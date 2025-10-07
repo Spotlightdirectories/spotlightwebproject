@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotlight Directories</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="images/favicon.png" type="image/png">
+    <script src="script.js" defer></script>
+</head>
+<body>
+  <main>
+     <header class="navbar">
+        <div class="logo-left">
+          <a href="index.html"> 
+            <img src="images/whitelogo3.png" alt="Spotlight Directories Logo"/>
+          </a>
+          <!-- <a href="#"class="divider">|</a> -->
+          <a href="home" class="home">Home</a>        
+        </div>
+
+       <nav>
+          <a href="#" class="menu-open hide-desktop">
+            <img src="images/hbopen.png" alt="open-menu">
+          </a>
+          
+          <ul>
+            <li><a href="#"class="xclose">
+              <img src="images/xclose.png" alt="close menu"></a>
+            </li>
+            <li><a href="#">Why Spotlight?</a></li>
+            <li><a href="#">Get Listed</a></li>
+            <li><a href="#">Contact Us</a></li>
+            <li><a href="#">FAQ</a></li>
+            <li><a href="#">Feedback</a></li>            
+          </ul>
+       </nav>
+     </header>
+    <section class="grid-container">
+     <section class="box1">
+      <div class="vendor-content">
+       <figure class="text-image">
+         <img src="images/homepageimg2.png" alt="Put your business in the spotlight"/>
+       </figure>
+      <a href="vendor-registration-form.html" target="_blank" class="getlisted-button">Get Listed
+      </a>
+      <h3>Listing your shop or office puts it on the spotlight for buyers to see when searching...</h3><hr><br>
+      <h1 class="searchVendor">Search Vendors Nearby</h1>
+          <div class="search-container">
+             <input 
+                type="text" 
+                id="search-input" 
+                placeholder="Search by Vendor's Name or Category" 
+                onkeyup="filterSearch()"/>
+          </div>
+         <div class="button-group">
+             <button onclick="searchByName()">Search by Name</button>
+             <button onclick="searchByCategory()">Search by Category</button>
+          </div>
+      </div>
+     </div>
+    </section> 
+
+    <!--BOX 2-->
+
+    <section class="box2">
+      <div class="slideshow">
+      <div class="slide">
+      <video autoplay loop muted playsinline width="100%" height="auto">
+        <source src="videos/pincallimage8.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+      </div>
+
+      <div class="slide">
+      <img src="images/mechanic.png" alt="A mechanic workshop"/>
+      </div>
+
+      <div class="slide">
+      <img src="images/consultant.png" alt="A Consulting Office"/>
+      </div>
+      </div>
+      <section class="apps">
+      <h3 class="appCaption">Download <strong>SPOTLIGHT MOBILE APP</strong> for ON-THE-GO Experience. Never get stranded again as you go about your daily activities.</h3>
+      <figure class="app-download"> 
+        <a href="https://play.google.com/store/apps/details?id=com.spotlight.directories" target="_blank">
+          <img src="images/android.png" alt="Download on Google Play" class="app-icon">
+        </a>
+        <!--<figcaption>Android</figcaption>-->
+      </figure>
+      <figure class="app-download">
+        <a href="https://apps.apple.com/us/app/spotlight-directories/id6444221234" target="_blank">
+          <img src="images/iOS.png" alt="Download on the App Store" class="app-icon">
+        </a>
+        <!--<figcaption>iOS</figcaption>-->
+      </figure>
+    </section>
+    </section> 
+    
+    <!--INDEX BOX 3-->
+    <section class="idbox3">
+    <h2 class="featureheading">Find Vendors Near You in Seconds</h2>
+    <div class="features">
+        <article class="feature">
+            <span aria-hidden="true">📍</span>
+            <p>
+                <strong>Location-Based Search</strong><br>
+                Instantly see nearby vendors in km on real-time.
+            </p>
+        </article>
+        <article class="feature">
+            <span aria-hidden="true">⚡</span>
+            <p>
+                <strong>Fast & Easy</strong><br>
+                No sign-up required for searches.
+            </p>
+        </article>
+        <article class="feature">
+            <span aria-hidden="true">⚖️</span>
+            <p>
+                <strong>Value For Money</strong><br>
+                Compare vendors and get the best deals at your fingertips.
+            </p>
+        </article>
+        <article class="feature">
+            <span aria-hidden="true">💬</span>
+            <p>
+                <strong>Direct Contact</strong><br>
+                Call or chat instantly with vendors.
+            </p>
+        </article>        <article class="feature">
+            <span aria-hidden="true">🔍</span>
+            <p>
+                 <strong>Smart Filters</strong><br>
+                Find exactly what you need by category.
+            </p>
+        </article>
+                <article class="feature">
+            <span aria-hidden="true">💰</span>
+            <p>
+                <strong>Free to Use</strong><br>
+                Search vendors without paying a dime.
+            </p>
+        </article>
+      </div>
+      <div>
+     <button class="cta">Start Searching Now</button>
+     </div>
+    </section>
+    
+<!--BOX 4-->
+   
+<section class="box4"> 
+  <div class="vendorBenefits">
+    <h2>Join Spotlight Directory Today</h2>
+    <p>Get your business in front of customers searching near you. Upgrade for more visibility and grow 
+      your reach!</p>
+    <a href="#" class="cta-btn">Get Listed</a>
+  </div>
+
+    <!--<div class="benefits-intro">
+        <p>We help striving businesses like yours get listed and stand out on Spotlight Directory,
+           Google and on search engines — where local customers search for what they need right now. 
+           And before you know it, you’ll attract more customers, boost your visibility, and grow your 
+           business effortlessly</p>
+    </div>-->
+
+  <div class="idcard">
+      <img src="images/homepinimg.png" alt="Google map pins on phone">
+        <div class="idcard-content">
+         <h3>Stand Out Locally</h3>
+        <ul>
+          <li> Appear on spotlight vendor search</li>
+          <li> Appear on Google Maps</li>
+          <li> Appear in local pack results</li>
+          <li> Verified presence with Google</li>
+        </ul>
+       </div>
+      </div>
+
+          <div class="idcard">
+            <img src="images/Homeleadimg.png" alt="Woman holding phone with map">
+          <div class="idcard-content">
+            <h3>Smart Scheduling & Client Mgt</h3>
+            <ul>
+               <li>Never miss a client call or inquiry</li>
+               <li>24/7 appointment booking availability</li>
+               <li>Saves time with automated scheduling</li>
+               <li>Enhances professional image and client trust</li>
+            </ul>
+          </div>
+        </div>
+  
+        <div class="idcard">
+            <img src="images/Homewalkin3.png" alt="Customer entering shop">
+          <div class="idcard-content">
+            <h3>Boost Walk-In Traffic & Calls</h3>
+            <ul>
+                <li>Integrated “Call Now” and “Directions” buttons</li>
+                <li>Up-to-date contact details</li>
+                <li>Increased in-person visits</li>
+            </ul>
+          </div>
+        </div>
+       
+         <div class="idcard">
+            <img src="images/Homepinimg2.png" alt="Woman smiling with phone">
+           <div class="idcard-content">
+            <h3>Earn Customer Trust with Reviews</h3>
+            <ul>
+                <li>5-star Google review collection</li>
+                <li>Higher credibility & social proof</li>
+                <li>Ongoing review tips & strategies</li>
+            </ul>
+          </div>
+         </div>
+
+        <div class="idcard">
+            <img src="images/Homepinimg4.png" alt="Woman holding phone with map">
+          <div class="idcard-content">
+            <h3>Get Found on the Go by Mobile Users</h3>
+            <ul>
+                <li>Mobile-friendly listing format</li>
+                <li>Fast-loading profile pages</li>
+                <li>Searchable from any location</li>
+            </ul>
+          </div>
+        </div>
+
+    <div class="cta-bottom">
+       <a href="#" class="cta2-btn">Get Listed</a>
+    </div>
+ </section>
+</section>
+    </main>
+   <footer>
+        <div class="footer-content">
+             <a href="terms.html">Terms & Conditions</a> |
+             <a href="privacy.html">Privacy Policy</a>   |
+             <a href="disclaimer.html">Disclaimer</a>   
+             <p>&copy; 2025 Spotlight Directories. All Rights Reserve</p>
+        </div>
+     </footer>
+  </body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotlight Directories</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="images/favicon.png" type="image/png">
+    <script src="script.js" defer></script>
+</head>
+<body>
+  <main>
+     <header class="navbar">
+        <div class="logo-left">
+          <a href="index.html"> 
+            <img src="images/whitelogo3.png" alt="Spotlight Directories Logo"/>
+          </a>
+          <!-- <a href="#"class="divider">|</a> -->
+          <a href="home" class="home">Home</a>        
+        </div>
+
+       <nav>
+          <a href="#" class="menu-open hide-desktop">
+            <img src="images/hbopen.png" alt="open-menu">
+          </a>
+          
+          <ul>
+            <li><a href="#"class="xclose">
+              <img src="images/xclose.png" alt="close menu"></a>
+            </li>
+            <li><a href="#">Why Spotlight?</a></li>
+            <li><a href="#">Get Listed</a></li>
+            <li><a href="#">Contact Us</a></li>
+            <li><a href="#">FAQ</a></li>
+            <li><a href="#">Feedback</a></li>            
+          </ul>
+       </nav>
+     </header>
+    <!--<section class="grid-container">-->
+<!-- Feedback -->
+ <!---->
+
+<section class="page-container">
+
+  <div class="page-header">
+      <h1>Feedback</h1>
+      <p>We value your thoughts — send us feedback, report issues, or share suggestions.</p>
+  </div>
+
+<label for="contact">Email or WhatsApp (optional)</label>
+<input type="text" id="contact" name="contact" placeholder="email@example.com or +2348012345678">
+</div>
+</div>
+
+
+<div class="row">
+<div>
+<label for="role">Are you a Vendor or Customer?</label>
+<select id="role" name="role">
+<option value="customer">Customer</option>
+<option value="vendor">Vendor</option>
+<option value="other">Other</option>
+</select>
+</div>
+<div>
+<label for="category">Category of Feedback</label>
+<select id="category" name="category">
+<option>Difficulty with Listing</option>
+<option>Payment / Subscription Issues</option>
+<option>Location or Map Accuracy</option>
+<option>Suggestion for Improvement</option>
+<option>Report a Vendor</option>
+<option>Other</option>
+</select>
+</div>
+</div>
+
+
+<div>
+<label for="message">Your Feedback</label>
+<textarea id="message" name="message" placeholder="Type your feedback here…" required></textarea>
+</div>
+
+
+<div class="row">
+<div>
+<label for="rating">Rating (optional)</label>
+<select id="rating" name="rating">
+<option value="">-- Choose --</option>
+<option>1 - Very Poor</option>
+<option>2 - Poor</option>
+<option>3 - Okay</option>
+<option>4 - Good</option>
+<option>5 - Excellent</option>
+</select>
+</div>
+<div class="full muted" style="align-self:center;font-size:0.85rem">By submitting you agree we may contact you to follow up.</div>
+</div>
+
+
+<div class="actions">
+<button type="submit" class="primary">Send Feedback</button>
+<button type="button" class="ghost" id="clearBtn">Clear</button>
+</div>
+
+
+<div id="result" class="full" style="display:none;margin-top:.5rem"></div>
+
+
+</form>
+
+     </section>
+    </section>
+  </section>
+  </main>
+   <footer>
+        <div class="footer-content">
+             <a href="terms.html">Terms & Conditions</a> |
+             <a href="privacy.html">Privacy Policy</a>   |
+             <a href="disclaimer.html">Disclaimer</a>   
+             <p>&copy; 2025 Spotlight Directories. All Rights Reserve</p>
+        </div>
+     </footer>
+  </body>
+</html>
