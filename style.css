@@ -1559,7 +1559,7 @@ input:checked + .glslider:before {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 2rem;
-  max-width: 1200px;
+  max-width: 1600px;
   margin: auto;
 }
 
@@ -1575,6 +1575,16 @@ input:checked + .glslider:before {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+.dark-card {
+  background: #240707;
+  color: white;
+  border: none;
+}
+
+.price-white h2 {
+  color: white;
+}
+
 .glcard:hover {
   transform: translateY(-8px);
   box-shadow: 0 8px 20px rgba(0,0,0,0.1);
@@ -1587,7 +1597,7 @@ input:checked + .glslider:before {
 
 .glcard h2 {
   color: var(--brand);
-  font-size: 1.3rem;
+  font-size: 1.6rem;
   margin-bottom: 0.3rem;
 }
 
@@ -1612,6 +1622,11 @@ input:checked + .glslider:before {
   border-bottom: 1px solid #eee;
 }
 
+.big {
+  font-weight: bold;
+  font-size: 1.4rem;
+}
+
 
 /* ====== BUTTON ====== */
 .btn {
@@ -1625,7 +1640,22 @@ input:checked + .glslider:before {
   margin-top: auto;
 }
 
+.btnwhite {
+    display: inline-block;
+  background: white;
+  color: var(--brand);
+  text-decoration: none;
+  padding: 0.9rem 1.4rem;
+  border-radius: 8px;
+  transition: background 0.3s;
+  margin-top: auto;
+}
+
 .btn:hover {
+  background: var(--highlight);
+}
+
+.btnwhite:hover {
   background: var(--highlight);
 }
 
