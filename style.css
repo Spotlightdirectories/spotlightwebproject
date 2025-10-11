@@ -1567,7 +1567,7 @@ input:checked + .glslider:before {
   background: #fff;
   border: 1px solid #e5e5e5;
   border-radius: 16px;
-  padding: 2rem 1.5rem 2.5rem;
+  /*padding: 2rem 1.5rem 2.5rem;*/
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -1575,14 +1575,12 @@ input:checked + .glslider:before {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.dark-card {
-  background: #240707;
+.letsTalk {
   color: white;
-  border: none;
-}
-
-.price-white h2 {
-  color: white;
+  font-weight: bold;
+  font-size: 1.5rem;
+  margin: 0;
+  padding: 0;
 }
 
 .glcard:hover {
@@ -1593,12 +1591,42 @@ input:checked + .glslider:before {
 .glcard.highlight {
   border: 2px solid var(--highlight);
   background: #fff5f5;
+  position: relative;
+  transform: translateY(-10px); /* Raises it slightly */
+  border-top: 4px solid #3366ff;
+}
+
+.badge {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #3366ff;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 5px 12px;
+  border-radius: 15px;
+  white-space: nowrap;
 }
 
 .glcard h2 {
   color: var(--brand);
   font-size: 1.6rem;
-  margin-bottom: 0.3rem;
+  margin-top: 1.5rem; 
+}
+
+.dark-card h2 {
+  color: var(--bg-light);
+  font-size: 1.6rem;
+  margin: 1.5rem 0 0 0;
+  
+}
+
+.dark-card {
+  background: #240707;
+  color: white;
+  border: none;
 }
 
 .price {
@@ -1620,11 +1648,20 @@ input:checked + .glslider:before {
 .glcard ul li {
   padding: 0.6rem 0;
   border-bottom: 1px solid #eee;
+  margin: 0rem 1.5rem 0rem 1.5rem;
+}
+
+.glcard ul li::before {
+  content: "✓";
+  color: darkgray;
+  font-weight: bold;
+  margin-right: 8px;
 }
 
 .big {
   font-weight: bold;
-  font-size: 1.4rem;
+  font-size: 1.3rem;
+  margin: 0;
 }
 
 
@@ -1635,20 +1672,30 @@ input:checked + .glslider:before {
   color: #fff;
   text-decoration: none;
   padding: 0.9rem 1.4rem;
+  margin: 0 0.9rem 1.2rem 0.9rem;
   border-radius: 8px;
   transition: background 0.3s;
   margin-top: auto;
 }
 
+.recommendedbanner {
+  /*border-radius: 8px;*/
+  background: rgb(224, 236, 224);
+  padding: 0.7rem 1.2rem;
+  color: black;
+  font-size: 1.2rem;
+  /* border-style: solid; */
+}
+
 .btnwhite {
-    display: inline-block;
+  display: inline-block;
   background: white;
   color: var(--brand);
   text-decoration: none;
   padding: 0.9rem 1.4rem;
   border-radius: 8px;
   transition: background 0.3s;
-  margin-top: auto;
+  margin: 0 0.9rem 1.2rem 0.9rem;
 }
 
 .btn:hover {
