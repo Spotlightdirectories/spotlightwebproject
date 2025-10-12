@@ -46,13 +46,17 @@ footer {
     color: white;
     text-align: center;
     padding: 10px 10px;
-    font-size: 0.7em;
-    height: 80px;
+    font-size: 0.9em;
+    height: 100px;
     a {
         text-decoration: none;
         color: white;
-        padding: 0 10px;
+        padding: 0 15px;
     }
+}
+
+footer p {
+  margin: 0.3rem 0;
 }
 
 @media (min-width: 992px) {
