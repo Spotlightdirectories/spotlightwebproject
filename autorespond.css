@@ -38,7 +38,7 @@
   left: 50%;
   transform: translate(-50%, -50%) scale(1);
   width: 94%;
-  max-width: 760px;
+  max-width: 860px;
   max-height: 82vh;
   overflow-y: auto;
   background: #fff;
@@ -75,6 +75,48 @@ body.modal-open {
   overflow: hidden;
 }
 
+.addon-preview {
+  Margin: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 25%;
+  background: rgb(244, 241, 241);
+}
+
+.glbadge {
+  width: 25px;
+  height: 25px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 4px;
+  margin-bottom: 3px; /* adjust upward or downward as needed */
+}
+
+.addon-preview p {
+  padding: 15px;
+}
+
+.addon-detail h2 {
+  margin-top: 0;
+  padding: 20px;
+  background: #f1c8c8;
+  border-radius: 8px;
+  box-shadow: 0 4px 18px rgba(12,15,20,0.06);
+  text-align: center;
+}
+
+.addon-detail p {
+  padding: 20px;
+}
+
+.addon-subheading h3 {
+  margin: 10px 0 15px 0;;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius:8px;
+  background: rgb(244, 241, 241);
+}
+
 /* Animation */
 @keyframes modalIn {
   from { opacity: 0; transform: translate(-50%, -48%) scale(0.98); }
@@ -84,4 +126,42 @@ body.modal-open {
 /* Responsive: use accordion under 768px (breakpoint logic is also in JS) */
 @media (max-width: 767px) {
   .addon-detail.modal { position: static; transform: none; box-shadow: none; max-height: none; }
+}
+
+.addon-subheading table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+  font-size: 15px;
+  text-align: left;
+}
+
+.addon-subheading th {
+  background: #f4f4f4;
+  color: #333;
+  padding: 10px;
+  border-bottom: 2px solid #ddd;
+}
+
+.addon-subheading td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.addon-subheading tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.addon-subheading tr:hover {
+  background: #f0f8ff;
+}
+
+.activate-btn {
+  background: #240707;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-weight: bold;
+  cursor: pointer;
 }

@@ -1821,7 +1821,7 @@ input:checked + .glslider:before {
 .pricing-header {
   position: sticky;
   top: 0;
-  background: rgb(229, 141, 141);
+  background: #f1c8c8;
   z-index: 10;
   border-bottom: 1px solid #eee;
   border-radius: 16px 16px 0 0;
