@@ -1,0 +1,87 @@
+/* ===== Base preview card styles (keeps your look) ===== */
+.addons-section { gap: 1rem; }
+
+/* ===== Accordion (mobile/smaller screens) ===== */
+.addon-detail {
+  display: none;
+  margin-top: 1rem;
+  padding: 1.25rem;
+  background: #fbfdff;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(12,15,20,0.06);
+  transition: max-height 0.28s ease, opacity 0.24s ease;
+  overflow: hidden;
+}
+
+/* Expanded */
+.addon-card.active .addon-detail {
+  display: block;
+}
+
+/* Buttons */
+.learn-more-btn, .activate-btn {
+  background: #0b67ff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 0.85rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+.learn-more-btn:hover, .activate-btn:hover { filter: brightness(0.92); }
+
+/* ===== Modal styles (desktop) ===== */
+.addon-detail.modal {
+  display: block; /* controlled by JS; moved to body */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  width: 94%;
+  max-width: 760px;
+  max-height: 82vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 20px 60px rgba(6,10,20,0.35);
+  z-index: 10001;
+  animation: modalIn 220ms cubic-bezier(.2,.9,.3,1);
+}
+
+/* Overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.56);
+  z-index: 10000;
+  display: none;
+}
+.modal-overlay.active { display: block; }
+
+/* Close button inside modal */
+.addon-detail .modal-close {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+/* Prevent body scroll when modal open */
+body.modal-open {
+  overflow: hidden;
+}
+
+/* Animation */
+@keyframes modalIn {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.98); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Responsive: use accordion under 768px (breakpoint logic is also in JS) */
+@media (max-width: 767px) {
+  .addon-detail.modal { position: static; transform: none; box-shadow: none; max-height: none; }
+}
