@@ -78,7 +78,8 @@
       <div class="glcard highlight">
       <div class="badge">⚡ Most popular</div>
         <h2>Standard</h2>
-        <p class="price" data-monthly="₦4,998" data-yearly="₦50,000">₦4,998</p>
+        <p class="price" data-monthly="₦2,998" data-yearly="₦25,976">₦2,998</p>
+        <p class="yearly">Do yearly save <strong>₦10,000</strong></p>
         <div class="recommendedbanner">
         <p>For Professionals</p>
         </div>
@@ -97,7 +98,8 @@
       <!-- ENTERPRISE PLAN -->
       <div class="glcard">
         <h2>Enterprise</h2>
-        <p class="price" data-monthly="₦14,998" data-yearly="₦170,400">₦14,998</p>
+        <p class="price" data-monthly="₦8,998" data-yearly="₦82,976">₦8,998</p>
+        <p class="yearly">Do yearly save <strong>₦25,000</strong></p>
 
         <div class="recommendedbanner">
         <p class="recommendation">For Growing Chains</p>
@@ -116,8 +118,8 @@
       <!-- ELITE PLAN -->
       <div class="glcard">
         <h2>Elite</h2>
-        <p class="price" data-monthly="₦44,998" data-yearly="₦120,000">₦44,998</p>
-
+        <p class="price" data-monthly="₦22,998" data-yearly="₦110,976">₦22,998</p>
+        <p class="yearly">Do yearly save <strong>₦45,000</strong></p>
         <div class="recommendedbanner">
         <p>For Nationwide Brands</p>
         </div>
@@ -153,32 +155,112 @@
 
     </section>
     </section>
-    <section class="gladdons-wrapper">
 
-      <h1 class="addons-gray">Available <span class="addons-title">Add-Ons</span>;</h1>
+<script>
+  const toggle = document.getElementById("billingToggle");
+  const prices = document.querySelectorAll(".price");
 
-      <div class="addons">
+  toggle.addEventListener("change", () => {
+    const yearly = toggle.checked;
+    prices.forEach(price => {
+      price.textContent = yearly 
+        ? price.getAttribute("data-yearly") 
+        : price.getAttribute("data-monthly");
+    });
+  });
+</script>
 
-          <h2>
-          <span>🤖</span>Smart Leads Management & Scheduler:
-          <a href="autorespond.html" class="btn-small">Learn More →</a>
-          </h2> 
-          <p>Get More Customers on Autopilot</P>
+    <!--Add-Ons Wrapper-->
 
-          <h2>
-          <span>🌟</span>Featured Listing: 
-          <a href="autorespond.html" class="btn-small">Learn More →</a>
-          </h2>
-          <p>Be on Top — Get Noticed First!</p>
+<section class="gladdons-wrapper">
+  <h1 class="addons-gray">
+    Available <span class="addons-title">Add-Ons</span>
+  </h1>
 
-          <h2>
-          <span>✅</span>Verified Badge:
-          <a href="autorespond.html" class="btn-small">Learn More →</a>
-          </h2>
-          <p>Boost Your Credibility & Trust (one-time)</P>
+  <!-- Toggle -->
+  <div class="addon-toggle-container">
+    <span>Monthly</span>
+    <label class="addon-switch">
+      <input type="checkbox" id="addonBillingToggle" checked>
+      <span class="addon-slider addon-round"></span>
+    </label>
+    <span>Yearly</span>
+  </div>
 
+  <div class="addon-list">
+
+    <!-- 1️⃣ Smart Leads Management -->
+    <div class="addon-card" id="activate">
+      <div class="addon-header">
+        <h2><span>🤖</span> Smart Leads Management & Scheduler</h2>
+        <p class="addon-desc">Get More Customers on Autopilot</p>
+        <a href="addondetails.html#addon1" class="addon-btn-small"><strong>Learn More →</strong></a>
       </div>
-    </section>
+
+      <div class="addon-pricing">
+        <div class="addon-plan addon-basic">
+          <h3>Basic</h3>
+          <p class="addon-price">₦30,000<span>/year</span></p>
+          <button class="addon-subscribe-btn">Subscribe</button>
+        </div>
+        <div class="addon-plan addon-pro">
+          <h3>Pro</h3>
+          <p class="addon-price">₦60,000<span>/year</span></p>
+          <button class="addon-subscribe-btn">Subscribe</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2️⃣ Featured Listing -->
+    <div class="addon-card" id="activate">
+      <div class="addon-header">
+        <h2><span>🌟</span> Featured Listing</h2>
+        <p class="addon-desc">Be on Top — Get Noticed First!</p>
+        <a href="addondetails.html#addon2" class="addon-btn-small"><strong>Learn More →</strong></a>
+      </div>
+
+      <div class="addon-pricing">
+        <div class="addon-plan addon-basic">
+          <h3>Basic</h3>
+          <p class="addon-price">₦30,000<span>/year</span></p>
+          <button class="addon-subscribe-btn">Subscribe</button>
+        </div>
+        <div class="addon-plan addon-pro">
+          <h3>Pro</h3>
+          <p class="addon-price">₦60,000<span>/year</span></p>
+          <button class="addon-subscribe-btn">Subscribe</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3️⃣ Verified Badge -->
+    <div class="addon-card" id="activate">
+      <div class="addon-header">
+        <h2><span>✅</span> Verified Badge</h2>
+        <p class="addon-desc">Boost Your Credibility & Trust (one-time)</p>
+        <a href="addondetails.html#addon3" class="addon-btn-small"><strong>Learn More →</strong></a>
+      </div>
+
+      <div class="addon-pricing">
+        <div class="addon-plan addon-basic">
+          <h3>Blue Badge</h3>
+          <p class="addon-free">Free till June 2026</p>
+          <button class="addon-subscribe-btn">Verify Now</button>
+        </div>
+        <div class="addon-plan addon-pro">
+          <h3>Gray Badge</h3>
+          <p class="addon-free">Free till June 2026</p>
+          <button class="addon-subscribe-btn">Verify Now</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- Feature Comparison Table -->
+
 <section class="pricing-table">
   <h1>See all features and compare plans</h1>
 

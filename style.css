@@ -60,13 +60,24 @@ footer p {
   font-size: 0.6rem;
 }
 
+footer p {
+  margin: 0.3rem 0;
+  font-size: 0.6rem;
+}
+
 @media (min-width: 992px) {
   :root {
     --header-height: 80px;
   }
-}
 
-.logo-left  {
+  footer {
+    font-size: 1rem;
+  }
+  footer p {
+  font-size: 0.9rem;
+  }
+
+  .logo-left  {
     display: flex;
     max-width: 100%;
     height: auto; 
@@ -75,7 +86,9 @@ footer p {
         width: auto;
         margin: 10px;
    }
+  }
 }
+
 
 .home {
     display: flex;
@@ -509,7 +522,7 @@ input {
     color: #111;
 }
 
-.cta {
+/* .cta {
     padding: 0.8rem 1.5rem;
     font-size: 1rem;
     color: white;
@@ -518,10 +531,27 @@ input {
     border-radius: 8px;
     cursor: pointer;
     margin-bottom: 1rem;
+} */
+
+.cta {
+  display: inline-block;
+  background-color: #240707;  /* your preferred color */
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  /* font-weight: 600; */
+  font-size: 1rem;
+  text-decoration: none;
+  text-align: center;
+  transition: background-color 0.3s ease;
 }
 
 .cta:hover {
     background-color: green;
+}
+
+[id^="homepage"] {
+  scroll-margin-top: 100px; /* adjust to match your header height */
 }
 
 .featureheading {
@@ -1675,6 +1705,12 @@ input:checked + .glslider:before {
   margin: 0;
 }
 
+.yearly {
+  color: blue;
+  font-style: italic;
+  font-size: 15px;
+}
+
 
 /* ====== BUTTON ====== */
 .btn {
@@ -1728,63 +1764,192 @@ input:checked + .glslider:before {
   }
 }
 
-.gladdons-wrapper {
-  margin: 0 0 1.5rem 1rem;
-  text-align: left;
+/* ADDONS SECTION */
+
+/* Add-Ons Toggle Wrapper */
+
+/* General Wrapper */
+
+
+:root {
+  --addon-primary: #004aad;
+  --addon-bg-light: #fdf9f3;
+  --addon-card-bg: #f8faff;
+  --addon-text-dark: #333;
+  --addon-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --addon-transition: 0.3s ease;
 }
 
-.addons-title {
-  font-size: 1.5rem;
-  color: blue;
-  font-style: italic;
+.gladdons-wrapper {
+  text-align: center;
+  max-width: 800px;
+  margin: auto;
 }
 
 .addons-gray {
-  color: gray;
+  font-size: 1.8rem;
+  font-weight: 700;
 }
 
-.addons h2 {
-  margin-right: 10px;
-  font-size: 1.5rem;
-  margin: 0;
+.addons-title {
+  color: var(--addon-primary);
 }
 
-.addons span {
-  margin: 0;
+/* Toggle */
+.addon-toggle-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
 }
 
-.addons p {
-  margin-left: 5rem;
-  font-style: italic;
-  font-size: 1rem;
-  color: #555;
+.addon-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
 }
 
-.addons {
+.addon-switch input {
+  display: none;
+}
+
+.addon-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #ccc;
+  border-radius: 24px;
+  transition: var(--addon-transition);
+}
+
+.addon-slider::before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 4px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: var(--addon-transition);
+}
+
+input:checked + .addon-slider {
+  background-color: var(--addon-primary);
+}
+
+input:checked + .addon-slider::before {
+  transform: translateX(26px);
+}
+
+/* Add-on Cards */
+.addon-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 20px;
 }
 
-.addons-items {
-  margin-bottom: 1.5rem;
+.addon-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--addon-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: var(--addon-transition);
 }
 
-.btn-small {
-  display: inline-block;
-  background-color: rgb(9, 150, 238); 
+.addon-header h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.addon-header p {
+  margin: 10px;
+}
+
+.addon-header a {
+  margin-left: 18px;
+}
+
+.addon-desc {
+  font-size: 0.9rem;
+  color: #777;
+}
+
+.addon-pricing {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.addon-plan {
+  background: var(--addon-card-bg);
+  padding: 12px;
+  border-radius: 10px;
+  flex: 1 1 45%;
+  box-shadow: inset 0 0 0 1px #e5e9f2;
+}
+
+.addon-price {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0.5rem 0;
+  transition: var(--addon-transition);
+}
+
+.addon-free {
+  margin: 0.5rem;
+}
+
+[id^="activate"] {
+  scroll-margin-top: 200px; /* adjust to match your header height */
+}
+
+.addon-subscribe-btn {
+  background: var(--addon-primary);
   color: white;
-  font-size: 0.85rem;
-  font-style: italic;
-  padding: 6px 12px;
-  border-radius: 6px;
-  text-decoration: none;
-  margin-left: 8px;
-  transition: background-color 0.3s ease;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--addon-transition);
 }
 
-.btn-small:hover {
-  background-color: green; /* slightly lighter on hover */
+.addon-subscribe-btn:hover {
+  opacity: 0.9;
+}
+
+.addon-btn-small {
+  color: var(--addon-primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+/* Desktop layout */
+@media (min-width: 768px) {
+  .addon-card {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+  }
+
+  .addon-header {
+    flex: 1;
+    text-align: left;
+  }
+
+  .addon-pricing {
+    flex: 1;
+    justify-content: flex-end;
+  }
 }
 
 

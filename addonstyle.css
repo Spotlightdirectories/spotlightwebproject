@@ -1,0 +1,185 @@
+
+/* 🔹 Addons Section Container */
+.addons-section {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* 🔹 Each Add-on Card (mobile-first) */
+.addon-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  margin-bottom: 1.5rem;
+  padding: 1.2rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Prevent fixed header from covering the section when navigated via anchor */
+[id^="addon"] {
+  scroll-margin-top: 100px; /* adjust to match your header height */
+}
+
+.addon-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+/* 🔹 Add-on Title */
+.addon-detail h2 {
+  font-size: 1.25rem;
+  color: #004aad;
+  margin-bottom: 0.5rem;
+}
+
+.addon-detail p strong {
+  color: #111;
+}
+
+/* 🔹 Subsection blocks */
+.addon-subheading {
+  margin-top: 1rem;
+  background: #f9fbff;
+  border-left: 3px solid #004aad;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+}
+
+.addon-subheading img {
+  display: inline-block;
+}
+
+.addon-subheading h3 {
+  margin-top: 0;
+  color: #004aad;
+  font-size: 1rem;
+}
+
+/* 🔹 Lists */
+.addon-subheading ul {
+  list-style: none;
+  padding-left: 1rem;
+}
+
+.addon-subheading ul li::before {
+  content: "•";
+  color: #004aad;
+  font-weight: bold;
+  display: inline-block;
+  width: 1em;
+  margin-left: -1em;
+}
+
+.addon-subheading ol {
+  padding-left: 1.2rem;
+}
+
+.addon-subheading li {
+  margin-bottom: 0.4rem;
+  font-size: 0.95rem;
+}
+
+/* 🔹 Tables */
+.addon-subheading table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.8rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  border: 1px solid #e5e5e5;
+}
+
+.addon-subheading th,
+.addon-subheading td {
+  border: 1px solid #e5e5e5;
+  padding: 0.6rem 0.7rem;
+  text-align: left;
+}
+
+.addon-subheading th {
+  background: #004aad;
+  color: #fff;
+}
+
+.addon-subheading tbody tr:nth-child(even) {
+  background: #f3f6fb;
+}
+
+/* 🔹 Buttons */
+.activate-btn {
+  display: inline-block;
+  background: #004aad;
+  color: #fff;
+  border: none;
+  padding: 0.7rem 1.2rem;
+  margin-top: 0.8rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.activate-btn:hover {
+  background: #00337d;
+  transform: translateY(-2px);
+}
+
+/* 🔹 Image badges */
+.glbadge {
+  width: 20px;
+  vertical-align: middle;
+  margin-left: 5px;
+}
+
+/* ===========================
+   🔸 Larger Screens (Tablet)
+   =========================== */
+@media (min-width: 600px) {
+  .addon-card {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .addon-detail h2 {
+    font-size: 1.5rem;
+  }
+
+  .addon-subheading h3 {
+    font-size: 1.1rem;
+  }
+
+  .activate-btn {
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+  }
+}
+
+/* ===========================
+   🔸 Desktop & Large Screens
+   =========================== */
+@media (min-width: 992px) {
+  .addon-card {
+    padding: 2rem;
+    border-radius: 16px;
+  }
+
+  .addon-detail h2 {
+    font-size: 1.75rem;
+  }
+
+  .addon-subheading {
+    padding: 1rem 1.5rem;
+  }
+
+  .addon-subheading table {
+    font-size: 1rem;
+  }
+
+  .activate-btn {
+    border-radius: 8px;
+  }
+}
