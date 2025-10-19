@@ -156,19 +156,7 @@
     </section>
     </section>
 
-<script>
-  const toggle = document.getElementById("billingToggle");
-  const prices = document.querySelectorAll(".price");
 
-  toggle.addEventListener("change", () => {
-    const yearly = toggle.checked;
-    prices.forEach(price => {
-      price.textContent = yearly 
-        ? price.getAttribute("data-yearly") 
-        : price.getAttribute("data-monthly");
-    });
-  });
-</script>
 
     <!--Add-Ons Wrapper-->
 

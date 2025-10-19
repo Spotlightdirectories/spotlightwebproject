@@ -36,9 +36,24 @@ headers.forEach(header => {
     });
   });
 });
-
-
 // END OF FAQ TOGGLE SCRIPT
+
+//GET LISTED PLAN TOGGLE SCRIPT
+
+  const toggle = document.getElementById("billingToggle");
+  const prices = document.querySelectorAll(".price");
+
+  toggle.addEventListener("change", () => {
+    const yearly = toggle.checked;
+    prices.forEach(price => {
+      price.textContent = yearly 
+        ? price.getAttribute("data-yearly") 
+        : price.getAttribute("data-monthly");
+    });
+  });
+// END OF GET LISTED PLAN TOGGLE SCRIPT
+
+// ADDON BILLING TOGGLE SCRIPT
 
 //<script defer>
 document.addEventListener("DOMContentLoaded", function() {
@@ -65,3 +80,4 @@ document.addEventListener("DOMContentLoaded", function() {
   updatePrices();
 });
 //</script>
+// END OF ADDON BILLING TOGGLE SCRIPT
