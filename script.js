@@ -42,13 +42,19 @@ headers.forEach(header => {
 
   const toggle = document.getElementById("billingToggle");
   const prices = document.querySelectorAll(".price");
+  const yearlyTexts = document.querySelectorAll(".yearly");
 
   toggle.addEventListener("change", () => {
     const yearly = toggle.checked;
+
     prices.forEach(price => {
       price.textContent = yearly 
         ? price.getAttribute("data-yearly") 
         : price.getAttribute("data-monthly");
+    });
+
+    yearlyTexts.forEach(text => {
+      text.style.display = yearly ? "none" : "block";
     });
   });
 // END OF GET LISTED PLAN TOGGLE SCRIPT
