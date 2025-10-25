@@ -10,8 +10,6 @@
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="images/favicon.ico" type="image/x-icon">
     <link rel="apple-touch-icon" href="images/favicon.png" type="image/png">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js" defer></script>
 </head>
 <body>
   <main>
@@ -56,15 +54,13 @@
              <input 
                 type="text" 
                 id="search-input" 
-                placeholder="Search by Vendor's Name or Category" 
-                onkeyup="filterSearch()"/>
+                placeholder="Search by Vendor's Name or Category"/>
           </div>
          <div class="button-group">
              <button onclick="searchByName()">Search by Name</button>
              <button onclick="searchByCategory()">Search by Category</button>
           </div>
       </div>
-     </div>
     </section> 
 
     <!--BOX 2-->
@@ -250,5 +246,7 @@
              <p>&copy; 2025 Spotlight Directories. All Rights Reserve</p>
         </div>
      </footer>
+     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+     <script src="script.js"></script>
   </body>
 </html>

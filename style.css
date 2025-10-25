@@ -2103,4 +2103,91 @@ pricing-body::-webkit-scrollbar {
 }
 }
 
+/* Vendors Search Results*/
 
+.results-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+}
+
+.vendor-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.vendor-link {
+  color: #1e40af;
+  text-decoration: none;
+}
+
+.vendor-link:hover {
+  text-decoration: underline;
+}
+
+.whatsapp-btn {
+  display: inline-block;
+  margin-top: 6px;
+  color: #25d366;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* end of Vendors Search Results*/
+
+/* Vendor Profile Mini webpage */
+
+.vendor-content {
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.vendor-logo {
+  display: block;
+  width: 150px;
+  margin: 15px 0;
+  border-radius: 8px;
+}
+
+.vendor-description {
+  margin: 15px 0;
+  line-height: 1.5;
+}
+
+.vendor-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.gallery-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.upgrade-hint {
+  margin-top: 20px;
+  background: #f1f5f9;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.upgrade-btn {
+  display: inline-block;
+  margin-top: 10px;
+  background: #2563eb;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+/* End of Vendor Profile Mini webpage */
