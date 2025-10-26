@@ -36,6 +36,7 @@ header.navbar {
     background-color: #240707;  /* soft background */
     height: var(--header-height);
     padding: 0 1rem;
+    color: white;
 }
 
 .logo-left {
@@ -2112,6 +2113,15 @@ pricing-body::-webkit-scrollbar {
   padding: 20px;
 }
 
+.results-header {
+  margin-top: 20px; /* since the navbar padding already covers the gap */
+  margin-bottom: 25px;
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #222;
+}
+
 .vendor-card {
   background: #fff;
   border-radius: 12px;
@@ -2191,3 +2201,44 @@ pricing-body::-webkit-scrollbar {
 }
 
 /* End of Vendor Profile Mini webpage */
+
+/* === Verified Badge Styling === */
+.vendor-badge {
+  width: 22px;
+  height: 22px;
+  margin-left: 6px;
+  vertical-align: middle;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  position: relative;
+}
+
+.vendor-badge:hover {
+  transform: scale(1.15);
+}
+
+/* Tooltip for badge hover */
+.vendor-badge[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: 13px;
+  padding: 5px 8px;
+  border-radius: 5px;
+  top: -32px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  z-index: 10;
+}
+
+/* Unverified Vendor Styling */
+.unverified-text {
+  font-style: italic;
+  color: red;
+  font-size: 0.9rem;
+}
+
+/* End of === Verified Badge Styling === */
+

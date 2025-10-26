@@ -15,25 +15,22 @@ const resultsContainer = document.getElementById("results-container");
 // ✅ Haversine formula
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
     Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1 * Math.PI / 180) *
-      Math.cos(lat2 * Math.PI / 180) *
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
       Math.sin(dLon / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
-// ✅ Check if coordinates are reasonable (within Nigeria)
-function isWithinNigeria(lat, lon) {
-  // Nigeria roughly spans between latitudes 4–14°N, longitudes 3–15°E
-  return lat >= 4 && lat <= 14 && lon >= 3 && lon <= 15;
-}
-
-// ✅ Lagos fallback coordinates
-const LAGOS_COORDS = { lat: 6.5244, lon: 3.3792 };
+// ✅ Tooltip messages for badges
+const badgeTooltips = {
+  blue: "Verified: Email, Phone, ID, CAC, and Business Address",
+  gray: "Verified: Email, Phone, and ID",
+};
 
 // ✅ Load vendors and filter
 (async function () {
@@ -43,34 +40,32 @@ const LAGOS_COORDS = { lat: 6.5244, lon: 3.3792 };
     try {
       const position = await new Promise((resolve, reject) =>
         navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
           timeout: 8000,
-          maximumAge: 0,
         })
       );
-
       userLat = position.coords.latitude;
       userLon = position.coords.longitude;
-
-      // ✅ Validate location sanity
-      if (!isWithinNigeria(userLat, userLon)) {
-        console.warn("Detected location seems outside Nigeria. Using Lagos instead.");
-        alert("⚠️ Location not accurate — showing results around Lagos.");
-        userLat = LAGOS_COORDS.lat;
-        userLon = LAGOS_COORDS.lon;
-      }
-    } catch (geoErr) {
-      console.warn("Geolocation failed or blocked. Falling back to Lagos.");
-      alert("⚠️ Unable to detect location — showing results around Lagos.");
-      userLat = LAGOS_COORDS.lat;
-      userLon = LAGOS_COORDS.lon;
+    } catch (geoError) {
+      // ⚠️ Lagos fallback
+      console.warn("⚠️ Location error detected — using Lagos fallback.");
+      userLat = 6.5244;
+      userLon = 3.3792;
     }
 
-    const { data: vendors, error } = await supabase.from("Vendors").select("*");
-    if (error) throw error;
+     // ✅ Query vendors directly by category or name (case-insensitive)
+       let query = supabase.from("Vendors").select("*");
+
+       if (searchType === "name") {
+        query = query.ilike("name", `%${searchTerm}%`);
+      } else if (searchType === "category") {
+        query = query.ilike("category", `%${searchTerm}%`);
+     }
+
+       const { data: vendors, error } = await query;
+       if (error) throw error;
 
     console.log("Fetched vendors:", vendors);
-    console.log("User location used:", userLat, userLon);
+    console.log("User location:", userLat, userLon);
     console.log("Search type:", searchType, "Search term:", searchTerm);
 
     const filtered = vendors
@@ -96,29 +91,57 @@ const LAGOS_COORDS = { lat: 6.5244, lon: 3.3792 };
       .filter((v) => v && v.distance <= 100)
       .sort((a, b) => a.distance - b.distance);
 
-    // ✅ Update results section
+    // ✅ Build HTML results
     resultsTitle.textContent = `${searchTerm}s Nearby`;
-    resultsContainer.innerHTML =
-      filtered.length > 0
-        ? filtered
-            .map(
-              (v) => `
-              <div class="vendor-card">
+
+    if (filtered.length === 0) {
+      resultsContainer.innerHTML = "<p>No vendors found within 100 km.</p>";
+      return;
+    }
+
+    resultsContainer.innerHTML = filtered
+      .map((v) => {
+        // Determine badge and status
+        let badgeHTML = "";
+        let verificationHTML = "";
+
+        if (v.badge === "blue") {
+          badgeHTML = `<img src="images/bluebadge.png" alt="Blue Verified Badge" class="vendor-badge" title="${badgeTooltips.blue}" />`;
+        } else if (v.badge === "gray") {
+          badgeHTML = `<img src="images/graybadge.png" alt="Gray Verified Badge" class="vendor-badge" title="${badgeTooltips.gray}" />`;
+        } else {
+          verificationHTML =
+            '<p><em style="color:red;">Unverified</em> — proceed with caution</p>';
+        }
+
+        // Vendor image
+        const profileImage = v.profile_image_url
+          ? `<img src="${v.profile_image_url}" alt="${v.name}" class="vendor-photo" />`
+          : `<div class="vendor-photo placeholder">No Image</div>`;
+
+        return `
+          <div class="vendor-card">
+            <div class="vendor-header">
+              ${profileImage}
+              <div class="vendor-info">
                 <h3>
                   <a href="vendor.html?id=${v.id}" class="vendor-link">${v.name}</a>
+                  ${badgeHTML}
                 </h3>
-                <p>${v.address}</p>
-                <p><strong>Distance:</strong> ${v.distance.toFixed(1)} km away</p>
-                ${
-                  v.phone
-                    ? `<a class="whatsapp-btn" href="https://wa.me/${v.phone}" target="_blank">Chat on WhatsApp</a>`
-                    : ""
-                }
+                ${verificationHTML}
               </div>
-            `
-            )
-            .join("")
-        : "<p>No vendors found within 100 km.</p>";
+            </div>
+            <p>${v.address || "Address not provided"}</p>
+            <p><strong>Distance:</strong> ${v.distance.toFixed(1)} km away</p>
+            ${
+              v.phone
+                ? `<a class="whatsapp-btn" href="https://wa.me/${v.phone}" target="_blank">Chat on WhatsApp</a>`
+                : ""
+            }
+          </div>
+        `;
+      })
+      .join("");
   } catch (err) {
     console.error("Error loading results:", err);
     resultsContainer.innerHTML =
