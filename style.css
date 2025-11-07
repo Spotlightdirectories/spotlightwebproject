@@ -2242,3 +2242,110 @@ pricing-body::-webkit-scrollbar {
 
 /* End of === Verified Badge Styling === */
 
+/*PRIVACY POLICY PAGE*/
+    .privatecontainer {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+    .privatecontainer h1, 
+    .privatecontainer h2, 
+    .privatecontainer h3 {
+      color: #222;
+    }
+    .privatecontainer h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .privatecontainer ul {
+      margin-left: 2rem;
+      margin-bottom: 1rem;
+    }
+    .privatecontainer p {
+      margin-bottom: 1rem;
+    }
+    .privatecontainer a {
+      color: #0066cc;
+      text-decoration: none;
+    }
+    .privatecontainer a:hover {
+      text-decoration: underline;
+    }
+
+    /*END OF PRIVACY POLICY PAGE*/
+
+    /*DISCLAIMER PAGE*/
+    .disclaimercontainer {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+    .disclaimercontainer h1, 
+    .disclaimercontainer h2
+    {
+      color: #222;
+    }
+    .disclaimercontainer h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .disclaimercontainer p {
+      margin-bottom: 1rem;
+    }
+    .disclaimercontainer a {
+      color: #0066cc;
+      text-decoration: none;
+    }
+    .disclaimercontainer a:hover {
+      text-decoration: underline;
+    }
+
+    /*END OF DISCLAIMER PAGE*/
+
+    /*BEGINNING OF TERMS OF SERVICE PAGE*/
+    .termscontainer {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+    .termscontainer h1, 
+    .termscontainer h2
+    {
+      color: #222;
+    }
+    .termscontainer h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .termscontainer p {
+      margin-bottom: 1rem;
+    }
+    .termscontainer a {
+      color: #0066cc;
+      text-decoration: none;
+    }
+    .termscontainer a:hover {
+      text-decoration: underline;
+    }
+
+    /*END OF TERMS OF SERVICE PAGE*/
