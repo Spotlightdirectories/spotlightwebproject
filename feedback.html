@@ -44,74 +44,71 @@
  <!---->
 
 <section class="page-container">
-
   <div class="page-header">
-      <h1>Feedback</h1>
-      <p>We value your thoughts — send us feedback, report issues, or share suggestions.</p>
+    <h1>Feedback</h1>
+    <p>We value your thoughts — send us feedback, report issues, or share suggestions.</p>
   </div>
 
-<label for="contact">Email or WhatsApp (optional)</label>
-<input type="text" id="contact" name="contact" placeholder="email@example.com or +2348012345678">
-</div>
-</div>
-
-
-<div class="row">
-<div>
-<label for="role">Are you a Vendor or Customer?</label>
-<select id="role" name="role">
-<option value="customer">Customer</option>
-<option value="vendor">Vendor</option>
-<option value="other">Other</option>
-</select>
-</div>
-<div>
-<label for="category">Category of Feedback</label>
-<select id="category" name="category">
-<option>Difficulty with Listing</option>
-<option>Payment / Subscription Issues</option>
-<option>Location or Map Accuracy</option>
-<option>Suggestion for Improvement</option>
-<option>Report a Vendor</option>
-<option>Other</option>
-</select>
-</div>
-</div>
-
-
-<div>
-<label for="message">Your Feedback</label>
-<textarea id="message" name="message" placeholder="Type your feedback here…" required></textarea>
-</div>
-
-
-<div class="row">
-<div>
-<label for="rating">Rating (optional)</label>
-<select id="rating" name="rating">
-<option value="">-- Choose --</option>
-<option>1 - Very Poor</option>
-<option>2 - Poor</option>
-<option>3 - Okay</option>
-<option>4 - Good</option>
-<option>5 - Excellent</option>
-</select>
-</div>
-<div class="full muted" style="align-self:center;font-size:0.85rem">By submitting you agree we may contact you to follow up.</div>
-</div>
-
-
-    <div class="actions">
-       <button type="submit" class="primary">Send Feedback</button>
-       <button type="button" class="ghost" id="clearBtn">Clear</button>
+  <form id="feedbackForm">
+    <div>
+      <label for="contact">Email or WhatsApp</label>
+      <input type="text" id="contact" name="contact" placeholder="email@example.com or +2348012345678" required>
     </div>
 
+    <div class="row">
+      <div>
+        <label for="role">Are you a Vendor or Customer?</label>
+        <select id="role" name="role">
+          <option value="">-- Choose --</option>
+          <option value="Customer">Customer</option>
+          <option value="Vendor">Vendor</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div>
+        <label for="category">Category of Feedback</label>
+        <select id="category" name="category">
+          <option value="">-- Choose --</option>
+          <option>Difficulty with Listing</option>
+          <option>Payment / Subscription Issues</option>
+          <option>Location or Map Accuracy</option>
+          <option>Suggestion for Improvement</option>
+          <option>Report a Vendor</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
 
-   <div id="result" class="full" style="display:none;margin-top:.5rem"></div>
+    <div>
+      <label for="message">Your Feedback</label>
+      <textarea id="message" name="message" placeholder="Type your feedback here…" required></textarea>
+    </div>
 
+    <div class="row">
+      <div>
+        <label for="rating">Rating (optional)</label>
+        <select id="rating" name="rating">
+          <option value="">-- Choose --</option>
+          <option value="1">1 - Very Poor</option>
+          <option value="2">2 - Poor</option>
+          <option value="3">3 - Okay</option>
+          <option value="4">4 - Good</option>
+          <option value="5">5 - Excellent</option>
+        </select>
+      </div>
+    </div>
 
+    <div class="full-muted" style="align-self:center;font-size:0.85rem">
+      By submitting you agree we may contact you to follow up.
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="primary">Send Feedback</button>
+      <button type="button" class="ghost" id="clearBtn">Clear</button>
+    </div>
   </form>
 
+  <div id="result" class="full" style="display:none;margin-top:.5rem"></div>
 </section>
   </main>
    <footer>
@@ -122,7 +119,8 @@
              <p>&copy; 2025 Spotlight Directories. All Rights Reserve</p>
         </div>
      </footer>
-      <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
      <script src="script.js"></script>
+     <script src="vendor.js"></script>
   </body>
 </html>
