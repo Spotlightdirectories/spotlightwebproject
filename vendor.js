@@ -5,91 +5,7 @@
 
 //const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const params = new URLSearchParams(window.location.search);
-const vendorId = params.get("id");
 
-const vendorName = document.getElementById("vendor-name");
-const vendorContent = document.getElementById("vendor-content");
-
-(async function () {
-  try {
-    const { data: vendor, error } = await supabaseClient
-      .from("Vendors")
-      .select("*")
-      .eq("id", vendorId)
-      .single();
-
-    if (error || !vendor) {
-      vendorContent.innerHTML = "<p>Vendor not found.</p>";
-      return;
-    }
-
-    vendorName.textContent = vendor.name;
-
-    // ✅ Basic info (always shown)
-    let html = `
-      <div class="vendor-details">
-        <p><strong>Category:</strong> ${vendor.category || "N/A"}</p>
-        <p><strong>Address:</strong> ${vendor.address || "N/A"}</p>
-        <p><strong>Phone:</strong> ${vendor.phone || "N/A"}</p>
-        <p><strong>Email:</strong> ${vendor.email || "N/A"}</p>
-        ${
-          vendor.phone
-            ? `<p><a class="whatsapp-btn" href="https://wa.me/${vendor.phone}" target="_blank">Chat on WhatsApp</a></p>`
-            : ""
-        }
-      </div>
-    `;
-
-    // ✅ For paid plans, add more details
-    if (vendor.plan && vendor.plan.toLowerCase() !== "free") {
-      if (vendor.logo_url) {
-        html += `<img src="${vendor.logo_url}" alt="${vendor.name} Logo" class="vendor-logo" />`;
-      }
-
-      if (vendor.description) {
-        html += `<p class="vendor-description">${vendor.description}</p>`;
-      }
-
-      if (vendor.video_url) {
-        html += `
-          <div class="vendor-video">
-            <video width="100%" controls>
-              <source src="${vendor.video_url}" type="video/mp4">
-              Your browser does not support the video tag.
-            </video>
-          </div>
-        `;
-      }
-
-      if (vendor.gallery_urls && vendor.gallery_urls.length > 0) {
-        html += `
-          <div class="vendor-gallery">
-            ${vendor.gallery_urls
-              .map((img) => `<img src="${img}" class="gallery-image" />`)
-              .join("")}
-          </div>
-        `;
-      }
-    } else {
-      // ✅ Message for free vendors
-      html += `
-        <div class="upgrade-hint">
-          <p>Want to showcase your profile picture, gallery, logo, and videos?</p>
-          <a href="getListed.html" class="upgrade-btn">Upgrade Your Plan</a>
-        </div>
-      `;
-    }
-
-    vendorContent.innerHTML = html;
-  } catch (err) {
-    console.error(err);
-    vendorContent.innerHTML =
-      "<p>Something went wrong loading this vendor's page.</p>";
-  }
-})();
-
-console.log("✅ Contact form script loaded");
 
 // ✅ Contact Us Form Logic (runs only if contact form exists)
 
@@ -237,122 +153,205 @@ document.addEventListener("DOMContentLoaded", () => {
   const nextStepMessage = document.getElementById("nextStepMessage");
   const vendorForm = document.getElementById("vendorForm");
 
-  // --- Get selected plan info from localStorage ---
-  const selectedPlan = localStorage.getItem("selectedPlan") || "free";
+  // --- Get selected plan info ---
+  const selectedPlan = (localStorage.getItem("selectedPlan") || "free").toLowerCase();
   const selectedPrice = localStorage.getItem("selectedPrice") || "₦0";
   const billingType = localStorage.getItem("billingType") || "monthly";
 
-  // Display plan and price
+  if (selectedPlan === "free" || selectedPlan === "basic") {
+    nextBtn.textContent = "Submit";
+  }
+
   if (tierText) {
     tierText.textContent = `${selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)} (${billingType}) - ${selectedPrice}`;
   }
 
-  // --- Helper function to collect form data ---
-  const getFormData = () => {
-    return {
-      name: document.getElementById("name").value.trim(),
-      category: document.getElementById("category").value.trim(),
-      address: document.getElementById("address").value.trim(),
-      phone: document.getElementById("phone").value.trim(),
-      email: document.getElementById("email").value.trim(),
-      tier: selectedPlan,
-      billing_type: billingType,
-      price: selectedPrice,
-      verification_status: "pending",
-      email_verified: false,
-      phone_verified: false,
-      created_at: new Date()
-    };
-  };
+  // --- Helper: Collect data ---
+  const getFormData = () => ({
+    name: document.getElementById("name").value.trim(),
+    category: document.getElementById("category").value.trim(),
+    address: document.getElementById("address").value.trim(),
+    state: document.getElementById("state").value.trim(),
+    lga: document.getElementById("lga").value.trim(),
+    phone: document.getElementById("phone").value.trim(),
+    email: document.getElementById("email").value.trim(),
+    tier: selectedPlan,
+    billing_type: billingType,
+    price: selectedPrice,
+    verification_status: "pending",
+    email_verified: false,
+    phone_verified: false,
+    created_at: new Date()
+  });
 
-  // --- Step Navigation ---
+  // =========================================================================================
+  // STEP NAVIGATION — NEXT BUTTON
+  // =========================================================================================
   nextBtn.addEventListener("click", async () => {
-    // Validate step 1 required fields
+
     if (!vendorForm.checkValidity()) {
       vendorForm.reportValidity();
       return;
     }
 
-    if (selectedPlan.toLowerCase() === "basic" || selectedPlan.toLowerCase() === "free") {
-      // Free plan → submit immediately
+    // FREE PLAN WORKFLOW -------------------------------------------------
+    if (selectedPlan === "free" || selectedPlan === "basic") {
       submitFreePlan();
-    } else {
-      // Paid plan → go to step 2
+      return;
+    }
+
+    // PAID PLAN WORKFLOW -------------------------------------------------
+    const formData = getFormData();
+
+    try {
+      // 1️⃣ Insert or fetch vendor (no crash on duplicates)
+      const { data: vendor, error: vendorError } = await supabaseClient
+        .from("vendors")
+        .insert([{
+          ...formData,
+          payment_status: "pending",
+          account_status: "pending"
+        }])
+        .select()
+        .maybeSingle();
+
+      if (vendorError) {
+        alert("Unable to save your details. Email or business name may already exist.");
+        console.error("Vendor insert error:", vendorError);
+        return;
+      }
+
+      const vendorId = vendor.id;
+      localStorage.setItem("vendor_id", vendorId);
+
+      // 2️⃣ Create payment tracking row
+      const { error: payError } = await supabaseClient
+        .from("vendorpayments")
+        .insert([{
+          vendor_id: vendorId,
+          amount: selectedPrice.replace(/[₦ ,]/g, ""),
+          status: "pending",
+          payment_method: null
+        }]);
+
+      if (payError) {
+        console.error("Payment tracking error:", JSON.stringify(payError, null, 2));
+        alert("Error initializing payment record. Try again.");
+        return;
+      }
+
+      // 3️⃣ Move to payment step
       step1.classList.add("ob-hidden");
       step2.classList.remove("ob-hidden");
       paymentMethods.classList.remove("ob-hidden");
+
+    } catch (err) {
+      console.error("Unexpected exception:", err);
+      alert("Unexpected error. Please try again.");
     }
   });
 
+  // BACK BUTTON ---------------------------------------------------------
   backBtn.addEventListener("click", () => {
     step2.classList.add("ob-hidden");
     step1.classList.remove("ob-hidden");
   });
 
-  // --- Payment method selection ---
+  // PAYMENT METHOD TOGGLE ------------------------------------------------
   paymentMethods.addEventListener("change", (e) => {
     if (e.target.name === "payment_method") {
       bankDetails.classList.toggle("ob-hidden", e.target.value !== "Bank Transfer");
     }
   });
 
-  // --- Submit for paid plan ---
-  submitBtn.addEventListener("click", () => {
+  // =========================================================================================
+  // SUBMIT BUTTON — BANK TRANSFER / CARD / USSD
+  // =========================================================================================
+  submitBtn.addEventListener("click", async () => {
+
+    const vendorId = localStorage.getItem("vendor_id");
+    if (!vendorId) {
+      alert("Missing vendor record. Please go back and re-submit your details.");
+      return;
+    }
+
     const paymentOption = document.querySelector('input[name="payment_method"]:checked');
     if (!paymentOption) {
       alert("Please select a payment method");
       return;
     }
 
-    const formData = getFormData();
-    formData.payment_method = paymentOption.value;
+    const selectedMethod = paymentOption.value;
 
-    // Save formData temporarily for payment page or bank transfer workflow
-    localStorage.setItem("onboardingFormData", JSON.stringify(formData));
+    // BANK TRANSFER SELECTED
+if (selectedMethod === "Bank Transfer") {
 
-    if (paymentOption.value === "Bank Transfer") {
-      // Show instructions for bank transfer
-      step2.classList.add("ob-hidden");
-      messageBox.classList.remove("ob-hidden");
-      nextStepMessage.innerHTML = `
-        Please make a transfer of <strong>${selectedPrice}</strong> to the bank account provided.
-        After sending the proof of payment, your account will be verified.
-      `;
-    } else {
-      // Card / USSD → redirect to payment page
-      window.location.href = "payment.html";
-    }
+  // Insert payment tracking entry
+  const { error: payError } = await supabaseClient
+    .from("vendorpayments")
+    .insert([{
+      vendor_id: vendorId,
+      amount: selectedPrice.replace(/[₦ ,]/g, ""),
+      status: "pending",
+      method: "bank_transfer"
+    }]);
+
+  if (payError) {
+    console.error("Payment insert error:", payError);
+    alert("Could not initialize payment.");
+    return;
+  }
+
+  // Show bank transfer instructions
+    step2.classList.add("ob-hidden");
+    messageBox.classList.remove("ob-hidden");
+    nextStepMessage.innerHTML = `
+     Please make a transfer of <strong>${selectedPrice}</strong> to the bank account provided.
+     After sending your proof of payment to <strong>payments@spotlightdirectory.com</strong>,
+     your account will be verified and activated manually.
+   `;
+  }
+
+// CARD / USSD → redirect to Paystack payment page
+   else {
+     window.location.href = "payment.html";
+   }
   });
 
-  // --- Submit Free Plan ---
+  // =========================================================================================
+  // FREE PLAN SUBMISSION
+  // =========================================================================================
   async function submitFreePlan() {
     const data = getFormData();
 
     try {
-      const { data: inserted, error } = await supabase
-        .from("Vendors")
-        .insert([data]);
+      const { data: inserted, error } = await supabaseClient
+        .from("vendors")
+        .insert([data])
+        .select();
 
       if (error) {
-        alert("Error submitting form. Please try again.");
+        alert("Error submitting free plan.");
         console.error(error);
-      } else {
-        step1.classList.add("ob-hidden");
-        messageBox.classList.remove("ob-hidden");
-        nextStepMessage.textContent = "Thank you! Your free listing has been successfully submitted.";
-        // Clean localStorage
-        localStorage.removeItem("selectedPlan");
-        localStorage.removeItem("selectedPrice");
-        localStorage.removeItem("billingType");
+        return;
       }
+
+      step1.classList.add("ob-hidden");
+      messageBox.classList.remove("ob-hidden");
+      nextStepMessage.textContent =
+        "Thank you! Your free listing has been successfully submitted.";
+
+      localStorage.removeItem("selectedPlan");
+      localStorage.removeItem("selectedPrice");
+      localStorage.removeItem("billingType");
+
     } catch (err) {
-      console.error(err);
-      alert("Unexpected error. Please try again later.");
+      console.error("Exception submitting free plan:", err);
+      alert("Unexpected error. Please try again.");
     }
   }
 
 });
-
 // END OF VENDOR ONBOARDING PAGE JS LOGIC
 
 // GET LISTED PAGE SCRIPT?

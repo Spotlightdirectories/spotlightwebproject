@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Verifying Payment...</title>
+</head>
+<body>
+
+<h3>Please wait… verifying your payment.</h3>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js";
+
+const supabase = createClient(
+  "https://gyvzmktavyrevfxnwsay.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5dnpta3RhdnlyZXZmeG53c2F5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5NjIyNzUsImV4cCI6MjA3NjUzODI3NX0.a5LnkYZb6IlTd2PEwD-M-Cw-hQSC8lKSU1uOEjgwjRo"
+);
+
+async function verifyPayment() {
+  const params = new URLSearchParams(window.location.search);
+  const reference = params.get("ref");
+
+  const verifyUrl = `https://api.paystack.co/transaction/verify/${reference}`;
+
+  const response = await fetch(verifyUrl, {
+    headers: {
+      Authorization: "sk_test_1cdfb8259f0dad94fec7338b61f0bdc85668ce24"   // do NOT send this to me
+    }
+  });
+
+  const result = await response.json();
+
+  if (result.status && result.data.status === "success") {
+
+    const vendorId = result.data.metadata.vendor_id;
+
+    // Update vendorpayments
+    await supabase
+      .from("vendorpayments")
+      .update({ status: "paid" })
+      .eq("vendor_id", vendorId);
+
+    // Activate vendor
+    await supabase
+      .from("vendors")
+      .update({
+        payment_status: "paid",
+        account_status: "active"
+      })
+      .eq("id", vendorId);
+
+    // Redirect to account creation
+    window.location.href = "setup-account.html?vendor_id=" + vendorId;
+
+  } else {
+    document.body.innerHTML = "<h3>Payment failed. Please try again.</h3>";
+  }
+}
+
+verifyPayment();
+
+</script>
+
+</body>
+</html>

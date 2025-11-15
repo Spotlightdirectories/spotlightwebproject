@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Complete Payment</title>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+  <h2>Processing Payment...</h2>
+  <p>Please wait while we redirect you to Paystack.</p>
+
+  <script>
+    // 1. INIT SUPABASE
+    const supabaseClient = supabase.createClient(
+      "https://gyvzmktavyrevfxnwsay.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5dnpta3RhdnlyZXZmeG53c2F5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5NjIyNzUsImV4cCI6MjA3NjUzODI3NX0.a5LnkYZb6IlTd2PEwD-M-Cw-hQSC8lKSU1uOEjgwjRo"
+    );
+
+    // 2. GET PAYMENT INFO FROM LOCAL STORAGE
+    const vendorId = localStorage.getItem("vendor_id");
+    const formData = JSON.parse(localStorage.getItem("onboardingFormData"));
+    const amount = Number(formData.price.replace(/[₦ ,]/g, "")) * 100; // Paystack uses Kobo
+
+    // SAFETY CHECK
+    if (!vendorId || !formData) {
+      alert("Missing vendor session data.");
+    }
+
+    // 3. PAYSTACK POPUP
+    const handler = PaystackPop.setup({
+      key: "pk_test_xxxxxxx", // <-- Replace with your Paystack Public Key
+      email: formData.email,
+      amount: amount,
+      currency: "NGN",
+      callback: async function(response) {
+        const reference = response.reference;
+
+        // 4. UPDATE vendorpayments TABLE
+        await supabaseClient
+          .from("vendorpayments")
+          .update({
+            status: "paid",
+            reference: reference
+          })
+          .eq("vendor_id", vendorId);
+
+        // 5. ACTIVATE VENDOR ACCOUNT
+        await supabaseClient
+          .from("vendors")
+          .update({
+            payment_status: "paid",
+            account_status: "active",
+            verified_at: new Date()
+          })
+          .eq("id", vendorId);
+
+        // 6. REDIRECT TO SUCCESS PAGE
+        window.location.href = "success.html";
+      },
+
+      onClose: function() {
+        alert("Payment window closed.");
+      }
+    });
+
+    handler.openIframe();
+  </script>
+</body>
+</html>

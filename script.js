@@ -10,7 +10,7 @@ window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON
 // ✅ Test Supabase connection
    (async() => {
     try {
-      const { data, error } = await supabaseClient.from("Vendors").select("*").limit(1);
+      const { data, error } = await supabaseClient.from("vendors").select("*").limit(1);
       if (error) console.error("❌ Supabase connection failed:", error.message);
       else console.log("✅ Supabase connected! Sample:", data);
     } catch (err) {
@@ -179,7 +179,7 @@ headers.forEach(header => {
     }
 
     const { data, error } = await supabaseClient
-      .from("Vendors")
+      .from("vendors")
       .select("id, name, category, state, lga, logo_url, tier, is_verified")
       .ilike("category", `%${term}%`);
 

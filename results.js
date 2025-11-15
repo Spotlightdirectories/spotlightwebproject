@@ -53,7 +53,7 @@ const badgeTooltips = {
     }
 
      // ✅ Query vendors directly by category or name (case-insensitive)
-       let query = supabase.from("Vendors").select("*");
+       let query = supabase.from("vendors").select("*");
 
        if (searchType === "name") {
         query = query.ilike("name", `%${searchTerm}%`);

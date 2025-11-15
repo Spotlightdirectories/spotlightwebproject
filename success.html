@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Payment Successful</title>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      padding: 40px;
+      background: #f7f7f7;
+    }
+    .box {
+      max-width: 450px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .loading {
+      font-size: 18px;
+      margin-top: 15px;
+    }
+  </style>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <div class="box">
+    <h2>Verifying Payment…</h2>
+    <p class="loading">Please wait, do not close this page.</p>
+  </div>
+
+<script>
+const supabaseClient = supabase.createClient(
+  "https://gyvzmktavyrevfxnwsay.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5dnpta3RhdnlyZXZmeG53c2F5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5NjIyNzUsImV4cCI6MjA3NjUzODI3NX0.a5LnkYZb6IlTd2PEwD-M-Cw-hQSC8lKSU1uOEjgwjRo"
+);
+
+async function verifyPayment() {
+  const params = new URLSearchParams(window.location.search);
+  const reference = params.get("reference");
+  const vendorId = params.get("vendor");
+
+  if (!reference || !vendorId) {
+    document.querySelector(".loading").innerText =
+      "Missing reference or vendor ID.";
+    return;
+  }
+
+  // 1️⃣ VERIFY PAYSTACK PAYMENT
+  const verifyReq = await fetch(
+    `https://api.paystack.co/transaction/verify/${reference}`,
+    {
+      headers: {
+        Authorization: "sk_test_1cdfb8259f0dad94fec7338b61f0bdc85668ce24",  // <-- insert your Paystack SK
+        "Content-Type": "application/json"
+      }
+    }
+  );
+
+  const verifyRes = await verifyReq.json();
+
+  if (verifyRes.status !== true || verifyRes.data.status !== "success") {
+    document.querySelector(".loading").innerText =
+      "Payment verification failed.";
+    return;
+  }
+
+  // 2️⃣ FETCH VENDOR EMAIL
+  const { data: vendor } = await supabaseClient
+    .from("vendors")
+    .select("email")
+    .eq("id", vendorId)
+    .single();
+
+  const vendorEmail = vendor.email;
+
+  // 3️⃣ CREATE PASSWORD
+  const generatedPassword =
+    Math.random().toString(36).slice(-10) + "!A1";
+
+  // 4️⃣ CREATE AUTH USER
+  const { data: authUser, error: authError } =
+    await supabaseClient.auth.admin.createUser({
+      email: vendorEmail,
+      password: generatedPassword,
+      email_confirm: true
+    });
+
+  if (authError) {
+    console.error(authError);
+    document.querySelector(".loading").innerText =
+      "Error creating login account.";
+    return;
+  }
+
+  const authUserId = authUser.user.id;
+
+  // 5️⃣ UPDATE DATABASE
+  await supabaseClient
+    .from("vendorpayments")
+    .update({
+      status: "paid",
+      paystack_reference: reference
+    })
+    .eq("vendor_id", vendorId);
+
+  await supabaseClient
+    .from("vendors")
+    .update({
+      payment_status: "paid",
+      account_status: "active",
+      auth_user_id: authUserId
+    })
+    .eq("id", vendorId);
+
+  // 6️⃣ CALL EDGE FUNCTION (FIXED URL)
+  await fetch("https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/welcome-vendor", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: vendorEmail,
+      password: generatedPassword
+    })
+  });
+
+  // 7️⃣ REDIRECT
+  window.location.href = `welcome.html?vendor=${vendorId}`;
+}
+
+verifyPayment();
+</script>
+
+</body>
+</html>
