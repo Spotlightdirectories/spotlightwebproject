@@ -5,7 +5,7 @@
 
 //const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-
+console.log("🚀 vendor.js loaded");
 
 // ✅ Contact Us Form Logic (runs only if contact form exists)
 
@@ -136,224 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
 //END OF FEEDBACK FORM LOGIC
 
 
-// VENDOR ONBOARDING JS
-// ---------------------------
-document.addEventListener("DOMContentLoaded", () => {
-
-  // --- Get elements ---
-  const step1 = document.getElementById("step1");
-  const step2 = document.getElementById("step2");
-  const nextBtn = document.getElementById("nextBtn");
-  const backBtn = document.getElementById("backBtn");
-  const submitBtn = document.getElementById("submitBtn");
-  const paymentMethods = document.getElementById("paymentMethods");
-  const bankDetails = document.getElementById("bankDetails");
-  const tierText = document.getElementById("selectedTierText");
-  const messageBox = document.getElementById("message");
-  const nextStepMessage = document.getElementById("nextStepMessage");
-  const vendorForm = document.getElementById("vendorForm");
-
-  // --- Get selected plan info ---
-  const selectedPlan = (localStorage.getItem("selectedPlan") || "free").toLowerCase();
-  const selectedPrice = localStorage.getItem("selectedPrice") || "₦0";
-  const billingType = localStorage.getItem("billingType") || "monthly";
-
-  if (selectedPlan === "free" || selectedPlan === "basic") {
-    nextBtn.textContent = "Submit";
-  }
-
-  if (tierText) {
-    tierText.textContent = `${selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)} (${billingType}) - ${selectedPrice}`;
-  }
-
-  // --- Helper: Collect data ---
-  const getFormData = () => ({
-    name: document.getElementById("name").value.trim(),
-    category: document.getElementById("category").value.trim(),
-    address: document.getElementById("address").value.trim(),
-    state: document.getElementById("state").value.trim(),
-    lga: document.getElementById("lga").value.trim(),
-    phone: document.getElementById("phone").value.trim(),
-    email: document.getElementById("email").value.trim(),
-    tier: selectedPlan,
-    billing_type: billingType,
-    price: selectedPrice,
-    verification_status: "pending",
-    email_verified: false,
-    phone_verified: false,
-    created_at: new Date()
-  });
-
-  // =========================================================================================
-  // STEP NAVIGATION — NEXT BUTTON
-  // =========================================================================================
-  nextBtn.addEventListener("click", async () => {
-
-    if (!vendorForm.checkValidity()) {
-      vendorForm.reportValidity();
-      return;
-    }
-
-    // FREE PLAN WORKFLOW -------------------------------------------------
-    if (selectedPlan === "free" || selectedPlan === "basic") {
-      submitFreePlan();
-      return;
-    }
-
-    // PAID PLAN WORKFLOW -------------------------------------------------
-    const formData = getFormData();
-
-    try {
-      // 1️⃣ Insert or fetch vendor (no crash on duplicates)
-      const { data: vendor, error: vendorError } = await supabaseClient
-        .from("vendors")
-        .insert([{
-          ...formData,
-          payment_status: "pending",
-          account_status: "pending"
-        }])
-        .select()
-        .maybeSingle();
-
-      if (vendorError) {
-        alert("Unable to save your details. Email or business name may already exist.");
-        console.error("Vendor insert error:", vendorError);
-        return;
-      }
-
-      const vendorId = vendor.id;
-      localStorage.setItem("vendor_id", vendorId);
-
-      // 2️⃣ Create payment tracking row
-      const { error: payError } = await supabaseClient
-        .from("vendorpayments")
-        .insert([{
-          vendor_id: vendorId,
-          amount: selectedPrice.replace(/[₦ ,]/g, ""),
-          status: "pending",
-          payment_method: null
-        }]);
-
-      if (payError) {
-        console.error("Payment tracking error:", JSON.stringify(payError, null, 2));
-        alert("Error initializing payment record. Try again.");
-        return;
-      }
-
-      // 3️⃣ Move to payment step
-      step1.classList.add("ob-hidden");
-      step2.classList.remove("ob-hidden");
-      paymentMethods.classList.remove("ob-hidden");
-
-    } catch (err) {
-      console.error("Unexpected exception:", err);
-      alert("Unexpected error. Please try again.");
-    }
-  });
-
-  // BACK BUTTON ---------------------------------------------------------
-  backBtn.addEventListener("click", () => {
-    step2.classList.add("ob-hidden");
-    step1.classList.remove("ob-hidden");
-  });
-
-  // PAYMENT METHOD TOGGLE ------------------------------------------------
-  paymentMethods.addEventListener("change", (e) => {
-    if (e.target.name === "payment_method") {
-      bankDetails.classList.toggle("ob-hidden", e.target.value !== "Bank Transfer");
-    }
-  });
-
-  // =========================================================================================
-  // SUBMIT BUTTON — BANK TRANSFER / CARD / USSD
-  // =========================================================================================
-  submitBtn.addEventListener("click", async () => {
-
-    const vendorId = localStorage.getItem("vendor_id");
-    if (!vendorId) {
-      alert("Missing vendor record. Please go back and re-submit your details.");
-      return;
-    }
-
-    const paymentOption = document.querySelector('input[name="payment_method"]:checked');
-    if (!paymentOption) {
-      alert("Please select a payment method");
-      return;
-    }
-
-    const selectedMethod = paymentOption.value;
-
-    // BANK TRANSFER SELECTED
-if (selectedMethod === "Bank Transfer") {
-
-  // Insert payment tracking entry
-  const { error: payError } = await supabaseClient
-    .from("vendorpayments")
-    .insert([{
-      vendor_id: vendorId,
-      amount: selectedPrice.replace(/[₦ ,]/g, ""),
-      status: "pending",
-      method: "bank_transfer"
-    }]);
-
-  if (payError) {
-    console.error("Payment insert error:", payError);
-    alert("Could not initialize payment.");
-    return;
-  }
-
-  // Show bank transfer instructions
-    step2.classList.add("ob-hidden");
-    messageBox.classList.remove("ob-hidden");
-    nextStepMessage.innerHTML = `
-     Please make a transfer of <strong>${selectedPrice}</strong> to the bank account provided.
-     After sending your proof of payment to <strong>payments@spotlightdirectory.com</strong>,
-     your account will be verified and activated manually.
-   `;
-  }
-
-// CARD / USSD → redirect to Paystack payment page
-   else {
-     window.location.href = "payment.html";
-   }
-  });
-
-  // =========================================================================================
-  // FREE PLAN SUBMISSION
-  // =========================================================================================
-  async function submitFreePlan() {
-    const data = getFormData();
-
-    try {
-      const { data: inserted, error } = await supabaseClient
-        .from("vendors")
-        .insert([data])
-        .select();
-
-      if (error) {
-        alert("Error submitting free plan.");
-        console.error(error);
-        return;
-      }
-
-      step1.classList.add("ob-hidden");
-      messageBox.classList.remove("ob-hidden");
-      nextStepMessage.textContent =
-        "Thank you! Your free listing has been successfully submitted.";
-
-      localStorage.removeItem("selectedPlan");
-      localStorage.removeItem("selectedPrice");
-      localStorage.removeItem("billingType");
-
-    } catch (err) {
-      console.error("Exception submitting free plan:", err);
-      alert("Unexpected error. Please try again.");
-    }
-  }
-
-});
-// END OF VENDOR ONBOARDING PAGE JS LOGIC
-
 // GET LISTED PAGE SCRIPT?
 // syncing with onboarding---------------------------
 
@@ -395,6 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // END OF GET LISTED PAGE SCRIPT - SYNCING ONBOARDING?
 
 //NIGERIA STATES AND LGAS SCRIPT
+document.addEventListener("DOMContentLoaded", () => {
   const nigeriaData = {
     "Abia": ["Aba North","Aba South","Arochukwu","Bende","Ikwuano","Isiala Ngwa North","Isiala Ngwa South","Isuikwuato","Obi Ngwa","Ohafia","Osisioma","Ugwunagbo","Ukwa East","Ukwa West","Umuahia North","Umuahia South","Umu Nneochi"],
     "Adamawa": ["Demsa","Fufore","Ganye","Girei","Gombi","Guyuk","Hong","Jada","Lamurde","Madagali","Maiha","Mayo-Belwa","Michika","Mubi North","Mubi South","Numan","Shelleng","Song","Toungo","Yola North","Yola South"],
@@ -457,3 +240,232 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   });
+});
+
+  //END OF NIGERIA STATES AND LGAS SCRIPT
+
+
+// VENDOR ONBOARDING JS (FINAL)
+// --------------------------------------------------
+document.addEventListener("DOMContentLoaded", () => {
+
+  const sb = typeof supabaseClient !== "undefined" ? supabaseClient : supabase;
+
+  // DOM
+  const step1 = document.getElementById("step1");
+  const step2 = document.getElementById("step2");
+  const tierText = document.getElementById("selectedTierText");
+  const nextBtn = document.getElementById("nextBtn");
+  const backBtn = document.getElementById("backBtn");
+  const submitBtn = document.getElementById("submitBtn");
+  const paymentMethods = document.getElementById("paymentMethods");
+  const bankDetails = document.getElementById("bankDetails");
+  const messageBox = document.getElementById("message");
+  const nextStepMessage = document.getElementById("nextStepMessage");
+  const statusMsg = document.getElementById("statusMsg");
+
+  // ---- Retrieve plan info -----------------------------------------
+  const selectedPlan = (localStorage.getItem("selectedPlan") || "free").toLowerCase();
+  const selectedPrice = localStorage.getItem("selectedPrice") || "₦0";
+  const billingType = localStorage.getItem("billingType") || "monthly";
+
+  // Show tier display
+  if (tierText) {
+    tierText.textContent =
+      `${selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)} (${billingType}) - ${selectedPrice}`;
+  }
+
+  // ---- Helper: parse price ----------------------------------------
+  function parseAmount(priceString) {
+    if (!priceString) return 0;
+    const digits = priceString.replace(/[^0-9.-]+/g, "");
+    const n = parseFloat(digits);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  const amount = parseAmount(selectedPrice);
+
+  // ==================================================================
+  //  FREE PLAN RULES
+  // ==================================================================
+  const isFree = selectedPlan === "basic" && amount === 0;
+
+  if (isFree) {
+    if (step2) step2.classList.add("ob-hidden");
+    if (paymentMethods) paymentMethods.classList.add("ob-hidden");
+    if (nextBtn) nextBtn.textContent = "Submit";
+  }
+
+  // ==================================================================
+  //   STEP 1 SUBMISSION (FREE OR PAID)
+  // ==================================================================
+  if (nextBtn) {
+    nextBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+
+      // Input values
+      const name = document.getElementById("name").value.trim();
+      const category = document.getElementById("category").value.trim();
+      const address = document.getElementById("address").value.trim();
+      const state = document.getElementById("state").value.trim();
+      const lga = document.getElementById("lga").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const email = document.getElementById("email").value.trim();
+
+      if (!name || !category || !address || !phone || !email || !state || !lga) {
+        alert("Please complete all required fields.");
+        return;
+      }
+
+      nextBtn.disabled = true;
+      nextBtn.innerHTML = `<span class="spinner"></span> Saving...`;
+
+      const rpcPayload = {
+        p_name: name,
+        p_category: category,
+        p_address: address,
+        p_email: email,
+        p_phone: phone,
+        p_state: state,
+        p_lga: lga,
+        p_tier: selectedPlan,
+        p_price: amount,
+        p_billing_type: billingType,
+        p_payment_method: isFree ? "free" : "pending",
+        p_plan: selectedPlan
+      };
+
+      const { data: rpcData, error: rpcErr } = await sb.rpc("create_vendor_with_payment", rpcPayload);
+
+      if (rpcErr) {
+        console.error("RPC Error:", rpcErr);
+        alert("Unable to save your details. Email or business name may already exist.");
+        nextBtn.disabled = false;
+        nextBtn.textContent = isFree ? "Submit" : "Next";
+        return;
+      }
+
+      const vendorId = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+      localStorage.setItem("vendor_id", vendorId);
+
+      const { data: vendorRow } = await sb
+        .from("vendors")
+        .select("spot_id")
+        .eq("id", vendorId)
+        .single();
+
+      const spotId = vendorRow?.spot_id || null;
+      if (spotId) localStorage.setItem("spot_id", spotId);
+
+      // ==================================================================
+      //   FREE PLAN → Thank You
+      // ==================================================================
+      if (isFree) {
+        step1.classList.add("ob-hidden");
+        messageBox.classList.remove("ob-hidden");
+
+        nextStepMessage.innerHTML = `
+          Your free Basic Plan has been created successfully.<br>
+          Your business listing will be visible after verification.<br><br>
+          <strong>SPOT ID:</strong> ${spotId || "Pending"}
+        `;
+
+        nextBtn.disabled = true;
+        nextBtn.style.opacity = "0.5";
+        nextBtn.style.cursor = "default";
+        return;
+      }
+
+      // ==================================================================
+      //   PAID PLAN → Move to Step 2
+      //   >>> SHOW SPOT ID HERE (NEW)
+      // ==================================================================
+
+      // <<< ADDED FOR PAID SPOT ID >>>
+      if (nextStepMessage) {
+        nextStepMessage.innerHTML = `
+          Your vendor record has been created.<br>
+          <strong>SPOT ID:</strong> ${spotId || "Pending"}<br><br>
+          Please select a payment method to activate your account.
+        `;
+      }
+      messageBox.classList.remove("ob-hidden");
+      // <<< END PATCH >>>
+
+      step1.classList.add("ob-hidden");
+      step2.classList.remove("ob-hidden");
+      paymentMethods.classList.remove("ob-hidden");
+
+      nextBtn.disabled = false;
+      nextBtn.textContent = "Next";
+    });
+  }
+
+  // ==================================================================
+  //   BACK BUTTON
+  // ==================================================================
+  if (backBtn) {
+    backBtn.addEventListener("click", () => {
+      step2.classList.add("ob-hidden");
+      step1.classList.remove("ob-hidden");
+    });
+  }
+
+  // Payment method toggle
+  if (paymentMethods) {
+    paymentMethods.addEventListener("change", (e) => {
+      if (e.target.name === "payment_method") {
+        bankDetails.classList.toggle("ob-hidden", e.target.value !== "Bank Transfer");
+      }
+    });
+  }
+
+  // ==================================================================
+  //   SUBMIT PAID PLAN (Step 2)
+  // ==================================================================
+  if (submitBtn) {
+    submitBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+
+      const vendorId = localStorage.getItem("vendor_id");
+      if (!vendorId) {
+        alert("Missing vendor record. Please go back and resubmit your details.");
+        return;
+      }
+
+      const method = document.querySelector('input[name="payment_method"]:checked');
+      if (!method) {
+        alert("Please select a payment method.");
+        return;
+      }
+
+      const paymentMethod = method.value;
+
+      if (paymentMethod === "Bank Transfer") {
+        await sb
+          .from("vendorpayments")
+          .update({ payment_method: "bank_transfer", status: "pending" })
+          .eq("vendor_id", vendorId);
+
+        step2.classList.add("ob-hidden");
+        messageBox.classList.remove("ob-hidden");
+
+        nextStepMessage.innerHTML = `
+          Please make a transfer of <strong>${selectedPrice}</strong> to the bank account provided.<br>
+          After sending your proof of payment quoting your SPOT ID, your account will be activated manually.
+        `;
+
+        return;
+      }
+
+      // CARD / USSD
+      const url = new URL(window.location.origin + "/payment.html");
+      url.searchParams.set("vendor", vendorId);
+      url.searchParams.set("amount", amount);
+      url.searchParams.set("method", paymentMethod.toLowerCase());
+      window.location.href = url.toString();
+    });
+  }
+});
+
+// END OF VENDOR ONBOARDING JS

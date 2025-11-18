@@ -107,13 +107,11 @@ headers.forEach(header => {
   addonToggle.addEventListener("change", updateAddonPrices);
   updateAddonPrices();
 }
-//</script>
 // END OF ADDON BILLING TOGGLE SCRIPT
 
 
+
 //SEARCH BUTTON using SUPABASE LOGIC
-
-
   // -----------------------------
   // 🔍 SEARCH LOGIC (SUPABASE)
   // -----------------------------
