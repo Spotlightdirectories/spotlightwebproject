@@ -452,7 +452,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         nextStepMessage.innerHTML = `
           Please make a transfer of <strong>${selectedPrice}</strong> to the bank account provided.<br>
-          After sending your proof of payment quoting your SPOT ID, your account will be activated manually.
+          After sending your proof of payment quoting your SPOT ID, your account will be activated.
         `;
 
         return;
