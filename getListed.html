@@ -16,7 +16,7 @@
      <header class="navbar">
         <div class="logo-left">
           <a href="index.html"> 
-            <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg"/>
+            <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg" width="500" height="195" decoding="async">
           </a>
           <!-- <a href="#"class="divider">|</a> -->
           <a href="index.html" class="home">Home</a>        
@@ -24,12 +24,12 @@
 
        <nav>
           <a href="#" class="menu-open hide-desktop">
-            <img src="images/hbopen.png" alt="open-menu">
+            <img src="images/hbopen.png" alt="open-menu" width="32" height="32" loading="lazy" decoding="async">
           </a>
           
           <ul>
             <li><a href="#"class="xclose">
-              <img src="images/xclose.png" alt="close menu"></a>
+              <img src="images/xclose.png" alt="close menu" width="32" height="32" loading="lazy" decoding="async"></a>
             </li>
             <li><a href="aboutUs.html">Why Spotlight?</a></li>
             <li><a href="getListed.html">Get Listed</a></li>
@@ -46,12 +46,15 @@
       <p>Select the plan that fits your business best.</p>
 
       <div class="toggle-container">
-        <span>Monthly</span>
-        <label class="switch">
-          <input type="checkbox" id="billingToggle">
+        <span id="billingMonthly">Monthly</span>
+
+        <label class="switch" for="billingToggle">
+          <span class="sr-only">Toggle billing period</span>
+          <input type="checkbox" id="billingToggle" aria-labelledby="billingMonthly billingYearly">
           <span class="glslider round"></span>
         </label>
-        <span>Yearly</span>
+
+        <span id="billingYearly">Yearly</span>
       </div>
     </section>
    
@@ -159,9 +162,9 @@
     <!--Add-Ons Wrapper -->
 
 <section class="gladdons-wrapper">
-  <h1 class="addons-gray">
+  <h2 class="addons-gray">
     Available <span class="addons-title">Add-Ons</span>
-  </h1>
+  </h2>
 
   <!-- Toggle -->
   <div class="addon-toggle-container">
@@ -185,7 +188,7 @@
 
       <div class="addon-pricing">
         <div class="addon-plan addon-basic">
-          <h3>Basic</h3>
+          <h2>Basic</h2>
           <p class="addon-price">₦30,000<span>/year</span></p>
           <label class="addon-checkbox">
              <input type="radio" name="addon1" class="addon-select" value="smart-basic">
@@ -193,7 +196,7 @@
           </label>
         </div>
         <div class="addon-plan addon-pro">
-          <h3>Pro</h3>
+          <h2>Pro</h2>
           <p class="addon-price">₦60,000<span>/year</span></p>
           <label class="addon-checkbox">
              <input type="radio" name="addon1" class="addon-select"value="smart-pro">
@@ -213,7 +216,7 @@
 
       <div class="addon-pricing">
         <div class="addon-plan addon-basic">
-          <h3>Basic</h3>
+          <h2>Basic</h2>
           <p class="addon-price">₦30,000<span>/year</span></p>
           <label class="addon-checkbox">
              <input type="radio" name="addon2" class="addon-select" value="smart-basic">
@@ -221,7 +224,7 @@
           </label>
         </div>
         <div class="addon-plan addon-pro">
-          <h3>Pro</h3>
+          <h2>Pro</h2>
           <p class="addon-price">₦60,000<span>/year</span></p>
           <label class="addon-checkbox">
              <input type="radio" name="addon2" class="addon-select"value="smart-pro">
@@ -241,12 +244,12 @@
 
       <div class="addon-pricing">
         <div class="addon-plan addon-basic">
-          <h3>Gray Badge</h3>
+          <h2>Gray Badge</h2>
           <p class="addon-free">Free till June 2026</p>
           <button class="addon-subscribe-btn">Verify Now</button>
         </div>
         <div class="addon-plan addon-pro">
-          <h3>Blue Badge</h3>
+          <h2>Blue Badge</h2>
           <p class="addon-free">Free till June 2026</p>
           <button class="addon-subscribe-btn">Verify Now</button>
         </div>
@@ -259,7 +262,7 @@
 <!-- Feature Comparison Table -->
 
 <section class="pricing-table">
-  <h1>See all features and compare plans</h1>
+  <h2>See all features and compare plans</h2>
 
   <div class="pricing-container">
 
