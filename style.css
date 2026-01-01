@@ -931,7 +931,7 @@ div.benefits-intro p {
       
     }
 
-    .aucard h3 {
+    .aucard h2 {
       Width: 70%;
       border-radius: 16px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
@@ -1014,7 +1014,7 @@ div.benefits-intro p {
          padding: 1.0rem;
        }
      
-       .aucard h3 {
+       .aucard h2 {
         margin-top: 1.5rem;
         width: 50%
       }
@@ -1057,7 +1057,7 @@ div.benefits-intro p {
         
       }
 
-      .whatWeDoHeading h1 {
+      .whatWeDoHeading h2 {
         border-radius: 14px;
         text-align: center;
         background: rgb(230, 198, 198);
@@ -1106,7 +1106,7 @@ div.benefits-intro p {
         margin-bottom: 2rem;
       }
 
-      .box5 h1 {
+      .box5 h3 {
         Width: 80%;
         border-radius: 16px;
         box-shadow: 4px 4px 14px rgba(244, 130, 130, 0.9);
@@ -1149,7 +1149,7 @@ div.benefits-intro p {
         display: grid;
         grid-template-columns: 1fr 1fr;
       }
-      .box5 h1 {
+      .box5 h3 {
         font-size: 2rem;
         padding: 10px;
       }
