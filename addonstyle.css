@@ -28,7 +28,7 @@
 }
 
 /* 🔹 Add-on Title */
-.addon-detail h2 {
+.addon-detail h3 {
   font-size: 1.25rem;
   color: #004aad;
   margin-bottom: 0.5rem;
@@ -41,7 +41,7 @@
 /* 🔹 Subsection blocks */
 .addon-subheading {
   margin-top: 1rem;
-  background: #f9fbff;
+  background: #e3e9f6;
   border-left: 3px solid #004aad;
   padding: 0.8rem 1rem;
   border-radius: 8px;
@@ -144,13 +144,14 @@
     margin-bottom: 2rem;
   }
 
-  .addon-detail h2 {
+  .addon-detail h3 {
     font-size: 1.5rem;
   }
 
   .addon-subheading h3 {
     font-size: 1.1rem;
   }
+  
 
   .activate-btn {
     font-size: 1rem;
@@ -167,7 +168,7 @@
     border-radius: 16px;
   }
 
-  .addon-detail h2 {
+  .addon-detail h3 {
     font-size: 1.75rem;
   }
 
