@@ -17,12 +17,16 @@
 } */ */
 
 body {
-    display: grid;
-    grid-template-rows: 1fr auto; /* header, main, footer */
-    min-height: 100vh;
-    background-color: #FEFBF2;
-    margin: 0;
-    font-family: 'inter', sans-serif;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: 100vh;
+
+  margin: 0;
+  padding: 0;
+
+  font-family: 'Poppins', 'Inter', sans-serif;
+  background: var(--bg-light, #FEFBF2);
+  color: var(--text-dark, #111827);
 }
 
 header.navbar {
@@ -1582,14 +1586,6 @@ button.ghost:hover {
   --bg-light: #fffaf5;
 }
 
-body {
-  font-family: 'Poppins', sans-serif;
-  margin: 0;
-  padding: 0;
-  background: var(--bg-light);
-  color: var(--text-dark);
-}
-
 /* ====== MAIN CONTENT ====== */
 .get-listed-content {
   padding: 5rem 1rem 3rem;
@@ -1937,7 +1933,7 @@ Add-on Cards
 }
 
 .addon-card {
-  background: white;
+  background: #f8fafc;
   border-radius: 12px;
   padding: 16px;
   box-shadow: var(--addon-shadow);
@@ -1945,6 +1941,14 @@ Add-on Cards
   flex-direction: column;
   gap: 12px;
   transition: var(--addon-transition);
+}
+
+.addon-card a {
+  color: #0b5ed7;
+}
+
+.addon-card a:hover {
+  color: #084298;
 }
 
 .addon-header h2 {
@@ -1973,7 +1977,7 @@ Add-on Cards
 
 .addon-desc {
   font-size: 0.9rem;
-  color: #777;
+  color: #283854;
 }
 
 .addon-pricing {
