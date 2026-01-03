@@ -1857,7 +1857,7 @@ input:checked + .glslider:before {
 :root {
   --addon-primary: #004aad;
   --addon-bg-light: #fdf9f3;
-  --addon-card-bg: #f8faff;
+  --addon-card-bg: #e3e9f6;
   --addon-text-dark: #333;
   --addon-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   --addon-transition: 0.3s ease;
@@ -1958,6 +1958,17 @@ Add-on Cards
 
 .addon-header a {
   margin-left: 18px;
+}
+
+.select-addon {
+  color: #044ab2fe; /* clean blue */
+  font-size: 0.9rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.select-addon:hover {
+  text-decoration: underline;
 }
 
 .addon-desc {
