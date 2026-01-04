@@ -184,3 +184,12 @@
     border-radius: 8px;
   }
 }
+
+/* 🔹 Verification as trust (not promotion) */
+.verification-addon {
+  border-left: 4px solid #1a73e8;
+}
+
+.verification-addon .addonsubstatement {
+  color: #444;
+}

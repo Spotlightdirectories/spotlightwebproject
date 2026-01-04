@@ -16,13 +16,15 @@
 }
 } */ */
 
-body {
-  display: grid;
-  grid-template-rows: 1fr auto;
-  min-height: 100vh;
+html, body {
+  height: 100%;
+}
 
+body { 
   margin: 0;
-  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 
   font-family: 'Poppins', 'Inter', sans-serif;
   background: var(--bg-light, #FEFBF2);
@@ -190,12 +192,13 @@ nav ul.open {
    } */
    
 main {
-    grid-row: 1;          /* sits in the middle row of the body grid */
-    padding-top: var(--header-height);   /* creates space below the fixed header */
-    /*padding: 20px;        /* inner spacing for content */
-    background: #fffbf3;  /* light background for contrast */
-    overflow-y: auto;    /* adds scroll if content is longer than screen */
-    margin: 0;  
+  flex: 1;
+  min-height: 0;                /* REQUIRED for proper scrolling */
+
+  padding-top: var(--header-height);
+  background: #fffbf3;
+  overflow-y: auto;
+  margin: 0;
 }
 
 footer {
