@@ -1,25 +1,67 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vendor Profile | Spotlight Directories</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="icon" href="images/favicon.ico" type="image/x-icon">
-  <link rel="apple-touch-icon" href="images/favicon.png" type="image/png">
-</head>
-<body>
-  <header class="vendor-header">
-    <h1 id="vendorName">Loading...</h1>
-  </header>
+  <title>Find Vendors Near You</title>
 
-  <main id="vendorContent" class="vendorContent">
-    <p>Loading vendor details...</p>
+  <meta name="description" content="Search and discover verified vendors near you by category, subcategory, and location." />
+
+  <link rel="stylesheet" href="vendor.css" />
+  <link rel="icon" href="images/favicon.ico">
+  <link rel="apple-touch-icon" href="images/favicon.png">
+</head>
+
+<body>
+  <main>
+
+    <!-- 🔍 SEARCH & FILTER BAR -->
+    <section class="search-section">
+      <h1>Search Vendors</h1>
+
+      <form id="searchForm">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search by vendor name, category or sub-category"
+        />
+
+        <div class="filters">
+          <select id="categorySelect">
+            <option value="">All Categories</option>
+          </select>
+
+          <select id="subcategorySelect" disabled>
+            <option value="">All Subcategories</option>
+          </select>
+        </div>
+
+        <div class="location-toggle">
+          <label>
+            <input type="checkbox" id="locationToggle" />
+            Enable location
+          </label>
+        </div>
+
+        <p id="locationHint" class="hint hidden">
+          Enable location to find vendors closest to you within 10km
+        </p>
+
+        <button type="submit">Search</button>
+      </form>
+    </section>
+
+    <!-- 🧾 RESULTS -->
+    <section class="results-section">
+      <div id="resultsCount"></div>
+
+      <div id="vendorsGrid" class="vendors-grid">
+        <!-- Vendor cards injected here -->
+      </div>
+    </section>
+
   </main>
 
-  <footer>
-    <p>&copy; 2025 Spotlight Directories. All rights reserved.</p>
-  </footer>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="vendor.js"></script>
+  <script src="vendor.js" defer></script>
 </body>
 </html>

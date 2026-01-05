@@ -1,0 +1,213 @@
+/* =========================
+   RESET & BASE
+========================= */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #fafafa;
+  color: #222;
+  line-height: 1.5;
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* =========================
+   SEARCH SECTION
+========================= */
+.search-section {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e5e5e5;
+}
+
+.search-section h1 {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+#searchForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+#searchInput {
+  padding: 0.6rem;
+  font-size: 0.95rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.filters {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filters select {
+  flex: 1;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.location-toggle {
+  font-size: 0.9rem;
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: #555;
+}
+
+.hidden {
+  display: none;
+}
+
+button[type="submit"] {
+  padding: 0.6rem;
+  font-size: 0.95rem;
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button[type="submit"]:hover {
+  opacity: 0.9;
+}
+
+/* =========================
+   RESULTS SECTION
+========================= */
+.results-section {
+  margin-top: 1rem;
+}
+
+#resultsCount {
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+  color: #444;
+}
+
+/* =========================
+   VENDOR GRID
+========================= */
+.vendors-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+/* =========================
+   VENDOR CARD
+========================= */
+.vendor-card {
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 0.9rem;
+}
+
+.vendor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.vendor-card h3 {
+  font-size: 1rem;
+}
+
+.category {
+  font-size: 0.85rem;
+  color: #555;
+  margin: 0.25rem 0;
+}
+
+.address {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.actions a {
+  font-size: 0.8rem;
+  text-decoration: none;
+  color: #111;
+  border: 1px solid #ddd;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+}
+
+.actions a:hover {
+  background: #f3f3f3;
+}
+
+.distance {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #444;
+}
+
+/* =========================
+   BADGES
+========================= */
+.badge {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.badge.blue {
+  background: #e6f0ff;
+  color: #1a4fd8;
+}
+
+.badge.gray {
+  background: #f0f0f0;
+  color: #555;
+}
+
+.verification-badge {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+/* =========================
+   DESKTOP ENHANCEMENT
+========================= */
+@media (min-width: 768px) {
+  .vendors-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  #searchForm {
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .vendors-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
