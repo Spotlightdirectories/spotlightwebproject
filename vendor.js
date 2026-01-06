@@ -5,87 +5,90 @@
 
 //const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-console.log("✅ vendor.js is running");
+document.addEventListener("DOMContentLoaded", () => {
 
+  console.log("✅ vendor.js is running");
 
+  // ===============================
+  // DOM ELEMENTS
+  // ===============================
+  const searchForm = document.getElementById("searchForm");
+  const searchInput = document.getElementById("searchInput");
+  const locationToggle = document.getElementById("locationToggle");
+  const locationHint = document.getElementById("locationHint");
+  const vendorsGrid = document.getElementById("vendorsGrid");
+  const resultsCount = document.getElementById("resultsCount");
+  const categorySelect = document.getElementById("categorySelect");
+  const subcategorySelect = document.getElementById("subcategorySelect");
 
-// ===============================
-// DOM ELEMENTS
-// ===============================
-const searchForm = document.getElementById("searchForm");
-const searchInput = document.getElementById("searchInput");
-const locationToggle = document.getElementById("locationToggle");
-const locationHint = document.getElementById("locationHint");
-const vendorsGrid = document.getElementById("vendorsGrid");
-const resultsCount = document.getElementById("resultsCount");
+  // ===============================
+  // STATE
+  // ===============================
+  let userLocation = null;
 
-// ===============================
-// LOCATION TOGGLE UI
-// ===============================
-locationToggle.addEventListener("change", () => {
-  locationHint.classList.toggle("hidden", !locationToggle.checked);
-});
+  // ===============================
+  // DUMMY VENDOR DATA
+  // ===============================
+  const vendors = [
+    {
+      id: 1,
+      name: "Mama T’s Kitchen",
+      category: "Canteen",
+      subcategory: "Mama Put",
+      address: "Alimosho, Lagos",
+      latitude: 6.6175,
+      longitude: 3.2916,
+      phone: "2348012345678",
+      verification_status: "blue",
+      is_premium: true
+    },
+    {
+      id: 2,
+      name: "Bright Spark Electricians",
+      category: "Home Services",
+      subcategory: "Electrician",
+      address: "Egbeda, Lagos",
+      latitude: 6.6098,
+      longitude: 3.3051,
+      phone: "2348098765432",
+      verification_status: "gray",
+      is_premium: false
+    },
+    {
+      id: 3,
+      name: "Calabar Delight",
+      category: "Canteen",
+      subcategory: "Calabar Kitchen",
+      address: "Akowonjo, Lagos",
+      latitude: 6.6202,
+      longitude: 3.2804,
+      phone: "2348076543210",
+      verification_status: "none",
+      is_premium: true
+    }
+  ];
 
-// ===============================
-// DUMMY VENDOR DATA (PHASE 1A)
-// ===============================
-const vendors = [
-  {
-    id: 1,
-    name: "Mama T’s Kitchen",
-    category: "Canteen",
-    subcategory: "Mama Put",
-    address: "Alimosho, Lagos",
-    latitude: 6.6175,
-    longitude: 3.2916,
-    phone: "2348012345678",
-    verification_status: "blue",
-    is_premium: true
-  },
-  {
-    id: 2,
-    name: "Bright Spark Electricians",
-    category: "Home Services",
-    subcategory: "Electrician",
-    address: "Egbeda, Lagos",
-    latitude: 6.6098,
-    longitude: 3.3051,
-    phone: "2348098765432",
-    verification_status: "gray",
-    is_premium: false
-  },
-  {
-    id: 3,
-    name: "Calabar Delight",
-    category: "Canteen",
-    subcategory: "Calabar Kitchen",
-    address: "Akowonjo, Lagos",
-    latitude: 6.6202,
-    longitude: 3.2804,
-    phone: "2348076543210",
-    verification_status: "none",
-    is_premium: true
-  }
-];
-
-// ===============================
-// BADGE RENDERER (SINGLE SOURCE)
-// ===============================
-function renderBadge(status) {
-  if (status === "blue") {
-    return `<img src="images/bluebadge.png" alt="Fully verified" class="verification-badge">`;
-  }
-
-  if (status === "gray") {
-    return `<img src="images/graybadge.png" alt="Partially verified" class="verification-badge">`;
+  // ===============================
+  // HELPERS
+  // ===============================
+  function renderBadge(status) {
+    if (status === "blue") return `<img src="images/bluebadge.png" class="verification-badge">`;
+    if (status === "gray") return `<img src="images/graybadge.png" class="verification-badge">`;
+    return "";
   }
 
-  return "";
-}
+  function haversineDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const toRad = deg => deg * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
 
-// ===============================
-// VENDOR CARD TEMPLATE
-// ===============================
 function renderVendorCard(vendor) {
   return `
     <article class="vendor-card">
@@ -100,8 +103,15 @@ function renderVendorCard(vendor) {
 
       <p class="address">${vendor.address}</p>
 
+      ${vendor.distance !== undefined
+        ? `<p class="distance">${vendor.distance.toFixed(1)} km away</p>`
+        : ``}
+
       <div class="actions">
-        <a href="https://wa.me/${vendor.phone}" target="_blank" rel="noopener">WhatsApp</a>
+        <a href="https://wa.me/${vendor.phone}" target="_blank" rel="noopener">
+          WhatsApp
+        </a>
+
         <a
           href="https://www.google.com/maps/search/?api=1&query=${vendor.latitude},${vendor.longitude}"
           target="_blank"
@@ -109,138 +119,100 @@ function renderVendorCard(vendor) {
         >
           Map
         </a>
-        ${vendor.is_premium ? `<a href="/vendors/${vendor.id}">View Profile</a>` : ``}
+
+        ${vendor.is_premium
+          ? `<a href="/vendors/${vendor.id}">View Profile</a>`
+          : ``}
       </div>
     </article>
   `;
 }
 
-// ===============================
-// RENDER VENDORS
-// ===============================
-function renderVendors(list) {
-  vendorsGrid.innerHTML = "";
-  resultsCount.textContent = "";
 
-  if (!list.length) {
-    vendorsGrid.innerHTML = "<p>No vendors found.</p>";
-    return;
+  function renderVendors(list) {
+    vendorsGrid.innerHTML = list.length
+      ? list.map(renderVendorCard).join("")
+      : "<p>No vendors found</p>";
+    resultsCount.textContent = `${list.length} vendors found`;
   }
 
-  list.forEach(vendor => {
-    vendorsGrid.insertAdjacentHTML("beforeend", renderVendorCard(vendor));
+  function populateCategories(list) {
+    const cats = [...new Set(list.map(v => v.category))];
+    categorySelect.innerHTML = `<option value="">All Categories</option>` +
+      cats.map(c => `<option value="${c}">${c}</option>`).join("");
+  }
+
+  function populateSubcategories(list, cat) {
+    const subs = [...new Set(list.filter(v => v.category === cat).map(v => v.subcategory))];
+    subcategorySelect.disabled = !cat;
+    subcategorySelect.innerHTML = `<option value="">All Subcategories</option>` +
+      subs.map(s => `<option value="${s}">${s}</option>`).join("");
+  }
+
+  function applyFilters() {
+    let filtered = vendors.filter(v =>
+      (!searchInput.value ||
+        v.name.toLowerCase().includes(searchInput.value.toLowerCase()) ||
+        v.category.toLowerCase().includes(searchInput.value.toLowerCase()) ||
+        v.subcategory.toLowerCase().includes(searchInput.value.toLowerCase())) &&
+      (!categorySelect.value || v.category === categorySelect.value) &&
+      (!subcategorySelect.value || v.subcategory === subcategorySelect.value)
+    );
+
+    if (userLocation) {
+      filtered = filtered
+        .map(v => ({
+          ...v,
+          distance: haversineDistance(
+            userLocation.lat,
+            userLocation.lng,
+            v.latitude,
+            v.longitude
+          )
+        }))
+        .filter(v => v.distance <= 10)
+        .sort((a, b) => a.distance - b.distance);
+    }
+
+    renderVendors(filtered);
+  }
+
+  // ===============================
+  // EVENT LISTENERS
+  // ===============================
+  searchForm.addEventListener("submit", e => {
+    e.preventDefault();
+    applyFilters();
   });
 
-  resultsCount.textContent = `${list.length} vendors found`;
-}
-
-// ===============================
-// INITIAL LOAD
-// ===============================
-renderVendors(vendors);
-
-// ===============================
-// FORM SUBMIT (PHASE 1B READY)
-// ===============================
-searchForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  const query = searchInput.value.toLowerCase().trim();
-
-  const filtered = vendors.filter(v =>
-    v.name.toLowerCase().includes(query) ||
-    v.category.toLowerCase().includes(query) ||
-    v.subcategory.toLowerCase().includes(query)
-  );
-
-  renderVendors(filtered);
-});
-
-//1) Define helpers first
-
-function syncURL() {
-  const q = searchInput.value.trim();
-  const cat = categorySelect.value;
-  const sub = subcategorySelect.value;
-
-  const p = new URLSearchParams();
-  if (q) p.set("q", q);
-  if (cat) p.set("category", cat);
-  if (sub) p.set("subcategory", sub);
-
-  history.replaceState(null, "", `${location.pathname}?${p.toString()}`);
-}
-
-function applyFilters() {
-  const q = searchInput.value.toLowerCase().trim();
-  const cat = categorySelect.value;
-  const sub = subcategorySelect.value;
-
-  const filtered = vendors.filter(v =>
-    (!q ||
-      v.name.toLowerCase().includes(q) ||
-      v.category.toLowerCase().includes(q) ||
-      v.subcategory.toLowerCase().includes(q)) &&
-    (!cat || v.category === cat) &&
-    (!sub || v.subcategory === sub)
-  );
-
-  renderVendors(filtered);
-  syncURL();
-}
-
-//2) Populate dropdowns (once)
-populateCategories(vendors);
-
-//3) Restore UI from URL
-searchInput.value = urlQ;
-
-if (urlCategory) {
-  categorySelect.value = urlCategory;
-  populateSubcategories(vendors, urlCategory);
-}
-
-if (urlSubcategory) {
-  subcategorySelect.value = urlSubcategory;
-}
-
-//4) Apply filters ONCE on load
-applyFilters();
-
-//5) Form submit
-searchForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  applyFilters();
-});
-
-//Wire the location toggle
-
-let userLocation = null;
-
-locationToggle.addEventListener("change", async () => {
-  if (!locationToggle.checked) {
-    userLocation = null;
+  categorySelect.addEventListener("change", () => {
+    populateSubcategories(vendors, categorySelect.value);
     applyFilters();
-    return;
-  }
+  });
 
-  if (!navigator.geolocation) {
-    alert("Geolocation is not supported by your browser");
-    locationToggle.checked = false;
-    return;
-  }
+  subcategorySelect.addEventListener("change", applyFilters);
 
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      userLocation = {
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude
-      };
+  locationToggle.addEventListener("change", () => {
+    locationHint.classList.toggle("hidden", !locationToggle.checked);
+
+    if (!locationToggle.checked) {
+      userLocation = null;
       applyFilters();
-    },
-    () => {
-      alert("Location permission denied");
-      locationToggle.checked = false;
+      return;
     }
-  );
+
+    navigator.geolocation.getCurrentPosition(pos => {
+      userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      applyFilters();
+    });
+  });
+
+  // ===============================
+  // INIT
+  // ===============================
+  populateCategories(vendors);
+  renderVendors(vendors);
+
 });
+
+
