@@ -155,3 +155,92 @@ searchForm.addEventListener("submit", (e) => {
 
   renderVendors(filtered);
 });
+
+//1) Define helpers first
+
+function syncURL() {
+  const q = searchInput.value.trim();
+  const cat = categorySelect.value;
+  const sub = subcategorySelect.value;
+
+  const p = new URLSearchParams();
+  if (q) p.set("q", q);
+  if (cat) p.set("category", cat);
+  if (sub) p.set("subcategory", sub);
+
+  history.replaceState(null, "", `${location.pathname}?${p.toString()}`);
+}
+
+function applyFilters() {
+  const q = searchInput.value.toLowerCase().trim();
+  const cat = categorySelect.value;
+  const sub = subcategorySelect.value;
+
+  const filtered = vendors.filter(v =>
+    (!q ||
+      v.name.toLowerCase().includes(q) ||
+      v.category.toLowerCase().includes(q) ||
+      v.subcategory.toLowerCase().includes(q)) &&
+    (!cat || v.category === cat) &&
+    (!sub || v.subcategory === sub)
+  );
+
+  renderVendors(filtered);
+  syncURL();
+}
+
+//2) Populate dropdowns (once)
+populateCategories(vendors);
+
+//3) Restore UI from URL
+searchInput.value = urlQ;
+
+if (urlCategory) {
+  categorySelect.value = urlCategory;
+  populateSubcategories(vendors, urlCategory);
+}
+
+if (urlSubcategory) {
+  subcategorySelect.value = urlSubcategory;
+}
+
+//4) Apply filters ONCE on load
+applyFilters();
+
+//5) Form submit
+searchForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  applyFilters();
+});
+
+//Wire the location toggle
+
+let userLocation = null;
+
+locationToggle.addEventListener("change", async () => {
+  if (!locationToggle.checked) {
+    userLocation = null;
+    applyFilters();
+    return;
+  }
+
+  if (!navigator.geolocation) {
+    alert("Geolocation is not supported by your browser");
+    locationToggle.checked = false;
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      userLocation = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude
+      };
+      applyFilters();
+    },
+    () => {
+      alert("Location permission denied");
+      locationToggle.checked = false;
+    }
+  );
+});

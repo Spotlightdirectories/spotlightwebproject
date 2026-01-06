@@ -283,12 +283,32 @@ footer p {
     font-size: 1.5rem;
     padding: 5px 15px;
     border-radius: 8px;
-    
 }
 
 .getlisted-button:hover {
     background-color: green /* Darker shade on hover */
 }
+
+#goToSearch {
+  padding: 5px 15px;
+  font-size: 1.5rem;
+  font-weight: 400;
+  background: #2b0d0d;   /* use your brand dark */
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#goToSearch:hover {
+  opacity: 0.9;
+}
+
+#goToSearch {
+  display: block;
+  margin: 1.5rem auto 0;
+}
+
 
 .box1 img {
     width: 100%;
@@ -312,102 +332,13 @@ footer p {
   font-size: 2rem;
 }
 
-.searchVendor {
-  Margin-top: 2rem;
-  margin-bottom: 1rem;
-  font-weight: 600;
-  font-size: 1.8rem;
-}
-
-
-
-/* Search container */
-#search-input {
-    max-width: 450px;
-    border-radius: 8px;
-    font-size: 1.5rem;
-    border-color: gray;
-    border-width: 0.05rem;
-    margin-bottom: 5px;
-}
-
-input::placeholder {
-  font-size: 16px;
-  color: chocolate
-}
-
-input {
-  text-align: center;
-  line-height: 20px;
-}
-
-/* Two buttons */
-.button-group {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin-top: 7px; 
-}
-
-.button-group button {
-    border-radius: 8px;
-    color: white;
-    font-size: 0.8rem;
-    background-color: #240707;
-}
-
-.button-group button:hover {
-  background-color: green; /* Darker shade on hover */
-}
-
-
 
 @media (min-width: 992px) {
 
-     .getlisted-button {
-      font-size: 1.8rem;
-      padding: 5px 15px;
-     }
-     #search-input {
-       max-width: 400px;
-       width: 100%;
-       border-radius: 8px;
-       font-size: 1.5rem;
-       border-color: gray;
-       border-width: 0.05rem;
-       padding: 0.5rem;
-     }
-     .searchVendor {
-        font-size: 2rem;
-        justify-content: center;
-        padding-bottom: 10px;
-     }
-
-     .button-group {
-      display: flex;
-      justify-content: center;
-      gap: 0.8rem;
-      margin-top: 1rem;
-     }
-
-     .button-group button {
-        padding-top: 5px;
-        font-size: 1rem;
-        width: 32%;
-        height: 40px;
-      }
-
-     .box1 h3 {
-       margin-top: 2rem;
-       font-size: 1.8rem;
-      }
-
-      input::placeholder {
-       font-size: 1.2rem;
-       color: chocolate
-      }
-
-}
+.box1 h3 {
+   margin-top: 2rem;
+   font-size: 1.8rem;
+}}
 
 /*BOX 2 CSS PROPERTIES*/
 

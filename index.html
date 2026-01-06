@@ -29,6 +29,7 @@
 
   <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
+  
 
   <!-- Icons -->
   <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
@@ -73,17 +74,13 @@
       </a>
       <p class="hero-text">Listing your shop or office puts it on the spotlight for buyers or clients to see when searching...</p>
       <h1 class="searchVendor">Search Vendors Nearby</h1>
-          <div class="search-container">
-             <input 
-                type="text" 
-                id="search-input" 
-                placeholder="Search by Vendor's Name or Category"/>
-          </div>
-         <div class="button-group">
-             <button onclick="searchByName()">Search by Name</button>
-             <button onclick="searchByCategory()">Search by Category</button>
-          </div>
-      </div>
+      <button id="goToSearch">Search</button>
+     <script>
+  document.getElementById("goToSearch").addEventListener("click", () => {
+    window.location.href = "vendor.html";
+  });
+</script>
+
     </section> 
 
     <!--BOX 2-->
