@@ -1,13 +1,60 @@
 // ✅ Supabase setup
-//const SUPABASE_URL = "https://gyvzmktavyrevfxnwsay.supabase.co";
-//const SUPABASE_ANON_KEY =
-  //"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5dnpta3RhdnlyZXZmeG53c2F5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5NjIyNzUsImV4cCI6MjA3NjUzODI3NX0.a5LnkYZb6IlTd2PEwD-M-Cw-hQSC8lKSU1uOEjgwjRo";
-
-//const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+//now exist in supabase-client.js
 
 document.addEventListener("DOMContentLoaded", () => {
 
   console.log("✅ vendor.js is running");
+
+  const supabase = window.supabaseClient;
+
+  function renderBadge(status) {
+  if (status === "blue") {
+    return `<img src="images/bluebadge.png" alt="Fully verified" class="verification-badge">`;
+  }
+  if (status === "gray") {
+    return `<img src="images/graybadge.png" alt="Partially verified" class="verification-badge">`;
+  }
+  return "";
+}
+
+
+
+  async function loadVendors() {
+  console.log("🔄 Loading vendors from Supabase...");
+
+  const { data, error } = await supabase
+    .from("vendors")
+    .select(`
+      id,
+      name,
+      category,
+      subcategory,
+      address,
+      state,
+      lga,
+      latitude,
+      longitude,
+      phone,
+      verification_status,
+      plan_tier,
+      is_premium,
+      is_demo,
+      slug
+    `);
+
+  if (error) {
+    console.error("❌ Supabase fetch error:", error);
+    return;
+  }
+
+  console.log("✅ Vendors fetched:", data);
+
+  vendors = data;
+  populateCategories(vendors);
+  applyFilters();
+}
+
+loadVendors(); 
 
   // ===============================
   // DOM ELEMENTS
@@ -29,44 +76,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===============================
   // DUMMY VENDOR DATA
   // ===============================
-  const vendors = [
-    {
-      id: 1,
-      name: "Mama T’s Kitchen",
-      category: "Canteen",
-      subcategory: "Mama Put",
-      address: "Alimosho, Lagos",
-      latitude: 6.6175,
-      longitude: 3.2916,
-      phone: "2348012345678",
-      verification_status: "blue",
-      is_premium: true
-    },
-    {
-      id: 2,
-      name: "Bright Spark Electricians",
-      category: "Home Services",
-      subcategory: "Electrician",
-      address: "Egbeda, Lagos",
-      latitude: 6.6098,
-      longitude: 3.3051,
-      phone: "2348098765432",
-      verification_status: "gray",
-      is_premium: false
-    },
-    {
-      id: 3,
-      name: "Calabar Delight",
-      category: "Canteen",
-      subcategory: "Calabar Kitchen",
-      address: "Akowonjo, Lagos",
-      latitude: 6.6202,
-      longitude: 3.2804,
-      phone: "2348076543210",
-      verification_status: "none",
-      is_premium: true
-    }
-  ];
+
+  let vendors = [];
 
   // ===============================
   // HELPERS
@@ -121,7 +132,10 @@ function renderVendorCard(vendor) {
         </a>
 
         ${vendor.is_premium
-          ? `<a href="/vendors/${vendor.id}">View Profile</a>`
+          ? `<a href="vendor-profile.html?slug=${vendor.slug}">
+  View Profile
+</a>
+`
           : ``}
       </div>
     </article>

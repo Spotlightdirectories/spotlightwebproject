@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Vendor Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO placeholders -->
+  <meta name="description" content="" />
+
+  <link rel="stylesheet" href="vendor-profile.css" />
+  <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
+  <link rel="apple-touch-icon" href="images/favicon.png" />
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+<main id="vendorProfile">
+
+  <!-- HERO / HEADER -->
+  <header class="profile-hero">
+    <div class="hero-left">
+       <div class="logo-wrap">
+          <img id="vendorLogo" alt="Vendor logo" />
+       </div>
+
+    </div>
+
+    <div class="hero-center">
+      <h1 id="vendorName"></h1>
+      <p id="vendorCategory"></p>
+      <p id="vendorAddress"></p>
+    </div>
+
+    <div class="hero-right">
+      <div id="vendorBadge"></div>
+      <p class="plan-label">
+        Plan: <strong id="vendorPlan"></strong>
+      </p>
+    </div>
+  </header>
+
+  <!-- ACTIONS -->
+  <section class="profile-actions">
+    <a id="whatsappLink" target="_blank">WhatsApp</a>
+    <a id="mapLink" target="_blank">View on Map</a>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="aboutSection" class="profile-section">
+    <h2>About</h2>
+    <p id="vendorDescription"></p>
+  </section>
+
+  <!-- MEDIA (tier-based) -->
+  <section id="mediaSection" class="profile-section hidden">
+    <h2>Media</h2>
+
+    <div id="galleryWrap" class="media-gallery hidden"></div>
+    <div id="videoWrap" class="media-video hidden"></div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="profile-section">
+    <h2>Contact & Location</h2>
+    <p><strong>Phone:</strong> <span id="vendorPhone"></span></p>
+    <p><strong>Email:</strong> <span id="vendorEmail"></span></p>
+  </section>
+
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Shared Supabase client -->
+  <script src="supabase-client.js"></script>
+
+  <script src="vendor-profile.js" defer></script>
+</body>
+</html>
