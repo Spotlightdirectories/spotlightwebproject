@@ -2,11 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Vendor Profile</title>
+  <title>Vendor Profile | Spotlight</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <meta property="og:type" content="business.business" />
+  <meta property="og:title" content="Vendor Profile on Spotlight" />
+  <meta property="og:description" content="Verified business profile on Spotlight." />
+  <meta property="og:image" content="https://yourdomain.com/images/og-default.png" />
+  <meta property="og:url" content="" id="ogUrl" />
+
+
   <!-- SEO placeholders -->
-  <meta name="description" content="" />
+  <meta name="description" content="Verified business profile on Spotlight." />
+  <link rel="canonical" href="" id="canonicalLink" />
 
   <link rel="stylesheet" href="vendor-profile.css" />
   <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
@@ -35,12 +43,16 @@
       <p id="vendorAddress"></p>
     </div>
 
-    <div class="hero-right">
-      <div id="vendorBadge"></div>
-      <p class="plan-label">
-        Plan: <strong id="vendorPlan"></strong>
-      </p>
-    </div>
+  <div class="hero-right">
+  <!-- Badge: ALWAYS PUBLIC -->
+    <div id="vendorBadge" class="badge-skeleton"></div>
+
+  <!-- Plan: VENDOR-ONLY -->
+    <p class="plan-label hidden">
+      Plan: <strong id="vendorPlan"></strong>
+    </p>
+  </div>
+
   </header>
 
   <!-- ACTIONS -->
@@ -48,6 +60,12 @@
     <a id="whatsappLink" target="_blank">WhatsApp</a>
     <a id="mapLink" target="_blank">View on Map</a>
   </section>
+
+  <section id="upgradeCTA" class="upgrade-cta hidden">
+    <p id="upgradeMessage"></p>
+    <a href="/getlisted.html" class="upgrade-btn">Upgrade</a>
+  </section>
+
 
   <!-- ABOUT -->
   <section id="aboutSection" class="profile-section">
@@ -58,6 +76,10 @@
   <!-- MEDIA (tier-based) -->
   <section id="mediaSection" class="profile-section hidden">
     <h2>Media</h2>
+
+   <p class="media-hint">
+    Images: JPG/PNG (max 1MB). Video: MP4 (tier-based length).
+   </p>
 
     <div id="galleryWrap" class="media-gallery hidden"></div>
     <div id="videoWrap" class="media-video hidden"></div>

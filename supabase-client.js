@@ -8,3 +8,12 @@ window.supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_ANON_KEY
 );
+
+// 🔐 Track current logged-in user (vendor)
+window.currentUser = null;
+
+window.supabaseClient.auth.onAuthStateChange((event, session) => {
+  window.currentUser = session?.user || null;
+  console.log("Auth state changed:", event, window.currentUser);
+});
+
