@@ -2469,4 +2469,28 @@ pricing-body::-webkit-scrollbar {
   }
    /*END OF VENDOR ONBOARDING*/
 
-     
+     .hidden {
+  display: none !important;
+}
+
+/* ===============================
+   NAV LOGIN HIGHLIGHT
+   =============================== */
+
+.nav-login-btn {
+  background: #f7c600; /* spotlight yellow */
+  color: #2b1200 !important;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.nav-login-btn:hover {
+  background: #e6b800;
+  transform: translateY(-1px);
+}
+
+.nav-login-btn:active {
+  transform: translateY(0);
+}

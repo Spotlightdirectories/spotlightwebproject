@@ -1,94 +1,117 @@
-.verification-badge {
-  width: 48px;
-  height: 48px;
-}
+/* ==================================================
+   PHASE 1D-P — LINKEDIN-STYLE VENDOR PROFILE (FINAL)
+================================================== */
 
-.hidden {
+/* Utilities */
+/*.hidden {
   display: none;
+}*/
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f9fafb;
+  color: #111;
 }
 
+/* ===============================
+   HERO — LINKEDIN STYLE
+================================ */
+
+/* Wrapper */
 .profile-hero {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Cover */
+.hero-cover {
+  height: 220px;
+  background: linear-gradient(
+    135deg,
+    #e5e7eb 0%,
+    #f3f4f6 50%,
+    #e5e7eb 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Content row */
+.hero-content {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px 24px;
   display: grid;
   grid-template-columns: auto 1fr auto;
-  gap: 1rem;
-  align-items: center;
-}
-
-.profile-section {
-  margin-top: 2rem;
-}
-
-.upgrade-cta {
-  margin-top: 16px;
-  padding: 14px;
-  border: 1px dashed #ddd;
-  border-radius: 10px;
-  background: #fafafa;
-  text-align: center;
-}
-
-.upgrade-text {
-  font-size: 0.9rem;
-  color: #555;
-  margin-bottom: 8px;
-}
-
-.upgrade-btn {
-  background: #000;
-  color: #fff;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.upgrade-btn:hover {
-  opacity: 0.85;
-}
-
-.badge-wrap {
+  gap: 24px;
+  align-items: flex-end;
   position: relative;
-  display: inline-block;
-  cursor: pointer;
 }
 
-.badge-wrap::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  top: 120%;
-  right: 0;
-  width: 260px;
+/* Logo — overlapping */
+.hero-left {
+  position: relative;
+  top: -56px; /* overlap cover */
+}
+
+.logo-wrap {
+  width: 112px;
+  height: 112px;
   background: #fff;
-  color: #222;
-  font-size: 14px;
-  line-height: 1.4;
-  padding: 12px 14px;
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-6px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  z-index: 20;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.badge-wrap::before {
-  content: "";
-  position: absolute;
-  top: 110%;
-  right: 18px;
-  border-width: 6px;
-  border-style: solid;
-  border-color: transparent transparent #fff transparent;
-  opacity: 0;
-  transition: opacity 0.2s ease;
+.logo-wrap img {
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
 }
 
-.badge-wrap:hover::after,
-.badge-wrap:hover::before {
-  opacity: 1;
-  transform: translateY(0);
+/* Center text */
+.hero-center h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.hero-center p {
+  color: #4b5563;
+  font-size: 0.95rem;
+}
+
+/* Actions */
+.hero-actions {
+  margin-top: 8px;
+}
+
+.hero-actions a {
+  margin-right: 14px;
+  font-size: 0.9rem;
+  text-decoration: none;
+  color: #2563eb;
+}
+
+/* ===============================
+   BADGE
+================================ */
+#vendorBadge {
+  background: transparent;
+}
+
+.verification-badge {
+  width: 44px;
+  height: 44px;
+  display: block;
 }
 
 .badge-skeleton {
@@ -105,36 +128,111 @@
   100% { opacity: 0.6; }
 }
 
-#vendorBadge {
-  background: transparent;
+/* Tooltip */
+.badge-wrap {
+  position: relative;
+  cursor: pointer;
 }
 
-.verification-badge {
-  display: block;
-  width: 48px;
-  height: 48px;
+.badge-wrap::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 120%;
+  right: 0;
+  width: 260px;
+  background: #fff;
+  color: #222;
+  padding: 12px 14px;
+  font-size: 14px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
 }
 
-.logo-wrap {
-  width: 96px;
-  height: 96px;
-}
-.logo-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+.badge-wrap:hover::after {
+  opacity: 1;
 }
 
+/* Badge */
+.hero-right {
+  align-self: flex-start;
+  padding-top: 16px;
+}
+
+
+/* ===============================
+   PROFILE CARDS
+================================ */
+.profile-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px;
+  margin: 24px auto;
+  max-width: 920px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+}
+
+.profile-card h2 {
+  font-size: 1.2rem;
+  margin-bottom: 12px;
+}
+
+/* ===============================
+   MEDIA
+================================ */
 .media-hint {
-  color: #6b7280;
   font-size: 0.9rem;
-  margin-bottom: 8px;
-}
-
-.upgrade-placeholder {
   color: #6b7280;
   font-style: italic;
 }
 
+/* Responsive */
+@media (max-width: 768px) {
+  .hero-content {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
 
+  .hero-left {
+    margin: 0 auto;
+    top: -48px;
+  }
 
+  .hero-right {
+    justify-self: center;
+  }
+}
+
+.upgrade-cta {
+  max-width: 920px;
+  margin: 24px auto;
+  padding: 20px 24px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.upgrade-cta p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #7c2d12;
+}
+
+.upgrade-btn {
+  background: #f97316;
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.upgrade-btn:hover {
+  background: #ea580c;
+}

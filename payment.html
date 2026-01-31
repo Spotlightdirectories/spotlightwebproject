@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment | Spotlight</title>
+  <meta name="description" content="payment for subscription on Spotlight."/>
+  <link rel="canonical" href="https://www.spotlightdirectories.com/payment.html" />
+
+
+  <link rel="stylesheet" href="vendor.css" />
+  <link rel="icon" href="images/favicon.ico">
+  <link rel="apple-touch-icon" href="images/favicon.png">
+  
+</head>
+
+<body>
+  <main style="max-width:600px;margin:4rem auto;font-family:system-ui;">
+    <h1>Complete Your Subscription</h1>
+
+    <div id="planSummary"
+         style="margin:1rem 0;padding:1rem;background:#f5f5f5;border-radius:6px;">
+    </div>
+
+    <div style="margin-top:2rem;">
+      <button id="payOnlineBtn"
+              style="padding:12px 18px;margin-right:12px;">
+        Pay Online
+      </button>
+
+      <button id="payBankBtn"
+              style="padding:12px 18px;">
+        Pay via Bank Transfer
+      </button>
+    </div>
+
+    <p id="paymentHint"
+       class="hidden"
+       style="margin-top:1.5rem;color:#444;">
+    </p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script src="payment.js"></script>
+</body>
+

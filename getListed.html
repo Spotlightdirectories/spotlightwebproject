@@ -60,6 +60,10 @@
        </nav>
      </header>
 
+     <div>
+     <p id="onboardingStatus"></p>
+     </div>
+
     <section class="get-listed-content">
     <section class="intro">
       <h1>Get Listed on Spotlight</h1>
@@ -81,7 +85,7 @@
     <section class="pricing-grid">
       <!-- BASIC PLAN -->
       <div class="glcard">
-        <h2>Basic (Free)</h2>
+        <h2 data-plan="free">Basic (Free)</h2>
         <p class="price" data-monthly="₦0" data-yearly="₦0">₦0</p>
         <div class="recommendedbanner">
         <p>For Artisans</p>
@@ -100,7 +104,7 @@
       <!-- STANDARD PLAN -->
       <div class="glcard highlight">
       <div class="badge">⚡ Most popular</div>
-        <h2>Standard</h2>
+        <h2 data-plan="standard">Standard</h2>
         <p class="price" data-monthly="₦2,998" data-yearly="₦25,976">₦2,998</p>
         <p class="yearly">Do yearly, save <strong>₦10,000</strong></p>
         <div class="recommendedbanner">
@@ -120,7 +124,7 @@
 
       <!-- ENTERPRISE PLAN -->
       <div class="glcard">
-        <h2>Enterprise</h2>
+        <h2 data-plan="enterprise">Enterprise</h2>
         <p class="price" data-monthly="₦8,998" data-yearly="₦82,976">₦8,998</p>
         <p class="yearly">Do yearly, save <strong>₦25,000</strong></p>
 
@@ -140,7 +144,7 @@
 
       <!-- ELITE PLAN -->
       <div class="glcard">
-        <h2>Elite</h2>
+        <h2 data-plan="elite">Elite</h2>
         <p class="price" data-monthly="₦22,998" data-yearly="₦110,976">₦22,998</p>
         <p class="yearly">Do yearly, save <strong>₦45,000</strong></p>
         <div class="recommendedbanner">
@@ -173,7 +177,7 @@
           <li>Unlimited branches</li>
           <li>Unlimited social media handles</li>
         </ul>
-        <a href="FAQ.html" class="btnwhite">Go Unlimited</a>
+        <a href="contactUs.html" class="btnwhite">Go Unlimited</a>
       </div>
 
     </section>
@@ -418,5 +422,8 @@
       <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
      <script src="script.js"></script>
      <script src="vendor.js"></script>
+     <script src="supabase-client.js"></script>
+     <script src="getlisted.js"></script>
+
   </body>
 </html>

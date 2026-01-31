@@ -13,8 +13,8 @@
 
 
   <!-- SEO placeholders -->
-  <meta name="description" content="Verified business profile on Spotlight." />
-  <link rel="canonical" href="" id="canonicalLink" />
+  <meta name="description" content="Discover verified vendors near you on Spotlight." />
+  <link rel="canonical" href="https://www.spotlightdirectories.com/vendor-profile.html" />
 
   <link rel="stylesheet" href="vendor-profile.css" />
   <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
@@ -29,52 +29,60 @@
 <main id="vendorProfile">
 
   <!-- HERO / HEADER -->
-  <header class="profile-hero">
-    <div class="hero-left">
-       <div class="logo-wrap">
-          <img id="vendorLogo" alt="Vendor logo" />
-       </div>
+<!-- HERO / HEADER -->
+<header class="profile-hero">
 
-    </div>
-
-    <div class="hero-center">
-      <h1 id="vendorName"></h1>
-      <p id="vendorCategory"></p>
-      <p id="vendorAddress"></p>
-    </div>
-
-  <div class="hero-right">
-  <!-- Badge: ALWAYS PUBLIC -->
-    <div id="vendorBadge" class="badge-skeleton"></div>
-
-  <!-- Plan: VENDOR-ONLY -->
-    <p class="plan-label hidden">
-      Plan: <strong id="vendorPlan"></strong>
-    </p>
+  <!-- COVER -->
+  <div class="hero-cover">
+    <img id="vendorCover" alt="Vendor cover" />
   </div>
 
-  </header>
+  <!-- CONTENT -->
+  <div class="hero-content">
 
-  <!-- ACTIONS -->
-  <section class="profile-actions">
-    <a id="whatsappLink" target="_blank">WhatsApp</a>
-    <a id="mapLink" target="_blank">View on Map</a>
-  </section>
+    <div class="hero-left">
+      <div class="logo-wrap">
+        <img id="vendorLogo" alt="Vendor logo" />
+      </div>
+    </div>
 
-  <section id="upgradeCTA" class="upgrade-cta hidden">
+    <div class="hero-text">
+      <h1 id="vendorName"></h1>
+      <p class="meta">
+        <span id="vendorCategory"></span>
+        <span class="dot">•</span>
+        <span id="vendorAddress"></span>
+      </p>
+
+      <div class="hero-actions">
+        <a id="whatsappLink" target="_blank">WhatsApp</a>
+        <a id="mapLink" target="_blank">View on Map</a>
+      </div>
+    </div>
+
+    <!-- BADGE -->
+    <div class="hero-badge">
+      <div id="vendorBadge" class="badge-skeleton"></div>
+    </div>
+
+  </div>
+</header>
+
+  <section id="upgradeCTA" class="upgrade-cta">
     <p id="upgradeMessage"></p>
     <a href="/getlisted.html" class="upgrade-btn">Upgrade</a>
   </section>
 
 
   <!-- ABOUT -->
-  <section id="aboutSection" class="profile-section">
+  <section id="aboutSection" class="profile-card">
     <h2>About</h2>
     <p id="vendorDescription"></p>
   </section>
 
   <!-- MEDIA (tier-based) -->
-  <section id="mediaSection" class="profile-section hidden">
+  <section id="mediaSection" class="profile-card hidden">
+
     <h2>Media</h2>
 
    <p class="media-hint">
@@ -86,7 +94,7 @@
   </section>
 
   <!-- CONTACT -->
-  <section class="profile-section">
+  <section class="profile-card">
     <h2>Contact & Location</h2>
     <p><strong>Phone:</strong> <span id="vendorPhone"></span></p>
     <p><strong>Email:</strong> <span id="vendorEmail"></span></p>

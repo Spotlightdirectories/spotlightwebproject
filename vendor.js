@@ -82,11 +82,7 @@ loadVendors();
   // ===============================
   // HELPERS
   // ===============================
-  function renderBadge(status) {
-    if (status === "blue") return `<img src="images/bluebadge.png" class="verification-badge">`;
-    if (status === "gray") return `<img src="images/graybadge.png" class="verification-badge">`;
-    return "";
-  }
+
 
   function haversineDistance(lat1, lon1, lat2, lon2) {
     const R = 6371;
@@ -109,7 +105,7 @@ function renderVendorCard(vendor) {
       </div>
 
       <p class="category">
-        ${vendor.category} • ${vendor.subcategory}
+         ${[vendor.category, vendor.subcategory].filter(Boolean).join(" • ")}
       </p>
 
       <p class="address">${vendor.address}</p>

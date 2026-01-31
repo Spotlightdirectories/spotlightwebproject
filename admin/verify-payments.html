@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin – Verify Bank Payments</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="admin.css" />
+  
+  <link rel="icon" href="images/favicon.ico">
+  <link rel="apple-touch-icon" href="images/favicon.png">
+</head>
+
+<body>
+  <main class="admin-container">
+    <h1>Bank Transfer Verification</h1>
+    <p>Approve or reject pending vendor subscriptions.</p>
+
+    <table id="paymentsTable">
+      <thead>
+        <tr>
+          <th>Business</th>
+          <th>Plan</th>
+          <th>Payment Method</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <p id="adminMsg" class="hidden"></p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../supabase-client.js"></script>
+  <script src="verify-payments.js"></script>
+  
+</body>
+</html>

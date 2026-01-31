@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vendor Login | Spotlight</title>
+
+  <meta
+    name="description"
+    content="Log in to manage your vendor profile, uploads, and subscriptions on Spotlight."
+  />
+
+  <link rel="stylesheet" href="auth.css" />
+  <link rel="icon" href="images/favicon.ico" />
+</head>
+
+<body>
+
+  <div class="auth-wrapper">
+    <div class="auth-card">
+
+      <h1 class="auth-title">Vendor Login</h1>
+      <p class="auth-subtitle">Access your Spotlight dashboard</p>
+
+      <div id="loginError" class="auth-error"></div>
+
+      <form id="loginForm" class="auth-form">
+        <div>
+          <label for="email">Email address</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="you@business.com"
+            required
+          />
+        </div>
+
+        <div>
+          <label for="password">Password</label>
+          <div class="password-wrap">
+          <input type="password" id="password" placeholder="Your password" required/>
+          <button type="button" class="toggle-password" data-target="password">👁</button>
+       </div>
+  </div>
+      <button type="submit" class="auth-btn" id="loginBtn">Log in</button>
+      </form>
+
+      <div class="auth-footer">
+        Don’t have a vendor account?
+        <a href="/getlisted.html">Get listed</a>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script src="login.js" defer></script>
+  
+
+</body>
+
+</html>

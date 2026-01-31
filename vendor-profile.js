@@ -1,15 +1,26 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   console.log("✅ vendor-profile.js loaded");
-  console.log("URL search:", window.location.search);
 
-// ✅ Supabase setup
-//now exist in supabase-client.js
+  
+  // ===============================
+  // SUPABASE
+  // ===============================
+  const supabase = window.supabaseClient;
 
-const supabase = window.supabaseClient;
+  // ===============================
+  // RESOLVE CURRENT USER (OWNER CHECK)
+  // ===============================
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
 
-  // 1️⃣ CONSTANTS / CONFIG (TOP LEVEL)
+  window.currentUser = session?.user || null;
+
+  // ===============================
+  // PLAN CAPABILITIES (BLUEPRINT)
+  // ===============================
   const TIER_CAPABILITIES = {
-    basic: {
+    free: {
       about: true,
       media: false,
       videoSeconds: 0,
@@ -46,304 +57,211 @@ const supabase = window.supabaseClient;
     }
   };
 
-//helper function is the renderBadge
+  // ===============================
+  // BADGE RENDERER (SINGLE SOURCE)
+  // ===============================
+  function renderBadge(status) {
 
-function renderBadge(status) {
-  if (status === "blue") {
-    return `
-      <div class="badge-wrap" data-tooltip="Fully verified business. Identity and location confirmed.">
-        <img src="images/bluebadge.png" alt="Fully verified" class="verification-badge">
-      </div>
-    `;
+    if (!status) return "";
+
+    const value = status.toString().toLowerCase();
+
+    if (value === "blue") {
+      return `
+        <div class="badge-wrap" data-tooltip="Fully verified business. This means business identity, address, and phone have been verified.">
+          <img src="images/bluebadge.png" class="verification-badge" />
+        </div>
+      `;
+    }
+
+    if (value === "gray") {
+      return `
+        <div class="badge-wrap" data-tooltip="Partially verified business. This means some business details have been verified, but not all.">
+          <img src="images/graybadge.png" class="verification-badge" />
+        </div>
+      `;
+    }
+
+    return "";
   }
 
-  if (status === "gray") {
-    return `
-      <div class="badge-wrap" data-tooltip="Partially verified business. Verification in progress.">
-        <img src="images/graybadge.png" alt="Partially verified" class="verification-badge">
-      </div>
-    `;
-  }
+  // ===============================
+  // LOAD VENDOR PROFILE
+  // ===============================
+  async function loadVendorProfile() {
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get("slug");
 
-  return "";
-}
-
-
-
-async function loadVendorProfile() {
-  const params = new URLSearchParams(window.location.search);
-  const slug = params.get("slug");
-
-  if (!slug) {
-    console.error("❌ No vendor slug provided");
-    return;
-  }
-
-  console.log("🔍 Loading vendor profile for slug:", slug);
-
-  const { data, error } = await supabase
-    .from("vendors")
-    .select("*")
-    .eq("slug", slug)
-    .single();
-
-  if (error) {
-    console.error(
-      "❌ Supabase fetch error:",
-      error.message,
-      error.details,
-      error
-    );
-    return;
-  }
-
-  const vendor = data;
-
-  // ✅ TIER CAPABILITY RESOLUTION (WAS MISSING)
-  const plan = vendor.plan_tier;
-  const caps = TIER_CAPABILITIES[plan];
-
-  if (!caps) {
-  console.error("❌ Unknown plan tier:", plan);
+    if (!slug || slug === "null") {
+  console.error("❌ Invalid vendor slug:", slug);
   return;
 }
 
-// 🧭 Tier-based section ordering
-const aboutSection = document.getElementById("aboutSection");
-const mediaSection = document.getElementById("mediaSection");
-const contactSection = document.querySelector(".profile-section:last-of-type");
 
-// Basic plan: About → Contact
-if (plan === "basic") {
-  mediaSection?.remove();
-  aboutSection.after(contactSection);
-}
+    const { data: vendor, error } = await supabase
+      .from("vendors")
+      .select("*")
+      .eq("slug", slug)
+      .maybeSingle();
 
-// Paid plans: About → Media → Contact
-else {
-  aboutSection.after(mediaSection);
-  mediaSection.after(contactSection);
-}
+    if (error || !vendor) {
+      console.error("❌ Vendor fetch failed", error);
+      return;
+    }
 
-  // ✅ HARD GATING (SEO-SAFE)
-  if (!caps.media) {
-    document.getElementById("mediaSection")?.remove();
+    renderVendorProfile(vendor);
   }
 
-  // ✅ RENDER AFTER GATING
-  renderVendorProfile(vendor);
-}
-
-  // 🚀 CALL IT
-  loadVendorProfile();
-
+  // ===============================
+  // RENDER PROFILE
+  // ===============================
   function renderVendorProfile(vendor) {
+      console.log("🔍 CTA DEBUG START");
+  console.log("Logged-in user:", window.currentUser);
+  console.log("Vendor auth_user_id:", vendor.auth_user_id);
+  console.log("Current user id:", window.currentUser?.id);
+  console.log("Vendor plan_tier (raw):", vendor.plan_tier);
+  console.log("Is free vendor:", vendor.plan_tier === "free");
 
-  // ===============================
-  // OWNERSHIP CHECK
-  // ===============================
+    const isVendorOwner =
+      !!window.currentUser &&
+      vendor.auth_user_id === window.currentUser.email;
+
+
+  console.log("Is vendor owner:", isVendorOwner);
+
+    const caps = TIER_CAPABILITIES[vendor.plan_tier];
+
+     if (!caps) {
+    console.warn("Unknown plan tier:", vendor.plan_tier);
+  }
+    if (!TIER_CAPABILITIES[vendor.plan_tier]) {
+       console.warn("Unknown plan tier:", vendor.plan_tier);
+  }
+
+
+    // -------------------------------
+    // HERO
+    // -------------------------------
+    document.getElementById("vendorName").textContent = vendor.name;
+    document.getElementById("vendorCategory").textContent = vendor.category;
+    document.getElementById("vendorAddress").textContent = vendor.address;
+
+    const logoImg = document.getElementById("vendorLogo");
+    if (vendor.logo_url) {
+      logoImg.src = vendor.logo_url;
+      logoImg.style.display = "block";
+    } else {
+      logoImg.style.display = "none";
+    }
+
+    const coverImg = document.getElementById("vendorCover");
+    if (vendor.cover_url) {
+      coverImg.src = vendor.cover_url;
+      coverImg.style.display = "block";
+    } else {
+      coverImg.style.display = "none";
+    }
+
+    // -------------------------------
+    // BADGE (PUBLIC)
+    // -------------------------------
+    const badgeEl = document.getElementById("vendorBadge");
+    if (badgeEl) {
+      badgeEl.classList.remove("badge-skeleton");
+      badgeEl.innerHTML = renderBadge(vendor.verification_status);
+    }
+
+    // -------------------------------
+    // CONTACT
+    // -------------------------------
+    document.getElementById("vendorPhone").textContent =
+      vendor.phone || "—";
+    document.getElementById("vendorEmail").textContent =
+      vendor.email || "—";
+
+    if (vendor.phone) {
+      document.getElementById("whatsappLink").href =
+        `https://wa.me/${vendor.phone}`;
+    }
+
+    if (vendor.latitude && vendor.longitude) {
+      document.getElementById("mapLink").href =
+        `https://www.google.com/maps/search/?api=1&query=${vendor.latitude},${vendor.longitude}`;
+    }
+
+    // -------------------------------
+    // ABOUT
+    // -------------------------------
+    document.getElementById("vendorDescription").textContent =
+      vendor.description || "This vendor has not added a description yet.";
+
+    // -------------------------------
+    // MEDIA (TIER-AWARE) — FIXED
+    // -------------------------------
+    const mediaSection = document.getElementById("mediaSection");
+    const galleryWrap = document.getElementById("galleryWrap");
+    const videoWrap = document.getElementById("videoWrap");
+
+    if (!caps.media) {
+      mediaSection.classList.add("hidden");
+    } else {
+      mediaSection.classList.remove("hidden");
+
+      if (
+        Array.isArray(vendor.gallery_image_url) &&
+        vendor.gallery_image_url.length
+      ) {
+        galleryWrap.classList.remove("hidden");
+        galleryWrap.innerHTML = vendor.gallery_image_url
+          .slice(0, 12)
+          .map(img => `<img src="${img}" />`)
+          .join("");
+      } else {
+        galleryWrap.classList.add("hidden");
+      }
+
+      if (vendor.promo_video_url) {
+        videoWrap.classList.remove("hidden");
+        videoWrap.innerHTML = `
+          <video controls>
+            <source src="${vendor.promo_video_url}" type="video/mp4" />
+          </video>
+          <small>Max video length: ${caps.videoSeconds}s</small>
+        `;
+      } else {
+        videoWrap.classList.add("hidden");
+      }
+    }
+// -------------------------------
+// UPGRADE CTA (FREE + OWNER ONLY)
+// -------------------------------
+
+const upgradeSection = document.getElementById("upgradeCTA");
+const upgradeMessage = document.getElementById("upgradeMessage");
+
+if (upgradeSection && upgradeMessage) {
   const isVendorOwner =
-    window.currentUser &&
+    !!window.currentUser &&
+    !!vendor.auth_user_id &&
     vendor.auth_user_id === window.currentUser.id;
 
-    // ===============================
-// SEO META (DYNAMIC)
-// ===============================
-   document.title = `${vendor.name} – ${vendor.category} at ${vendor.address}`;
+  const isFreeVendor = vendor.plan_tier === "free";
 
-   const metaDesc = document.querySelector('meta[name="description"]');
-   if (metaDesc) {
-    metaDesc.setAttribute(
-    "content",
-    `${vendor.name} is a verified ${vendor.category} located at ${vendor.address}. Contact details, location, and services available on Spotlight.`
-  );
- }
-
- // ===============================
-// CANONICAL URL
-// ===============================
-  const canonical = document.getElementById("canonicalLink");
-    if (canonical) {
-   canonical.href = `${window.location.origin}/vendor-profile.html?slug=${vendor.slug}`;
- }
-
-  // ===============================
-  // HERO (PUBLIC CONTENT)
-  // ===============================
-  document.getElementById("vendorName").textContent = vendor.name;
-  document.getElementById("vendorCategory").textContent = vendor.category;
-  document.getElementById("vendorAddress").textContent = vendor.address;
-
-  // ===============================
-  // PLAN (VENDOR-ONLY)
-  // ===============================
-  const planEl = document.getElementById("vendorPlan");
-  const planWrap = document.querySelector(".plan-label");
-
-  if (isVendorOwner) {
-    planEl.textContent = vendor.plan_tier;
-    planWrap.classList.remove("hidden");
-  } else {
-    planWrap.remove(); // completely remove for public users
-  }
-
-  // ===============================
-  // UPGRADE CTA (VENDOR-ONLY)
-  // ===============================
-  const upgradeSection = document.getElementById("upgradeCTA");
-  const upgradeMessage = document.getElementById("upgradeMessage");
-
-  if (
-    isVendorOwner &&
-    vendor.plan_tier !== "elite" &&
-    vendor.plan_tier !== "custom"
-  ) {
+  if (isVendorOwner && isFreeVendor) {
     upgradeSection.classList.remove("hidden");
-
-    if (vendor.plan_tier === "basic") {
-      upgradeMessage.textContent =
-        "Upgrade to add photos, videos & social links to your profile.";
-    }
-
-    if (vendor.plan_tier === "standard") {
-      upgradeMessage.textContent =
-        "Upgrade to add longer videos, more branches & enhanced visibility.";
-    }
-
-    if (vendor.plan_tier === "enterprise") {
-      upgradeMessage.textContent =
-        "Upgrade to Elite for nationwide visibility and premium placement.";
-    }
+    upgradeMessage.textContent =
+      "Upgrade your profile to add photos, videos, and boost visibility.";
   } else {
-    upgradeSection.remove();
-  }
-
-  // ===============================
-  // BADGE (ALWAYS PUBLIC)
-  // ===============================
-  const badgeEl = document.getElementById("vendorBadge");
-  badgeEl.classList.remove("badge-skeleton");
-  badgeEl.innerHTML = renderBadge(vendor.verification_status);
-
-  // ===============================
-  // ACTIONS
-  // ===============================
-  if (vendor.phone) {
-    document.getElementById("whatsappLink").href =
-      `https://wa.me/${vendor.phone}`;
-  }
-
-  document.getElementById("mapLink").href =
-    `https://www.google.com/maps/search/?api=1&query=${vendor.latitude},${vendor.longitude}`;
-
-  // ===============================
-  // ABOUT
-  // ===============================
-  document.getElementById("vendorDescription").textContent =
-    vendor.description || "This vendor has not added a description yet.";
-
-  // ===============================
-  // CONTACT
-  // ===============================
-  document.getElementById("vendorPhone").textContent =
-    vendor.phone || "—";
-  document.getElementById("vendorEmail").textContent =
-    vendor.email || "—";
-
-
-// ===============================
-// OPEN GRAPH
-// ===============================
-document.querySelector('meta[property="og:title"]')
-  ?.setAttribute("content", vendor.name);
-
-document.querySelector('meta[property="og:description"]')
-  ?.setAttribute(
-    "content",
-    `${vendor.name} – verified ${vendor.category} in ${vendor.address}`
-  );
-
-document.getElementById("ogUrl")
-  ?.setAttribute(
-    "content",
-    `${window.location.origin}/vendor-profile.html?slug=${vendor.slug}`
-  );
-
-
-  // ===============================
-  // MEDIA (TIER RULES)
-  // ===============================
-  handleTierMedia(vendor);
-}
-
-
-function handleTierMedia(vendor) {
-  const mediaSection = document.getElementById("mediaSection");
-  const galleryWrap = document.getElementById("galleryWrap");
-  const videoWrap = document.getElementById("videoWrap");
-
-  const tier = vendor.plan_tier;
-
-  // -------------------------------
-  // BASIC TIER — EMPTY STATE
-  // -------------------------------
-  if (tier === "basic") {
-    mediaSection.classList.remove("hidden");
-    mediaSection.innerHTML = `
-      <h2>Media</h2>
-      <p class="upgrade-placeholder">
-        Upgrade your plan to showcase photos and videos.
-      </p>
-    `;
-    return;
-  }
-
-  // -------------------------------
-  // PAID TIERS
-  // -------------------------------
-  mediaSection.classList.remove("hidden");
-
-  // Reset (important for re-renders)
-  galleryWrap.classList.add("hidden");
-  videoWrap.classList.add("hidden");
-  galleryWrap.innerHTML = "";
-  videoWrap.innerHTML = "";
-
-  // -------------------------------
-  // GALLERY (soft-capped)
-  // -------------------------------
-  if (Array.isArray(vendor.gallery_image_url) && vendor.gallery_image_url.length) {
-    galleryWrap.classList.remove("hidden");
-
-    galleryWrap.innerHTML = vendor.gallery_image_url
-      .slice(0, 12) // soft cap for layout safety
-      .map(img => `<img src="${img}" alt="Vendor gallery image">`)
-      .join("");
-  }
-
-  // -------------------------------
-  // VIDEO (tier-based duration)
-  // -------------------------------
-  if (vendor.promo_video_url) {
-    let maxSeconds = 0;
-
-    if (tier === "standard") maxSeconds = 20;
-    if (tier === "enterprise") maxSeconds = 40;
-    if (tier === "elite") maxSeconds = 60;
-    if (tier === "custom") maxSeconds = 120;
-
-    if (maxSeconds > 0) {
-      videoWrap.classList.remove("hidden");
-      videoWrap.innerHTML = `
-        <video controls>
-          <source src="${vendor.promo_video_url}" type="video/mp4">
-        </video>
-        <small>Max video length for this plan: ${maxSeconds}s</small>
-      `;
-    }
+    upgradeSection.classList.add("hidden");
   }
 }
 
 
+  }
 
+  // ===============================
+  // INIT
+  // ===============================
+  loadVendorProfile();
 });

@@ -1,0 +1,94 @@
+document.addEventListener("DOMContentLoaded", async () => {
+  const supabase = window.supabaseClient;
+  const form = document.getElementById("loginForm");
+  const errorEl = document.getElementById("loginError");
+  const submitBtn = document.getElementById("loginBtn");
+
+  let isSubmitting = false;
+  if (!form) return;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+    isSubmitting = true;
+
+    errorEl.classList.add("hidden");
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Logging in...";
+    }
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      errorEl.textContent = error.message;
+      errorEl.classList.remove("hidden");
+      resetSubmitState();
+      return;
+    }
+
+    const user = data.user;
+
+    // 🔍 SINGLE SOURCE OF TRUTH — vendors table ONLY
+    const { data: vendor, error: vendorErr } = await supabase
+      .from("vendors")
+      .select("slug, plan_tier, subscription_status")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+
+
+// ===============================
+// ROUTING (LOCKED — DB IS SOURCE)
+// ===============================
+
+// 1️⃣ No vendor yet → route by plan intent (ONE TIME ONLY)
+if (!vendor) {
+  const selectedPlan = localStorage.getItem("selectedPlan");
+
+  // Safety fallback
+  if (!selectedPlan) {
+    window.location.replace("getlisted.html");
+    return;
+  }
+
+  // FREE → onboarding
+  if (selectedPlan === "free") {
+    window.location.replace("onboarding.html");
+    return;
+  }
+
+  // PREMIUM → payment
+  window.location.replace("payment.html");
+  return;
+}
+
+// 🔥 PLAN INTENT ENDS HERE
+localStorage.removeItem("selectedPlan");
+localStorage.removeItem("billingType");
+
+// 2️⃣ FREE vendor → private profile
+if (vendor.plan_tier === "free") {
+  window.location.replace(
+    `vendor-profile.html?slug=${vendor.slug}`
+  );
+  return;
+}
+
+// 3️⃣ PREMIUM unpaid → payment
+if (vendor.subscription_status !== "active") {
+  window.location.replace("payment.html");
+  return;
+}
+
+// 4️⃣ PREMIUM paid → dashboard
+window.location.replace("dashboard.html");
+
+  });
+    
+});
