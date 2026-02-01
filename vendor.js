@@ -119,13 +119,26 @@ function renderVendorCard(vendor) {
           WhatsApp
         </a>
 
-        <a
-          href="https://www.google.com/maps/search/?api=1&query=${vendor.latitude},${vendor.longitude}"
-          target="_blank"
-          rel="noopener"
-        >
-          Map
-        </a>
+        ${(() => {
+      if (vendor.latitude && vendor.longitude) {
+       return `<a
+         href="https://www.google.com/maps/search/?api=1&query=${vendor.latitude},${vendor.longitude}"
+         target="_blank"
+         rel="noopener"
+         >Map</a>`;
+      }
+
+      if (vendor.address) {
+       return `<a
+        href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vendor.address)}"
+        target="_blank"
+        rel="noopener"
+        >Map</a>`;
+     }
+
+      return ``;
+    })()}
+
 
         ${vendor.is_premium
           ? `<a href="vendor-profile.html?slug=${vendor.slug}">
