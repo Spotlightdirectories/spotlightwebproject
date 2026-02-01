@@ -1,9 +1,9 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const supabase = window.supabaseClient;
 
-  // =====================================================
-  // AUTH GUARD
-  // =====================================================
+  // ===============================
+  // AUTH
+  // ===============================
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     window.location.replace("login.html");
@@ -16,50 +16,39 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (!form) return;
 
-  let isSubmitting = false;
-
-  // =====================================================
-  // PREVENT ACCESS IF VENDOR ALREADY EXISTS
-  // (Login routing should already block this, but this
-  // is a final safety net)
-  // =====================================================
-  const { data: existingVendor } = await supabase
+  // ===============================
+  // BLOCK DUPLICATE
+  // ===============================
+  const { data: existing } = await supabase
     .from("vendors")
     .select("id")
     .eq("auth_user_id", user.id)
     .maybeSingle();
 
-  if (existingVendor) {
-    statusMsg.textContent = "Your profile already exists.";
+  if (existing) {
+    statusMsg.textContent = "Profile already exists.";
     return;
   }
 
-  // =====================================================
-  // CATEGORY + SUBCATEGORY
-  // =====================================================
+  // ===============================
+  // CATEGORY
+  // ===============================
   const categorySelect = document.getElementById("category");
   const subcategorySelect = document.getElementById("subcategory");
 
-  const { data: categories, error: catErr } = await supabase
+  const { data: categories } = await supabase
     .from("categories")
     .select("id, name");
 
-  if (catErr) {
-    console.error(catErr);
-    return;
-  }
-
   categories.forEach(cat => {
-    const opt = document.createElement("option");
-    opt.value = cat.id;
-    opt.textContent = cat.name;
-    categorySelect.appendChild(opt);
+    const o = document.createElement("option");
+    o.value = cat.id;
+    o.textContent = cat.name;
+    categorySelect.appendChild(o);
   });
 
   categorySelect.addEventListener("change", async () => {
-    subcategorySelect.innerHTML =
-      "<option value=''>Select Subcategory</option>";
-
+    subcategorySelect.innerHTML = "<option value=''>Select Subcategory</option>";
     if (!categorySelect.value) return;
 
     const { data: subs } = await supabase
@@ -67,34 +56,44 @@ document.addEventListener("DOMContentLoaded", async () => {
       .select("id, name")
       .eq("category_id", categorySelect.value);
 
-    subs.forEach(sub => {
-      const opt = document.createElement("option");
-      opt.value = sub.id;
-      opt.textContent = sub.name;
-      subcategorySelect.appendChild(opt);
+    subs.forEach(s => {
+      const o = document.createElement("option");
+      o.value = s.id;
+      o.textContent = s.name;
+      subcategorySelect.appendChild(o);
     });
   });
 
-  // =====================================================
-  // FORM SUBMIT — FREE VENDOR ONLY
-  // =====================================================
+  // ===============================
+  // SUBMIT
+  // ===============================
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (isSubmitting) return;
-    isSubmitting = true;
 
-    if (!form.checkValidity()) {
-      form.reportValidity();
-      resetSubmitState();
+    submitBtn.disabled = true;
+    statusMsg.textContent = "Creating profile…";
+
+    const businessName =
+      localStorage.getItem("pendingBusinessName");
+
+    if (!businessName) {
+      statusMsg.textContent = "Business name missing.";
+      submitBtn.disabled = false;
       return;
     }
 
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Saving profile…";
-    statusMsg.textContent = "Creating your business profile…";
+    const categoryText =
+      categorySelect.options[categorySelect.selectedIndex]?.text || null;
+
+    const subcategoryText =
+      subcategorySelect.options[subcategorySelect.selectedIndex]?.text || null;
 
     const payload = {
-      name: document.getElementById("name").value.trim(),
+      name: businessName,
+      slug: businessName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, ""),
       address: document.getElementById("address").value.trim(),
       state: document.getElementById("state").value,
       lga: document.getElementById("lga").value,
@@ -102,45 +101,32 @@ document.addEventListener("DOMContentLoaded", async () => {
       email: document.getElementById("email").value.trim(),
       category_id: categorySelect.value,
       subcategory_id: subcategorySelect.value,
+      category: categoryText,
+      subcategory: subcategoryText,
       auth_user_id: user.id,
       plan_tier: "free",
       subscription_status: "active",
       is_premium: false
     };
 
-    try {
-      // CREATE FREE VENDOR (ONLY PLACE THIS EVER HAPPENS)
-      const { data: vendor, error } = await supabase
-        .from("vendors")
-        .insert(payload)
-        .select("id, slug")
-        .single();
+    const { data, error } = await supabase
+      .from("vendors")
+      .insert(payload)
+      .select("slug")
+      .single();
 
-      if (error) throw error;
-
-      // GENERATE SPOT-ID
-      await supabase.rpc("generate_spot_id", {
-        vendor_id: vendor.id,
-        vendor_type: "F"
-      });
-
-      // REDIRECT TO PRIVATE PROFILE
-      window.location.replace(
-        `vendor-profile.html?slug=${vendor.slug}`
-      );
-    } catch (err) {
-      statusMsg.textContent =
-        err.message || "Something went wrong.";
-      resetSubmitState();
+    if (error) {
+      statusMsg.textContent = error.message;
+      submitBtn.disabled = false;
+      return;
     }
-  });
 
-  function resetSubmitState() {
-    isSubmitting = false;
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Submit";
-  }
+    window.location.replace(
+      `vendor-profile.html?slug=${data.slug}`
+    );
+  });
 });
+
 
 //NIGERIA STATES AND LGAS SCRIPT
 document.addEventListener("DOMContentLoaded", () => {

@@ -48,11 +48,12 @@ body {
   margin: 0 auto;
   padding: 0 24px 24px;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 120px minmax(0, 1fr) auto;
   gap: 24px;
   align-items: flex-end;
   position: relative;
 }
+
 
 /* Logo — overlapping */
 .hero-left {
@@ -77,14 +78,18 @@ body {
   object-fit: contain;
 }
 
+.hero-text {
+  min-width: 0;
+}
 /* Center text */
-.hero-center h1 {
+.hero-text h1 {
   font-size: 1.6rem;
   font-weight: 700;
-  margin-bottom: 6px;
+  color: #111;
+  margin: 0;
 }
 
-.hero-center p {
+.hero-text p {
   color: #4b5563;
   font-size: 0.95rem;
 }
@@ -100,6 +105,13 @@ body {
   text-decoration: none;
   color: #2563eb;
 }
+
+.address-line {
+  margin-top: 4px;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
 
 /* ===============================
    BADGE
@@ -236,3 +248,10 @@ body {
 .upgrade-btn:hover {
   background: #ea580c;
 }
+
+#upgradeMessage {
+  display: block;
+  min-height: 1.4em;
+  color: #7c2d12;
+}
+
