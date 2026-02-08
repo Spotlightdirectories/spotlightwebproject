@@ -22,6 +22,7 @@
         <h1>Search Vendors</h1>
 
         <form id="searchForm">
+          <label for="searchInput" class="visually-hidden">Search vendors</label>
           <input
             type="text"
             id="searchInput"
@@ -29,11 +30,13 @@
           />
 
           <div class="filters">
-            <select id="categorySelect">
+            <label for="categorySelect" class="visually-hidden">Category</label>
+            <select id="categorySelect" name="category">
               <option value="">All Categories</option>
             </select>
 
-            <select id="subcategorySelect" disabled>
+            <label for="subcategorySelect" class="visually-hidden">Subcategory</label>
+            <select id="subcategorySelect" name="subcategory" disabled>
               <option value="">All Subcategories</option>
             </select>
           </div>
@@ -62,11 +65,7 @@
     </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- Shared Supabase client -->
   <script src="supabase-client.js"></script>
-
-<!-- Page-specific JS -->
   <script src="vendor.js" defer></script>
 </body>
 </html>

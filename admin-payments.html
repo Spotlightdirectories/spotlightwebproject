@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin – Payment Approvals</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="../admin.css" />
+</head>
+
+<body>
+  <main class="admin-container">
+    <h1>Pending Payments</h1>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Vendor</th>
+          <th>Plan</th>
+          <th>Billing</th>
+          <th>Receipt</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+
+      <tbody id="paymentsTable">
+        <tr>
+          <td colspan="6">Loading…</td>
+        </tr>
+      </tbody>
+    </table>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../supabase-client.js"></script>
+  <script src="admin-payments.js"></script>
+</body>
+</html>

@@ -1,37 +1,58 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const supabase = window.supabaseClient;
+
   const planSummaryEl = document.getElementById("planSummary");
-  const hintEl = document.getElementById("paymentHint");
+  const paymentActions = document.getElementById("paymentActions");
+  const bankSection = document.getElementById("bankSection");
+  const lockedState = document.getElementById("lockedState");
+  const receiptStatus = document.getElementById("receiptStatus");
 
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+  const payOnlineBtn = document.getElementById("payOnlineBtn");
+  const payBankBtn = document.getElementById("payBankBtn");
+  const submitReceiptBtn = document.getElementById("submitReceiptBtn");
+  const receiptFileInput = document.getElementById("receiptFile");
 
+  // ===============================
+  // AUTH
+  // ===============================
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    window.location.href = "login.html";
+    window.location.replace("login.html");
     return;
   }
 
   const selectedPlan = localStorage.getItem("selectedPlan");
   const billingType = localStorage.getItem("billingType");
 
-  if (!selectedPlan) {
-    window.location.href = "getlisted.html";
+  if (!selectedPlan || !billingType) {
+    window.location.replace("getlisted.html");
     return;
   }
 
   planSummaryEl.textContent =
     `You selected the ${selectedPlan.toUpperCase()} plan (${billingType}).`;
 
-  // 🔒 IMPORTANT:
-  // ❌ DO NOT create vendor here
-  // Payment happens BEFORE onboarding
+  // ===============================
+  // CHECK EXISTING PAYMENT (LOCK PAGE)
+  // ===============================
+  const { data: existingPayment } = await supabase
+    .from("vendorpayments")
+    .select("id,status")
+    .eq("auth_user_id", user.id)
+    .in("status", ["pending", "awaiting_review", "approved"])
+    .maybeSingle();
 
-  // PAY ONLINE (Paystack – stub)
-  document.getElementById("payOnlineBtn").addEventListener("click", async () => {
-    hintEl.textContent = "Redirecting to secure online payment…";
-    hintEl.classList.remove("hidden");
+  if (existingPayment) {
+    paymentActions.classList.add("hidden");
+    bankSection.classList.add("hidden");
+    lockedState.classList.remove("hidden");
+    return;
+  }
 
+  // ===============================
+  // PAY ONLINE (STUB)
+  // ===============================
+  payOnlineBtn.addEventListener("click", async () => {
     await supabase.from("vendorpayments").insert({
       auth_user_id: user.id,
       plan: selectedPlan,
@@ -40,28 +61,68 @@ document.addEventListener("DOMContentLoaded", async () => {
       status: "pending"
     });
 
-    // Paystack redirect later
+    paymentActions.classList.add("hidden");
+    lockedState.classList.remove("hidden");
   });
 
+  // ===============================
   // BANK TRANSFER
-  document.getElementById("payBankBtn").addEventListener("click", async () => {
-    await supabase.from("vendorpayments").insert({
-      auth_user_id: user.id,
-      plan: selectedPlan,
-      billing_type: billingType,
-      payment_method: "bank",
-      status: "pending"
-    });
+  // ===============================
+  payBankBtn.addEventListener("click", async () => {
+    const { data, error } = await supabase
+      .from("vendorpayments")
+      .insert({
+        auth_user_id: user.id,
+        plan: selectedPlan,
+        billing_type: billingType,
+        payment_method: "bank",
+        status: "pending"
+      })
+      .select("id")
+      .single();
 
-    hintEl.innerHTML = `
-      <strong>Bank Transfer Instructions</strong><br><br>
-      Bank: Sterling Bank Plc<br>
-      Account Name: Spotlight Directories Ltd<br>
-      Account Number: 0123456789<br><br>
-      After payment, send receipt to
-      <strong>payments@spotlightdirectories.com</strong>.
-      Your account will be activated after payment is confirmed.
-    `;
-    hintEl.classList.remove("hidden");
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    window.currentPaymentId = data.id;
+
+    paymentActions.classList.add("hidden");
+    bankSection.classList.remove("hidden");
+  });
+
+  // ===============================
+  // SUBMIT RECEIPT
+  // ===============================
+  submitReceiptBtn.addEventListener("click", async () => {
+    const file = receiptFileInput.files[0];
+    if (!file) {
+      alert("Please select a receipt file.");
+      return;
+    }
+
+    const filePath =
+      `bank-receipts/${window.currentPaymentId}-${file.name}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("payment-receipts")
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      alert(uploadError.message);
+      return;
+    }
+
+    await supabase
+      .from("vendorpayments")
+      .update({
+        transfer_proof_url: filePath,
+        status: "awaiting_review"
+      })
+      .eq("id", window.currentPaymentId);
+
+    bankSection.classList.add("hidden");
+    lockedState.classList.remove("hidden");
   });
 });

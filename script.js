@@ -162,6 +162,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log('SUPABASE URL:', window.supabaseClient.supabaseUrl);
 
+    console.log("Feedback payload being sent:", feedback);
+
     try {
       const { error } = await window.supabaseClient
   .from('feedback')
