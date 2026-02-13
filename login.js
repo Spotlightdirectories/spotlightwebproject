@@ -35,6 +35,35 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const user = data.user;
 
+    // ===============================
+// ENSURE USER ROLE EXISTS (ONCE)
+// ===============================
+    await supabase
+      .from("user_roles")
+      .insert({
+       user_id: user.id,
+       role: "vendor"
+    })
+      .select()
+      .maybeSingle();
+
+      // ===============================
+// CHECK PHONE VERIFICATION
+// ===============================
+   const { data: phoneCheck } = await supabase
+      .from("phone_verifications")
+      .select("verified")
+      .eq("auth_user_id", user.id)
+      .eq("verified", true)
+      .maybeSingle();
+
+   if (!phoneCheck) {
+      window.location.replace("verify-phone.html");
+      return;
+    }
+
+    
+
     // 🔍 SINGLE SOURCE OF TRUTH — vendors table ONLY
     const { data: vendor, error: vendorErr } = await supabase
       .from("vendors")

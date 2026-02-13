@@ -1,11 +1,16 @@
 document.addEventListener("DOMContentLoaded", async () => {
+  // ===============================
+  // SUPABASE
+  // ===============================
   const supabase = window.supabaseClient;
 
+  // ===============================
+  // ELEMENTS
+  // ===============================
   const planSummaryEl = document.getElementById("planSummary");
   const paymentActions = document.getElementById("paymentActions");
   const bankSection = document.getElementById("bankSection");
   const lockedState = document.getElementById("lockedState");
-  const receiptStatus = document.getElementById("receiptStatus");
 
   const payOnlineBtn = document.getElementById("payOnlineBtn");
   const payBankBtn = document.getElementById("payBankBtn");
@@ -13,7 +18,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const receiptFileInput = document.getElementById("receiptFile");
 
   // ===============================
-  // AUTH
+  // AUTH CHECK
   // ===============================
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
@@ -21,6 +26,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
+  // ===============================
+  // PLAN DATA
+  // ===============================
   const selectedPlan = localStorage.getItem("selectedPlan");
   const billingType = localStorage.getItem("billingType");
 
@@ -33,42 +41,36 @@ document.addEventListener("DOMContentLoaded", async () => {
     `You selected the ${selectedPlan.toUpperCase()} plan (${billingType}).`;
 
   // ===============================
-  // CHECK EXISTING PAYMENT (LOCK PAGE)
+  // PAY ONLINE — GUARANTEED TO FIRE
   // ===============================
-  const { data: existingPayment } = await supabase
-    .from("vendorpayments")
-    .select("id,status")
-    .eq("auth_user_id", user.id)
-    .in("status", ["pending", "awaiting_review", "approved"])
-    .maybeSingle();
-
-  if (existingPayment) {
-    paymentActions.classList.add("hidden");
-    bankSection.classList.add("hidden");
-    lockedState.classList.remove("hidden");
-    return;
-  }
-
-  // ===============================
-  // PAY ONLINE (STUB)
-  // ===============================
-  payOnlineBtn.addEventListener("click", async () => {
-    await supabase.from("vendorpayments").insert({
-      auth_user_id: user.id,
-      plan: selectedPlan,
-      billing_type: billingType,
-      payment_method: "paystack",
-      status: "pending"
+  payOnlineBtn.onclick = () => {
+    const handler = PaystackPop.setup({
+      key: "pk_test_3dc48990c568ef43d2b42a9571cde21b9175d699", // <-- PUT YOUR REAL TEST KEY
+      email: user.email,
+      amount: getAmountInKobo(selectedPlan, billingType),
+      currency: "NGN",
+      ref: `SPOT_${Date.now()}`,
+      metadata: {
+        auth_user_id: user.id,
+        plan: selectedPlan,
+        billing_type: billingType
+      },
+      callback: function () {
+        alert("Paystack popup opened successfully");
+        // later: verification + redirect
+      },
+      onClose: function () {
+        alert("Payment cancelled");
+      }
     });
 
-    paymentActions.classList.add("hidden");
-    lockedState.classList.remove("hidden");
-  });
+    handler.openIframe();
+  };
 
   // ===============================
-  // BANK TRANSFER
+  // BANK TRANSFER (UNCHANGED)
   // ===============================
-  payBankBtn.addEventListener("click", async () => {
+  payBankBtn.onclick = async () => {
     const { data, error } = await supabase
       .from("vendorpayments")
       .insert({
@@ -87,23 +89,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     window.currentPaymentId = data.id;
-
     paymentActions.classList.add("hidden");
     bankSection.classList.remove("hidden");
-  });
+  };
 
-  // ===============================
-  // SUBMIT RECEIPT
-  // ===============================
-  submitReceiptBtn.addEventListener("click", async () => {
+  submitReceiptBtn.onclick = async () => {
     const file = receiptFileInput.files[0];
     if (!file) {
-      alert("Please select a receipt file.");
+      alert("Select a receipt file.");
       return;
     }
 
-    const filePath =
-      `bank-receipts/${window.currentPaymentId}-${file.name}`;
+    const filePath = `bank-receipts/${window.currentPaymentId}-${file.name}`;
 
     const { error: uploadError } = await supabase.storage
       .from("payment-receipts")
@@ -124,5 +121,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     bankSection.classList.add("hidden");
     lockedState.classList.remove("hidden");
-  });
+  };
+
+  // ===============================
+  // PRICING
+  // ===============================
+  function getAmountInKobo(plan, billingType) {
+    const prices = {
+      standard: { monthly: 299800, yearly: 2597600 },
+      enterprise: { monthly: 899800, yearly: 8297600 },
+      elite: { monthly: 2299800, yearly: 11097600 }
+    };
+    return prices[plan][billingType];
+  }
 });

@@ -30,7 +30,7 @@
     />
 
     <!-- Category -->
-    <label class="ob-label">
+    <label for="category"  class="ob-label">
       Category <span class="ob-req">*</span>
     </label>
     <select class="ob-select" id="category" required>
@@ -38,11 +38,11 @@
     </select>
 
     <!-- Subcategory -->
-    <label class="ob-label">
+    <label for="subcategory" class="ob-label">
       Subcategory <span class="ob-req">*</span>
     </label>
-    <select class="ob-select" id="subcategory" required>
-      <option value="">Select Subcategory</option>
+    <select class="ob-select" id="subcategory" name="subcategory" required>
+      <option value="" disabled selected>Select Subcategory</option>
     </select>
 
     <!-- Address -->
@@ -58,7 +58,7 @@
     ></textarea>
 
     <!-- State -->
-    <label class="ob-label">
+    <label for="state" class="ob-label">
       State <span class="ob-req">*</span>
     </label>
     <select class="ob-select" id="state" required>
@@ -66,7 +66,7 @@
     </select>
 
     <!-- LGA -->
-    <label class="ob-label">
+    <label for="lga" class="ob-label">
       LGA <span class="ob-req">*</span>
     </label>
     <select class="ob-select" id="lga" required>
