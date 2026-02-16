@@ -1,5 +1,15 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const supabase = window.supabaseClient;
+
+  // Password toggle
+document.querySelectorAll(".toggle-password").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const input = document.getElementById(btn.dataset.target);
+    if (!input) return;
+    input.type = input.type === "password" ? "text" : "password";
+  });
+});
+
   const form = document.getElementById("resetForm");
   const msg = document.getElementById("resetMsg");
 

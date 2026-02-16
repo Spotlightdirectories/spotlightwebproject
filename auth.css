@@ -135,25 +135,25 @@ body {
 }
 
 .password-wrap {
-  display: flex;
-  align-items: center;
   position: relative;
 }
 
 .password-wrap input {
   width: 100%;
-  padding-right: 42px;
+  padding-right: 40px;
 }
 
 .toggle-password {
   position: absolute;
   right: 10px;
-  background: none;
+  top: 50%;
+  transform: translateY(-50%);
   border: none;
+  background: transparent;
   cursor: pointer;
-  font-size: 14px;
-  opacity: 0.7;
+  font-size: 16px;
 }
+
 
 .auth-card {
   max-width: 420px;
