@@ -1,45 +1,49 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const supabase = window.supabaseClient;
 
-    // 👁 Password toggle logic
+  const form = document.getElementById("resetForm");
+  const msg = document.getElementById("resetMsg");
+
+  // 👁 Password toggle
   document.querySelectorAll(".toggle-password").forEach(btn => {
     btn.addEventListener("click", () => {
       const input = document.getElementById(btn.dataset.target);
       if (!input) return;
-
       input.type = input.type === "password" ? "text" : "password";
     });
   });
 
-  const form = document.getElementById("resetForm");
-  const msg = document.getElementById("resetMsg");
-
-  // -------------------------------------------------
-  // 1️⃣ Detect recovery session from URL hash
-  // -------------------------------------------------
+  // ---------------------------------
+  // 1️⃣ Extract recovery code
+  // ---------------------------------
   const hash = window.location.hash;
+  const params = new URLSearchParams(hash.replace("#", ""));
+  const access_token = params.get("access_token");
+  const type = params.get("type");
 
-  if (!hash || !hash.includes("access_token")) {
+  if (!access_token || type !== "recovery") {
     msg.textContent = "Invalid or expired reset link.";
     msg.classList.remove("hidden");
     form.style.display = "none";
     return;
   }
 
-  // Let Supabase automatically extract session from hash
-  const { data: { session }, error } =
-    await supabase.auth.getSession();
+  // ---------------------------------
+  // 2️⃣ Exchange recovery code for session
+  // ---------------------------------
+  const { error: exchangeError } =
+    await supabase.auth.exchangeCodeForSession(access_token);
 
-  if (!session || error) {
+  if (exchangeError) {
     msg.textContent = "Invalid or expired reset link.";
     msg.classList.remove("hidden");
     form.style.display = "none";
     return;
   }
 
-  // -------------------------------------------------
-  // 2️⃣ Handle password update
-  // -------------------------------------------------
+  // ---------------------------------
+  // 3️⃣ Handle password update
+  // ---------------------------------
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
