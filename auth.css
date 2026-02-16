@@ -244,3 +244,18 @@ input {
   font-weight: 500;
 }
 
+/* Login Error Styling */
+.auth-error {
+  display: none;
+  background: #ffe5e5;
+  color: #b00020;
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.input-error {
+  border: 1px solid #b00020 !important;
+}
+

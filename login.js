@@ -27,13 +27,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     if (error) {
-      errorEl.textContent = error.message;
-      errorEl.classList.remove("hidden");
-      resetSubmitState();
-      return;
-    }
+  errorEl.textContent = "Invalid email or password.";
+  errorEl.style.display = "block";
+
+  document.getElementById("email").classList.add("input-error");
+  document.getElementById("password").classList.add("input-error");
+
+  resetSubmitState();
+  return;
+}
+
 
     const user = data.user;
+
+    errorEl.style.display = "none";
+    document.getElementById("email").classList.remove("input-error");
+    document.getElementById("password").classList.remove("input-error");
 
     // ===============================
 // ENSURE USER ROLE EXISTS (ONCE)
@@ -56,6 +65,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       .eq("auth_user_id", user.id)
       .eq("verified", true)
       .maybeSingle();
+      
 
    if (!phoneCheck) {
       window.location.replace("verify-phone.html");
@@ -119,5 +129,16 @@ if (vendor.subscription_status !== "active") {
 window.location.replace("dashboard.html");
 
   });
+
+  // 👁️ Password toggle (LOGIN PAGE)
+document.querySelectorAll(".toggle-password").forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const input = document.getElementById(btn.dataset.target);
+    if (!input) return;
+    input.type = input.type === "password" ? "text" : "password";
+  });
+});
+
     
 });

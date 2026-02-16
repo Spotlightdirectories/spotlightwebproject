@@ -7,23 +7,31 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ---------------------------------
   // 1️⃣ Handle Supabase recovery CODE
   // ---------------------------------
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get("code");
+  // Handle both ?code= and #access_token= formats
+   const hash = window.location.hash;
+   const params = new URLSearchParams(window.location.search);
+   const code = params.get("code");
 
-  if (!code) {
-    msg.textContent = "Invalid or expired reset link.";
-    msg.classList.remove("hidden");
-    return;
+   if (code) {
+     const { error } = await supabase.auth.exchangeCodeForSession(code);
+   if (error) {
+      msg.textContent = "Invalid or expired reset link.";
+      msg.classList.remove("hidden");
+      return;
+    }
+  } else if (hash.includes("access_token")) {
+     const { error } = await supabase.auth.getSession();
+   if (error) {
+      msg.textContent = "Invalid or expired reset link.";
+      msg.classList.remove("hidden");
+      return;
+   }
+  } else {
+     msg.textContent = "Invalid or expired reset link.";
+     msg.classList.remove("hidden");
+     return;
   }
 
-  const { error: exchangeError } =
-    await supabase.auth.exchangeCodeForSession(code);
-
-  if (exchangeError) {
-    msg.textContent = "Invalid or expired reset link.";
-    msg.classList.remove("hidden");
-    return;
-  }
 
   // ---------------------------------
   // 2️⃣ Update password

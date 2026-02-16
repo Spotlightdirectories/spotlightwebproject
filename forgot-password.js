@@ -10,9 +10,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const email = document.getElementById("email").value.trim();
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "http://127.0.0.1:5501/reset-password.html"
-    });
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: "https://spotlightdirectories.com/reset-password.html"
+  });
+
 
     if (error) {
       msg.textContent = error.message;
