@@ -58,10 +58,18 @@ document.querySelectorAll(".toggle-password").forEach(btn => {
       return;
     }
 
-    msg.textContent = "Password updated successfully. Redirecting to login...";
+    // SUCCESS UI
+      form.style.display = "none";
 
-    setTimeout(() => {
+      msg.textContent = "Password reset successful! Redirecting to login...";
+      msg.classList.remove("hidden");
+      msg.style.color = "#16a34a"; // clean green
+      msg.style.fontWeight = "600";
+      msg.style.marginTop = "15px";
+
+      setTimeout(() => {
       window.location.href = "login.html";
-    }, 1500);
+      }, 2500);
+
   });
 });
