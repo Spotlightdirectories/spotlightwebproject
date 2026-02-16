@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const supabase = window.supabaseClient;
-
   const form = document.getElementById("resetForm");
   const msg = document.getElementById("resetMsg");
 
@@ -13,37 +12,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  // ---------------------------------
-  // 1️⃣ Extract recovery code
-  // ---------------------------------
-  const hash = window.location.hash;
-  const params = new URLSearchParams(hash.replace("#", ""));
-  const access_token = params.get("access_token");
-  const type = params.get("type");
+  // Let Supabase auto-detect recovery session
+  const { data: { session } } = await supabase.auth.getSession();
 
-  if (!access_token || type !== "recovery") {
+  if (!session) {
     msg.textContent = "Invalid or expired reset link.";
     msg.classList.remove("hidden");
     form.style.display = "none";
     return;
   }
 
-  // ---------------------------------
-  // 2️⃣ Exchange recovery code for session
-  // ---------------------------------
-  const { error: exchangeError } =
-    await supabase.auth.exchangeCodeForSession(access_token);
-
-  if (exchangeError) {
-    msg.textContent = "Invalid or expired reset link.";
-    msg.classList.remove("hidden");
-    form.style.display = "none";
-    return;
-  }
-
-  // ---------------------------------
-  // 3️⃣ Handle password update
-  // ---------------------------------
+  // Handle password update
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -62,14 +41,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    msg.textContent = "Updating password...";
-    msg.classList.remove("hidden");
+    const { error } = await supabase.auth.updateUser({ password });
 
-    const { error: updateError } =
-      await supabase.auth.updateUser({ password });
-
-    if (updateError) {
-      msg.textContent = updateError.message;
+    if (error) {
+      msg.textContent = error.message;
       return;
     }
 
