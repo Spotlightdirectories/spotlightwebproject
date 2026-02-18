@@ -80,10 +80,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Route after verification
     const selectedPlan = localStorage.getItem("selectedPlan");
 
-    if (selectedPlan === "free") {
-      window.location.href = "onboarding.html";
-    } else {
-      window.location.href = "payment.html";
-    }
+    console.log("OTP VERIFIED");
+    console.log("Selected Plan:", selectedPlan);
+
+   if (selectedPlan === "free") {
+     window.location.replace("onboarding.html");
+     return;
+   }
+
+     window.location.replace("payment.html");
+
   });
 });

@@ -73,17 +73,47 @@
       <option value="">Select LGA</option>
     </select>
 
-    <!-- Phone -->
+    <!-- Location Detection -->
     <label class="ob-label">
-      WhatsApp / Phone <span class="ob-req">*</span>
+      Business Coordinates
     </label>
-    <input
-      type="tel"
-      class="ob-input"
-      id="phone"
-      placeholder="e.g., 0803 123 4567"
-      required
-    />
+
+    <div style="display:flex; gap:10px; margin-bottom:10px;">
+    <input type="text" id="latitude" class="ob-input" placeholder="Latitude" readonly />
+    <input type="text" id="longitude" class="ob-input" placeholder="Longitude" readonly />
+    </div>
+
+    <button type="button" id="detectLocationBtn" class="ob-btn secondary">
+      Detect My Business Location
+    </button>
+
+    <p id="locationStatus" style="font-size:12px; color:#777;">
+      Click detect only if you are currently at your business location.
+    </p>
+
+    <!-- WhatsApp -->
+<label class="ob-label">
+  WhatsApp Number <span class="ob-req">*</span>
+</label>
+<input
+  type="tel"
+  class="ob-input"
+  id="whatsapp"
+  placeholder="e.g., 0803 123 4567"
+  required
+/>
+
+<!-- Telephone -->
+<label class="ob-label">
+  Telephone Number (Optional)
+</label>
+<input
+  type="tel"
+  class="ob-input"
+  id="telephone"
+  placeholder="If different from WhatsApp"
+/>
+
 
     <!-- Email -->
     <label class="ob-label">

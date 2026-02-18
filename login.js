@@ -27,18 +27,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     if (error) {
-  errorEl.textContent = "Invalid email or password.";
-  errorEl.style.display = "block";
+       errorEl.textContent = "Invalid email or password.";
+       errorEl.style.display = "block";
 
-  document.getElementById("email").classList.add("input-error");
-  document.getElementById("password").classList.add("input-error");
+       document.getElementById("email").classList.add("input-error");
+       document.getElementById("password").classList.add("input-error");
 
-  resetSubmitState();
-  return;
-}
+       resetSubmitState();
+       return;
+    }
 
 
     const user = data.user;
+
+    console.log("Email confirmed at:", user.email_confirmed_at);
+
+    // ===============================
+    // EMAIL VERIFICATION CHECK
+    // ===============================
+    if (!user.email_confirmed_at) {
+      errorEl.textContent = "Please verify your email before logging in.";
+      errorEl.style.display = "block";
+
+      await supabase.auth.signOut();
+      resetSubmitState();
+      return;
+    }
+
 
     errorEl.style.display = "none";
     document.getElementById("email").classList.remove("input-error");
@@ -58,19 +73,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // ===============================
 // CHECK PHONE VERIFICATION
-// ===============================
-   const { data: phoneCheck } = await supabase
-      .from("phone_verifications")
-      .select("verified")
-      .eq("auth_user_id", user.id)
-      .eq("verified", true)
-      .maybeSingle();
+// // ===============================
+//    const { data: phoneCheck } = await supabase
+//       .from("phone_verifications")
+//       .select("verified")
+//       .eq("auth_user_id", user.id)
+//       .eq("verified", true)
+//       .maybeSingle();
       
 
-   if (!phoneCheck) {
-      window.location.replace("verify-phone.html");
-      return;
-    }
+   //if (!phoneCheck) {
+    //  window.location.replace("verify-phone.html");
+    //  return;
+   // }
 
     
 

@@ -7,31 +7,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const supabase = window.supabaseClient;
 
   const submitBtn = document.getElementById("signupBtn");
-let isSubmitting = false;
-
+  let isSubmitting = false;
 
   form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (isSubmitting) return;
-  isSubmitting = true;
+    if (isSubmitting) return;
+    isSubmitting = true;
 
-  errorEl.classList.add("hidden");
+    errorEl.classList.add("hidden");
 
-  if (submitBtn) {
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Creating account...";
-  }
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Creating account...";
+    }
 
-
-    const businessName =
-      document.getElementById("businessName").value.trim();
-    const email =
-      document.getElementById("email").value.trim();
-    const password =
-      document.getElementById("password").value;
-    const confirmPassword =
-      document.getElementById("confirmPassword").value;
+    const businessName = document.getElementById("businessName").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
 
     if (!businessName || !email || !password || !confirmPassword) {
       showError("All fields are required.");
@@ -46,9 +40,12 @@ let isSubmitting = false;
     }
 
     // 🔐 Create auth user (email confirmation ON)
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
-      password
+      password,
+      options: {
+        emailRedirectTo: "https://spotlightdirectories.com/login.html"
+      }
     });
 
     if (error) {
@@ -57,34 +54,37 @@ let isSubmitting = false;
       return;
     }
 
-    // 🔒 ENSURE PLAN INTENT EXISTS BEFORE PROCEEDING
+    // 🔒 ENSURE PLAN INTENT EXISTS
     const selectedPlan = localStorage.getItem("selectedPlan");
 
     if (!selectedPlan) {
-     showError("Please select a plan before creating an account.");
-     resetSubmitState();
-     return;
-   }
+      showError("Please select a plan before creating an account.");
+      resetSubmitState();
+      return;
+    }
 
+    // Store business name for onboarding
+    localStorage.setItem("pendingBusinessName", businessName);
 
+    // ✅ Success message
+    errorEl.textContent =
+      "Account created. Please check your email to verify before logging in.";
+    errorEl.classList.remove("hidden");
+    errorEl.classList.remove("form-error");
+    errorEl.classList.add("form-success");
 
- // Store business name for later onboarding
-     localStorage.setItem("pendingBusinessName", businessName);
+    submitBtn.textContent = "Verification email sent";
+    submitBtn.disabled = true;
+  });
 
-// ✅ Success feedback
-     errorEl.textContent = "Account created successfully. Redirecting to login...";
-     errorEl.classList.remove("hidden");
-     errorEl.classList.remove("form-error");
-     errorEl.classList.add("form-success");
-
-// Redirect after short delay
-     setTimeout(() => {
-     window.location.href = "login.html";
-   }, 1500);
-
-
-    window.location.href = "login.html";
-
+  // 👁️ Password toggle
+  document.querySelectorAll(".toggle-password").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const input = document.getElementById(btn.dataset.target);
+      if (!input) return;
+      input.type = input.type === "password" ? "text" : "password";
+    });
   });
 
   function showError(msg) {
@@ -92,23 +92,11 @@ let isSubmitting = false;
     errorEl.classList.remove("hidden");
   }
 
-  // 👁️ Password eye toggle (WORKING)
-  document.querySelectorAll(".toggle-password").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault(); // 🔴 critical
-      const input = document.getElementById(btn.dataset.target);
-      if (!input) return;
-      input.type = input.type === "password" ? "text" : "password";
-    });
-  });
-
   function resetSubmitState() {
-  isSubmitting = false;
-  if (submitBtn) {
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Create account";
+    isSubmitting = false;
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Create account";
+    }
   }
-}
-
 });
-

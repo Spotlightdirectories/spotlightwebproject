@@ -11,6 +11,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   const form = document.getElementById("vendorForm");
+  const detectBtn = document.getElementById("detectLocationBtn");
+  const latInput = document.getElementById("latitude");
+  const lngInput = document.getElementById("longitude");
+  const locationStatus = document.getElementById("locationStatus");
   const statusMsg = document.getElementById("statusMsg");
   const submitBtn = document.getElementById("submitBtn");
 
@@ -65,6 +69,34 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // ===============================
+// LOCATION DETECTION
+// ===============================
+if (detectBtn) {
+  detectBtn.addEventListener("click", () => {
+    if (!navigator.geolocation) {
+      locationStatus.textContent = "Geolocation not supported by your browser.";
+      return;
+    }
+
+    locationStatus.textContent = "Detecting location...";
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        latInput.value = position.coords.latitude.toFixed(6);
+        lngInput.value = position.coords.longitude.toFixed(6);
+
+        locationStatus.textContent =
+          "Location detected. Please confirm this is your business location.";
+      },
+      (error) => {
+        locationStatus.textContent =
+          "Unable to retrieve location. Please allow permission and try again.";
+      }
+    );
+  });
+}
+
+  // ===============================
   // SUBMIT
   // ===============================
   form.addEventListener("submit", async (e) => {
@@ -72,6 +104,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     submitBtn.disabled = true;
     statusMsg.textContent = "Creating profile…";
+
+    // 🔒 REQUIRE CONFIRMED LOCATION
+  if (!latInput.value || !lngInput.value) {
+     statusMsg.textContent = "Please detect and confirm business location.";
+     submitBtn.disabled = false;
+     return;
+  }
+
 
     const businessName =
       localStorage.getItem("pendingBusinessName");
@@ -94,10 +134,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)/g, ""),
+      
+      latitude: parseFloat(latInput.value),
+      longitude: parseFloat(lngInput.value),
+
+
       address: document.getElementById("address").value.trim(),
       state: document.getElementById("state").value,
       lga: document.getElementById("lga").value,
-      phone: document.getElementById("phone").value.trim(),
+      whatsapp: document.getElementById("whatsapp").value.trim(),
+      telephone: document.getElementById("telephone").value.trim() || null,
       email: document.getElementById("email").value.trim(),
       category_id: categorySelect.value,
       subcategory_id: subcategorySelect.value,

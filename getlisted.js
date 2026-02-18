@@ -58,3 +58,26 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
+// ===============================
+// VERIFIED BADGE BUTTONS
+// ===============================
+
+document.querySelectorAll(".verify-btn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+
+    const badgeType = btn.dataset.badge;
+
+    const { data: { user } } = await window.supabaseClient.auth.getUser();
+
+    if (!user) {
+      localStorage.setItem("pendingBadgeType", badgeType);
+      window.location.href = "login.html";
+      return;
+    }
+
+    localStorage.setItem("pendingBadgeType", badgeType);
+    window.location.href = "verify-badge.html";
+  });
+});
+

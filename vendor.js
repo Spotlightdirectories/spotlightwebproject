@@ -115,9 +115,15 @@ function renderVendorCard(vendor) {
         : ``}
 
       <div class="actions">
-        <a href="https://wa.me/${vendor.phone}" target="_blank" rel="noopener">
+        <a href="https://wa.me/${vendor.whatsapp}" target="_blank" rel="noopener">
           WhatsApp
         </a>
+    
+          ${vendor.telephone ? `
+       <a href="tel:${vendor.telephone}">
+         Call
+       </a>
+       ` : ``}
 
         ${(() => {
       if (vendor.latitude && vendor.longitude) {

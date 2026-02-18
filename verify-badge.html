@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Verify Badge</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<main class="auth-card">
+  <h2 id="badgeTitle">Badge Verification</h2>
+  <p id="badgeRequirements"></p>
+
+  <form id="verificationForm">
+
+    <div class="form-group">
+      <label>Government ID *</label>
+      <input type="file" id="idFile" required />
+    </div>
+
+    <div class="form-group gray-only">
+      <label>Passport Photograph *</label>
+      <input type="file" id="passportFile" />
+    </div>
+
+    <div class="form-group blue-only">
+      <label>CAC Certificate *</label>
+      <input type="file" id="cacFile" />
+    </div>
+
+    <div class="form-group blue-only">
+      <label>Utility Bill *</label>
+      <input type="file" id="utilityFile" />
+    </div>
+
+    <button type="submit">Submit Verification</button>
+  </form>
+
+  <p id="verifyMsg"></p>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="verify-badge.js"></script>
+
+</body>
+</html>
