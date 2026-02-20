@@ -1,58 +1,60 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const supabase = window.supabaseClient;
 
-  // ===============================
-  // AUTH
-  // ===============================
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     window.location.replace("login.html");
     return;
   }
 
+   // ===============================
+// PREFILL FROM AUTH + SIGNUP
+// ===============================
+
+// Business name from signup (since auth does not store business name)
+const savedName = localStorage.getItem("pendingBusinessName");
+
+if (savedName) {
+  document.getElementById("name").value = savedName;
+  document.getElementById("name").readOnly = true;
+}
+
+// Email from Supabase Auth (source of truth)
+if (user.email) {
+  document.getElementById("email").value = user.email;
+  document.getElementById("email").readOnly = true;
+}
+
   const form = document.getElementById("vendorForm");
   const detectBtn = document.getElementById("detectLocationBtn");
   const latInput = document.getElementById("latitude");
   const lngInput = document.getElementById("longitude");
+  const confirmCheckbox = document.getElementById("confirmLocationCheckbox");
   const locationStatus = document.getElementById("locationStatus");
   const statusMsg = document.getElementById("statusMsg");
   const submitBtn = document.getElementById("submitBtn");
 
-  if (!form) return;
-
-  // ===============================
-  // BLOCK DUPLICATE
-  // ===============================
-  const { data: existing } = await supabase
-    .from("vendors")
-    .select("id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
-
-  if (existing) {
-    statusMsg.textContent = "Profile already exists.";
-    return;
-  }
-
-  // ===============================
-  // CATEGORY
-  // ===============================
   const categorySelect = document.getElementById("category");
   const subcategorySelect = document.getElementById("subcategory");
 
+
+  // ===============================
+  // Load categories
+  // ===============================
   const { data: categories } = await supabase
     .from("categories")
     .select("id, name");
 
   categories.forEach(cat => {
-    const o = document.createElement("option");
-    o.value = cat.id;
-    o.textContent = cat.name;
-    categorySelect.appendChild(o);
+    const opt = document.createElement("option");
+    opt.value = cat.id;
+    opt.textContent = cat.name;
+    categorySelect.appendChild(opt);
   });
 
   categorySelect.addEventListener("change", async () => {
     subcategorySelect.innerHTML = "<option value=''>Select Subcategory</option>";
+
     if (!categorySelect.value) return;
 
     const { data: subs } = await supabase
@@ -61,116 +63,185 @@ document.addEventListener("DOMContentLoaded", async () => {
       .eq("category_id", categorySelect.value);
 
     subs.forEach(s => {
-      const o = document.createElement("option");
-      o.value = s.id;
-      o.textContent = s.name;
-      subcategorySelect.appendChild(o);
+      const opt = document.createElement("option");
+      opt.value = s.id;
+      opt.textContent = s.name;
+      subcategorySelect.appendChild(opt);
     });
   });
 
   // ===============================
-// LOCATION DETECTION
+// GEOLOCATION
 // ===============================
 if (detectBtn) {
   detectBtn.addEventListener("click", () => {
     if (!navigator.geolocation) {
-      locationStatus.textContent = "Geolocation not supported by your browser.";
+      locationStatus.textContent = "Geolocation is not supported by your browser.";
       return;
     }
 
     locationStatus.textContent = "Detecting location...";
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        latInput.value = position.coords.latitude.toFixed(6);
-        lngInput.value = position.coords.longitude.toFixed(6);
-
+      (pos) => {
+        latInput.value = pos.coords.latitude.toFixed(6);
+        lngInput.value = pos.coords.longitude.toFixed(6);
         locationStatus.textContent =
-          "Location detected. Please confirm this is your business location.";
+          "Location detected successfully. Please confirm this is your business location.";
       },
-      (error) => {
+      (err) => {
+        console.error("Geolocation error:", err);
         locationStatus.textContent =
-          "Unable to retrieve location. Please allow permission and try again.";
+          "Unable to retrieve location. Please allow location permission or enter coordinates manually.";
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
       }
     );
   });
 }
 
-  // ===============================
-  // SUBMIT
-  // ===============================
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
 
-    submitBtn.disabled = true;
-    statusMsg.textContent = "Creating profile…";
+// ===============================
+// SUBMIT
+// ===============================
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    // 🔒 REQUIRE CONFIRMED LOCATION
-  if (!latInput.value || !lngInput.value) {
-     statusMsg.textContent = "Please detect and confirm business location.";
-     submitBtn.disabled = false;
-     return;
+  submitBtn.disabled = true;
+  statusMsg.textContent = "Creating profile...";
+
+  // ===============================
+  // VALIDATE COORDINATES
+  // ===============================
+  let latitude = latInput.value.trim();
+  let longitude = lngInput.value.trim();
+
+  if (!latitude || !longitude) {
+    statusMsg.textContent =
+      "Please detect your business location or manually enter valid coordinates.";
+    submitBtn.disabled = false;
+    return;
   }
 
+  latitude = parseFloat(latitude);
+  longitude = parseFloat(longitude);
 
-    const businessName =
-      localStorage.getItem("pendingBusinessName");
+  if (isNaN(latitude) || isNaN(longitude)) {
+    statusMsg.textContent =
+      "Invalid coordinates format. Please enter valid numbers.";
+    submitBtn.disabled = false;
+    return;
+  }
 
-    if (!businessName) {
-      statusMsg.textContent = "Business name missing.";
-      submitBtn.disabled = false;
-      return;
-    }
+  // ===============================
+  // VALIDATE REQUIRED FIELDS
+  // ===============================
+  const businessName = document.getElementById("name").value.trim();
+  const address = document.getElementById("address").value.trim();
+  const state = document.getElementById("state").value;
+  const lga = document.getElementById("lga").value;
+  const whatsapp = document.getElementById("whatsapp").value.trim();
+  const email = document.getElementById("email").value.trim();
 
-    const categoryText =
-      categorySelect.options[categorySelect.selectedIndex]?.text || null;
+  if (!businessName || !address || !state || !lga || !whatsapp || !email) {
+    statusMsg.textContent = "Please fill all required fields.";
+    submitBtn.disabled = false;
+    return;
+  }
 
-    const subcategoryText =
-      subcategorySelect.options[subcategorySelect.selectedIndex]?.text || null;
+  if (!categorySelect.value || !subcategorySelect.value) {
+    statusMsg.textContent = "Please select category and subcategory.";
+    submitBtn.disabled = false;
+    return;
+  }
 
-    const payload = {
-      name: businessName,
-      slug: businessName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, ""),
-      
-      latitude: parseFloat(latInput.value),
-      longitude: parseFloat(lngInput.value),
+  const selectedCategoryText =
+    categorySelect.options[categorySelect.selectedIndex].text;
+
+  const selectedSubcategoryText =
+    subcategorySelect.options[subcategorySelect.selectedIndex].text;
+
+  // ===============================
+  // BUILD PAYLOAD
+  // ===============================
+  const payload = {
+    name: businessName,
+    slug: businessName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, ""),
+
+    latitude,
+    longitude,
+
+    address,
+    state,
+    lga,
+    whatsapp,
+    telephone: document.getElementById("telephone").value.trim() || null,
+    email,
+
+    category_id: categorySelect.value,
+    subcategory_id: subcategorySelect.value,
+    category: selectedCategoryText,
+    subcategory: selectedSubcategoryText,
+
+    auth_user_id: user.id,
+  };
+
+  // ===============================
+  // INSERT INTO SUPABASE
+  // ===============================
+  let response;
+
+const { data: existingVendor } = await supabase
+  .from("vendors")
+  .select("id")
+  .eq("auth_user_id", user.id)
+  .maybeSingle();
+
+if (existingVendor) {
+  // UPDATE for paid users
+  response = await supabase
+    .from("vendors")
+    .update(payload)
+    .eq("auth_user_id", user.id)
+    .select("slug")
+    .maybeSingle()
+} else {
+  // INSERT for free users
+  response = await supabase
+    .from("vendors")
+    .insert(payload)
+    .select("slug")
+    .maybeSingle();
+}
+
+const { data, error } = response;
 
 
-      address: document.getElementById("address").value.trim(),
-      state: document.getElementById("state").value,
-      lga: document.getElementById("lga").value,
-      whatsapp: document.getElementById("whatsapp").value.trim(),
-      telephone: document.getElementById("telephone").value.trim() || null,
-      email: document.getElementById("email").value.trim(),
-      category_id: categorySelect.value,
-      subcategory_id: subcategorySelect.value,
-      category: categoryText,
-      subcategory: subcategoryText,
-      auth_user_id: user.id,
-      plan_tier: "free",
-      subscription_status: "active",
-      is_premium: false
-    };
+  if (error) {
+    console.error("Insert error:", error);
+    statusMsg.textContent = error.message;
+    submitBtn.disabled = false;
+    return;
+  }
 
-    const { data, error } = await supabase
-      .from("vendors")
-      .insert(payload)
-      .select("slug")
-      .single();
+  // ===============================
+  // CLEAR TEMP STORAGE
+  // ===============================
+  localStorage.removeItem("pendingBusinessName");
+  localStorage.removeItem("pendingEmail");
 
-    if (error) {
-      statusMsg.textContent = error.message;
-      submitBtn.disabled = false;
-      return;
-    }
+  // ===============================
+  // REDIRECT
+  // ===============================
+  window.location.replace(`vendor-profile.html?slug=${data.slug}`);
+});
 
-    window.location.replace(
-      `vendor-profile.html?slug=${data.slug}`
-    );
-  });
 });
 
 

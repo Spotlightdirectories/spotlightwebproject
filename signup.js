@@ -63,9 +63,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Store business name for onboarding
+    // Store business name and email for onboarding
     localStorage.setItem("pendingBusinessName", businessName);
-
+    localStorage.setItem("pendingEmail", email);
     // ✅ Success message
     errorEl.textContent =
       "Account created. Please check your email to verify before logging in.";

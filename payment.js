@@ -1,12 +1,6 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  // ===============================
-  // SUPABASE
-  // ===============================
   const supabase = window.supabaseClient;
 
-  // ===============================
-  // ELEMENTS
-  // ===============================
   const planSummaryEl = document.getElementById("planSummary");
   const paymentActions = document.getElementById("paymentActions");
   const bankSection = document.getElementById("bankSection");
@@ -26,62 +20,135 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // ===============================
-  // PLAN DATA
-  // ===============================
-  const selectedPlan = localStorage.getItem("selectedPlan");
-  const billingType = localStorage.getItem("billingType");
+  const billingType = localStorage.getItem("billingType") || "monthly";
 
-  if (!selectedPlan || !billingType) {
-    window.location.replace("getlisted.html");
+
+  // ===============================
+  // GET VENDOR FROM DATABASE
+  // ===============================
+  const { data: vendor } = await supabase
+    .from("vendors")
+    .select("plan_tier, subscription_status")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+
+  if (!vendor) {
+    window.location.replace("onboarding.html");
     return;
   }
 
+  // FREE USERS SHOULD NEVER BE HERE
+  if (vendor.plan_tier === "free") {
+    window.location.replace("vendor-profile.html");
+    return;
+  }
+
+  // If already paid → go to onboarding
+  if (vendor.subscription_status === "active") {
+    window.location.replace("onboarding.html");
+    return;
+  }
+
+  // Show correct plan
   planSummaryEl.textContent =
-    `You selected the ${selectedPlan.toUpperCase()} plan (${billingType}).`;
+    `You selected the ${vendor.plan_tier.toUpperCase()} plan.`;
 
   // ===============================
-  // PAY ONLINE — GUARANTEED TO FIRE
+  // PAY ONLINE
   // ===============================
-  payOnlineBtn.onclick = () => {
-    const handler = PaystackPop.setup({
-      key: "pk_test_3dc48990c568ef43d2b42a9571cde21b9175d699", // <-- PUT YOUR REAL TEST KEY
-      email: user.email,
-      amount: getAmountInKobo(selectedPlan, billingType),
-      currency: "NGN",
-      ref: `SPOT_${Date.now()}`,
-      metadata: {
-        auth_user_id: user.id,
-        plan: selectedPlan,
-        billing_type: billingType
-      },
-      callback: function () {
-        alert("Paystack popup opened successfully");
-        // later: verification + redirect
-      },
-      onClose: function () {
-        alert("Payment cancelled");
+  payOnlineBtn.onclick = async () => {
+
+  // 1️⃣ Create payment record first
+  const { data, error } = await supabase
+    .from("vendorpayments")
+    .insert({
+      auth_user_id: user.id,
+      plan: vendor.plan_tier,
+      payment_method: "card",
+      status: "pending"
+    })
+    .select("id")
+    .maybeSingle();
+
+  if (error || !data) {
+    alert("Could not create payment record.");
+    return;
+  }
+
+  // Save payment ID globally
+  window.currentPaymentId = data.id;
+
+  // 2️⃣ Open Paystack
+  const handler = PaystackPop.setup({
+    key: "pk_test_3dc48990c568ef43d2b42a9571cde21b9175d699",
+    email: user.email,
+    amount: getAmountInKobo(vendor.plan_tier, billingType),
+    currency: "NGN",
+    ref: `SPOT_${Date.now()}`,
+    metadata: {
+      auth_user_id: user.id
+    },
+
+    callback: function (response) {
+      verifyPayment(response.reference);
+    },
+
+    onClose: function () {
+      alert("Payment cancelled");
+    }
+  });
+
+  handler.openIframe();
+};
+
+
+  async function verifyPayment(reference) {
+
+  try {
+
+    const { data, error } = await supabase.functions.invoke(
+      "verify-paystack-payment",
+      {
+        body: {
+          reference: reference,
+          payment_id: window.currentPaymentId,
+          auth_user_id: user.id
+        }
       }
-    });
+    );
 
-    handler.openIframe();
-  };
+    if (error) {
+      console.log("VERIFY ERROR:", error);
+      alert("Payment verification failed.");
+      return;
+    }
+
+    alert("Payment verified successfully.");
+    window.location.href = "onboarding.html";
+
+  } catch (err) {
+    console.error(err);
+    alert("Payment verification failed. Contact support.");
+  }
+
+}
+
+
 
   // ===============================
-  // BANK TRANSFER (UNCHANGED)
+  // BANK TRANSFER
   // ===============================
   payBankBtn.onclick = async () => {
     const { data, error } = await supabase
       .from("vendorpayments")
       .insert({
         auth_user_id: user.id,
-        plan: selectedPlan,
-        billing_type: billingType,
+        plan: vendor.plan_tier,
         payment_method: "bank",
         status: "pending"
       })
       .select("id")
-      .single();
+      .maybeSingle();
 
     if (error) {
       alert(error.message);
@@ -123,15 +190,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     lockedState.classList.remove("hidden");
   };
 
-  // ===============================
-  // PRICING
-  // ===============================
   function getAmountInKobo(plan, billingType) {
-    const prices = {
-      standard: { monthly: 299800, yearly: 2597600 },
-      enterprise: { monthly: 899800, yearly: 8297600 },
-      elite: { monthly: 2299800, yearly: 11097600 }
-    };
-    return prices[plan][billingType];
-  }
+  const prices = {
+    standard: { monthly: 299800, yearly: 2597600 },
+    enterprise: { monthly: 899800, yearly: 8297600 },
+    elite: { monthly: 2299800, yearly: 11097600 }
+  };
+
+  return prices[plan]?.[billingType] ?? prices[plan]?.monthly ?? 0;
+}
+
 });

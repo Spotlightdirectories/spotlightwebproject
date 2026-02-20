@@ -7,7 +7,6 @@
 
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="images/favicon.ico" type="image/x-icon">
-  <link rel="apple-touch-icon" href="images/favicon.png" type="image/png">
 </head>
 
 <body>
@@ -15,7 +14,7 @@
 <div class="ob-container">
   <h2 class="ob-title">Vendor Onboarding</h2>
 
-  <form id="vendorForm" class="ob-form" novalidate>
+  <form id="vendorForm" class="ob-form">
 
     <!-- Business Name -->
     <label class="ob-label">
@@ -25,24 +24,24 @@
       type="text"
       class="ob-input"
       id="name"
-      placeholder="Enter your business name"
+      placeholder="Enter your registered business name"
       required
     />
 
     <!-- Category -->
-    <label for="category"  class="ob-label">
+    <label class="ob-label" for="category">
       Category <span class="ob-req">*</span>
     </label>
-    <select class="ob-select" id="category" required>
+      <select class="ob-select" id="category" required>
       <option value="">Select Category</option>
     </select>
 
     <!-- Subcategory -->
-    <label for="subcategory" class="ob-label">
+    <label class="ob-label" for="subcategory">
       Subcategory <span class="ob-req">*</span>
     </label>
-    <select class="ob-select" id="subcategory" name="subcategory" required>
-      <option value="" disabled selected>Select Subcategory</option>
+    <select class="ob-select" id="subcategory" required>
+      <option value="">Select Subcategory</option>
     </select>
 
     <!-- Address -->
@@ -53,12 +52,12 @@
       class="ob-textarea"
       id="address"
       rows="2"
-      placeholder="Enter your business address"
+      placeholder="e.g., 12 Admiralty Way, Lekki Phase 1"
       required
     ></textarea>
 
     <!-- State -->
-    <label for="state" class="ob-label">
+    <label class="ob-label" for="state">
       State <span class="ob-req">*</span>
     </label>
     <select class="ob-select" id="state" required>
@@ -66,80 +65,67 @@
     </select>
 
     <!-- LGA -->
-    <label for="lga" class="ob-label">
+    <label class="ob-label" for="lga">
       LGA <span class="ob-req">*</span>
     </label>
-    <select class="ob-select" id="lga" required>
+    <select class="ob-select" name="lga" id="lga" required>
       <option value="">Select LGA</option>
     </select>
 
-    <!-- Location Detection -->
-    <label class="ob-label">
-      Business Coordinates
-    </label>
+    <!-- Coordinates -->
+    <label class="ob-label">Business Coordinates</label>
+
+    <p style="font-size:13px; color:#555; margin-bottom:10px;">
+     Click "Detect My Business Location" while at your shop.
+     If you are not there, you may manually enter coordinates.
+    </p>
 
     <div style="display:flex; gap:10px; margin-bottom:10px;">
-    <input type="text" id="latitude" class="ob-input" placeholder="Latitude" readonly />
-    <input type="text" id="longitude" class="ob-input" placeholder="Longitude" readonly />
+      <input type="text" id="latitude" class="ob-input" placeholder="e.g. 6.5244" />
+      <input type="text" id="longitude" class="ob-input" placeholder="e.g. 3.3792" />
     </div>
 
     <button type="button" id="detectLocationBtn" class="ob-btn secondary">
       Detect My Business Location
     </button>
 
-    <p id="locationStatus" style="font-size:12px; color:#777;">
-      Click detect only if you are currently at your business location.
-    </p>
+    <div class="location-confirm">
+      <input type="checkbox" id="confirmLocationCheckbox">
+      <label for="confirmLocationCheckbox">
+        I confirm this is my business location
+      </label>
+    </div>
+
+    <div id="locationStatus" style="font-size:12px; color:#777; margin-bottom:10px;"></div>
 
     <!-- WhatsApp -->
-<label class="ob-label">
-  WhatsApp Number <span class="ob-req">*</span>
-</label>
-<input
-  type="tel"
-  class="ob-input"
-  id="whatsapp"
-  placeholder="e.g., 0803 123 4567"
-  required
-/>
+    <label class="ob-label">
+      WhatsApp Number <span class="ob-req">*</span>
+    </label>
+    <input type="tel" class="ob-input" id="whatsapp" placeholder="e.g., 08031234567" required />
 
-<!-- Telephone -->
-<label class="ob-label">
-  Telephone Number (Optional)
-</label>
-<input
-  type="tel"
-  class="ob-input"
-  id="telephone"
-  placeholder="If different from WhatsApp"
-/>
-
+    <!-- Telephone -->
+    <label class="ob-label">
+      Telephone Number (Optional)
+    </label>
+    <input type="tel" class="ob-input" id="telephone" placeholder="Optional — if different from WhatsApp" />
 
     <!-- Email -->
     <label class="ob-label">
       Email <span class="ob-req">*</span>
     </label>
-    <input
-      type="email"
-      class="ob-input"
-      id="email"
-      placeholder="e.g., vendor@email.com"
-      required
-    />
+    <input type="email" class="ob-input" id="email" placeholder="e.g., business@email.com" required />
 
     <!-- Submit -->
-    <div class="ob-btn-group">
-      <button type="submit" id="submitBtn" class="ob-btn primary">
-        Submit
-      </button>
-    </div>
+    <button type="submit" id="submitBtn" class="ob-btn primary">
+      Submit
+    </button>
 
   </form>
 
   <div id="statusMsg" class="status-message"></div>
 </div>
 
-<!-- JS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
 <script src="onboarding.js"></script>

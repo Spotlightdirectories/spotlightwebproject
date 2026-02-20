@@ -1,64 +1,7 @@
-// ✅ Supabase setup
-//now exist in supabase-client.js
-
-document.addEventListener("DOMContentLoaded", () => {
-
-  console.log("✅ vendor.js is running");
+document.addEventListener("DOMContentLoaded", async () => {
 
   const supabase = window.supabaseClient;
 
-  function renderBadge(status) {
-  if (status === "blue") {
-    return `<img src="images/bluebadge.png" alt="Fully verified" class="verification-badge">`;
-  }
-  if (status === "gray") {
-    return `<img src="images/graybadge.png" alt="Partially verified" class="verification-badge">`;
-  }
-  return "";
-}
-
-
-
-  async function loadVendors() {
-  console.log("🔄 Loading vendors from Supabase...");
-
-  const { data, error } = await supabase
-    .from("vendors")
-    .select(`
-      id,
-      name,
-      category,
-      subcategory,
-      address,
-      state,
-      lga,
-      latitude,
-      longitude,
-      phone,
-      verification_status,
-      plan_tier,
-      is_premium,
-      is_demo,
-      slug
-    `);
-
-  if (error) {
-    console.error("❌ Supabase fetch error:", error);
-    return;
-  }
-
-  console.log("✅ Vendors fetched:", data);
-
-  vendors = data;
-  populateCategories(vendors);
-  applyFilters();
-}
-
-loadVendors(); 
-
-  // ===============================
-  // DOM ELEMENTS
-  // ===============================
   const searchForm = document.getElementById("searchForm");
   const searchInput = document.getElementById("searchInput");
   const locationToggle = document.getElementById("locationToggle");
@@ -68,21 +11,51 @@ loadVendors();
   const categorySelect = document.getElementById("categorySelect");
   const subcategorySelect = document.getElementById("subcategorySelect");
 
-  // ===============================
-  // STATE
-  // ===============================
+  let vendors = [];
   let userLocation = null;
 
   // ===============================
-  // DUMMY VENDOR DATA
+  // LOAD VENDORS
   // ===============================
 
-  let vendors = [];
+  async function loadVendors() {
+    const { data, error } = await supabase
+      .from("vendors")
+      .select(`
+        id,
+        name,
+        category,
+        subcategory,
+        address,
+        state,
+        lga,
+        latitude,
+        longitude,
+        whatsapp,
+        telephone,
+        verification_status,
+        plan_tier,
+        is_premium,
+        slug,
+        subscription_status
+      `)
+      .eq("subscription_status", "active");
+
+    if (error) {
+      console.error("Supabase error:", error);
+      vendorsGrid.innerHTML = "<p>Error loading vendors</p>";
+      return;
+    }
+
+    vendors = data || [];
+
+    populateCategories();
+    renderVendors(vendors);
+  }
 
   // ===============================
   // HELPERS
   // ===============================
-
 
   function haversineDistance(lat1, lon1, lat2, lon2) {
     const R = 6371;
@@ -91,105 +64,103 @@ loadVendors();
     const dLon = toRad(lon2 - lon1);
     const a =
       Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
       Math.sin(dLon / 2) ** 2;
+
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
-function renderVendorCard(vendor) {
-  return `
-    <article class="vendor-card">
-      <div class="vendor-header">
-        <h3>${vendor.name}</h3>
-        ${renderBadge(vendor.verification_status)}
-      </div>
+  function renderVendorCard(v) {
+    return `
+      <article class="vendor-card">
+        <h3>${v.name}</h3>
 
-      <p class="category">
-         ${[vendor.category, vendor.subcategory].filter(Boolean).join(" • ")}
-      </p>
+        <p>
+          ${(v.category || "")}
+          ${v.subcategory ? " • " + v.subcategory : ""}
+        </p>
 
-      <p class="address">${vendor.address}</p>
+        <p>${v.address || ""}</p>
 
-      ${vendor.distance !== undefined
-        ? `<p class="distance">${vendor.distance.toFixed(1)} km away</p>`
-        : ``}
+        ${v.distance !== undefined
+          ? `<p>${v.distance.toFixed(1)} km away</p>`
+          : ""}
 
-      <div class="actions">
-        <a href="https://wa.me/${vendor.whatsapp}" target="_blank" rel="noopener">
-          WhatsApp
-        </a>
-    
-          ${vendor.telephone ? `
-       <a href="tel:${vendor.telephone}">
-         Call
-       </a>
-       ` : ``}
+        <div class="actions">
+          ${v.whatsapp ? `
+            <a href="https://wa.me/${v.whatsapp}" target="_blank">WhatsApp</a>
+          ` : ""}
 
-        ${(() => {
-      if (vendor.latitude && vendor.longitude) {
-       return `<a
-         href="https://www.google.com/maps/search/?api=1&query=${vendor.latitude},${vendor.longitude}"
-         target="_blank"
-         rel="noopener"
-         >Map</a>`;
-      }
+          ${v.telephone ? `
+            <a href="tel:${v.telephone}">Call</a>
+          ` : ""}
 
-      if (vendor.address) {
-       return `<a
-        href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vendor.address)}"
-        target="_blank"
-        rel="noopener"
-        >Map</a>`;
-     }
-
-      return ``;
-    })()}
-
-
-        ${vendor.is_premium
-          ? `<a href="vendor-profile.html?slug=${vendor.slug}">
-  View Profile
-</a>
-`
-          : ``}
-      </div>
-    </article>
-  `;
-}
-
+          ${v.latitude && v.longitude ? `
+            <a href="https://www.google.com/maps/search/?api=1&query=${v.latitude},${v.longitude}" target="_blank">
+              Map
+            </a>
+          ` : ""}
+        </div>
+      </article>
+    `;
+  }
 
   function renderVendors(list) {
     vendorsGrid.innerHTML = list.length
       ? list.map(renderVendorCard).join("")
       : "<p>No vendors found</p>";
+
     resultsCount.textContent = `${list.length} vendors found`;
   }
 
-  function populateCategories(list) {
-    const cats = [...new Set(list.map(v => v.category))];
-    categorySelect.innerHTML = `<option value="">All Categories</option>` +
-      cats.map(c => `<option value="${c}">${c}</option>`).join("");
+  function populateCategories() {
+    const categories = [...new Set(
+      vendors.map(v => v.category).filter(Boolean)
+    )];
+
+    categorySelect.innerHTML =
+      `<option value="">All Categories</option>` +
+      categories.map(c => `<option value="${c}">${c}</option>`).join("");
   }
 
-  function populateSubcategories(list, cat) {
-    const subs = [...new Set(list.filter(v => v.category === cat).map(v => v.subcategory))];
-    subcategorySelect.disabled = !cat;
-    subcategorySelect.innerHTML = `<option value="">All Subcategories</option>` +
+  function populateSubcategories(selectedCategory) {
+    const subs = [...new Set(
+      vendors
+        .filter(v => v.category === selectedCategory)
+        .map(v => v.subcategory)
+        .filter(Boolean)
+    )];
+
+    subcategorySelect.disabled = !selectedCategory;
+
+    subcategorySelect.innerHTML =
+      `<option value="">All Subcategories</option>` +
       subs.map(s => `<option value="${s}">${s}</option>`).join("");
   }
 
   function applyFilters() {
-    let filtered = vendors.filter(v =>
-      (!searchInput.value ||
-        v.name.toLowerCase().includes(searchInput.value.toLowerCase()) ||
-        v.category.toLowerCase().includes(searchInput.value.toLowerCase()) ||
-        v.subcategory.toLowerCase().includes(searchInput.value.toLowerCase())) &&
-      (!categorySelect.value || v.category === categorySelect.value) &&
-      (!subcategorySelect.value || v.subcategory === subcategorySelect.value)
-    );
+    const searchText = (searchInput.value || "").toLowerCase();
 
+    let filtered = vendors.filter(v => {
+      const name = (v.name || "").toLowerCase();
+      const category = (v.category || "").toLowerCase();
+      const subcategory = (v.subcategory || "").toLowerCase();
+
+      return (
+        (!searchText ||
+          name.includes(searchText) ||
+          category.includes(searchText) ||
+          subcategory.includes(searchText)) &&
+        (!categorySelect.value || v.category === categorySelect.value) &&
+        (!subcategorySelect.value || v.subcategory === subcategorySelect.value)
+      );
+    });
+
+    // Location filtering
     if (userLocation) {
       filtered = filtered
+        .filter(v => v.latitude && v.longitude)
         .map(v => ({
           ...v,
           distance: haversineDistance(
@@ -207,15 +178,16 @@ function renderVendorCard(vendor) {
   }
 
   // ===============================
-  // EVENT LISTENERS
+  // EVENTS
   // ===============================
+
   searchForm.addEventListener("submit", e => {
     e.preventDefault();
     applyFilters();
   });
 
   categorySelect.addEventListener("change", () => {
-    populateSubcategories(vendors, categorySelect.value);
+    populateSubcategories(categorySelect.value);
     applyFilters();
   });
 
@@ -231,7 +203,10 @@ function renderVendorCard(vendor) {
     }
 
     navigator.geolocation.getCurrentPosition(pos => {
-      userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      userLocation = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude
+      };
       applyFilters();
     });
   });
@@ -239,9 +214,7 @@ function renderVendorCard(vendor) {
   // ===============================
   // INIT
   // ===============================
-  populateCategories(vendors);
-  renderVendors(vendors);
+
+  await loadVendors();
 
 });
-
-

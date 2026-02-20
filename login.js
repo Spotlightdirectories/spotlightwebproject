@@ -54,7 +54,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-
     errorEl.style.display = "none";
     document.getElementById("email").classList.remove("input-error");
     document.getElementById("password").classList.remove("input-error");
@@ -71,24 +70,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       .select()
       .maybeSingle();
 
-      // ===============================
-// CHECK PHONE VERIFICATION
-// // ===============================
-//    const { data: phoneCheck } = await supabase
-//       .from("phone_verifications")
-//       .select("verified")
-//       .eq("auth_user_id", user.id)
-//       .eq("verified", true)
-//       .maybeSingle();
-      
-
-   //if (!phoneCheck) {
-    //  window.location.replace("verify-phone.html");
-    //  return;
-   // }
-
-    
-
     // 🔍 SINGLE SOURCE OF TRUTH — vendors table ONLY
     const { data: vendor, error: vendorErr } = await supabase
       .from("vendors")
@@ -97,53 +78,74 @@ document.addEventListener("DOMContentLoaded", async () => {
       .maybeSingle();
 
 
-// ===============================
-// ROUTING (LOCKED — DB IS SOURCE)
+    // ===============================
+// ROUTING (DATABASE IS TRUTH)
 // ===============================
 
-// 1️⃣ No vendor yet → route by plan intent (ONE TIME ONLY)
+// If vendor row does not exist → go to onboarding
 if (!vendor) {
+
   const selectedPlan = localStorage.getItem("selectedPlan");
 
-  // Safety fallback
-  if (!selectedPlan) {
-    window.location.replace("getlisted.html");
-    return;
-  }
-
-  // FREE → onboarding
+  // FREE plan → onboarding
   if (selectedPlan === "free") {
     window.location.replace("onboarding.html");
     return;
   }
 
-  // PREMIUM → payment
-  window.location.replace("payment.html");
+  // PAID plan → create partial row then go to payment
+  if (selectedPlan && selectedPlan !== "free") {
+
+    const pendingName = localStorage.getItem("pendingBusinessName");
+    const pendingEmail = localStorage.getItem("pendingEmail");
+
+    const { error: insertError } = await supabase
+     .from("vendors")
+     .insert({
+       auth_user_id: user.id,
+       name: pendingName,
+       email: pendingEmail,
+       plan_tier: selectedPlan,
+       subscription_status: "pending"
+     });
+
+   if (insertError) {
+     console.error("Partial vendor creation failed:", insertError);
+     alert("Unable to start paid plan. Please try again.");
+     return;
+   }
+    
+   window.location.replace("payment.html");
+    return;
+  }
+
+  // Fallback
+  window.location.replace("getlisted.html");
   return;
 }
 
-// 🔥 PLAN INTENT ENDS HERE
-localStorage.removeItem("selectedPlan");
-localStorage.removeItem("billingType");
-
-// 2️⃣ FREE vendor → private profile
+// FREE vendor
 if (vendor.plan_tier === "free") {
-  window.location.replace(
-    `vendor-profile.html?slug=${vendor.slug}`
-  );
+  window.location.replace(`vendor-profile.html?slug=${vendor.slug}`);
   return;
 }
 
-// 3️⃣ PREMIUM unpaid → payment
-if (vendor.subscription_status !== "active") {
+// PREMIUM but not paid
+if (vendor.plan_tier !== "free" && vendor.subscription_status !== "active") {
   window.location.replace("payment.html");
   return;
 }
 
-// 4️⃣ PREMIUM paid → dashboard
+// PREMIUM paid but not onboarded
+if (vendor.plan_tier !== "free" && vendor.subscription_status === "active" && !vendor.slug) {
+  window.location.replace("onboarding.html");
+  return;
+}
+
+// PREMIUM fully active
 window.location.replace("dashboard.html");
 
-  });
+});
 
   // 👁️ Password toggle (LOGIN PAGE)
 document.querySelectorAll(".toggle-password").forEach(btn => {
