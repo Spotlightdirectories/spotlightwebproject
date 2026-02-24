@@ -80,65 +80,123 @@ document.addEventListener("DOMContentLoaded", async () => {
   // -----------------------------
   // APPROVE
   // -----------------------------
-  async function approvePayment(paymentId) {
-    if (!confirm("Approve this payment?")) return;
+async function approvePayment(paymentId) {
+  if (!confirm("Approve this payment?")) return;
 
-    const { data: payment } = await supabase
-      .from("vendorpayments")
-      .select("vendor_id, plan")
-      .eq("id", paymentId)
-      .single();
+  const { data: payment, error } = await supabase
+    .from("vendorpayments")
+    .select(`
+      id,
+      vendor_id,
+      plan,
+      billing_type,
+      status,
+      vendors ( id, email )
+    `)
+    .eq("id", paymentId)
+    .single();
 
-    await supabase
-      .from("vendorpayments")
-      .update({ status: "approved" })
-      .eq("id", paymentId);
-
-    await supabase
-      .from("vendors")
-      .update({
-        plan_tier: payment.plan,
-        is_premium: true,
-        subscription_status: "active"
-      })
-      .eq("id", payment.vendor_id);
-
-    await sendEmail({
-      to: payment.vendors.email,
-      subject: "Payment Approved 🎉",
-      html: `<p>Your payment has been approved. Your account is now active.</p>`
-    });
-
-    alert("Payment approved");
-    location.reload();
+  if (error || !payment) {
+    alert("Payment not found.");
+    return;
   }
+
+  if (payment.status !== "awaiting_review") {
+  alert("This payment is already processed.");
+  return;
+ }
+
+  const now = new Date().toISOString();
+
+  // 1️⃣ Update vendorpayment
+  await supabase
+    .from("vendorpayments")
+    .update({
+      status: "approved",
+      reviewed_at: now,
+      approved_at: now,
+      paid_at: now,
+      reviewed_by: adminSession.user_id
+    })
+    .eq("id", paymentId);
+
+  // 2️⃣ Activate vendor
+  await supabase
+    .from("vendors")
+    .update({
+      subscription_status: "active",
+      plan_tier: payment.plan,
+      billing_cycle: payment.billing_type,
+      is_premium: true,
+      paid_at: new Date()
+    })
+    .eq("id", payment.vendor_id);
+
+  // 3️⃣ Send email
+  await sendEmail({
+    to: payment.vendors.email,
+    subject: "Payment Approved 🎉",
+    html: `<p>Your bank transfer has been verified. You can now complete onboarding and access your dashboard.</p>`
+  });
+
+  alert("Payment approved");
+  location.reload();
+}
 
   // -----------------------------
   // REJECT
   // -----------------------------
   async function rejectPayment(paymentId) {
-    const reason = prompt("Reason for rejection?");
-    if (!reason) return;
+  const reason = prompt("Reason for rejection?");
+  if (!reason) return;
 
-    await supabase
-      .from("vendorpayments")
-      .update({
-        status: "rejected",
-        rejection_reason: reason
-      })
-      .eq("id", paymentId);
+  const { data: payment, error } = await supabase
+    .from("vendorpayments")
+    .select(`
+      id,
+      vendor_id,
+      vendors ( email )
+    `)
+    .eq("id", paymentId)
+    .single();
 
-      await sendEmail({
-      to: data.vendors.email,
-      subject: "Payment Rejected",
-      html: `<p>Your payment could not be confirmed.<br/>Reason: ${reason}</p>`
-    });
-
-
-    alert("Payment rejected");
-    location.reload();
+  if (error || !payment) {
+    alert("Payment not found.");
+    return;
   }
 
+  const now = new Date().toISOString();
+
+  // 1️⃣ Update vendorpayment
+  await supabase
+    .from("vendorpayments")
+    .update({
+      status: "rejected",
+      rejection_reason: reason,
+      reviewed_at: now,
+      rejected_at: now,
+      reviewed_by: adminSession.user_id
+    })
+    .eq("id", paymentId);
+
+  // 2️⃣ Update vendor
+  await supabase
+    .from("vendors")
+    .update({
+      subscription_status: "failed"
+    })
+    .eq("id", payment.vendor_id);
+
+  // 3️⃣ Send email
+  await sendEmail({
+    to: payment.vendors.email,
+    subject: "Payment Rejected",
+    html: `<p>Your bank transfer could not be verified.<br/>Reason: ${reason}</p>`
+  });
+
+  alert("Payment rejected");
+  location.reload();
+}
   // -----------------------------
   // EMAIL (RESEND EDGE)
   // -----------------------------

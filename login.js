@@ -1,18 +1,22 @@
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
+
   const supabase = window.supabaseClient;
   const form = document.getElementById("loginForm");
   const errorEl = document.getElementById("loginError");
   const submitBtn = document.getElementById("loginBtn");
 
-  let isSubmitting = false;
   if (!form) return;
+
+  let isSubmitting = false;
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+
     if (isSubmitting) return;
     isSubmitting = true;
 
-    errorEl.classList.add("hidden");
+    errorEl.style.display = "none";
+
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.textContent = "Logging in...";
@@ -21,26 +25,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
 
+    // ===============================
+    // AUTHENTICATE
+    // ===============================
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
 
     if (error) {
-       errorEl.textContent = "Invalid email or password.";
-       errorEl.style.display = "block";
-
-       document.getElementById("email").classList.add("input-error");
-       document.getElementById("password").classList.add("input-error");
-
-       resetSubmitState();
-       return;
+      errorEl.textContent = "Invalid email or password.";
+      errorEl.style.display = "block";
+      resetSubmitState();
+      return;
     }
 
-
     const user = data.user;
-
-    console.log("Email confirmed at:", user.email_confirmed_at);
 
     // ===============================
     // EMAIL VERIFICATION CHECK
@@ -48,114 +48,89 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!user.email_confirmed_at) {
       errorEl.textContent = "Please verify your email before logging in.";
       errorEl.style.display = "block";
-
       await supabase.auth.signOut();
       resetSubmitState();
       return;
     }
 
-    errorEl.style.display = "none";
-    document.getElementById("email").classList.remove("input-error");
-    document.getElementById("password").classList.remove("input-error");
-
     // ===============================
-// ENSURE USER ROLE EXISTS (ONCE)
-// ===============================
-    await supabase
-      .from("user_roles")
-      .insert({
-       user_id: user.id,
-       role: "vendor"
-    })
-      .select()
-      .maybeSingle();
-
-    // 🔍 SINGLE SOURCE OF TRUTH — vendors table ONLY
-    const { data: vendor, error: vendorErr } = await supabase
+    // FETCH VENDOR (DATABASE IS TRUTH)
+    // ===============================
+    const { data: vendor, error: vendorError } = await supabase
       .from("vendors")
-      .select("slug, plan_tier, subscription_status")
+      .select("*")
       .eq("auth_user_id", user.id)
       .maybeSingle();
 
+    if (vendorError) {
+      console.error(vendorError);
+      alert("Error fetching vendor record.");
+      resetSubmitState();
+      return;
+    }
 
-    // ===============================
-// ROUTING (DATABASE IS TRUTH)
-// ===============================
+    // =====================================================
+    // IF NO VENDOR ROW → something is wrong
+    // =====================================================
+    if (!vendor) {
+      window.location.replace("getlisted.html");
+      return;
+    }
 
-// If vendor row does not exist → go to onboarding
-if (!vendor) {
+    // =====================================================
+    // FREE PLAN
+    // =====================================================
+    if (vendor.plan_tier === "free") {
+      if (!vendor.slug) {
+        window.location.replace("onboarding.html");
+      } else {
+        window.location.replace("dashboard.html");
+      }
+      return;
+    }
 
-  const selectedPlan = localStorage.getItem("selectedPlan");
+    // =====================================================
+    // PAID PLAN
+    // =====================================================
+    if (vendor.subscription_status === "pending") {
+      window.location.replace("payment-status.html");
+      return;
+    }
 
-  // FREE plan → onboarding
-  if (selectedPlan === "free") {
-    window.location.replace("onboarding.html");
-    return;
-  }
+    if (vendor.subscription_status === "failed") {
+      window.location.replace("payment-failed.html");
+      return;
+    }
 
-  // PAID plan → create partial row then go to payment
-  if (selectedPlan && selectedPlan !== "free") {
+    if (vendor.subscription_status === "active") {
+      if (!vendor.slug) {
+        window.location.replace("onboarding.html");
+      } else {
+        window.location.replace("dashboard.html");
+      }
+      return;
+    }
 
-    const pendingName = localStorage.getItem("pendingBusinessName");
-    const pendingEmail = localStorage.getItem("pendingEmail");
-
-    const { error: insertError } = await supabase
-     .from("vendors")
-     .insert({
-       auth_user_id: user.id,
-       name: pendingName,
-       email: pendingEmail,
-       plan_tier: selectedPlan,
-       subscription_status: "pending"
-     });
-
-   if (insertError) {
-     console.error("Partial vendor creation failed:", insertError);
-     alert("Unable to start paid plan. Please try again.");
-     return;
-   }
-    
-   window.location.replace("payment.html");
-    return;
-  }
-
-  // Fallback
-  window.location.replace("getlisted.html");
-  return;
-}
-
-// FREE vendor
-if (vendor.plan_tier === "free") {
-  window.location.replace(`vendor-profile.html?slug=${vendor.slug}`);
-  return;
-}
-
-// PREMIUM but not paid
-if (vendor.plan_tier !== "free" && vendor.subscription_status !== "active") {
-  window.location.replace("payment.html");
-  return;
-}
-
-// PREMIUM paid but not onboarded
-if (vendor.plan_tier !== "free" && vendor.subscription_status === "active" && !vendor.slug) {
-  window.location.replace("onboarding.html");
-  return;
-}
-
-// PREMIUM fully active
-window.location.replace("dashboard.html");
-
-});
-
-  // 👁️ Password toggle (LOGIN PAGE)
-document.querySelectorAll(".toggle-password").forEach(btn => {
-  btn.addEventListener("click", (e) => {
-    e.preventDefault();
-    const input = document.getElementById(btn.dataset.target);
-    if (!input) return;
-    input.type = input.type === "password" ? "text" : "password";
+    // Fallback
+    window.location.replace("payment.html");
   });
-});
 
-    
+  function resetSubmitState() {
+    isSubmitting = false;
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Log in";
+    }
+  }
+
+  // Password toggle
+  document.querySelectorAll(".toggle-password").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const input = document.getElementById(btn.dataset.target);
+      if (!input) return;
+      input.type = input.type === "password" ? "text" : "password";
+    });
+  });
+
 });

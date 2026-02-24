@@ -4,11 +4,12 @@ body {
 }
 
 .admin-container {
-  max-width: 400px;
+  max-width: 1100px; /* wider for tables */
   margin: 4rem auto;
   background: #fff;
-  padding: 24px;
-  border-radius: 10px;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
 }
 
 h1 {
@@ -39,8 +40,12 @@ input {
 }
 
 button {
-  padding: 10px 16px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  font-size: 13px;
   cursor: pointer;
+  transition: 0.2s ease;
 }
 
 .password-wrap {
@@ -81,14 +86,37 @@ button {
 }
 
 
+/* ===============================
+   ADMIN TABLE
+================================= */
+
 table {
   width: 100%;
   border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 14px;
 }
 
-th, td {
-  padding: 12px;
-  border-bottom: 1px solid #ddd;
+thead {
+  background: #111;
+  color: #fff;
+}
+
+th {
+  text-align: left;
+  padding: 14px 12px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #eee;
+}
+
+tbody tr:hover {
+  background: #f7f9fc;
 }
 
 .approve-btn {
@@ -101,7 +129,39 @@ th, td {
   color: #fff;
 }
 
+.reject-btn:hover {
+  background: #b91c1c;
+}
+
 .error {
   color: red;
   margin-top: 1rem;
+}
+
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-awaiting_review {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.status-pending {
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.status-approved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-rejected {
+  background: #fee2e2;
+  color: #991b1b;
 }

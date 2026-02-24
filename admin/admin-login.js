@@ -2,6 +2,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("adminLoginForm");
   const errorEl = document.getElementById("loginError");
 
+  if (!form) return;
+
+   let isSubmitting = false;
   // -------------------------
   // PASSWORD TOGGLE (UNCHANGED)
   // -------------------------
@@ -17,6 +20,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // -------------------------
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+
+    if (isSubmitting) return;
+    isSubmitting = true;
+
     errorEl.textContent = "";
 
     const email = document.getElementById("email").value.trim();
@@ -31,8 +38,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (error) {
       errorEl.textContent = error.message;
+      isSubmitting = false;
       return;
-    }
+   }
 
     // 2. VERIFY ADMIN ROLE
     const { data: roleRow, error: roleError } =
@@ -43,13 +51,22 @@ document.addEventListener("DOMContentLoaded", () => {
         .in("role", ["admin", "super_admin"])
         .limit(1);
 
-    if (roleError || !roleRow) {
+     if (roleError || !roleRow || roleRow.length === 0) {
       await window.supabaseClient.auth.signOut();
       errorEl.textContent = "You are not authorized as an admin";
+      isSubmitting = false;
       return;
     }
 
     // 3. REDIRECT TO ADMIN DASHBOARD
-    window.location.href = "admin-payments.html";
+    // 3. STORE ADMIN SESSION
+localStorage.setItem("admin_session", JSON.stringify({
+  user_id: data.user.id,
+  email: data.user.email,
+  role: roleRow[0].role
+}));
+
+// 4. REDIRECT
+window.location.href = "admin-payments.html";
   });
 });

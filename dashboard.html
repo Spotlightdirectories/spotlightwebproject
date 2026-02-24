@@ -4,10 +4,7 @@
   <meta charset="UTF-8" />
   <title>Vendor Dashboard | Spotlight</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <link rel="stylesheet" href="auth.css" />
   <link rel="stylesheet" href="dashboard.css" />
-
   <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
   <link rel="apple-touch-icon" href="images/favicon.png" />
 </head>
@@ -15,147 +12,98 @@
 
 <main class="dashboard-container">
 
-  <!-- HEADER -->
   <header class="dashboard-header">
     <h1>Vendor Dashboard</h1>
     <button id="logoutBtn">Log out</button>
   </header>
 
-  <!-- STATUS CARD -->
-  <section class="dashboard-card">
-    <h2>Account Overview</h2>
+  <!-- STATUS BANNER -->
+  <div id="statusBanner" class="status-banner hidden"></div>
 
-    <p><strong>Business name:</strong> <span id="bizName">—</span></p>
-    <p><strong>Plan:</strong> <span id="planTier">—</span></p>
-    <p><strong>Verification:</strong> <span id="verificationStatus">—</span></p>
-    <p><strong>Profile URL:</strong> <a id="profileLink" target="_blank">View profile</a></p>
+  <!-- ACCOUNT SECTION -->
+  <section class="dashboard-card">
+    <h2>Account</h2>
+
+    <p><strong>Business:</strong> <span id="bizName"></span></p>
+    <p><strong>Email:</strong> <span id="bizEmail"></span></p>
+    <p><strong>Plan:</strong> <span id="planTier"></span></p>
+    <p><strong>Status:</strong> <span id="subscriptionStatus"></span></p>
+    <p><strong>Verification:</strong> <span id="verificationStatus"></span></p>
+    <p><strong>SPOT-ID:</strong> <span id="spotId"></span></p>
   </section>
 
- <section class="dashboard-card">
-  <h2>Edit Profile</h2>
+  <!-- PROFILE SECTION -->
+  <section class="dashboard-card">
+    <h2>Profile</h2>
 
-  <form id="profileForm">
-
-    <div class="form-group">
-      <label for="editName">Business name</label>
-      <input type="text" id="editName" required />
-    </div>
-
-    <div class="form-group">
-      <label for="editAddress">Address</label>
-      <textarea id="editAddress" required></textarea>
-    </div>
-
-    <div class="form-group">
-      <label for="editState">State</label>
-      <select id="editState">
-        <option value="">Select state</option>
-        <!-- you can populate later -->
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label for="editLga">LGA</label>
-      <select id="editLga">
-        <option value="">Select LGA</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label for="editPhone">Phone</label>
-      <input type="text" id="editPhone" required />
-    </div>
-
-    <div class="form-group">
-      <label for="editEmail">Email</label>
-      <input type="email" id="editEmail" required />
-    </div>
-
-    <button type="submit" id="saveProfileBtn" class="primary-btn">Save changes</button>
-
-
-    <p id="profileSuccess" class="success-msg hidden">
-      Profile updated successfully
+    <p>
+      Public profile:
+      <a id="profileLink" target="_blank">View</a>
     </p>
 
-    <p id="profileError" class="error-msg hidden"></p>
+    <p id="profileNotice" class="muted-text"></p>
 
-  </form>
-</section>
+    <button id="editProfileBtn" class="primary-btn">
+      Edit Profile
+    </button>
+  </section>
 
-<!-- ===============================
-     MEDIA UPLOADS
-=============================== -->
-<section class="dashboard-card">
-  <h2>Branding</h2>
+  <!-- SUBSCRIPTION SECTION -->
+  <section class="dashboard-card">
+    <h2>Subscription</h2>
 
-  <!-- LOGO -->
-  <div class="upload-group">
-    <label for="logoInput">Business logo</label>
-    <input type="file" id="logoInput" accept="image/png,image/jpeg" />
-    <small>PNG or JPG · Max 1MB · Square recommended</small>
-  </div>
+    <p><strong>Current Plan:</strong> <span id="subPlan"></span></p>
+    <p><strong>Billing Type:</strong> <span id="billingType"></span></p>
+    <p><strong>Price:</strong> <span id="priceInfo"></span></p>
+    <p><strong>Start Date:</strong> <span id="startDate"></span></p>
+    <p><strong>Next Billing:</strong> <span id="nextBilling"></span></p>
 
-  <!-- COVER -->
-  <div class="upload-group">
-    <label for="coverInput">Cover image</label>
-    <input type="file" id="coverInput" accept="image/png,image/jpeg" />
-    <small>PNG or JPG · Max 2MB · Wide image recommended</small>
-  </div>
+    <button id="upgradeBtn" class="primary-btn">
+      Upgrade Plan
+    </button>
+  </section>
 
-  <p id="uploadError" class="form-error hidden"></p>
-  <p id="uploadSuccess" class="form-success hidden"></p>
-</section>
+  <!-- MEDIA SECTION (Premium Only) -->
+  <section id="mediaSection" class="dashboard-card hidden">
+    <h2>Media & Branding</h2>
 
-<!-- ===============================
-     MEDIA UPLOADS
-=============================== -->
-<section class="dashboard-card">
-  <h2>Media</h2>
+    <p>Upload gallery images and promo video.</p>
+    
+    <label for="galleryInput">Gallery Images (up to 5)</label>
+    <input type="file" id="galleryInput" multiple />
 
-  <!-- GALLERY -->
-  <div class="upload-group">
-    <label for="galleryInput">Gallery images</label>
-    <input
-      type="file"
-      id="galleryInput"
-      accept="image/png,image/jpeg"
-      multiple
-    />
-    <small>PNG/JPG · Max 1MB each · Tier-limited</small>
-  </div>
+    <label for="videoInput">Promo Video (mp4, max 1MB)</label>
+    <input type="file" id="videoInput" />
 
-  <!-- VIDEO -->
-  <div class="upload-group">
-    <label for="videoInput">Promo video</label>
-    <input
-      type="file"
-      id="videoInput"
-      accept="video/mp4"
-    />
-    <small>MP4 · Max length depends on plan</small>
-  </div>
+    <p id="mediaMessage" class="hidden"></p>
+  </section>
 
-  <p id="mediaError" class="form-error hidden"></p>
-  <p id="mediaSuccess" class="form-success hidden"></p>
-</section>
+  <!-- VERIFICATION SECTION -->
+  <section class="dashboard-card">
+    <h2>Verification</h2>
 
-<!-- CURRENT MEDIA PREVIEW -->
-<div class="media-preview">
+    <p>Status: <span id="badgeStatus"></span></p>
 
-  <!-- Gallery preview -->
-  <div id="galleryPreview" class="media-preview-grid"></div>
+    <p class="badge-info">
+      Verified vendors receive higher trust and increased visibility.
+    </p>
 
-  <!-- Video preview -->
-  <div id="videoPreview" class="media-preview-video"></div>
+    <div class="badge-options">
+      <button id="applyGrayBtn" class="primary-btn">
+        Apply for Gray Badge
+      </button>
 
-</div>
+      <button id="applyBlueBtn" class="primary-btn secondary">
+        Apply for Blue Badge
+      </button>
+    </div>
 
+  </section>
 
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
-<script src="dashboard.js" defer></script>
+<script src="dashboard.js"></script>
 </body>
 </html>

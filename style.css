@@ -39,7 +39,7 @@ header.navbar {
     width: 100%;
     z-index: 1000;    /* ensures header is above other content */
     justify-content: space-between;
-    background-color: #240707;  /* soft background */
+    background-color: #000;  /* soft background */
     height: var(--header-height);
     padding: 0 1rem;
     color: white;
@@ -203,7 +203,7 @@ main {
 
 footer {
     grid-row: 3;          /*sits in the bottom row of the body grid*/
-    background: #240707;  /*dark background for footer*/
+    background: #000;  /*dark background for footer*/
     color: white;
     text-align: center;
     padding: 15px 10px;
@@ -277,7 +277,7 @@ footer p {
 }
 
 .getlisted-button {
-    background-color: #240707;
+    background-color: #000;
     color: white;
     text-decoration: none;
     font-size: 1.5rem;
@@ -513,7 +513,7 @@ footer p {
     padding: 0.8rem 1.5rem;
     font-size: 1rem;
     color: white;
-    background-color: #240707;
+    background-color: #000;
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -522,7 +522,7 @@ footer p {
 
 .cta {
   display: inline-block;
-  background-color: #240707;  /* your preferred color */
+  background-color: #000;  /* your preferred color */
   color: #fff;
   padding: 12px 24px;
   border-radius: 8px;
@@ -620,7 +620,7 @@ div.benefits-intro p {
 .box4 .cta-btn {
     display: inline-block;
     padding: 0.5rem 1.5rem;
-    background-color: #240707;
+    background-color: #000;
     color: #fff;
     font-size: 1rem;
     border-radius: 8px;
@@ -653,7 +653,7 @@ div.benefits-intro p {
 
     .box4 .idcard {
       background: lightgray;
-      box-shadow: 0px 3px 6px #240707;
+      box-shadow: 0px 3px 6px #000;
       height: auto;
       
     }
@@ -672,7 +672,7 @@ div.benefits-intro p {
     }
 
     .idcard-content h3 {
-      color: #240707;
+      color: #000;
       margin: 0;
       padding: 1rem;
       font-size: 25px;
@@ -703,7 +703,7 @@ div.benefits-intro p {
 
     .cta2-btn {
       display: block;
-      background-color: #240707;
+      background-color: #000;
       color: white;
       text-decoration: none;
       border-radius: 8px;
@@ -721,413 +721,14 @@ div.benefits-intro p {
       .box4 h2 {
         font-size: 2.5rem;
       }
-
-
     }
 
-   /*ABOUT US PAGE*/
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    .aboutuswrapper {
-      display: grid;
-      grid-template-columns: 1fr; /* mobile: one column */
-      margin: 0;
-      padding: 0;
-   }
-
-/* bigger screens: switch to 2x2 */
-@media (min-width: 992px) {
-  .aboutuswrapper {
-    grid-template-columns: 1fr 1fr;
-    grid-auto-rows: auto;
-    min-height: calc(100vh - 60px); 
-  }
-    
-  }
-
-       /*BOX 1*/
-
-   .b1aboutUsSection {
-    background-color: rgb(230, 198, 198);
-    padding: 1.0rem;
-    border-radius: 12px;
-   }
-
-    .container {
-      max-width: 100%;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      margin: 1.5rem;
-      padding: 0;
-    }
-
-    .container p {
-      margin: 15px;
-    }
-
-     .container .box1-title {
-      display: flex;
-      flex-direction: column;
-      margin: 1.5rem auto;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      padding-top: 1.0rem;
-      width: 70%;
-      /*display: flex;
-      flex-direction: column;*/
-      align-items: center;
-      background: lightblue;
-
-    }
-
-    .b1aboutUsSection .box1-title {
-      font-size: 1.5rem;
-      text-align: center;
-      margin-bottom: 1rem;
-      margin-top: 0.5rem;
-      padding-top: 1rem;
-      color: #222;
-      font-weight: 700;
-      position: relative;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
    
-.b1aboutUsSection .box1-title::after {
-  content: "";
-  display: block;
-  width: 50px;
-  height: 3px;
-  background: #ff6600; /* accent color */
-  margin: 0.5rem auto 0;
-  border-radius: 2px;
-}
-
-.b1aboutUsSection p {
-  margin-bottom: 0.3rem;
-  margin-top: 0.3rem;
-  font-size: 1.2rem;
-  text-align: left;
-  padding: 10px;
-  color: #240707;
-}
-
-@media (min-width: 992px) {
-  .b1aboutUsSection p {
-    font-size: 1.4rem;
-  }
-
-.b1aboutUsSection .highlight {
-  color: #ff6600;
-  font-weight: 600;
-}
-
-.b1aboutUsSection .closing {
-  font-size: 1rem;
-  font-weight: 600;
-  text-align: center;
-  margin-top: 1rem;
-  color: #111;
-}
-
-.b1aboutUsSection .box1-title {
-  font-size: 2.5rem;
- }
-
-
-.b1aboutUsSection .closing {
-  font-size: 1.5rem;
-}
-}
-
-
-/*BOX 2 ABOUT US*/
-
-    .box2-img {
-      max-width: 100%;
-      margin: 0 auto;
-      text-align: center;
-      background-color: rgb(230, 198, 198);
-      border-radius: 12px;
-      overflow: hidden;
-      margin: 0.5rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.9);
-    }
-
-    .box2-img img {
-      display: block;
-      width: 100%;
-      height: auto;
-      border-radius: 12px;
-      
-    }
-
-    .aucard h2 {
-      Width: 70%;
-      border-radius: 16px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      /*margin-top: 1.0rem;*/
-      padding: 10px;
-      background: lightblue;
-      font-size: 1.5rem;
-      text-align: center;
-    }
-    
-    .aucard p {
-      margin: 0;
-      text-align: left;
-      font-size: 1.2rem;
-      /*border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);*/
-      padding: 15px;
-    }
-
-    .aucard {
-      display: flex;
-      flex-direction: column;
-      background: white;
-      align-items: center;
-      gap: 1.0rem;
-      margin: 1.0rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-      padding: 0.2rem;
-    }
-
-    .values-list {
-      list-style: none;
-      text-align: left;
-    }
-
-    .values-list li {
-      position: relative;
-      padding-left: 24px;
-      font-size: 1.2rem;
-      margin: 0.5rem;
-
-    }
-
-    .values-list li::before {
-      content: "\2713";
-      position: absolute;
-      color: green;
-      left: 0;
-      padding-left: 0.5rem;
-      font-weight: bold;
-    }
-
-
-
-    section.b2auboutus {
-      background-color: rgb(230, 198, 198);
-      border-radius: 12px;
-    }
-
-      @media (min-width: 992px) {
-        .box2 .box2-img img {
-          border-bottom-left-radius: 16px;
-          border-bottom-right-radius: 16px;
-          border-top-left-radius: 0;
-          border-top-right-radius: 0;
-        }
-        .aucard p {
-          margin: 0;
-          font-size: 1.4rem;
-        }
-
-        .values-list li {
-          font-size: 1.4;
-        }
-      
-        .b2auboutus {
-         flex-direction: column;   /* side by side on tablet+ */
-         padding: 1.0rem;
-       }
-     
-       .aucard h2 {
-        margin-top: 1.5rem;
-        width: 50%
-      }
-    }
-
-
-/*BOX 3*/
-      .b3aboutus {
-        width: 100%;
-        height: 100%;        /* adjust height */
-        /*overflow: hidden;*/
-        display: flex;
-        margin-right: 15px;
-      }
-      .b3aboutus .nigerianmappins {
-        flex: 1;
-
-      }
-  
-      .b3aboutus .nigerianmappins img {
-        display: block;
-        border-radius: 16px;
-        width: 100%;
-        height: 100%;
-        margin:  15px;
-        object-fit: cover;
-      }
-
-      /*BOX 4 About Us*/
-      .weDoGrid{
-        display: grid;
-        grid-template-columns: 1fr;
-        grid-template-rows: auto;
-        border-radius: 12px;
-        /*box-shadow: 0 4px 14px rgba(0,0,0,0.9);*/
-        grid-gap: 1.5rem;
-        margin: 0 auto;
-        padding: 1rem;
-        margin-left: 15px;
-        
-      }
-
-      .whatWeDoHeading h2 {
-        border-radius: 14px;
-        text-align: center;
-        background: rgb(230, 198, 198);
-        width: 70%;
-        margin: 1.5rem auto 1.5rem auto;
-        box-shadow: 4px 4px 14px rgba(244, 130, 130, 0.9);
-        padding: 10px;
-
-      }
-
-      .weDoCard {
-        box-shadow: 4px 4px 14px rgba(244, 130, 130, 0.9);
-        border-radius: 16px;
-        padding: 0.5rem;
-        background: lightblue;
-      }
-
-      .weDoCard p {
-        font-size: 18px;
-        margin: 10px;
-      }
-
-      .whatWeDo {
-        text-align: center;
-        font-size: 18px;
-        text-decoration: underline;
-
-      }
-
-     @media (min-width: 992px) {
-        .weDoGrid {
-          grid-template-columns: repeat(3, 1fr);
-         }
-
-         .weDoCard:nth-child(4) {
-          grid-column: span 3;
-         }
-      }
-
-
-      /*BOX 5 About Us*/
-
-      .box5 {
-        position: relative;
-        margin: 15px;
-        margin-bottom: 2rem;
-      }
-
-      .box5 h3 {
-        Width: 80%;
-        border-radius: 16px;
-        box-shadow: 4px 4px 14px rgba(244, 130, 130, 0.9);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        margin: 1.5rem auto 1.5rem auto;
-        padding: 10px;
-        background: rgb(230, 198, 198);
-        font-size: 2rem;
-        text-align: center;
-      }
-
-      .categories {
-        /*position: absolute;*/
-        display: grid;
-        gap: 10px 40px;
-        padding: 0.5rem;
-        margin: 20px auto 0 2px;
-        max-width: 1000px;
-        list-style: none;
-        background-color: lightblue;
-        box-shadow: 4px 4px 14px rgba(244, 130, 130, 0.9);
-        border-radius: 12px;
-      }
-
-      .categories li {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.8rem;
-      }
-
-      .icon {
-        width: 20px;
-        text-align: center;
-        flex-shrink: 0;
-      }
-
-       @media (min-width:768px) {
-      .categories {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-      }
-      .box5 h3 {
-        font-size: 2rem;
-        padding: 10px;
-      }
-
-      .categories li {
-        font-size: 1.0rem;
-      }
-    }
-
-      /*BOX 6 About Us*/
-
-      .box6 {
-        position: relative;
-        min-height: 400px;
-        margin-top: 2rem;
-      }
-
-      .teampic img {
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        max-width: 100%;
-        height: auto;
-        margin: 5px 5px 15px 10px;
-        border-radius: 12px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-      }
-
-      @media (min-width: 992px) {
-        .teampic img {
-          border-top-left-radius: 16px;
-          border-top-right-radius: 16px;
-        }
-      }
-
 /*CONTACT US PAGE*/
 
 div.boxa-contactUs {
   grid-column: 1 / -1;          /* always span the whole row */
-  background-color: #240707;    /* banner color */
+  background-color: #1d1d1d;    /* banner color */
   color: white;
   font-size: 0.8rem;
   padding: 1rem;
@@ -1162,7 +763,7 @@ option {
 }
 
 .submitForm {
-  background-color: #240707;
+  background-color: #000;
   color: white;
   padding: 10px 30px;
   border: none;
@@ -1310,7 +911,7 @@ div.social-icons {
 .faq-section h1 {
   text-align: center;
   margin-bottom: 1.5rem;
-  color: #240707;
+  color: #000;
 }
 
 .accordion {
@@ -1326,7 +927,7 @@ div.social-icons {
 .accordion-header {
   width: 100%;
   text-align: left;
-  background-color: #240707;
+  background-color: #000;
   color: #fff;
   padding: 1rem;
   font-size: 1.5rem;
@@ -1483,7 +1084,7 @@ button {
 }
 
 button.primary {
-  background: #240707;  /* your brand color */
+  background: #000;  /* your brand color */
   color: #fff;
 }
 
@@ -1514,7 +1115,7 @@ button.ghost:hover {
 /*GET LISTED PAGE*/
 
 :root {
-  --brand: #240707;
+  --brand: #000;
   --highlight: green;
   --text-dark: #2b2b2b;
   --bg-light: #fffaf5;
@@ -1608,7 +1209,7 @@ input:checked + .glslider:before {
 }
 
 .glcard.dark-card {
-  background: #240707;
+  background: #000;
   color: white;
   border: none;
 }
@@ -2006,7 +1607,7 @@ Add-on Cards
   .pricing-table h1 {
     font-size: 2.5rem;
     margin-bottom: 1rem;
-    color: #240707;
+    color: #000;
   }
 
 .pricing-header, .row {
@@ -2051,7 +1652,7 @@ Add-on Cards
   padding: 6px 14px;
   border-radius: 8px;
   /* border: 1px solid #ccc; */
-  background: #240707;
+  background: #000;
   font-weight: 300;
   color: white;
 }

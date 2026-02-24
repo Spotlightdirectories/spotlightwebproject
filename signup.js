@@ -44,6 +44,9 @@ document.addEventListener("DOMContentLoaded", () => {
       email,
       password,
       options: {
+        data: {
+          full_name: businessName
+        },
         emailRedirectTo: "https://spotlightdirectories.com/login.html"
       }
     });
@@ -54,18 +57,46 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 🔒 ENSURE PLAN INTENT EXISTS
+    // ===============================
+    // CREATE VENDOR ROW IMMEDIATELY
+    // ===============================
+
     const selectedPlan = localStorage.getItem("selectedPlan");
+    const billingType = localStorage.getItem("billingType") || "monthly";
 
     if (!selectedPlan) {
-      showError("Please select a plan before creating an account.");
+      showError("Please select a plan first.");
       resetSubmitState();
       return;
     }
 
+    const { error: vendorError } = await supabase
+      .from("vendors")
+      .insert({
+        auth_user_id: data.user.id,
+        name: businessName,
+        email: email,
+        plan_tier: selectedPlan,
+        billing_cycle: billingType,
+        subscription_status: selectedPlan === "free" ? "active" : null,
+        is_premium: selectedPlan !== "free"
+      });
+
+    if (vendorError) {
+      console.error("Vendor creation error:", vendorError);
+      showError(vendorError.message);
+      resetSubmitState();
+      return;
+    }
+
+    // 🔥 CLEAR PLAN INTENT AFTER SUCCESS
+    localStorage.removeItem("selectedPlan");
+    localStorage.removeItem("billingType");
+
     // Store business name and email for onboarding
     localStorage.setItem("pendingBusinessName", businessName);
     localStorage.setItem("pendingEmail", email);
+
     // ✅ Success message
     errorEl.textContent =
       "Account created. Please check your email to verify before logging in.";

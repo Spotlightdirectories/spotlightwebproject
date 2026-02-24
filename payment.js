@@ -20,38 +20,48 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  const billingType = localStorage.getItem("billingType") || "monthly";
-
-
   // ===============================
   // GET VENDOR FROM DATABASE
   // ===============================
   const { data: vendor } = await supabase
     .from("vendors")
-    .select("plan_tier, subscription_status")
+    .select("id, plan_tier, subscription_status, billing_cycle")
     .eq("auth_user_id", user.id)
     .maybeSingle();
+
+    const billingType = vendor?.billing_cycle || "monthly";
+
+      // Show correct plan
+    if (planSummaryEl && vendor) {
+     planSummaryEl.textContent =
+    `You selected the ${vendor.plan_tier.toUpperCase()} plan.`;
+    }
 
   if (!vendor) {
     window.location.replace("onboarding.html");
     return;
   }
-
-  // FREE USERS SHOULD NEVER BE HERE
   if (vendor.plan_tier === "free") {
-    window.location.replace("vendor-profile.html");
+    window.location.replace("dashboard.html");
     return;
   }
 
-  // If already paid → go to onboarding
+  // 🔹 If payment approved
   if (vendor.subscription_status === "active") {
     window.location.replace("onboarding.html");
     return;
   }
 
-  // Show correct plan
-  planSummaryEl.textContent =
-    `You selected the ${vendor.plan_tier.toUpperCase()} plan.`;
+  // 🔹 If payment awaiting review
+  if (vendor.subscription_status === "pending") {
+    window.location.replace("payment-status.html");
+    return;
+  }
+
+  // 🔹 If payment failed → allow retry
+  if (vendor.subscription_status === "failed") {
+    // Stay on payment page
+  }
 
   // ===============================
   // PAY ONLINE
@@ -59,14 +69,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   payOnlineBtn.onclick = async () => {
 
   // 1️⃣ Create payment record first
-  const { data, error } = await supabase
-    .from("vendorpayments")
-    .insert({
-      auth_user_id: user.id,
-      plan: vendor.plan_tier,
-      payment_method: "card",
-      status: "pending"
-    })
+   const { data, error } = await supabase
+   .from("vendorpayments")
+   .insert({
+     vendor_id: vendor.id,
+     auth_user_id: user.id,
+     plan: vendor.plan_tier,
+     billing_type: billingType,
+     amount: getAmountInKobo(vendor.plan_tier, billingType),
+     payment_method: "card",
+     status: "pending"
+   })
     .select("id")
     .maybeSingle();
 
@@ -102,7 +115,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 };
 
 
-  async function verifyPayment(reference) {
+async function verifyPayment(reference) {
 
   try {
 
@@ -123,12 +136,42 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    alert("Payment verified successfully.");
-    window.location.href = "onboarding.html";
+     // Show inline success state
+document.body.innerHTML = `
+  <div style="
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    height:100vh;
+    font-family:system-ui;
+    background:#f9fafb;
+  ">
+    <div style="
+      background:white;
+      padding:40px;
+      border-radius:12px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.08);
+      text-align:center;
+      max-width:420px;
+    ">
+      <h2 style="margin-bottom:15px;color:#16a34a;">
+        ✔ Payment Verified Successfully
+      </h2>
+      <p style="margin-bottom:20px;color:#555;">
+        Redirecting you to complete onboarding...
+      </p>
+    </div>
+  </div>
+`;
+
+// Redirect automatically
+setTimeout(() => {
+  window.location.replace("onboarding.html");
+}, 2500);
 
   } catch (err) {
-    console.error(err);
-    alert("Payment verification failed. Contact support.");
+    console.error("Unexpected verification error:", err);
+    alert("Payment verification failed. Please contact support.");
   }
 
 }
@@ -142,11 +185,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const { data, error } = await supabase
       .from("vendorpayments")
       .insert({
-        auth_user_id: user.id,
-        plan: vendor.plan_tier,
-        payment_method: "bank",
-        status: "pending"
-      })
+       vendor_id: vendor.id,
+       auth_user_id: user.id,
+       plan: vendor.plan_tier,
+       amount: getAmountInKobo(vendor.plan_tier, billingType),
+       billing_type: billingType,
+       payment_method: "bank",
+       status: "pending"
+    })
       .select("id")
       .maybeSingle();
 
@@ -178,6 +224,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
+    // 1️⃣ Update payment record
     await supabase
       .from("vendorpayments")
       .update({
@@ -186,8 +233,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       })
       .eq("id", window.currentPaymentId);
 
-    bankSection.classList.add("hidden");
-    lockedState.classList.remove("hidden");
+// 2️⃣ Ensure vendor subscription is pending
+    await supabase
+      .from("vendors")
+      .update({
+        subscription_status: "pending"
+     })
+      .eq("auth_user_id", user.id);
+
+// 3️⃣ Redirect to status page (terminal state)
+    window.location.replace("payment-status.html");
   };
 
   function getAmountInKobo(plan, billingType) {

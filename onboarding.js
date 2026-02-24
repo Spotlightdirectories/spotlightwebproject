@@ -7,23 +7,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-   // ===============================
-// PREFILL FROM AUTH + SIGNUP
-// ===============================
+  // ===============================
+  // PREFILL FROM AUTH (SOURCE OF TRUTH)
+  // ===============================
 
-// Business name from signup (since auth does not store business name)
-const savedName = localStorage.getItem("pendingBusinessName");
+  const businessNameFromAuth = user.user_metadata?.full_name || "";
 
-if (savedName) {
-  document.getElementById("name").value = savedName;
+  if (businessNameFromAuth) {
+    document.getElementById("name").value = businessNameFromAuth;
+  }
+
+  if (user.email) {
+    document.getElementById("email").value = user.email;
+  }
+
   document.getElementById("name").readOnly = true;
-}
-
-// Email from Supabase Auth (source of truth)
-if (user.email) {
-  document.getElementById("email").value = user.email;
   document.getElementById("email").readOnly = true;
-}
 
   const form = document.getElementById("vendorForm");
   const detectBtn = document.getElementById("detectLocationBtn");
@@ -36,7 +35,6 @@ if (user.email) {
 
   const categorySelect = document.getElementById("category");
   const subcategorySelect = document.getElementById("subcategory");
-
 
   // ===============================
   // Load categories
@@ -71,179 +69,157 @@ if (user.email) {
   });
 
   // ===============================
-// GEOLOCATION
-// ===============================
-if (detectBtn) {
-  detectBtn.addEventListener("click", () => {
-    if (!navigator.geolocation) {
-      locationStatus.textContent = "Geolocation is not supported by your browser.";
+  // GEOLOCATION (UNCHANGED)
+  // ===============================
+  if (detectBtn) {
+    detectBtn.addEventListener("click", () => {
+      if (!navigator.geolocation) {
+        locationStatus.textContent = "Geolocation is not supported by your browser.";
+        return;
+      }
+
+      locationStatus.textContent = "Detecting location...";
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          latInput.value = pos.coords.latitude.toFixed(6);
+          lngInput.value = pos.coords.longitude.toFixed(6);
+          locationStatus.textContent =
+            "Location detected successfully. Please confirm this is your business location.";
+        },
+        (err) => {
+          console.error("Geolocation error:", err);
+          locationStatus.textContent =
+            "Unable to retrieve location. Please allow location permission or enter coordinates manually.";
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    });
+  }
+
+  // ===============================
+  // SUBMIT
+  // ===============================
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    submitBtn.disabled = true;
+    statusMsg.textContent = "Creating profile...";
+
+    let latitude = latInput.value.trim();
+    let longitude = lngInput.value.trim();
+
+    if (!latitude || !longitude) {
+      statusMsg.textContent =
+        "Please detect your business location or manually enter valid coordinates.";
+      submitBtn.disabled = false;
       return;
     }
 
-    locationStatus.textContent = "Detecting location...";
+    latitude = parseFloat(latitude);
+    longitude = parseFloat(longitude);
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        latInput.value = pos.coords.latitude.toFixed(6);
-        lngInput.value = pos.coords.longitude.toFixed(6);
-        locationStatus.textContent =
-          "Location detected successfully. Please confirm this is your business location.";
-      },
-      (err) => {
-        console.error("Geolocation error:", err);
-        locationStatus.textContent =
-          "Unable to retrieve location. Please allow location permission or enter coordinates manually.";
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    );
-  });
-}
+    if (isNaN(latitude) || isNaN(longitude)) {
+      statusMsg.textContent =
+        "Invalid coordinates format. Please enter valid numbers.";
+      submitBtn.disabled = false;
+      return;
+    }
 
+    const businessName = user.user_metadata?.full_name || "";
+    const email = user.email;
 
-// ===============================
-// SUBMIT
-// ===============================
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+    const address = document.getElementById("address").value.trim();
+    const state = document.getElementById("state").value;
+    const lga = document.getElementById("lga").value;
+    const whatsapp = document.getElementById("whatsapp").value.trim();
 
-  submitBtn.disabled = true;
-  statusMsg.textContent = "Creating profile...";
+    if (!businessName || !address || !state || !lga || !whatsapp || !email) {
+      statusMsg.textContent = "Please fill all required fields.";
+      submitBtn.disabled = false;
+      return;
+    }
 
-  // ===============================
-  // VALIDATE COORDINATES
-  // ===============================
-  let latitude = latInput.value.trim();
-  let longitude = lngInput.value.trim();
+    if (!categorySelect.value || !subcategorySelect.value) {
+      statusMsg.textContent = "Please select category and subcategory.";
+      submitBtn.disabled = false;
+      return;
+    }
 
-  if (!latitude || !longitude) {
-    statusMsg.textContent =
-      "Please detect your business location or manually enter valid coordinates.";
-    submitBtn.disabled = false;
-    return;
-  }
+    const selectedCategoryText =
+      categorySelect.options[categorySelect.selectedIndex].text;
 
-  latitude = parseFloat(latitude);
-  longitude = parseFloat(longitude);
+    const selectedSubcategoryText =
+      subcategorySelect.options[subcategorySelect.selectedIndex].text;
 
-  if (isNaN(latitude) || isNaN(longitude)) {
-    statusMsg.textContent =
-      "Invalid coordinates format. Please enter valid numbers.";
-    submitBtn.disabled = false;
-    return;
-  }
+    const payload = {
+      name: businessName,
+      slug: businessName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, ""),
+      latitude,
+      longitude,
+      address,
+      state,
+      lga,
+      whatsapp,
+      telephone: document.getElementById("telephone").value.trim() || null,
+      email,
+      category_id: categorySelect.value,
+      subcategory_id: subcategorySelect.value,
+      category: selectedCategoryText,
+      subcategory: selectedSubcategoryText,
+      auth_user_id: user.id,
+    };
 
-  // ===============================
-  // VALIDATE REQUIRED FIELDS
-  // ===============================
-  const businessName = document.getElementById("name").value.trim();
-  const address = document.getElementById("address").value.trim();
-  const state = document.getElementById("state").value;
-  const lga = document.getElementById("lga").value;
-  const whatsapp = document.getElementById("whatsapp").value.trim();
-  const email = document.getElementById("email").value.trim();
+    const { data: existingVendor } = await supabase
+      .from("vendors")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
 
-  if (!businessName || !address || !state || !lga || !whatsapp || !email) {
-    statusMsg.textContent = "Please fill all required fields.";
-    submitBtn.disabled = false;
-    return;
-  }
+    let response;
 
-  if (!categorySelect.value || !subcategorySelect.value) {
-    statusMsg.textContent = "Please select category and subcategory.";
-    submitBtn.disabled = false;
-    return;
-  }
+    if (existingVendor) {
+      response = await supabase
+        .from("vendors")
+        .update(payload)
+        .eq("auth_user_id", user.id)
+        .select("slug")
+        .maybeSingle();
+    } else {
+      response = await supabase
+        .from("vendors")
+        .insert(payload)
+        .select("slug")
+        .maybeSingle();
+    }
 
-  const selectedCategoryText =
-    categorySelect.options[categorySelect.selectedIndex].text;
+    const { error } = response;
 
-  const selectedSubcategoryText =
-    subcategorySelect.options[subcategorySelect.selectedIndex].text;
+    if (error) {
+      console.error("Insert error:", error);
+      statusMsg.textContent = error.message;
+      submitBtn.disabled = false;
+      return;
+    }
 
-  // ===============================
-  // BUILD PAYLOAD
-  // ===============================
-  const payload = {
-    name: businessName,
-    slug: businessName
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, ""),
-
-    latitude,
-    longitude,
-
-    address,
-    state,
-    lga,
-    whatsapp,
-    telephone: document.getElementById("telephone").value.trim() || null,
-    email,
-
-    category_id: categorySelect.value,
-    subcategory_id: subcategorySelect.value,
-    category: selectedCategoryText,
-    subcategory: selectedSubcategoryText,
-
-    auth_user_id: user.id,
-  };
-
-  // ===============================
-  // INSERT INTO SUPABASE
-  // ===============================
-  let response;
-
-const { data: existingVendor } = await supabase
+    
+// 🔹 Mark onboarding as completed
+await supabase
   .from("vendors")
-  .select("id")
-  .eq("auth_user_id", user.id)
-  .maybeSingle();
+  .update({ onboarding_completed: true })
+  .eq("auth_user_id", user.id);
 
-if (existingVendor) {
-  // UPDATE for paid users
-  response = await supabase
-    .from("vendors")
-    .update(payload)
-    .eq("auth_user_id", user.id)
-    .select("slug")
-    .maybeSingle()
-} else {
-  // INSERT for free users
-  response = await supabase
-    .from("vendors")
-    .insert(payload)
-    .select("slug")
-    .maybeSingle();
-}
-
-const { data, error } = response;
-
-
-  if (error) {
-    console.error("Insert error:", error);
-    statusMsg.textContent = error.message;
-    submitBtn.disabled = false;
-    return;
-  }
-
-  // ===============================
-  // CLEAR TEMP STORAGE
-  // ===============================
-  localStorage.removeItem("pendingBusinessName");
-  localStorage.removeItem("pendingEmail");
-
-  // ===============================
-  // REDIRECT
-  // ===============================
-  window.location.replace(`vendor-profile.html?slug=${data.slug}`);
-});
+    window.location.replace("dashboard.html");
+  });
 
 });
-
 
 //NIGERIA STATES AND LGAS SCRIPT
 document.addEventListener("DOMContentLoaded", () => {

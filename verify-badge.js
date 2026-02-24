@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const badgeType = localStorage.getItem("pendingBadgeType");
 
   if (!badgeType) {
-    window.location.href = "getlisted.html";
+    window.location.href = "dashboard.html";
     return;
   }
 
@@ -23,16 +23,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (badgeType === "gray") {
     badgeTitle.textContent = "Gray Badge Verification";
     badgeRequirements.textContent =
-      "Upload Government ID and Passport Photograph.";
-
+      "Gray badge builds trust. Requires Government ID and Passport photo.";
     blueOnly.forEach(el => el.style.display = "none");
   }
 
   if (badgeType === "blue") {
     badgeTitle.textContent = "Blue Badge Verification";
     badgeRequirements.textContent =
-      "Upload Government ID, CAC Certificate and Utility Bill.";
-
+      "Blue badge verifies registered businesses. Requires Government ID, CAC Certificate and Utility Bill.";
     grayOnly.forEach(el => el.style.display = "none");
   }
 
@@ -49,43 +47,35 @@ document.addEventListener("DOMContentLoaded", async () => {
     const cacFile = document.getElementById("cacFile").files[0];
     const utilityFile = document.getElementById("utilityFile").files[0];
 
-    const vendorId = user.id; // assuming vendor_id = auth_user_id
-
-    const upload = async (file, path) => {
+    const upload = async (file, name) => {
       if (!file) return null;
 
-      const { data, error } = await supabase.storage
+      const path = `${user.id}/${name}-${Date.now()}`;
+
+      const { error } = await supabase.storage
         .from("vendor-verifications")
-        .upload(path, file);
+        .upload(path, file, { upsert: true });
 
       if (error) throw error;
 
-      const { data: publicUrl } = supabase.storage
+      const { data } = supabase.storage
         .from("vendor-verifications")
         .getPublicUrl(path);
 
-      return publicUrl.publicUrl;
+      return data.publicUrl;
     };
 
     try {
 
-      const idUrl = await upload(idFile, `${vendorId}/id-${Date.now()}`);
-      const passportUrl = passportFile
-        ? await upload(passportFile, `${vendorId}/passport-${Date.now()}`)
-        : null;
-
-      const cacUrl = cacFile
-        ? await upload(cacFile, `${vendorId}/cac-${Date.now()}`)
-        : null;
-
-      const utilityUrl = utilityFile
-        ? await upload(utilityFile, `${vendorId}/utility-${Date.now()}`)
-        : null;
+      const idUrl = await upload(idFile, "id");
+      const passportUrl = passportFile ? await upload(passportFile, "passport") : null;
+      const cacUrl = cacFile ? await upload(cacFile, "cac") : null;
+      const utilityUrl = utilityFile ? await upload(utilityFile, "utility") : null;
 
       const { error } = await supabase
         .from("vendor_verifications")
         .insert({
-          vendor_id: vendorId,
+          vendor_id: user.id,
           badge_type: badgeType,
           id_url: idUrl,
           passport_url: passportUrl,
@@ -100,6 +90,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         "Verification submitted successfully. Await admin review.";
 
       localStorage.removeItem("pendingBadgeType");
+
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 1500);
 
     } catch (err) {
       verifyMsg.textContent = "Upload failed. Try again.";
