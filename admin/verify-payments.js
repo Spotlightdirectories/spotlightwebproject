@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       .from("vendors")
       .update({
         spot_id: spotId,
-        subscription_status: "active"
+      //subscription_status: "active"
       })
       .eq("id", vendorId);
 

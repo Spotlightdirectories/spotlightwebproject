@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
         email: email,
         plan_tier: selectedPlan,
         billing_cycle: billingType,
-        subscription_status: selectedPlan === "free" ? "active" : null,
+        subscription_status: null,
         is_premium: selectedPlan !== "free"
       });
 

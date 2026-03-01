@@ -81,11 +81,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // FREE PLAN
     // =====================================================
     if (vendor.plan_tier === "free") {
-      if (!vendor.slug) {
+
+      if (!vendor.onboarding_completed) {
         window.location.replace("onboarding.html");
       } else {
         window.location.replace("dashboard.html");
       }
+
       return;
     }
 
@@ -103,13 +105,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (vendor.subscription_status === "active") {
-      if (!vendor.slug) {
+
+      if (!vendor.onboarding_completed) {
         window.location.replace("onboarding.html");
-      } else {
+     } else {
         window.location.replace("dashboard.html");
-      }
-      return;
-    }
+     }
+
+     return;
+  }
 
     // Fallback
     window.location.replace("payment.html");

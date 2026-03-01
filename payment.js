@@ -69,26 +69,29 @@ document.addEventListener("DOMContentLoaded", async () => {
   payOnlineBtn.onclick = async () => {
 
   // 1️⃣ Create payment record first
-   const { data, error } = await supabase
-   .from("vendorpayments")
-   .insert({
+   const paystackReference = `SPOT_${Date.now()}`;
+
+const { data, error } = await supabase
+  .from("vendorpayments")
+  .insert({
      vendor_id: vendor.id,
      auth_user_id: user.id,
      plan: vendor.plan_tier,
      billing_type: billingType,
      amount: getAmountInKobo(vendor.plan_tier, billingType),
      payment_method: "card",
-     status: "pending"
+     status: "pending",
+     gateway_ref: paystackReference
    })
-    .select("id")
-    .maybeSingle();
+   .select("id")
+   .maybeSingle();
 
   if (error || !data) {
     alert("Could not create payment record.");
     return;
   }
 
-  // Save payment ID globally
+  // Save payment ID globally 
   window.currentPaymentId = data.id;
 
   // 2️⃣ Open Paystack
@@ -97,7 +100,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     email: user.email,
     amount: getAmountInKobo(vendor.plan_tier, billingType),
     currency: "NGN",
-    ref: `SPOT_${Date.now()}`,
+    ref: paystackReference,
     metadata: {
       auth_user_id: user.id
     },
@@ -129,6 +132,8 @@ async function verifyPayment(reference) {
         }
       }
     );
+
+    console.log("Invoke result:", data, error);
 
     if (error) {
       console.log("VERIFY ERROR:", error);

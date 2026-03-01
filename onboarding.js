@@ -210,11 +210,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     
-// 🔹 Mark onboarding as completed
-await supabase
-  .from("vendors")
-  .update({ onboarding_completed: true })
-  .eq("auth_user_id", user.id);
+    // 🔹 Mark onboarding as completed
+    await supabase
+     .from("vendors")
+    .update({
+      onboarding_completed: true,
+  // subscription_status: "active"
+    })
+    .eq("auth_user_id", user.id);
 
     window.location.replace("dashboard.html");
   });

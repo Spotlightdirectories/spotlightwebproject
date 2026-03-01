@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       vendors ( id, name, email )
     `)
     .eq("payment_method", "bank")
-    .in("status", ["pending", "awaiting_review"]);
+    .eq("status", "awaiting_review");
 
   if (error) {
     table.innerHTML = `<tr><td colspan="6">${error.message}</td></tr>`;
@@ -69,19 +69,29 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   table.addEventListener("click", async (e) => {
-    if (e.target.dataset.approve) {
-      await approvePayment(e.target.dataset.approve);
-    }
-    if (e.target.dataset.reject) {
-      await rejectPayment(e.target.dataset.reject);
-    }
-  });
+  const row = e.target.closest("tr");
+
+  if (e.target.dataset.approve) {
+    await approvePayment(e.target.dataset.approve, row);
+  }
+
+  if (e.target.dataset.reject) {
+    await rejectPayment(e.target.dataset.reject, row);
+  }
+});
 
   // -----------------------------
   // APPROVE
   // -----------------------------
-async function approvePayment(paymentId) {
-  if (!confirm("Approve this payment?")) return;
+    async function approvePayment(paymentId, row) {
+
+     if (!confirm("Approve this payment?")) return;
+
+     const approveBtn = document.querySelector(`[data-approve="${paymentId}"]`);
+     if (approveBtn) {
+      approveBtn.disabled = true;
+      approveBtn.textContent = "Processing...";
+    }
 
   const { data: payment, error } = await supabase
     .from("vendorpayments")
@@ -96,9 +106,13 @@ async function approvePayment(paymentId) {
     .eq("id", paymentId)
     .single();
 
-  if (error || !payment) {
-    alert("Payment not found.");
-    return;
+    if (error || !payment) {
+      alert("Payment not found.");
+      if (approveBtn) {
+        approveBtn.disabled = false;
+        approveBtn.textContent = "Approve";
+     }
+     return;
   }
 
   if (payment.status !== "awaiting_review") {
@@ -109,18 +123,26 @@ async function approvePayment(paymentId) {
   const now = new Date().toISOString();
 
   // 1️⃣ Update vendorpayment
-  await supabase
-    .from("vendorpayments")
-    .update({
-      status: "approved",
-      reviewed_at: now,
-      approved_at: now,
-      paid_at: now,
-      reviewed_by: adminSession.user_id
-    })
-    .eq("id", paymentId);
+  const { error: updateError } = await supabase
+  .from("vendorpayments")
+  .update({
+    status: "approved",
+    reviewed_at: now,
+    approved_at: now,
+    rejected_at: null,
+    rejection_reason: null,
+    reviewed_by: adminSession.user_id
+  })
+  .eq("id", paymentId);
+
+if (updateError) {
+  console.error("VendorPayment update failed:", updateError);
+  alert("Failed to update payment record.");
+  return;
+}
 
   // 2️⃣ Activate vendor
+
   await supabase
     .from("vendors")
     .update({
@@ -128,7 +150,7 @@ async function approvePayment(paymentId) {
       plan_tier: payment.plan,
       billing_cycle: payment.billing_type,
       is_premium: true,
-      paid_at: new Date()
+      paid_at: now
     })
     .eq("id", payment.vendor_id);
 
@@ -139,51 +161,97 @@ async function approvePayment(paymentId) {
     html: `<p>Your bank transfer has been verified. You can now complete onboarding and access your dashboard.</p>`
   });
 
+  await supabase
+  .from("vendorpayments")
+  .update({ notification_sent: true })
+  .eq("id", paymentId);
+
   alert("Payment approved");
-  location.reload();
-}
+
+  if (row) row.remove();
+  }
 
   // -----------------------------
   // REJECT
   // -----------------------------
-  async function rejectPayment(paymentId) {
-  const reason = prompt("Reason for rejection?");
-  if (!reason) return;
+  async function rejectPayment(paymentId, row) {
+    console.log("REJECT FUNCTION ENTERED");
+    const reason = prompt("Reason for rejection?");
+  
+    if (!reason) return;
+
+  const rejectBtn = document.querySelector(`[data-reject="${paymentId}"]`);
+   if (rejectBtn) {
+     rejectBtn.disabled = true;
+     rejectBtn.textContent = "Processing...";
+   }
 
   const { data: payment, error } = await supabase
     .from("vendorpayments")
     .select(`
       id,
       vendor_id,
+      status,
       vendors ( email )
     `)
     .eq("id", paymentId)
     .single();
 
-  if (error || !payment) {
-    alert("Payment not found.");
-    return;
-  }
+  console.log("FETCHED PAYMENT:", payment);
+  console.log("FETCH ERROR:", error);
+
+    if (error || !payment) {
+      alert("Payment not found.");
+      if (rejectBtn) {
+        rejectBtn.disabled = false;
+        rejectBtn.textContent = "Reject";
+     }
+     return;
+   }
+
+  console.log("CURRENT STATUS:", payment.status);
+
+  if (payment.status !== "awaiting_review") {
+  alert("This payment is rejected.");
+  return;
+}
+
+  const { data: authData } = await supabase.auth.getUser();
+  console.log("AUTH USER:", authData?.user);
 
   const now = new Date().toISOString();
 
   // 1️⃣ Update vendorpayment
-  await supabase
-    .from("vendorpayments")
-    .update({
-      status: "rejected",
-      rejection_reason: reason,
-      reviewed_at: now,
-      rejected_at: now,
-      reviewed_by: adminSession.user_id
-    })
-    .eq("id", paymentId);
+  const { data: updatedRow, error: updateError } = await supabase
+  .from("vendorpayments")
+  .update({
+  status: "rejected",
+  reviewed_at: now,
+  approved_at: null,
+  rejected_at: now,
+  rejection_reason: reason,
+  reviewed_by: adminSession.user_id
+})
+.eq("id", paymentId);
+
+console.log("UPDATE RESULT:", updatedRow);
+console.log("UPDATE ERROR:", updateError);
+
+if (updateError) {
+  console.error("VendorPayment update failed:", updateError);
+  alert("Failed to update payment record.");
+  if (rejectBtn) {
+    rejectBtn.disabled = false;
+    rejectBtn.textContent = "Reject";
+  }
+  return;
+}
 
   // 2️⃣ Update vendor
   await supabase
     .from("vendors")
     .update({
-      subscription_status: "failed"
+      subscription_status: "rejected"
     })
     .eq("id", payment.vendor_id);
 
@@ -194,8 +262,15 @@ async function approvePayment(paymentId) {
     html: `<p>Your bank transfer could not be verified.<br/>Reason: ${reason}</p>`
   });
 
+  await supabase
+  .from("vendorpayments")
+  .update({ notification_sent: true })
+  .eq("id", paymentId);
+
   alert("Payment rejected");
-  location.reload();
+
+  if (row) row.remove();
+  
 }
   // -----------------------------
   // EMAIL (RESEND EDGE)

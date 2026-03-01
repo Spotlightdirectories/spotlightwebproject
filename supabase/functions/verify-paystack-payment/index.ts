@@ -3,6 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 serve(async (req) => {
 
+  console.log("EDGE FUNCTION HIT");
+
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers":
@@ -26,6 +28,7 @@ serve(async (req) => {
   }
 
   const { reference, payment_id, auth_user_id } = await req.json();
+  console.log("DEBUG INPUT:", { reference, payment_id, auth_user_id });
 
   if (!reference || !payment_id || !auth_user_id) {
     return new Response("Missing data", {
@@ -70,43 +73,67 @@ serve(async (req) => {
   );
 
   // 🔹 Prevent duplicate processing
-  const { data: existingPayment } = await supabase
-    .from("vendorpayments")
-    .select("status, vendor_id, plan, billing_type")
-    .eq("id", payment_id)
-    .single();
+  const { data: existingPayment, error: fetchError } = await supabase
+  .from("vendorpayments")
+  .select("id, status, vendor_id, plan, billing_type")
+  .eq("id", payment_id)
+  .single();
 
-  if (!existingPayment || existingPayment.status === "approved") {
-    return new Response(
-      JSON.stringify({ message: "Already processed" }),
-      { headers: corsHeaders }
-    );
-  }
+  console.log("FETCHED PAYMENT:", existingPayment);
+
+if (fetchError) {
+  console.error("Fetch payment error:", fetchError);
+}
+
+if (!existingPayment) {
+  console.error("No payment found with id:", payment_id);
+  return new Response(
+    JSON.stringify({ message: "Payment record not found" }),
+    { headers: corsHeaders }
+  );
+}
+
+if (existingPayment.status === "active") {
+  return new Response(
+    JSON.stringify({ message: "Already processed" }),
+    { headers: corsHeaders }
+  );
+}
 
   const now = new Date().toISOString();
 
   // 🔹 Update vendorpayment
-  await supabase
-    .from("vendorpayments")
-    .update({
-      status: "approved",
-      paystack_reference: reference,
-      approved_at: now,
-      reviewed_at: now
-    })
-    .eq("id", payment_id);
+  const { data: updatedPayment, error: paymentUpdateError } = await supabase
+  .from("vendorpayments")
+  .update({
+    status: "active",
+    approved_at: now,
+    reviewed_at: now,
+    notification_sent: true
+  })
+  .eq("id", payment_id)
+  .select();
+
+if (paymentUpdateError) {
+  console.error("Payment update error:", paymentUpdateError);
+}
+
+if (!updatedPayment || updatedPayment.length === 0) {
+  console.error("No payment matched reference:", reference);
+}
 
   // 🔹 Activate vendor
   await supabase
-    .from("vendors")
-    .update({
-      subscription_status: "active",
-      plan_tier: existingPayment.plan,
-      billing_cycle: existingPayment.billing_type,
-      is_premium: true,
-      paid_at: now
-    })
-    .eq("id", existingPayment.vendor_id);
+  .from("vendors")
+  .update({
+    subscription_status: "active",
+    plan_tier: existingPayment.plan,
+    billing_cycle: existingPayment.billing_type,
+    is_premium: true,
+    paystack_reference: reference,
+    paid_at: now
+  })
+  .eq("id", existingPayment.vendor_id);
 
   // 🔹 Send activation email
   const { data: vendorData } = await supabase
@@ -116,6 +143,7 @@ serve(async (req) => {
     .single();
 
   if (vendorData?.email) {
+  try {
     await fetch(
       `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-email`,
       {
@@ -134,7 +162,10 @@ serve(async (req) => {
         })
       }
     );
+  } catch (err) {
+    console.error("Email failed:", err);
   }
+}
 
   return new Response(
     JSON.stringify({ success: true }),
