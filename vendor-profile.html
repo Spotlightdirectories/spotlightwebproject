@@ -34,39 +34,55 @@
 
   <!-- COVER -->
   <div class="hero-cover">
-    <img id="vendorCover" alt="Vendor cover" />
+  <img id="vendorCover" alt="Vendor cover" />
+
+  <label id="coverUploadLabel" class="camera-overlay hidden">
+    📷
+    <input type="file" id="coverInput" accept="image/*" hidden />
+  </label>
+
+  <div class="cover-placeholder" id="coverPlaceholder">
+  Recommended size: 920 × 300px<br>
+  Max size: 1MB<br>
+  Formats: JPG, PNG, WEBP
+  </div>
+
   </div>
 
   <!-- CONTENT -->
-  <div class="hero-content">
+<div class="hero-content">
 
-    <div class="hero-left">
-      <div class="logo-wrap">
-        <img id="vendorLogo" alt="Vendor logo" />
-      </div>
+  <div class="hero-left">
+    <div class="logo-wrap">
+      <img id="vendorLogo" alt="Vendor logo" />
+
+      <label id="logoUploadLabel" class="camera-overlay small hidden">
+        📷
+        <input type="file" id="logoInput" accept="image/*" hidden />
+      </label>
     </div>
-
-    <div class="hero-text">
-      <h1 id="vendorName"></h1>
-      <p class="meta">
-      <span id="vendorCategory"></span>
-      </p>
-
-<p class="address-line" id="vendorAddress"></p>
-
-
-      <div class="hero-actions">
-        <a id="whatsappLink" target="_blank">WhatsApp</a>
-        <a id="mapLink" target="_blank">View on Map</a>
-      </div>
-    </div>
-
-    <!-- BADGE -->
-    <div class="hero-badge">
-      <div id="vendorBadge" class="badge-skeleton"></div>
-    </div>
-
   </div>
+
+  <div class="hero-text">
+    <h1 id="vendorName"></h1>
+    <p class="meta">
+      <span id="vendorCategory"></span>
+    </p>
+
+    <p class="address-line" id="vendorAddress"></p>
+
+    <div class="hero-actions">
+      <a id="whatsappLink" target="_blank">WhatsApp</a>
+      <a id="mapLink" target="_blank">View on Map</a>
+    </div>
+  </div>
+
+  <!-- BADGE -->
+  <div class="hero-badge">
+    <div id="vendorBadge" class="badge-skeleton"></div>
+  </div>
+
+</div>
 </header>
 
   <section id="upgradeCTA" class="upgrade-cta">

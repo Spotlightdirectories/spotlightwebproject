@@ -72,39 +72,45 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function renderVendorCard(v) {
-    return `
-      <article class="vendor-card">
-        <h3>${v.name}</h3>
+  return `
+    <article class="vendor-card">
+      <h3>${v.name}</h3>
 
-        <p>
-          ${(v.category || "")}
-          ${v.subcategory ? " • " + v.subcategory : ""}
-        </p>
+      <p>
+        ${(v.category || "")}
+        ${v.subcategory ? " • <strong>" + v.subcategory + "</strong>" : ""}
+      </p>
 
-        <p>${v.address || ""}</p>
+      <p>${v.address || ""}</p>
 
-        ${v.distance !== undefined
-          ? `<p>${v.distance.toFixed(1)} km away</p>`
-          : ""}
+      ${v.distance !== undefined
+        ? `<p class="distance">${v.distance.toFixed(1)} km away</p>`
+        : ""}
 
-        <div class="actions">
-          ${v.whatsapp ? `
-            <a href="https://wa.me/${v.whatsapp}" target="_blank">WhatsApp</a>
-          ` : ""}
+      <div class="actions">
+        ${v.whatsapp ? `
+          <a href="https://wa.me/${v.whatsapp}" target="_blank">WhatsApp</a>
+        ` : ""}
 
-          ${v.telephone ? `
-            <a href="tel:${v.telephone}">Call</a>
-          ` : ""}
+        ${v.telephone ? `
+          <a href="tel:${v.telephone}">Call</a>
+        ` : ""}
 
-          ${v.latitude && v.longitude ? `
-            <a href="https://www.google.com/maps/search/?api=1&query=${v.latitude},${v.longitude}" target="_blank">
-              Map
-            </a>
-          ` : ""}
-        </div>
-      </article>
-    `;
-  }
+        ${v.latitude && v.longitude ? `
+          <a href="https://www.google.com/maps/search/?api=1&query=${v.latitude},${v.longitude}" target="_blank">
+            Map
+          </a>
+        ` : ""}
+
+        ${v.plan_tier !== "free" ? `
+          <a href="vendor-profile.html?slug=${v.slug}" class="view-profile">
+            View Profile
+         </a>
+       ` : ""}
+      </div>
+    </article>
+  `;
+}
 
   function renderVendors(list) {
     vendorsGrid.innerHTML = list.length

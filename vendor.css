@@ -127,9 +127,24 @@ button[type="submit"]:hover {
   gap: 0.5rem;
 }
 
+/*Improve Typography Hierarchy*/
 .vendor-card h3 {
-  font-size: 1rem;
+  margin-bottom: 6px;
+  font-size: 1.15rem;
+  font-weight: 700;
 }
+
+.vendor-card p:first-of-type {
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.vendor-card p:nth-of-type(2) {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 6px;
+}
+/*Improve Typography Hierarchy end*/
 
 .category {
   font-size: 0.85rem;
@@ -225,6 +240,73 @@ button[type="submit"]:hover {
   border: 0;
 }
 
-/*VENDOR BADGE VERIFICATION*/
+/*DISTANCE STYLING*/
+.distance {
+  font-weight: 600;
+  color: #2907ec !important;; /* dark navy */
+}
 
+.view-profile {
+  padding: 6px 12px;
+  border: 1px solid #0b1f3a;
+  color: #0b1f3a;
+  background: transparent;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.view-profile:hover {
+  background: #0b1f3a;
+  color: #fff;
+}
+
+/*added depth to vendor cards*/
+.vendor-card {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vendor-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.vendor-card .distance {
+  font-weight: 700;
+  color: #1e40af;   /* refined navy */
+  margin-bottom: 10px;
+}
+/*Improve Button Layout*/
+.vendor-card .actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vendor-card .actions a {
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.85rem;
+  color: #111;
+  background: #f9fafb;
+  transition: all 0.2s ease;
+}
+
+.vendor-card .actions a:hover {
+  background: #e5e7eb;
+}
+
+.view-profile {
+  border: 1px solid #1e40af !important;
+  color: #1e40af !important;
+  font-weight: 600;
+}
 

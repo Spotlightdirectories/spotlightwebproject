@@ -77,9 +77,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   // RENDER PROFILE
   // ===============================
   function renderVendorProfile(vendor) {
-    const isOwner =
+
+    console.log("FULL VENDOR OBJECT:", vendor);  // 👈 ADD THIS LINE HERE
+
+    const isOwner = 
       currentUser &&
       vendor.auth_user_id === currentUser.id;
+
+      const isFree = vendor.plan_tier === "free";
+      const isPaid = !isFree;
 
     // -------------------------------
     // HERO
@@ -89,10 +95,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const categoryEl = document.getElementById("vendorCategory");
     if (categoryEl) {
-      categoryEl.textContent =
-        [vendor.category, vendor.subcategory]
-          .filter(Boolean)
-          .join(" • ");
+      const category = vendor.category || "";
+      const subcategory = vendor.subcategory || "";
+
+    if (category && subcategory) {
+      categoryEl.innerHTML = `${category} • <strong>${subcategory}</strong>`;
+     } else {
+      categoryEl.textContent = category || subcategory;
+    }
     }
 
     const addressEl = document.getElementById("vendorAddress");
@@ -101,11 +111,56 @@ document.addEventListener("DOMContentLoaded", async () => {
     // -------------------------------
     // LOGO & COVER
     // -------------------------------
-    const logo = document.getElementById("vendorLogo");
-    if (logo && vendor.logo_url) logo.src = vendor.logo_url;
+ 
+const logo = document.getElementById("vendorLogo");
+if (logo) {
+  if (vendor.logo_url) {
+    logo.src = vendor.logo_url + "?t=" + new Date().getTime();
+    logo.style.display = "block";
+  } else {
+    logo.style.display = "none";
+  }
+}
 
-    const cover = document.getElementById("vendorCover");
-    if (cover && vendor.cover_url) cover.src = vendor.cover_url;
+const logoWrap = document.querySelector(".logo-wrap");
+
+if (logoWrap) {
+  // Remove any existing placeholder first
+  const existing = logoWrap.querySelector(".logo-placeholder");
+  if (existing) existing.remove();
+
+  if (isOwner && !vendor.logo_url) {
+    const placeholder = document.createElement("div");
+    placeholder.className = "logo-placeholder";
+    placeholder.innerHTML = `
+      112 × 112px<br>
+      Max size: 1MB<br>
+      JPG, PNG, WEBP
+    `;
+    logoWrap.appendChild(placeholder);
+  }
+}
+
+
+
+const cover = document.getElementById("vendorCover");
+if (cover) {
+  if (vendor.cover_url) {
+    cover.src = vendor.cover_url + "?t=" + new Date().getTime();
+    cover.style.display = "block";
+  } else {
+    cover.style.display = "none";
+  }
+}
+
+const coverPlaceholder = document.getElementById("coverPlaceholder");
+if (coverPlaceholder) {
+  if (isOwner && !vendor.cover_url) {
+    coverPlaceholder.style.display = "flex";
+  } else {
+    coverPlaceholder.style.display = "none";
+  }
+}
 
     // -------------------------------
     // BADGE
@@ -117,10 +172,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     // CONTACT
     // -------------------------------
     const whatsapp = document.getElementById("whatsappLink");
-    if (whatsapp && vendor.phone) {
-      whatsapp.href = `https://wa.me/${vendor.phone}`;
-      whatsapp.style.pointerEvents = "auto";
+    if (whatsapp) {
+    if (vendor.whatsapp) {
+      whatsapp.href = `https://wa.me/${vendor.whatsapp}`;
+      whatsapp.style.display = "inline-block";
+    } else {
+      whatsapp.style.display = "none";
     }
+  }
 
     const map = document.getElementById("mapLink");
 
@@ -171,7 +230,144 @@ document.addEventListener("DOMContentLoaded", async () => {
         upgradeSection.style.display = "none";
       }
     }
+    // -------------------------------
+    // OWNER MODE — Enable Branding Upload
+    // -------------------------------
+    if (isOwner) {
+  const coverLabel = document.getElementById("coverUploadLabel");
+  const logoLabel = document.getElementById("logoUploadLabel");
+  const coverInput = document.getElementById("coverInput");
+  const logoInput = document.getElementById("logoInput");
+
+  if (coverLabel) coverLabel.classList.remove("hidden");
+  if (logoLabel) logoLabel.classList.remove("hidden");
+
+  // COVER UPLOAD
+  if (coverInput) {
+    coverInput.addEventListener("change", async (e) => {
+      console.log("Cover input triggered");
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+      alert("Only JPG, PNG or WEBP images allowed.");
+      return;
+    }
+
+    // 1MB file size limit
+    if (file.size > 1024 * 1024) {
+       alert("Cover image must be less than 1MB.");
+       return;
+    }
+
+      const filePath = `${currentUser.id}/cover`;
+
+      console.log("Cover filePath being used:", filePath);
+
+      // Step 1: Remove existing cover (if any)
+      const { data: removeData, error: removeError } =
+      await supabase.storage
+        .from("vendor-branding")
+        .remove([filePath]);
+
+     console.log("Remove Result:", removeData);
+     console.log("Remove Error:", removeError);
+
+      // Step 2: Upload new cover
+     const { error } = await supabase.storage
+       .from("vendor-branding")
+       .upload(filePath, file);
+
+      if (error) {
+        console.error("Storage Upload Error:", error.message);
+        return;
+      }
+
+      const { data } = supabase.storage
+        .from("vendor-branding")
+        .getPublicUrl(filePath);
+
+        console.log("Public URL:", data.publicUrl);
+        console.log("Current User ID:", currentUser?.id);
+        console.log("Vendor auth_user_id:", vendor.auth_user_id);
+
+      await supabase
+        .from("vendors")
+        .update({ cover_url: data.publicUrl })
+        .eq("id", vendor.id);
+
+        console.log("Updated cover_url in DB");
+
+      vendor.cover_url = data.publicUrl;
+      document.getElementById("vendorCover").src =
+      data.publicUrl + "?t=" + new Date().getTime();
+      document.getElementById("vendorCover").style.display = "block";
+    });
   }
+  // LOGO UPLOAD
+if (logoInput) {
+  logoInput.addEventListener("change", async (e) => {
+    console.log("Logo input triggered");
+
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      alert("Only JPG, PNG or WEBP images allowed.");
+      return;
+    }
+
+    // 1MB size limit
+    if (file.size > 1024 * 1024) {
+      alert("Logo image must be less than 1MB.");
+      return;
+    }
+
+    const filePath = `${currentUser.id}/logo`;
+
+    // Remove existing logo
+    await supabase.storage
+      .from("vendor-branding")
+      .remove([filePath]);
+
+    // Upload new logo
+    const { error } = await supabase.storage
+      .from("vendor-branding")
+      .upload(filePath, file);
+
+    if (error) {
+      console.error("Logo Upload Error:", error.message);
+      return;
+    }
+
+    const { data } = supabase.storage
+      .from("vendor-branding")
+      .getPublicUrl(filePath);
+
+    // Update database
+    await supabase
+      .from("vendors")
+      .update({ logo_url: data.publicUrl })
+      .eq("id", vendor.id);
+
+    // Update UI immediately (cache-busted)
+    const logoImg = document.getElementById("vendorLogo");
+    if (logoImg) {
+      logoImg.src = data.publicUrl + "?t=" + new Date().getTime();
+      logoImg.style.display = "block";
+    }
+
+    // Hide placeholder
+    const logoPlaceholder = document.getElementById("logoPlaceholder");
+    if (logoPlaceholder) {
+      logoPlaceholder.style.display = "none";
+    }
+  });
+  }
+ }
+}
 
   loadVendorProfile();
 });

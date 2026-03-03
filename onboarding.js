@@ -174,6 +174,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       subcategory_id: subcategorySelect.value,
       category: selectedCategoryText,
       subcategory: selectedSubcategoryText,
+      description: document.getElementById("description").value.trim() || null,
       auth_user_id: user.id,
     };
 
@@ -215,7 +216,7 @@ document.addEventListener("DOMContentLoaded", async () => {
      .from("vendors")
     .update({
       onboarding_completed: true,
-  // subscription_status: "active"
+      subscription_status: "active"
     })
     .eq("auth_user_id", user.id);
 

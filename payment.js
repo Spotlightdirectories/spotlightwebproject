@@ -212,9 +212,15 @@ setTimeout(() => {
   };
 
   submitReceiptBtn.onclick = async () => {
+
+    submitReceiptBtn.disabled = true;
+    submitReceiptBtn.textContent = "Uploading Receipt...";
+
     const file = receiptFileInput.files[0];
     if (!file) {
       alert("Select a receipt file.");
+      submitReceiptBtn.disabled = false;
+      submitReceiptBtn.textContent = "Submit Receipt";
       return;
     }
 
@@ -226,6 +232,8 @@ setTimeout(() => {
 
     if (uploadError) {
       alert(uploadError.message);
+      submitReceiptBtn.disabled = false;
+      submitReceiptBtn.textContent = "Submit Receipt";
       return;
     }
 
