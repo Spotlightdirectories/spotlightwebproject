@@ -27,15 +27,27 @@ document.addEventListener("DOMContentLoaded", async () => {
   // BADGE RENDERER
   // ===============================
   function renderBadge(status) {
-    if (!status) return "";
-    if (status === "blue") {
-      return `<img src="images/bluebadge.png" class="verification-badge">`;
-    }
-    if (status === "gray") {
-      return `<img src="images/graybadge.png" class="verification-badge">`;
-    }
-    return "";
+
+  if (!status) return "";
+
+  if (status === "blue") {
+  return `
+    <span class="badge-wrap" data-tooltip="Verified Business — official business documents reviewed by Spotlight. This vendor operates a registered and credible business..">
+      <img src="images/bluebadge.png" class="verification-badge">
+    </span>
+  `;
+}
+
+  if (status === "gray") {
+    return `
+      <span class="badge-wrap" data-tooltip="Identity Verified — business owner identity confirmed">
+        <img src="images/graybadge.png" class="verification-badge">
+      </span>
+    `;
   }
+
+  return "";
+}
 
   // ===============================
   // LOAD VENDOR
@@ -45,6 +57,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const slug = params.get("slug");
 
     let vendor = null;
+
+    // ===============================
+    // CHECK PRELOADED VENDOR
+    // ===============================
 
     if (slug) {
       const { data } = await supabase

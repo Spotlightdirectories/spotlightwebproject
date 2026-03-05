@@ -15,6 +15,54 @@
   <form id="verificationForm">
 
     <div class="form-group">
+  <label for="applicantName">Contact Person *</label>
+  <input 
+    type="text" 
+    id="applicantName" 
+    placeholder="Name (must be a Director or Shareholder in the CAC registration)" 
+    required
+  />
+</div>
+
+<div class="form-group">
+  <label for="phone">Phone Number *</label>
+  <input 
+    type="tel" 
+    id="phone" 
+    placeholder="Enter active contact number" 
+    required
+  />
+</div>
+
+<div class="form-group">
+  <label for="email">Email Address *</label>
+  <input 
+    type="email" 
+    id="email" 
+    placeholder="Vendor account email"
+    readonly
+  />
+</div>
+
+<div class="form-group gray-only">
+  <label for="idNumber">ID Number *</label>
+  <input 
+    type="text" 
+    id="idNumber" 
+    placeholder="Government ID number"
+  />
+</div>
+
+<div class="form-group blue-only">
+  <label for="cacNumber">CAC Registration Number *</label>
+  <input 
+    type="text" 
+    id="cacNumber" 
+    placeholder="Enter CAC registration number"
+  />
+</div>
+
+    <div class="form-group">
       <label for="idFile">Government ID *</label>
       <input type="file" id="idFile" required />
     </div>
@@ -31,7 +79,18 @@
 
     <div class="form-group blue-only">
       <label for="utilityFile">Utility Bill *</label>
+      <small>Upload a utility bill issued within the last 6 months. The address must match the operating address used in your vendor listing.</small>
       <input type="file" id="utilityFile" />
+    </div>
+
+    <div class="form-group blue-only">
+      <label for="memartFile">MEMART (Memorandum & Articles of Association) *</label>
+      <input type="file" id="memartFile" />
+    </div>
+
+    <div class="form-group blue-only">
+      <label for="statusReportFile">CAC Status Report *</label>
+      <input type="file" id="statusReportFile" />
     </div>
 
     <button type="submit">Submit Verification</button>

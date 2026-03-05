@@ -165,3 +165,9 @@ tbody tr:hover {
   background: #fee2e2;
   color: #991b1b;
 }
+
+/* Badge Verification Status Badges */
+
+.verification-heading {
+  margin-top: 100px;
+}

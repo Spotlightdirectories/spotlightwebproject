@@ -91,14 +91,28 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ===============================
   document.getElementById("subPlan").textContent = vendor.plan_tier;
   document.getElementById("billingType").textContent =
-    vendor.billing_type || "—";
+    vendor.billing_cycle || "—";
+
+   const { data: payment } = await supabase
+     .from("vendorpayments")
+     .select("amount")
+     .eq("vendor_id", vendor.id)
+     .eq("status", "approved")
+     .order("approved_at", { ascending: false })
+     .limit(1)
+     .single();
+
   document.getElementById("priceInfo").textContent =
-    vendor.price ? `₦${vendor.price}` : "—";
-  document.getElementById("startDate").textContent =
-    vendor.paid_at ? new Date(vendor.paid_at).toLocaleDateString() : "—";
-  document.getElementById("nextBilling").textContent =
-    vendor.next_billing_at
-      ? new Date(vendor.next_billing_at).toLocaleDateString()
+    payment?.amount ? `₦${(payment.amount / 100).toLocaleString()}` : "—";
+
+   document.getElementById("startDate").textContent =
+     vendor.paid_at ? new Date(vendor.paid_at).toLocaleDateString() : "—";
+   
+   document.getElementById("nextBilling").textContent =
+    vendor.billing_cycle === "monthly"
+      ? "1 month after payment"
+      : vendor.billing_cycle === "yearly"
+      ? "1 year after payment"
       : "—";
 
   document.getElementById("upgradeBtn").addEventListener("click", () => {

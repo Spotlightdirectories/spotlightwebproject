@@ -57,6 +57,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   // HELPERS
   // ===============================
 
+  function renderBadge(status) {
+
+  if (!status) return "";
+
+  if (status === "blue") {
+    return `<img src="images/bluebadge.png" class="card-badge">`;
+  }
+
+  if (status === "gray") {
+    return `<img src="images/graybadge.png" class="card-badge">`;
+  }
+
+  return "";
+}
+
   function haversineDistance(lat1, lon1, lat2, lon2) {
     const R = 6371;
     const toRad = deg => deg * Math.PI / 180;
@@ -74,7 +89,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   function renderVendorCard(v) {
   return `
     <article class="vendor-card">
-      <h3>${v.name}</h3>
+      <h3 class="vendor-name">
+        ${v.name}
+        ${renderBadge(v.verification_status)}
+      </h3>
 
       <p>
         ${(v.category || "")}
@@ -102,11 +120,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           </a>
         ` : ""}
 
-        ${v.plan_tier !== "free" ? `
-          <a href="vendor-profile.html?slug=${v.slug}" class="view-profile">
-            View Profile
-         </a>
-       ` : ""}
+        <a href="vendor-profile.html?slug=${v.slug}" class="view-profile">
+        View Profile
+        </a>
       </div>
     </article>
   `;
@@ -208,13 +224,23 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(pos => {
-      userLocation = {
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude
-      };
-      applyFilters();
-    });
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        userLocation = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude
+        };
+        applyFilters();
+      },
+      err => {
+        console.error("Location error:", err);
+     },
+     {
+      enableHighAccuracy: false,
+      timeout: 5000,
+      maximumAge: 60000
+     }
+   );
   });
 
   // ===============================

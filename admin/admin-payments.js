@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const supabase = window.supabaseClient;
   const table = document.getElementById("paymentsTable");
+  const verificationTable = document.getElementById("verificationsTable");
+  console.log("Verification table:", verificationTable);
 
   // -----------------------------
   // ADMIN SESSION GUARD
@@ -36,7 +38,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (!payments.length) {
     table.innerHTML = `<tr><td colspan="6">No pending payments</td></tr>`;
-    return;
+    
   }
 
   table.innerHTML = "";
@@ -68,7 +70,63 @@ document.addEventListener("DOMContentLoaded", async () => {
     table.appendChild(tr);
   });
 
-  table.addEventListener("click", async (e) => {
+  // -----------------------------
+// LOAD BADGE VERIFICATIONS
+// -----------------------------
+const { data: verifications, error: verificationError } = await window.supabaseClient
+  .from("vendor_verifications")
+  .select(`
+    id,
+    badge_type,
+    status,
+    created_at,
+    id_url,
+    passport_photo_url,
+    cac_url,
+    utility_url,
+    memart_url,
+    status_report_url,
+    vendor:vendors ( name )  
+  `)
+  
+    .eq("status", "pending");
+
+  console.log("VERIFICATIONS RESULT:", verifications, verificationError);
+
+if (verificationError) {
+  verificationTable.innerHTML = `<tr><td colspan="6">${verificationError.message}</td></tr>`;
+} else if (!verifications.length) {
+  verificationTable.innerHTML = `<tr><td colspan="6">No pending verifications</td></tr>`;
+} else {
+  verificationTable.innerHTML = "";
+
+  verifications.forEach(v => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${v.vendor?.name || "—"}</td>
+      <td>${v.badge_type}</td>
+      <td>${new Date(v.created_at).toLocaleDateString()}</td>
+      <td>
+        <a href="${v.id_url}" target="_blank">ID</a> |
+        ${v.passport_photo_url ? `<a href="${v.passport_photo_url}" target="_blank">Passport</a> |` : ""}
+        ${v.cac_url ? `<a href="${v.cac_url}" target="_blank">CAC</a> |` : ""}
+        ${v.utility_url ? `<a href="${v.utility_url}" target="_blank">Utility</a> |` : ""}
+        ${v.memart_url ? `<a href="${v.memart_url}" target="_blank">MEMART</a> |` : ""}
+        ${v.status_report_url ? `<a href="${v.status_report_url}" target="_blank">Status Report</a>` : ""}
+      </td>
+      <td>${v.status}</td>
+      <td>
+        <button class="approve-btn" data-verify-approve="${v.id}">Approve</button>
+        <button class="reject-btn" data-verify-reject="${v.id}">Reject</button>
+      </td>
+    `;
+
+    verificationTable.appendChild(tr);
+  });
+}
+
+  document.addEventListener("click", async (e) => {
   const row = e.target.closest("tr");
 
   if (e.target.dataset.approve) {
@@ -78,6 +136,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (e.target.dataset.reject) {
     await rejectPayment(e.target.dataset.reject, row);
   }
+
+  if (e.target.dataset.verifyApprove) {
+  await approveVerification(e.target.dataset.verifyApprove, row);
+}
+
+if (e.target.dataset.verifyReject) {
+  await rejectVerification(e.target.dataset.verifyReject, row);
+}
 });
 
   // -----------------------------
@@ -271,6 +337,74 @@ if (updateError) {
 
   if (row) row.remove();
   
+}
+
+// -----------------------------
+// APPROVE BADGE VERIFICATION
+// -----------------------------
+async function approveVerification(verificationId, row) {
+
+  if (!confirm("Approve this badge verification?")) return;
+
+  const now = new Date().toISOString();
+
+  const { data: verification } = await supabase
+    .from("vendor_verifications")
+    .select("vendor_id, badge_type")
+    .eq("id", verificationId)
+    .single();
+
+  console.log("Verification record:", verification);
+
+  if (!verification) {
+    alert("Verification not found.");
+    return;
+  }
+
+  await supabase
+    .from("vendor_verifications")
+    .update({
+      status: "approved",
+      reviewed_at: now,
+      reviewed_by: adminSession.user_id
+    })
+    .eq("id", verificationId);
+
+  await supabase
+    .from("vendors")
+    .update({
+      verification_status: verification.badge_type
+    })
+    .eq("id", verification.vendor_id);
+
+  alert("Verification approved");
+
+  if (row) row.remove();
+}
+
+
+// -----------------------------
+// REJECT BADGE VERIFICATION
+// -----------------------------
+async function rejectVerification(verificationId, row) {
+
+  const reason = prompt("Reason for rejection?");
+  if (!reason) return;
+
+  const now = new Date().toISOString();
+
+  await supabase
+    .from("vendor_verifications")
+    .update({
+      status: "rejected",
+      reviewed_at: now,
+      reviewed_by: adminSession.user_id
+    })
+    .eq("id", verificationId);
+
+  alert("Verification rejected");
+
+  if (row) row.remove();
 }
   // -----------------------------
   // EMAIL (RESEND EDGE)

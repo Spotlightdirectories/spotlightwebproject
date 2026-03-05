@@ -156,3 +156,20 @@ body {
   cursor: pointer;
   font-size: 0.85rem;
 }
+
+.logout-btn {
+  width: auto;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logout-btn {
+  background: linear-gradient(135deg, #111, #444);
+  color: #fff;
+}

@@ -193,20 +193,22 @@ button[type="submit"]:hover {
   white-space: nowrap;
 }
 
-.badge.blue {
-  background: #e6f0ff;
-  color: #1a4fd8;
-}
-
-.badge.gray {
-  background: #f0f0f0;
-  color: #555;
-}
-
 .verification-badge {
   width: 28px;
   height: 28px;
   object-fit: contain;
+}
+
+.vendor-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-badge {
+  width: 20px;
+  height: 20px;
+  transform: translateY(2px);
 }
 
 /* =========================
@@ -224,7 +226,9 @@ button[type="submit"]:hover {
 
 @media (min-width: 1024px) {
   .vendors-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 1000px;
+    margin: 0 auto;
   }
 }
 
@@ -310,3 +314,58 @@ button[type="submit"]:hover {
   font-weight: 600;
 }
 
+
+/* ===============================
+VERIFY BADGE FORM
+=============================== */
+
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="tel"],
+.form-group input[type="file"] {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.form-group input[type="file"] {
+  padding: 6px;
+}
+
+#verificationForm button {
+  margin-top: 10px;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  background: #111;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#verificationForm button:hover {
+  opacity: 0.9;
+}
+
+#verifyMsg {
+  margin-top: 12px;
+  font-size: 14px;
+}
