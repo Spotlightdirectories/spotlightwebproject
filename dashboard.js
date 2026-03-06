@@ -14,10 +14,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   // FETCH VENDOR
   // ===============================
   const { data: vendor } = await supabase
-    .from("vendors")
-    .select("*")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+   .from("vendors")
+   .select("*, expires_at")
+   .eq("auth_user_id", user.id)
+   .maybeSingle();
+
+   console.log("Vendor record:", vendor);
 
   if (!vendor) {
     window.location.href = "onboarding.html";
@@ -59,8 +61,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("bizEmail").textContent = vendor.email || "—";
   document.getElementById("planTier").textContent = vendor.plan_tier;
   document.getElementById("subscriptionStatus").textContent = vendor.subscription_status;
-  document.getElementById("verificationStatus").textContent =
-    vendor.verification_status || "Not verified";
+
+  const badgeStatus = document.getElementById("badgeStatus");
+
+  if (badgeStatus) {
+    if (vendor.verification_status === "blue") {
+      badgeStatus.textContent = "Blue Verified";
+    } 
+    else if (vendor.verification_status === "gray") {
+    badgeStatus.textContent = "Gray Verified";
+   } 
+    else {
+      badgeStatus.textContent = "None";
+   }
+ }
+
   document.getElementById("spotId").textContent =
     vendor.spot_id || "Not generated yet";
 
@@ -90,6 +105,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // SUBSCRIPTION SECTION
   // ===============================
   document.getElementById("subPlan").textContent = vendor.plan_tier;
+  
   document.getElementById("billingType").textContent =
     vendor.billing_cycle || "—";
 
@@ -97,7 +113,7 @@ document.addEventListener("DOMContentLoaded", async () => {
      .from("vendorpayments")
      .select("amount")
      .eq("vendor_id", vendor.id)
-     .eq("status", "approved")
+     .in("status", ["approved", "active"])
      .order("approved_at", { ascending: false })
      .limit(1)
      .single();
@@ -109,11 +125,9 @@ document.addEventListener("DOMContentLoaded", async () => {
      vendor.paid_at ? new Date(vendor.paid_at).toLocaleDateString() : "—";
    
    document.getElementById("nextBilling").textContent =
-    vendor.billing_cycle === "monthly"
-      ? "1 month after payment"
-      : vendor.billing_cycle === "yearly"
-      ? "1 year after payment"
-      : "—";
+     vendor.expires_at
+      ? new Date(vendor.expires_at).toLocaleDateString()
+    : "—";
 
   document.getElementById("upgradeBtn").addEventListener("click", () => {
     window.location.href = "getlisted.html";

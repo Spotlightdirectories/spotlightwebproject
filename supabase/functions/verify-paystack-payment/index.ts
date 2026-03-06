@@ -123,7 +123,12 @@ if (!updatedPayment || updatedPayment.length === 0) {
 }
 
   // 🔹 Activate vendor
-  await supabase
+  const expiry =
+  existingPayment.billing_type === "monthly"
+    ? new Date(new Date(now).setMonth(new Date(now).getMonth() + 1))
+    : new Date(new Date(now).setFullYear(new Date(now).getFullYear() + 1));
+
+await supabase
   .from("vendors")
   .update({
     subscription_status: "active",
@@ -131,7 +136,8 @@ if (!updatedPayment || updatedPayment.length === 0) {
     billing_cycle: existingPayment.billing_type,
     is_premium: true,
     paystack_reference: reference,
-    paid_at: now
+    paid_at: now,
+    expires_at: expiry
   })
   .eq("id", existingPayment.vendor_id);
 
@@ -145,23 +151,22 @@ if (!updatedPayment || updatedPayment.length === 0) {
   if (vendorData?.email) {
   try {
     await fetch(
-      `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-email`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`
-        },
-        body: JSON.stringify({
-          to: vendorData.email,
-          subject: "Payment Successful 🎉",
-          html: `
-            <p>Your payment has been confirmed.</p>
-            <p>You can now complete onboarding and access your dashboard.</p>
-          `
-        })
-      }
-    );
+  `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-email`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!}`
+    },
+    body: JSON.stringify({
+      to: vendorData.email,
+      subject: "Payment Successful 🎉",
+      html: `<p>Your payment has been confirmed.</p>
+             <p>You can now complete onboarding and access your dashboard.</p>`
+    })
+  }
+);
   } catch (err) {
     console.error("Email failed:", err);
   }

@@ -209,23 +209,37 @@ if (updateError) {
 
   // 2️⃣ Activate vendor
 
-  await supabase
-    .from("vendors")
-    .update({
-      subscription_status: "active",
-      plan_tier: payment.plan,
-      billing_cycle: payment.billing_type,
-      is_premium: true,
-      paid_at: now
-    })
-    .eq("id", payment.vendor_id);
+  const expiry =
+  payment.billing_type === "monthly"
+    ? new Date(new Date(now).setMonth(new Date(now).getMonth() + 1))
+    : new Date(new Date(now).setFullYear(new Date(now).getFullYear() + 1));
+
+await supabase
+  .from("vendors")
+  .update({
+    subscription_status: "active",
+    plan_tier: payment.plan,
+    billing_cycle: payment.billing_type,
+    is_premium: true,
+    paid_at: now,
+    expires_at: expiry
+  })
+  .eq("id", payment.vendor_id);
 
   // 3️⃣ Send email
+
+  console.log("SENDING EMAIL TO:", payment.vendors.email); 
+
+  try {
   await sendEmail({
     to: payment.vendors.email,
     subject: "Payment Approved 🎉",
-    html: `<p>Your bank transfer has been verified. You can now complete onboarding and access your dashboard.</p>`
+    html: `<p>Your bank transfer has been verified.</p>
+           <p>You can now complete onboarding and access your dashboard.</p>`
   });
+} catch (err) {
+  console.error("Email failed:", err);
+}
 
   await supabase
   .from("vendorpayments")
@@ -234,7 +248,7 @@ if (updateError) {
 
   alert("Payment approved");
 
-  if (row) row.remove();
+   if (row) row.remove();
   }
 
   // -----------------------------
@@ -350,15 +364,29 @@ async function approveVerification(verificationId, row) {
 
   const { data: verification } = await supabase
     .from("vendor_verifications")
-    .select("vendor_id, badge_type")
+    .select("vendor_id, badge_type, status")
     .eq("id", verificationId)
     .single();
 
-  console.log("Verification record:", verification);
+  const { data: vendor } = await supabase
+    .from("vendors")
+    .select("email")
+    .eq("id", verification.vendor_id)
+    .single();
 
-  if (!verification) {
-    alert("Verification not found.");
-    return;
+   if (!verification) {
+     alert("Verification not found.");
+      return;
+  }
+
+   if (verification.status === "rejected") {
+     alert("This verification is already rejected.");
+     return;
+  }
+
+   if (verification.status === "approved") {
+     alert("This verification is already approved.");
+     return;
   }
 
   await supabase
@@ -377,11 +405,21 @@ async function approveVerification(verificationId, row) {
     })
     .eq("id", verification.vendor_id);
 
-  alert("Verification approved");
+    try {
+      await sendEmail({
+        to: vendor.email,
+        subject: "Verification Approved ✔️",
+        html: `<p>Your vendor verification has been approved.</p>
+           <p>Your listing now displays the ${verification.badge_type} badge.</p>`
+     });
+   } catch (err) {
+     console.error("Verification email failed:", err);
+   }
+
+   alert("Verification approved");
 
   if (row) row.remove();
 }
-
 
 // -----------------------------
 // REJECT BADGE VERIFICATION
@@ -390,6 +428,33 @@ async function rejectVerification(verificationId, row) {
 
   const reason = prompt("Reason for rejection?");
   if (!reason) return;
+
+  const { data: verification } = await supabase
+    .from("vendor_verifications")
+    .select("vendor_id, badge_type, status")
+    .eq("id", verificationId)
+    .single();
+
+  if (!verification) {
+    alert("Verification not found.");
+    return;
+  }
+
+  if (verification.status === "rejected") {
+    alert("This verification is already rejected.");
+    return;
+  }
+
+  if (verification.status === "approved") {
+    alert("This verification is already approved.");
+    return;
+  }
+
+  const { data: vendor } = await supabase
+    .from("vendors")
+    .select("email")
+    .eq("id", verification.vendor_id)
+    .single();
 
   const now = new Date().toISOString();
 
@@ -402,6 +467,17 @@ async function rejectVerification(verificationId, row) {
     })
     .eq("id", verificationId);
 
+  try {
+    await sendEmail({
+      to: vendor.email,
+      subject: "Verification Rejected",
+      html: `<p>Your verification request was not approved.</p>
+             <p>Please review your documents and submit again.</p>`
+    });
+  } catch (err) {
+    console.error("Verification rejection email failed:", err);
+  }
+
   alert("Verification rejected");
 
   if (row) row.remove();
@@ -409,18 +485,17 @@ async function rejectVerification(verificationId, row) {
   // -----------------------------
   // EMAIL (RESEND EDGE)
   // -----------------------------
-  async function sendEmail(payload) {
-    await fetch(
-      "https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/send-email",
+   async function sendEmail(payload) {
+     await fetch(
+       "https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/send-email",
       {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": window.SUPABASE_ANON_KEY,
-          "Authorization": `Bearer ${window.SUPABASE_ANON_KEY}`
-        },
-        body: JSON.stringify(payload)
-      }
-    );
-  }
+       method: "POST",
+       headers: {
+         "Content-Type": "application/json",
+         "apikey": window.SUPABASE_ANON_KEY
+       },
+       body: JSON.stringify(payload)
+    }
+   );
+ }
 });
