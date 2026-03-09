@@ -23,6 +23,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     custom: { media: true }
   };
 
+  const SOCIAL_LIMITS = {
+    free: 0,
+    standard: 2,
+    enterprise: 3,
+    elite: 5,
+    custom: Infinity
+  };
+
   // ===============================
   // BADGE RENDERER
   // ===============================
@@ -101,7 +109,88 @@ document.addEventListener("DOMContentLoaded", async () => {
       vendor.auth_user_id === currentUser.id;
 
       const isFree = vendor.plan_tier === "free";
+
+      const GALLERY_LIMITS = {
+        free: 0,
+        standard: 6,
+        enterprise: 12,
+        elite: 24,
+        custom: 24
+     };
+
       const isPaid = !isFree;
+
+      const galleryInput = document.getElementById("galleryInput");
+
+      if (galleryInput && !isFree) {
+
+         galleryInput.addEventListener("change", async (e) => {
+
+           const file = e.target.files[0];
+           if (!file) return;
+
+       // file type validation
+           const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+           if (!allowedTypes.includes(file.type)) {
+           alert("Only JPG, PNG or WEBP images allowed.");
+           return;
+          }
+
+        // 750KB size limit
+           if (file.size > 750 * 1024) {
+           alert("Image must be less than 750KB.");
+           return;
+          }
+
+           const fileName = `${Date.now()}-${file.name}`;
+           const filePath = `${vendor.id}/gallery/${fileName}`;
+
+         // upload to storage
+        const { error: uploadError } = await supabase.storage
+          .from("vendor-branding")
+          .upload(filePath, file);
+
+          if (uploadError) {
+        console.error("Upload error:", uploadError.message);
+          alert("Upload failed.");
+          return;
+          }
+
+        const { data } = supabase.storage
+         .from("vendor-branding")
+         .getPublicUrl(filePath);
+
+    // save record in vendor_media
+        const { error: dbError } = await supabase
+          .from("vendor_media")
+          .insert({
+            vendor_id: vendor.id,
+            media_type: "image",
+            file_url: data.publicUrl,
+            display_order: Math.floor(Date.now() / 1000)
+         });
+
+    if (dbError) {
+      console.error("DB error:", dbError.message);
+      return;
+    }
+
+    location.reload();
+
+  });
+
+}
+
+      const galleryUploader = document.getElementById("galleryUploader");
+
+      
+      if (galleryUploader && isOwner) {
+        galleryUploader.classList.remove("hidden");
+    }
+
+      if (isFree && galleryInput) {
+      galleryInput.disabled = true;
+    }
 
     // -------------------------------
     // HERO
@@ -218,18 +307,456 @@ if (coverPlaceholder) {
     // ABOUT
     // -------------------------------
     const desc = document.getElementById("vendorDescription");
-    if (desc) desc.textContent = vendor.description || "";
+
+if (desc) {
+
+  if (isOwner) {
+
+    const textarea = document.createElement("textarea");
+    textarea.className = "about-editor";
+    textarea.placeholder = "Describe your business, what you offer, experience, specialties, service areas.";
+    textarea.value = vendor.description || "";
+
+    textarea.addEventListener("blur", async () => {
+
+      const { error } = await supabase
+        .from("vendors")
+        .update({ description: textarea.value.trim() })
+        .eq("id", vendor.id);
+
+      if (error) {
+        console.error("About update error:", error.message);
+      }
+
+    });
+
+    desc.replaceWith(textarea);
+
+  } else {
+
+    desc.textContent = vendor.description || "";
+
+  }
+
+}
 
     // -------------------------------
     // MEDIA
     // -------------------------------
+
     const mediaSection = document.getElementById("mediaSection");
+
     if (mediaSection) {
-      mediaSection.classList.toggle(
-        "hidden",
-        !TIER_CAPABILITIES[vendor.plan_tier]?.media
-      );
+      mediaSection.classList.remove("hidden");
     }
+
+    const mediaHint = document.querySelector(".media-hint");
+
+    if (mediaHint && !isOwner) {
+      mediaHint.style.display = "none";
+    }
+
+// -------------------------------
+// LOAD GALLERY
+// -------------------------------
+async function loadGallery() {
+
+  const grid = document.getElementById("galleryGrid");
+  if (!grid) return;
+
+  grid.innerHTML = "";
+
+  const limit = GALLERY_LIMITS[vendor.plan_tier] ?? 0;
+
+  const { data: images } = await supabase
+    .from("vendor_media")
+    .select("*")
+    .eq("vendor_id", vendor.id)
+    .eq("media_type", "image")
+    .order("display_order", { ascending: true });
+
+  const imageList = images || [];
+
+  for (let i = 0; i < limit; i++) {
+
+    const slot = document.createElement("div");
+    slot.className = "gallery-item";
+
+    if (!isOwner) {
+
+  slot.addEventListener("click", () => {
+
+    if (!imageList[i]) return;
+
+    const mediaId = imageList[i].id;
+
+    window.location.href = `vendor-product.html?media_id=${mediaId}`;
+
+  });
+
+}
+
+    if (imageList[i]) {
+
+      const img = document.createElement("img");
+      img.src = imageList[i].file_url;
+
+      const moveUpBtn = document.createElement("button");
+      moveUpBtn.className = "gallery-move-up";
+      moveUpBtn.textContent = "↑";
+
+      const moveDownBtn = document.createElement("button");
+      moveDownBtn.className = "gallery-move-down";
+      moveDownBtn.textContent = "↓";
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "gallery-delete";
+      deleteBtn.textContent = "✕";
+
+      if (!isOwner) {
+      moveUpBtn.style.display = "none";
+      moveDownBtn.style.display = "none";
+      deleteBtn.style.display = "none";
+      }
+
+      deleteBtn.addEventListener("click", async () => {
+
+        console.log("Delete button clicked");
+
+        const confirmDelete = confirm("Delete this image?");
+        if (!confirmDelete) return;
+
+        const fileUrl = imageList[i].file_url;
+        const path = fileUrl.split("/vendor-branding/")[1];
+
+        await supabase.storage
+          .from("vendor-branding")
+          .remove([path]);
+
+        await supabase
+          .from("vendor_media")
+          .delete()
+          .eq("id", imageList[i].id);
+          
+          location.reload();
+
+       });
+
+moveUpBtn.addEventListener("click", async () => {
+
+  if (i === 0) return;
+
+  const current = imageList[i];
+  const above = imageList[i - 1];
+
+  const tempOrder = current.display_order;
+
+  await supabase
+    .from("vendor_media")
+    .update({ display_order: -1 })
+    .eq("id", above.id);
+
+  await supabase
+    .from("vendor_media")
+    .update({ display_order: above.display_order })
+    .eq("id", current.id);
+
+  await supabase
+    .from("vendor_media")
+    .update({ display_order: tempOrder })
+    .eq("id", above.id);
+
+  location.reload();
+
+});
+
+moveDownBtn.addEventListener("click", async () => {
+
+  if (i === imageList.length - 1) return;
+
+  const current = imageList[i];
+  const below = imageList[i + 1];
+
+  const tempOrder = current.display_order;
+
+  await supabase
+    .from("vendor_media")
+    .update({ display_order: -1 })
+    .eq("id", below.id);
+
+  await supabase
+    .from("vendor_media")
+    .update({ display_order: below.display_order })
+    .eq("id", current.id);
+
+  await supabase
+    .from("vendor_media")
+    .update({ display_order: tempOrder })
+    .eq("id", below.id);
+
+  location.reload();
+
+});
+
+      const meta = document.createElement("div");
+      meta.className = "gallery-meta";
+
+      const title = document.createElement("input");
+      title.className = "gallery-title";
+      title.placeholder = "Product or service name";
+      title.value = imageList[i].title || "";
+
+      if (!isOwner) {
+        title.readOnly = true;
+      }
+
+      const desc = document.createElement("textarea");
+      desc.className = "gallery-desc";
+      desc.placeholder = "Describe the product or service (features, size, benefits, usage, delivery if applicable)";
+      desc.value = imageList[i].description || "";
+
+      if (!isOwner) {
+        desc.readOnly = true;
+      }
+
+      const price = document.createElement("input");
+      price.className = "gallery-price";
+      price.type = "text";
+      price.placeholder = "Price";
+      price.step = "0.01";
+
+      if (!isOwner) {
+         price.readOnly = true;
+      } 
+      price.value = imageList[i].price
+        ? "₦ " + Number(imageList[i].price).toLocaleString("en-NG", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })
+     : "";
+
+      async function saveMeta() {
+
+        console.log("saveMeta triggered");
+
+    let priceValue = price.value.replace(/[^\d.]/g, "");
+
+    console.log("Raw price input:", price.value);
+
+    if (priceValue) {
+      priceValue = parseFloat(priceValue);
+    } else {
+      priceValue = null;
+    }
+
+  const { data, error } = await supabase
+    .from("vendor_media")
+    .update({
+      title: title.value.trim(),
+      description: desc.value.trim(),
+      price: priceValue
+    })
+    .eq("id", imageList[i].id)
+    .select();
+    console.log("Saved price value:", priceValue);
+    console.log("Update returned data:", data);
+
+  if (error) {
+    console.error("Update error:", error.message);
+  }
+
+}
+
+      title.addEventListener("blur", saveMeta);
+      desc.addEventListener("blur", saveMeta);
+      price.addEventListener("blur", saveMeta);
+
+      meta.appendChild(title);
+      meta.appendChild(desc);
+      meta.appendChild(price);
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "gallery-content";
+
+      wrapper.appendChild(title);
+      wrapper.appendChild(img);
+
+      if (isOwner) {
+        wrapper.appendChild(moveUpBtn);
+        wrapper.appendChild(moveDownBtn);
+        wrapper.appendChild(deleteBtn);
+      }
+
+      wrapper.appendChild(meta);
+
+      slot.appendChild(wrapper);
+
+    } else if (isOwner && !isFree) {
+
+  const placeholder = document.createElement("div");
+  placeholder.className = "gallery-placeholder";
+  placeholder.textContent = "+";
+
+  const meta = document.createElement("div");
+  meta.className = "gallery-meta";
+
+  const title = document.createElement("div");
+  title.className = "gallery-title";
+  title.textContent = "Title";
+
+  const desc = document.createElement("div");
+  desc.className = "gallery-desc";
+  desc.textContent = "Description";
+
+  const price = document.createElement("div");
+  price.className = "gallery-price";
+  price.textContent = "Price";
+
+  meta.appendChild(desc);
+  meta.appendChild(price);
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "gallery-content";
+
+  wrapper.appendChild(placeholder);
+  wrapper.appendChild(meta);
+
+  slot.appendChild(wrapper);
+
+}
+
+    grid.appendChild(slot);
+
+  }
+
+}
+
+loadGallery();
+
+    // -------------------------------
+    // SOCIAL LINKS
+    // -------------------------------
+  async function loadSocialLinks() {
+
+  const { data: links } = await supabase
+    .from("vendor_social_links")
+    .select("*")
+    .eq("vendor_id", vendor.id);
+
+  const row = document.getElementById("socialLinksRow");
+  if (!row) return;
+
+  if (!links || links.length === 0) {
+    row.classList.add("hidden");
+    return;
+  }
+
+  row.classList.remove("hidden");
+  row.innerHTML = "";
+
+  const iconMap = {
+
+    instagram: `<svg viewBox="0 0 24 24"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm5 5.8A4.2 4.2 0 1 0 16.2 12 4.2 4.2 0 0 0 12 7.8zm0 6.9A2.7 2.7 0 1 1 14.7 12 2.7 2.7 0 0 1 12 14.7zm4.4-7.8a1 1 0 1 1-1-1 1 1 0 0 1 1 1z"/></svg>`,
+
+    facebook: `<svg viewBox="0 0 24 24"><path d="M13 22v-9h3l1-4h-4V7a2 2 0 0 1 2-2h2V1h-3a5 5 0 0 0-5 5v3H6v4h3v9z"/></svg>`,
+
+    tiktok: `<svg viewBox="0 0 24 24"><path d="M16 3a6 6 0 0 0 4 4v3a9 9 0 0 1-4-1.1V15a5 5 0 1 1-5-5 4.7 4.7 0 0 1 1 .1v3a2 2 0 1 0 2 2V3z"/></svg>`,
+
+    youtube: `<svg viewBox="0 0 24 24"><path d="M23 7s-.2-1.7-.8-2.5a3.1 3.1 0 0 0-2.2-1.1C17.2 3 12 3 12 3s-5.2 0-8 .4a3.1 3.1 0 0 0-2.2 1.1C1.2 5.3 1 7 1 7S1 9 1 11v2c0 2 .2 4 .2 4s.2 1.7.8 2.5a3.1 3.1 0 0 0 2.2 1.1C6.8 21 12 21 12 21s5.2 0 8-.4a3.1 3.1 0 0 0 2.2-1.1c.6-.8.8-2.5.8-2.5S23 15 23 13v-2c0-2 0-4 0-4zM9.7 14.5V9.5l5.2 2.5z"/></svg>`,
+
+    website: `<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm6.9 9h-3.2a15 15 0 0 0-1.1-5A8.1 8.1 0 0 1 18.9 11zM12 4c.9 1.3 1.6 3.3 1.8 5H10.2c.2-1.7.9-3.7 1.8-5zM4.3 13h3.2a15 15 0 0 0 1.1 5A8.1 8.1 0 0 1 4.3 13zm3.2-2H4.3a8.1 8.1 0 0 1 4.3-5 15 15 0 0 0-1.1 5zM12 20c-.9-1.3-1.6-3.3-1.8-5h3.6c-.2 1.7-.9 3.7-1.8 5zm2.4-2a15 15 0 0 0 1.1-5h3.2a8.1 8.1 0 0 1-4.3 5z"/></svg>`
+  };
+
+links.forEach(link => {
+
+  if (!iconMap[link.platform]) return;
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "social-item";
+
+  const a = document.createElement("a");
+  a.href = link.url;
+  a.target = "_blank";
+  a.innerHTML = iconMap[link.platform];
+
+  wrapper.appendChild(a);
+
+  if (isOwner) {
+
+    const del = document.createElement("button");
+    del.className = "social-delete";
+    del.textContent = "×";
+
+    del.addEventListener("click", async () => {
+
+      const { error } = await supabase
+        .from("vendor_social_links")
+        .delete()
+        .eq("id", link.id);
+
+      if (!error) location.reload();
+
+    });
+
+    wrapper.appendChild(del);
+
+  }
+
+  row.appendChild(wrapper);
+
+});
+
+}
+
+loadSocialLinks();
+
+// -------------------------------
+// ADD SOCIAL LINK
+// -------------------------------
+const addSocialBtn = document.getElementById("addSocialBtn");
+
+if (addSocialBtn) {
+
+  addSocialBtn.addEventListener("click", async () => {
+
+    const platform = document.getElementById("socialPlatform").value;
+    const url = document.getElementById("socialUrl").value.trim();
+
+    if (!url) {
+      alert("Please enter a link.");
+      return;
+    }
+    
+    // Check plan limit
+    const { data: existingLinks } = await supabase
+      .from("vendor_social_links")
+      .select("id")
+      .eq("vendor_id", vendor.id);
+
+    const limit = SOCIAL_LIMITS[vendor.plan_tier] ?? 0;
+
+    if (existingLinks && existingLinks.length >= limit) {
+      alert("You have reached the maximum number of social links allowed for your plan.");
+      return;
+   }
+    const { error } = await supabase
+      .from("vendor_social_links")
+      .insert({
+        vendor_id: vendor.id,
+        platform: platform,
+        url: url
+      });
+
+    if (error) {
+      console.error("Insert error:", error.message);
+      return;
+    }
+
+    location.reload();
+
+  });
+
+}
 
     // -------------------------------
     // UPGRADE CTA (FREE + OWNER ONLY)
@@ -250,6 +777,32 @@ if (coverPlaceholder) {
     // OWNER MODE — Enable Branding Upload
     // -------------------------------
     if (isOwner) {
+
+    const socialEditor = document.getElementById("socialEditor");
+    const socialLimit = SOCIAL_LIMITS[vendor.plan_tier] ?? 0;
+
+    if (socialEditor) {
+
+      socialEditor.classList.remove("hidden");
+
+    if (socialLimit === 0) {
+
+    const platform = document.getElementById("socialPlatform");
+    const url = document.getElementById("socialUrl");
+    const btn = document.getElementById("addSocialBtn");
+
+    if (platform) platform.disabled = true;
+    if (url) url.disabled = true;
+
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Upgrade to add links";
+    }
+
+  }
+
+}
+
   const coverLabel = document.getElementById("coverUploadLabel");
   const logoLabel = document.getElementById("logoUploadLabel");
   const coverInput = document.getElementById("coverInput");

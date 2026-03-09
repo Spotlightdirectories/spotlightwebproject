@@ -78,7 +78,32 @@
       <a id="whatsappLink" target="_blank">WhatsApp</a>
       <a id="mapLink" target="_blank">View on Map</a>
     </div>
+    <div id="socialLinksRow" class="social-links hidden"></div>
+
+   <div id="socialEditor" class="hidden form-group">
+
+  <label for="socialPlatform">Platform</label>
+  <select id="socialPlatform">
+    <option value="instagram">Instagram</option>
+    <option value="facebook">Facebook</option>
+    <option value="tiktok">TikTok</option>
+    <option value="youtube">YouTube</option>
+    <option value="website">Website</option>
+  </select>
+
+  <label for="socialUrl">Link</label>
+  <input
+    type="text"
+    id="socialUrl"
+    placeholder="Paste full link"
+  />
+
+  <button id="addSocialBtn" class="primary-btn">
+    Add
+  </button>
+
   </div>
+</div>
 
 </div>
 </header>
@@ -98,14 +123,56 @@
   <!-- MEDIA (tier-based) -->
   <section id="mediaSection" class="profile-card hidden">
 
-    <h2>Media</h2>
+    <h2>Products & Services</h2>
 
    <p class="media-hint">
-    Images: JPG/PNG (max 1MB). Video: MP4 (tier-based length).
+    Images: JPG/PNG (max 750KB). Video: MP4 (tier-based length).
    </p>
 
-    <div id="galleryWrap" class="media-gallery hidden"></div>
-    <div id="videoWrap" class="media-video hidden"></div>
+    <div id="galleryWrap" class="media-gallery">
+
+  <div id="galleryGrid"></div>
+
+  <div id="galleryUploader" class="hidden">
+
+    <label for="galleryInput">Add Photo</label>
+
+    <input
+      type="file"
+      id="galleryInput"
+      accept="image/jpeg,image/png,image/webp"
+    >
+
+    <p class="media-note">
+      Recommended: 1200×1200px • Max size: 750KB
+    </p>
+
+   </div>
+
+  </div>
+    <div id="videoWrap" class="media-video hidden">
+
+  <h3>Business Video</h3>
+
+  <video id="vendorVideo" controls class="vendor-video-player"></video>
+
+  <div id="videoUploader" class="hidden">
+
+    <label for="videoInput">Upload Video</label>
+
+    <input
+      type="file"
+      id="videoInput"
+      accept="video/mp4"
+    >
+
+    <p class="media-note">
+      MP4 only • Max size: 8MB
+    </p>
+
+  </div>
+
+  </div>
   </section>
 
   <!-- CONTACT -->

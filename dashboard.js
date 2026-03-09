@@ -134,15 +134,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // ===============================
-  // MEDIA (Premium Only)
-  // ===============================
-  const mediaSection = document.getElementById("mediaSection");
-
-  if (!isFree && isActive) {
-    mediaSection.classList.remove("hidden");
-  }
-
-  // ===============================
   // BADGE APPLICATION
   // ===============================
   document.getElementById("applyGrayBtn")?.addEventListener("click", () => {

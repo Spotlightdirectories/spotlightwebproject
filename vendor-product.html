@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Product Details | Spotlight</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="vendor-product.css">
+</head>
+
+<body>
+<main class="product-page">
+ <a id="backToVendor" class="back-link">← Back to Vendor</a>
+
+  <div class="product-container">
+
+    <div class="product-image-wrap">
+      <img id="productImage" alt="Product image">
+    </div>
+
+    <div class="product-info">
+
+      <h1 id="productTitle"></h1>
+
+      <p id="productPrice" class="product-price"></p>
+
+      <p id="productDescription" class="product-description"></p>
+      <div class="product-actions">
+        <a id="contactVendorBtn" target="_blank">Contact Vendor</a>
+      </div>
+
+    </div>
+
+  </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="vendor-product.js"></script>
+
+</body>
+</html>

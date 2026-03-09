@@ -377,3 +377,274 @@ body {
 .camera-overlay.hidden {
   display: none !important;
 }
+
+/* ===============================
+   SOCIAL LINKS
+================================ */
+
+.social-links {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.social-links a {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.social-links a:hover {
+  background: #111;
+}
+
+.social-links svg {
+  width: 18px;
+  height: 18px;
+  fill: #374151;
+  transition: fill 0.15s ease;
+}
+
+.social-links a:hover svg {
+  fill: #fff;
+}
+
+/* ===============================
+   SOCIAL DELETE BUTTON
+================================ */
+
+.social-item {
+  position: relative;
+}
+
+.social-delete {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  line-height: 16px;
+  cursor: pointer;
+  display: none;
+}
+
+.social-item:hover .social-delete {
+  display: block;
+}
+
+/* ===============================
+   SOCIAL EDITOR CLEAN UI
+================================ */
+
+#socialEditor:not(.hidden) {
+  margin-top: 10px;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+#socialEditor label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  display: block;
+  margin-bottom: 3px;
+}
+
+#socialPlatform,
+#socialUrl {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 0.85rem;
+}
+
+#socialUrl {
+  width: 220px;
+}
+
+#addSocialBtn {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
+/* ===============================
+   MEDIA GALLERY
+================================ */
+
+.media-gallery {
+  margin-top:16px;
+}
+
+#galleryGrid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+  gap:12px;
+  margin-top:12px;
+}
+
+/* ===============================
+   GALLERY CARD
+================================ */
+
+.gallery-item {
+  display:flex;
+  flex-direction:column;
+  border-radius:12px;
+  overflow:hidden;
+  background:#ffffff;
+  min-height:180px;
+  border:1px solid #e5e7eb;
+  transition:transform 0.15s ease, box-shadow 0.15s ease;
+  cursor:pointer;
+}
+
+.gallery-item:hover {
+  transform:translateY(-2px);
+  box-shadow:0 8px 20px rgba(0,0,0,0.08);
+}
+
+/* ===============================
+   IMAGE
+================================ */
+
+.gallery-content {
+  position:relative;
+  display:flex;
+  flex-direction:column;
+}
+
+.gallery-content img {
+  width:100%;
+  height:80px;
+  object-fit:cover;
+  order:2;
+  transition:transform 0.2s ease;
+}
+
+.gallery-item:hover img {
+  transform:scale(1.05);
+}
+
+/* ===============================
+   DELETE BUTTON
+================================ */
+
+.gallery-delete {
+  position:absolute;
+  top:6px;
+  right:6px;
+  background:#ef4444;
+  color:#fff;
+  border:none;
+  border-radius:50%;
+  width:22px;
+  height:22px;
+  font-size:12px;
+  cursor:pointer;
+  z-index:5;
+}
+
+/* ===============================
+   EMPTY SLOT
+================================ */
+
+.gallery-placeholder {
+  width:100%;
+  height:80px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:26px;
+  color:#9ca3af;
+  border:2px dashed #d1d5db;
+}
+
+/* ===============================
+   META DATA
+================================ */
+
+.gallery-meta {
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  padding:6px;
+  order:3;
+}
+
+/* editable fields */
+
+.gallery-meta input,
+.gallery-meta textarea {
+  width:100%;
+  border:none;
+  outline:none;
+  background:#fff;
+  padding:3px 4px;
+  font-size:12px;
+  border-radius:4px;
+}
+
+/* typography */
+
+.gallery-title {
+  font-weight:600;
+  font-size:10px;
+  padding:4px 6px;
+  border-bottom:1px solid #e5e7eb;
+  order:1;
+}
+
+.gallery-desc {
+  font-size:11px;
+  color:#6b7280;
+  resize:none;
+}
+
+.gallery-price {
+  font-weight:600;
+  color:#111;
+}
+
+/* note */
+
+.media-note {
+  font-size:0.75rem;
+  color:#6b7280;
+  margin-top:4px;
+}
+
+
+/* ===============================
+   ABOUT SECTION
+================================ */
+
+.about-editor{
+  display:block;
+  width:100%;
+  min-height:120px;
+  border:1px solid #e5e7eb;
+  border-radius:8px;
+  padding:10px 12px;
+  font-size:0.95rem;
+  line-height:1.5;
+  resize:vertical;
+  font-family:inherit;
+  box-sizing:border-box;
+}
+
+.about-editor:focus{
+  outline:none;
+  border-color:#2563eb;
+  box-shadow:0 0 0 2px rgba(37,99,235,0.15);
+}
