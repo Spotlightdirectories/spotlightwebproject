@@ -20,9 +20,7 @@
   <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
   <link rel="apple-touch-icon" href="images/favicon.png" />
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
+  </head>
 
 <body>
 
@@ -117,7 +115,14 @@
   <!-- ABOUT -->
   <section id="aboutSection" class="profile-card">
     <h2>About</h2>
-    <p id="vendorDescription"></p>
+
+    <div id="aboutToolbar" class="about-toolbar hidden">
+      <button type="button" data-cmd="bold"><b>B</b></button>
+      <button type="button" data-cmd="italic"><i>I</i></button>
+      <button type="button" data-cmd="underline"><u>U</u></button>
+    </div>
+
+<div id="vendorDescription" class="about-editor-view"></div>
   </section>
 
   <!-- MEDIA (tier-based) -->
@@ -155,6 +160,10 @@
   <h3>Business Video</h3>
 
   <video id="vendorVideo" controls class="vendor-video-player"></video>
+  
+  <div id="videoControls" class="hidden">
+   <button id="deleteVideoBtn">Delete Video</button>
+  </div>
 
   <div id="videoUploader" class="hidden">
 
@@ -166,7 +175,7 @@
       accept="video/mp4"
     >
 
-    <p class="media-note">
+    <p class="media-note" id="videoPlanNote">
       MP4 only • Max size: 8MB
     </p>
 
@@ -177,9 +186,27 @@
 
   <!-- CONTACT -->
   <section class="profile-card">
-    <h2>Contact & Location</h2>
-    <p><strong>Phone:</strong> <span id="vendorPhone"></span></p>
-    <p><strong>Email:</strong> <span id="vendorEmail"></span></p>
+  <h2>Contact & Location</h2>
+
+  <div class="contact-details">
+
+    <div class="contact-row">
+      <span class="contact-label">Phone</span>
+      <span id="vendorPhone"></span>
+    </div>
+
+    <div class="contact-row">
+      <span class="contact-label">Email</span>
+      <span id="vendorEmail"></span>
+    </div>
+
+    <div class="contact-row">
+      <span class="contact-label">Address</span>
+      <span id="vendorAddressDetail"></span>
+    </div>
+
+   </div>
+
   </section>
 
 
@@ -188,5 +215,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-client.js"></script>
   <script src="vendor-profile.js" defer></script>
+  
 </body>
 </html>

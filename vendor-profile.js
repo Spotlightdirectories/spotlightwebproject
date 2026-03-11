@@ -31,6 +31,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     custom: Infinity
   };
 
+  const VIDEO_LIMITS = {
+  free: { allowed: false, maxDuration: 0, maxSize: 0 },
+  standard: { allowed: true, maxDuration: 30, maxSize: 8 * 1024 * 1024 },
+  enterprise: { allowed: true, maxDuration: 60, maxSize: 12 * 1024 * 1024 },
+  elite: { allowed: true, maxDuration: 90, maxSize: 18 * 1024 * 1024 },
+  custom: { allowed: true, maxDuration: 120, maxSize: 24 * 1024 * 1024 }
+};
+
   // ===============================
   // BADGE RENDERER
   // ===============================
@@ -108,6 +116,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       currentUser &&
       vendor.auth_user_id === currentUser.id;
 
+      vendor.plan_tier = vendor.plan_tier || "free";
+
       const isFree = vendor.plan_tier === "free";
 
       const GALLERY_LIMITS = {
@@ -121,6 +131,32 @@ document.addEventListener("DOMContentLoaded", async () => {
       const isPaid = !isFree;
 
       const galleryInput = document.getElementById("galleryInput");
+
+      const videoInput = document.getElementById("videoInput");
+      const videoPlayer = document.getElementById("vendorVideo");
+      const videoUploader = document.getElementById("videoUploader");
+
+      const videoNote = document.getElementById("videoPlanNote");
+
+if (videoNote) {
+
+  const limits = VIDEO_LIMITS[vendor.plan_tier];
+
+  if (limits.allowed) {
+
+    const sizeMB = limits.maxSize / (1024 * 1024);
+
+    videoNote.textContent =
+      `MP4 only • Max ${limits.maxDuration}s • Max size ${sizeMB}MB`;
+
+  } else {
+
+    videoNote.textContent =
+      "Video upload not available on this plan.";
+
+  }
+
+}
 
       if (galleryInput && !isFree) {
 
@@ -156,9 +192,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           return;
           }
 
-        const { data } = supabase.storage
-         .from("vendor-branding")
-         .getPublicUrl(filePath);
+
+          const { data } = supabase.storage
+           .from("vendor-branding")
+           .getPublicUrl(filePath);
 
     // save record in vendor_media
         const { error: dbError } = await supabase
@@ -181,11 +218,109 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 }
 
+if (videoInput) {
+
+  videoInput.addEventListener("change", async (e) => {
+
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const limits = VIDEO_LIMITS[vendor.plan_tier];
+
+    if (!limits.allowed) {
+      alert("Your current plan does not allow video upload.");
+      return;
+    }
+
+    if (file.size > limits.maxSize) {
+      alert("Video file exceeds the maximum size allowed for your plan.");
+      return;
+    }
+
+    const video = document.createElement("video");
+    video.preload = "metadata";
+
+video.src = URL.createObjectURL(file);
+
+await new Promise((resolve) => {
+  video.onloadedmetadata = resolve;
+});
+
+if (video.duration > limits.maxDuration) {
+  alert("Video duration exceeds the maximum allowed for your plan.");
+  return;
+}
+ // remove existing vendor video
+  const { data: existingVideos } = await supabase
+  .from("vendor_media")
+  .select("*")
+  .eq("vendor_id", vendor.id)
+  .eq("media_type", "video");
+
+if (existingVideos && existingVideos.length > 0) {
+
+  const oldVideo = existingVideos[0];
+
+  const oldPath = oldVideo.file_url.split("/vendor-videos/")[1];
+
+  await supabase.storage
+    .from("vendor-videos")
+    .remove([oldPath]);
+
+  await supabase
+    .from("vendor_media")
+    .delete()
+    .eq("id", oldVideo.id);
+   }
+
+   const videoFileName = `video-${Date.now()}.mp4`;
+   const videoPath = `${vendor.id}/video/${videoFileName}`;
+
+   const { error: uploadError } = await supabase.storage
+     .from("vendor-videos")
+     .upload(videoPath, file);
+
+   if (uploadError) {
+     console.error("Video upload error:", uploadError.message);
+     alert("Video upload failed.");
+     return;
+   }
+
+   const { data: videoData } = supabase.storage
+  .from("vendor-videos")
+  .getPublicUrl(videoPath);
+
+const { error: videoDbError } = await supabase
+  .from("vendor_media")
+  .insert({
+    vendor_id: vendor.id,
+    media_type: "video",
+    file_url: videoData.publicUrl,
+    display_order: Math.floor(Date.now() / 1000)
+  });
+
+if (videoDbError) {
+  console.error("Video DB error:", videoDbError.message);
+  return;
+}
+
+location.reload();
+
+  });
+
+}
+
       const galleryUploader = document.getElementById("galleryUploader");
 
       
       if (galleryUploader && isOwner) {
         galleryUploader.classList.remove("hidden");
+    }
+
+    const videoLimits = VIDEO_LIMITS[vendor.plan_tier];
+
+    if (videoUploader && isOwner && videoLimits.allowed) {
+      videoUploader.classList.remove("hidden");
     }
 
       if (isFree && galleryInput) {
@@ -276,6 +411,16 @@ if (coverPlaceholder) {
     // -------------------------------
     // CONTACT
     // -------------------------------
+    const phoneEl = document.getElementById("vendorPhone");
+if (phoneEl) phoneEl.textContent = vendor.phone || vendor.whatsapp || "";
+
+const emailEl = document.getElementById("vendorEmail");
+if (emailEl) emailEl.textContent = vendor.email || "";
+
+const addressDetail = document.getElementById("vendorAddressDetail");
+if (addressDetail) addressDetail.textContent = vendor.address || "";
+
+
     const whatsapp = document.getElementById("whatsappLink");
     if (whatsapp) {
     if (vendor.whatsapp) {
@@ -312,16 +457,16 @@ if (desc) {
 
   if (isOwner) {
 
-    const textarea = document.createElement("textarea");
+    const textarea = document.createElement("div");
+    textarea.contentEditable = true;
     textarea.className = "about-editor";
-    textarea.placeholder = "Describe your business, what you offer, experience, specialties, service areas.";
-    textarea.value = vendor.description || "";
+    textarea.innerHTML = vendor.description || "";
 
     textarea.addEventListener("blur", async () => {
 
       const { error } = await supabase
         .from("vendors")
-        .update({ description: textarea.value.trim() })
+        .update({ description: textarea.innerHTML.trim() })
         .eq("id", vendor.id);
 
       if (error) {
@@ -332,9 +477,31 @@ if (desc) {
 
     desc.replaceWith(textarea);
 
+const toolbar = document.getElementById("aboutToolbar");
+
+if (toolbar && isOwner) {
+
+  toolbar.classList.remove("hidden");
+
+toolbar.querySelectorAll("button").forEach(btn => {
+
+  btn.addEventListener("mousedown", function(e){
+
+    e.preventDefault();
+
+    const cmd = this.getAttribute("data-cmd");
+
+    document.execCommand(cmd, false, null);
+
+  });
+
+});
+
+}
+
   } else {
 
-    desc.textContent = vendor.description || "";
+    desc.innerHTML = vendor.description || "";
 
   }
 
@@ -349,6 +516,12 @@ if (desc) {
     if (mediaSection) {
       mediaSection.classList.remove("hidden");
     }
+
+    const videoWrap = document.getElementById("videoWrap");
+
+    if (videoWrap && VIDEO_LIMITS[vendor.plan_tier].allowed) {
+      videoWrap.classList.remove("hidden");
+   }
 
     const mediaHint = document.querySelector(".media-hint");
 
@@ -571,7 +744,6 @@ moveDownBtn.addEventListener("click", async () => {
       desc.addEventListener("blur", saveMeta);
       price.addEventListener("blur", saveMeta);
 
-      meta.appendChild(title);
       meta.appendChild(desc);
       meta.appendChild(price);
 
@@ -632,6 +804,62 @@ moveDownBtn.addEventListener("click", async () => {
 }
 
 loadGallery();
+
+async function loadVideo() {
+
+  const { data: videos } = await supabase
+    .from("vendor_media")
+    .select("*")
+    .eq("vendor_id", vendor.id)
+    .eq("media_type", "video")
+    .limit(1);
+
+  if (!videos || videos.length === 0) return;
+
+  const videoRecord = videos[0];
+
+  const deleteBtn = document.getElementById("deleteVideoBtn");
+
+if (deleteBtn) {
+
+  deleteBtn.onclick = async () => {
+
+    const confirmDelete = confirm("Delete this video?");
+    if (!confirmDelete) return;
+
+    const videoPath = videoRecord.file_url.split("/vendor-videos/")[1];
+
+    await supabase.storage
+      .from("vendor-videos")
+      .remove([videoPath]);
+
+    await supabase
+      .from("vendor_media")
+      .delete()
+      .eq("id", videoRecord.id);
+
+    location.reload();
+
+  };
+
+}
+
+  const videoPlayer = document.getElementById("vendorVideo");
+
+  if (videoPlayer) {
+  videoPlayer.src = videoRecord.file_url;
+  videoPlayer.style.display = "block";
+}
+
+const videoControls = document.getElementById("videoControls");
+
+if (videoControls && currentUser && vendor.auth_user_id === currentUser.id) {
+  videoControls.classList.remove("hidden");
+}
+
+}
+
+loadVideo();
 
     // -------------------------------
     // SOCIAL LINKS
