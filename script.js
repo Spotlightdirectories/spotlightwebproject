@@ -25,18 +25,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // HAMBURGER MENU SCRIPT
 
-  const menu = document.querySelector('nav ul');
-  const openBtn = document.querySelector('.menu-open');
-  const closeBtn = document.querySelector('.xclose');
+const menu = document.querySelector('nav ul');
+const openBtn = document.querySelector('.menu-open');
+const closeBtn = document.querySelector('.xclose');
 
-  if (openBtn && closeBtn && menu) {
-    openBtn.addEventListener('click', () => menu.classList.add('open'));
-    
-    closeBtn.addEventListener('click', () => menu.classList.remove('open'));
-   }
+if (openBtn && closeBtn && menu) {
+  openBtn.addEventListener('click', () => menu.classList.add('open'));
+  closeBtn.addEventListener('click', () => menu.classList.remove('open'));
+}
 
 // END OF hamburger MENU SCRIPT
-
 
 // FAQ TOGGLE SCRIPT
 const headers = document.querySelectorAll('.accordion-header');
