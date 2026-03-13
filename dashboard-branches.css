@@ -1,0 +1,195 @@
+/* ===============================
+   PAGE LAYOUT
+================================ */
+
+body{
+font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+background:#f9fafb;
+color:#111;
+margin:0;
+padding:0;
+}
+
+.branches-page{
+max-width:720px;
+margin:40px auto;
+padding:0 16px;
+}
+
+.branches-page h1{
+margin-bottom:6px;
+}
+
+.branches-note{
+font-size:0.9rem;
+color:#555;
+margin-bottom:20px;
+}
+
+/* ===============================
+   CARD SECTIONS
+================================ */
+
+.branch-form,
+.branch-list{
+background:#ffffff;
+border-radius:12px;
+padding:20px;
+margin-bottom:20px;
+box-shadow:0 6px 18px rgba(0,0,0,0.05);
+}
+
+.branch-form h2,
+.branch-list h2{
+margin-top:0;
+font-size:1.1rem;
+margin-bottom:14px;
+}
+
+/* ===============================
+   FORM INPUTS
+================================ */
+
+#branchForm input{
+width:100%;
+padding:10px 12px;
+margin-bottom:10px;
+border-radius:6px;
+border:1px solid #d1d5db;
+font-size:0.9rem;
+box-sizing:border-box;
+}
+
+#branchForm input:focus{
+outline:none;
+border-color:#2563eb;
+box-shadow:0 0 0 2px rgba(37,99,235,0.15);
+}
+
+/* ===============================
+   BUTTON
+================================ */
+
+#createBranchBtn{
+background:#2563eb;
+color:#fff;
+border:none;
+padding:10px 16px;
+border-radius:8px;
+font-size:0.9rem;
+cursor:pointer;
+margin-top:6px;
+}
+
+#createBranchBtn:hover{
+background:#1e4ed8;
+}
+
+/* ===============================
+   HELPER TEXT
+================================ */
+
+.map-helper-text{
+font-size:0.85rem;
+color:#555;
+line-height:1.5;
+margin:10px 0;
+background:#f7f7f7;
+padding:10px;
+border-radius:6px;
+}
+
+/* ===============================
+   BRANCH LIST
+================================ */
+
+.branch-item{
+padding:12px 0;
+border-bottom:1px solid #eee;
+}
+
+.branch-item:last-child{
+border-bottom:none;
+}
+
+.branch-name{
+font-weight:600;
+}
+
+.branch-address{
+font-size:0.9rem;
+color:#555;
+margin-top:4px;
+}
+
+/* ===============================
+   BRANCH ROW
+================================ */
+
+.branch-row{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:12px 0;
+border-bottom:1px solid #eee;
+gap:10px;
+}
+
+.branch-row:last-child{
+border-bottom:none;
+}
+
+/* ===============================
+   BRANCH INFO
+================================ */
+
+.branch-row div:first-child{
+font-weight:600;
+}
+
+.branch-row div:nth-child(2){
+font-size:0.9rem;
+color:#555;
+}
+
+/* ===============================
+   ACTION BUTTONS
+================================ */
+
+.branch-row button{
+background:#f3f4f6;
+border:none;
+padding:6px 10px;
+border-radius:6px;
+font-size:0.8rem;
+cursor:pointer;
+}
+
+.branch-row button:hover{
+background:#e5e7eb;
+}
+
+/* Delete button */
+
+.branch-row button:last-child{
+background:#ef4444;
+color:white;
+}
+
+.branch-row button:last-child:hover{
+background:#dc2626;
+}
+
+@media (max-width:768px){
+
+.branch-row{
+flex-direction:column;
+align-items:flex-start;
+gap:6px;
+}
+
+.branch-row button{
+margin-top:4px;
+}
+
+}

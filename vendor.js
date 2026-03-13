@@ -41,6 +41,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       `)
       .eq("subscription_status", "active");
 
+  const { data: branches } = await supabase
+  .from("branches")
+  .select(`
+    id,
+    vendor_id,
+    branch_name,
+    address,
+    latitude,
+    longitude,
+    phone,
+    whatsapp
+  `);
+
     if (error) {
       console.error("Supabase error:", error);
       vendorsGrid.innerHTML = "<p>Error loading vendors</p>";
@@ -48,6 +61,37 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     vendors = data || [];
+
+if (branches && branches.length) {
+
+  branches.forEach(branch => {
+
+    const parentVendor = vendors.find(v => v.id === branch.vendor_id);
+
+    if (!parentVendor) return;
+
+    vendors.push({
+      id: branch.id,
+      name: branch.branch_name,
+      category: parentVendor.category,
+      subcategory: parentVendor.subcategory,
+      address: branch.address,
+      state: parentVendor.state,
+      lga: parentVendor.lga,
+      latitude: branch.latitude,
+      longitude: branch.longitude,
+      whatsapp: branch.whatsapp || parentVendor.whatsapp,
+      telephone: branch.phone || parentVendor.telephone,
+      verification_status: parentVendor.verification_status,
+      plan_tier: parentVendor.plan_tier,
+      is_premium: parentVendor.is_premium,
+      slug: parentVendor.slug,
+      subscription_status: parentVendor.subscription_status
+    });
+
+  });
+
+}
 
     populateCategories();
     renderVendors(vendors);

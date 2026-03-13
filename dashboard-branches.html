@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Manage Branches | Spotlight</title>
+
+<link rel="stylesheet" href="dashboard-branches.css">
+
+<link rel="icon" href="images/favicon.ico">
+<link rel="apple-touch-icon" href="images/favicon.png">
+
+</head>
+
+<body>
+
+<main class="branches-page">
+
+<h1>Branches</h1>
+
+<p class="branches-note">
+Add and manage your business locations.
+</p>
+
+<!-- ADD BRANCH -->
+<section class="branch-form">
+
+<h2>Add Branch</h2>
+
+<form id="branchForm">
+
+<input
+type="text"
+id="branchName"
+placeholder="Branch name"
+required
+/>
+
+<input
+type="text"
+id="branchAddress"
+placeholder="Branch address"
+required
+/>
+
+<input
+type="text"
+id="branchPhone"
+placeholder="Phone number"
+/>
+
+<input
+type="text"
+id="branchWhatsapp"
+placeholder="WhatsApp number"
+/>
+
+<p class="map-helper-text">
+To obtain the correct coordinates for this branch:<br>
+Visit 
+<a href="https://maps.google.com" target="_blank" rel="noopener">
+maps.google.com
+</a>,
+paste the branch address in the search bar,
+right-click the exact location on the map and copy the latitude and longitude shown.
+Paste them into the fields below.
+</p>
+
+<input
+type="text"
+id="branchLatitude"
+placeholder="Latitude"
+/>
+
+<input
+type="text"
+id="branchLongitude"
+placeholder="Longitude"
+/>
+
+<button
+type="submit"
+id="createBranchBtn"
+>
+Add Branch
+</button>
+
+</form>
+
+</section>
+
+<!-- BRANCH LIST -->
+<section class="branch-list">
+
+<h2>Your Branches</h2>
+
+<div id="branchesContainer"></div>
+
+</section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="dashboard-branches.js"></script>
+
+</body>
+
+</html>

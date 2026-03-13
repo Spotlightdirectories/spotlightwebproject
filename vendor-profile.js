@@ -31,6 +31,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     custom: Infinity
   };
 
+  const BRANCH_LIMITS = {
+  free: 0,
+  standard: 1,
+  enterprise: 10,
+  elite: 50,
+  custom: Infinity
+};
+
   const VIDEO_LIMITS = {
   free: { allowed: false, maxDuration: 0, maxSize: 0 },
   standard: { allowed: true, maxDuration: 30, maxSize: 8 * 1024 * 1024 },
@@ -938,6 +946,8 @@ links.forEach(link => {
 
 loadSocialLinks();
 
+loadBranches();
+
 // -------------------------------
 // ADD SOCIAL LINK
 // -------------------------------
@@ -986,6 +996,62 @@ if (addSocialBtn) {
 
 }
 
+  // -------------------------------
+// LOAD BRANCHES
+// -------------------------------
+async function loadBranches() {
+
+  const branchesSection = document.getElementById("branchesSection");
+  const branchesList = document.getElementById("branchesList");
+
+  if (!branchesSection || !branchesList) return;
+
+  const { data: branches } = await supabase
+    .from("branches")
+    .select("*")
+    .eq("vendor_id", vendor.id);
+
+  const limit = BRANCH_LIMITS[vendor.plan_tier] ?? 0;
+
+if (!branches || branches.length === 0 || limit === 0) return;
+
+  branchesSection.classList.remove("hidden");
+
+  branchesList.innerHTML = "";
+
+  branches.slice(0, limit).forEach(branch => {
+
+    const item = document.createElement("div");
+    item.className = "branch-item";
+
+    const name = document.createElement("div");
+    name.className = "branch-name";
+    name.textContent = branch.branch_name || "";
+
+    const address = document.createElement("div");
+    address.className = "branch-address";
+    address.textContent = branch.address || "";
+
+    const map = document.createElement("a");
+
+    if (branch.latitude && branch.longitude) {
+      map.href = `https://www.google.com/maps/search/?api=1&query=${branch.latitude},${branch.longitude}`;
+    } else {
+      map.href = "#";
+    }
+
+    map.target = "_blank";
+    map.textContent = "View on Map";
+
+    item.appendChild(name);
+    item.appendChild(address);
+    item.appendChild(map);
+
+    branchesList.appendChild(item);
+
+  });
+
+}
     // -------------------------------
     // UPGRADE CTA (FREE + OWNER ONLY)
     // -------------------------------

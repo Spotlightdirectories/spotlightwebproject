@@ -60,6 +60,29 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("bizName").textContent = vendor.name || "—";
   document.getElementById("bizEmail").textContent = vendor.email || "—";
   document.getElementById("planTier").textContent = vendor.plan_tier;
+
+  // -------------------------------
+// BRANCHES CARD VISIBILITY
+// -------------------------------
+
+const branchesCard = document.getElementById("branchesCard");
+const manageBranchesBtn = document.getElementById("manageBranchesBtn");
+
+if (branchesCard && manageBranchesBtn) {
+
+  const tier = vendor.plan_tier;
+
+  if (tier === "enterprise" || tier === "elite") {
+
+    branchesCard.classList.remove("hidden");
+
+    manageBranchesBtn.addEventListener("click", () => {
+      window.location.href = "dashboard-branches.html";
+    });
+
+  }
+
+}
   document.getElementById("subscriptionStatus").textContent = vendor.subscription_status;
 
   const badgeStatus = document.getElementById("badgeStatus");

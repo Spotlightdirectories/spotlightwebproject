@@ -800,3 +800,45 @@ body {
   margin-top:4px;
 }
 
+/* ===============================
+   BRANCHES
+================================ */
+
+#branchesList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.branch-item {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.branch-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #111;
+}
+
+.branch-address {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.branch-item a {
+  font-size: 0.85rem;
+  color: #2563eb;
+  text-decoration: none;
+  margin-top: 2px;
+}
+
+.branch-item a:hover {
+  text-decoration: underline;
+}
