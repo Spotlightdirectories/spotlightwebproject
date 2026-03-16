@@ -8,7 +8,7 @@ color:#111;
 .container{
 max-width:1600px;
 margin:auto;
-padding:0 40px;
+padding:0 16px;
 }
 
 :root{
@@ -448,6 +448,21 @@ grid-template-columns:1fr;
 
 .app-grid{
 grid-template-columns:1fr;
+}
+
+.footer-grid{
+grid-template-columns:1fr;
+gap:40px;
+}
+
+}
+
+
+
+@media (min-width:768px){
+
+.container{
+padding:0 40px;
 }
 
 }

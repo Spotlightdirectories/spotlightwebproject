@@ -8,6 +8,7 @@
 
 <title>Spotlight Directories | Put Your Business on the Spotlight</title>
 
+<link rel="stylesheet" href="theme.css">
 <link rel="stylesheet" href="style2.css">
 <link rel="stylesheet" href="navbar.css">
 
@@ -16,6 +17,9 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
+<link rel="icon" href="images/favicon.ico" type="image/x-icon" />
+<link rel="apple-touch-icon" href="images/favicon.png" />
+
 </head>
 
 <body>
@@ -23,10 +27,10 @@
 <header class="navbar">
 
   <div class="logo-left">
-    <a href="index2.html">
+    <a href="index.html">
       <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg">
     </a>
-    <a href="index2.html" class="home">Home</a>
+    <a href="index.html" class="home">Home</a>
   </div>
 
   <nav>
@@ -51,13 +55,9 @@
       <li><a href="FAQ.html">FAQ</a></li>
       <li><a href="feedback.html">Feedback</a></li>
 
-      <!-- AUTH -->
-      <li id="loginLink">
-       <a href="login.html" class="nav-login-btn">Log in</a>
-      </li>
-
-      <li id="logoutLink" class="hidden">
-        <a href="#" id="logoutBtn">Log out</a>
+              <!-- AUTH LINKS (NEW) -->
+      <li id="authButton">
+       <a href="login.html" id="authBtn" class="nav-login-btn">Log in</a>
       </li>
 
     </ul>
@@ -355,7 +355,7 @@ Get Listed Today
 <div class="container footer-grid">
 
 <div class="footer-brand">
-<h3>Spotlight<span>.</span></h3>
+<img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg">
 <p>
 Dedicated to digitalizing local businesses and making services accessible to everyone, everywhere.
 </p>
@@ -363,7 +363,7 @@ Dedicated to digitalizing local businesses and making services accessible to eve
 
 <div class="footer-links">
 <h4>Quick Links</h4>
-<a href="index2.html">Home</a>
+<a href="index.html">Home</a>
 <a href="aboutUs.html">Why Spotlight</a>
 <a href="getlisted.html">Get Listed</a>
 <a href="vendor.html">Search Vendors</a>
@@ -406,9 +406,9 @@ Dedicated to digitalizing local businesses and making services accessible to eve
 
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-client.js"></script>
-<script src="script2.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="supabase-client.js"></script>
+<script defer src="script2.js"></script>
 
 </body>
 </html>
