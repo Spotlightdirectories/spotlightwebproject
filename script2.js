@@ -1,7 +1,7 @@
-/* global window, supabaseClient */
-var supabaseClient = window.supabaseClient;
+/* global window */
 
 document.addEventListener("DOMContentLoaded", () => {
+
 
 // HAMBURGER MENU
 
@@ -46,18 +46,14 @@ slides[currentSlide].classList.add("active");
 }
 
 if(nextBtn && prevBtn){
-
 nextBtn.onclick = () => showSlide(currentSlide + 1);
 prevBtn.onclick = () => showSlide(currentSlide - 1);
-
 }
 
 if(slides.length > 0){
-
 setInterval(()=>{
 showSlide(currentSlide + 1);
 },5000);
-
 }
 
 
@@ -83,11 +79,9 @@ heroSlides[heroIndex].classList.add("active");
 }
 
 if(heroSlides.length > 0){
-
 setInterval(()=>{
 showHeroSlide(heroIndex + 1);
 },4000);
-
 }
 
 
@@ -101,7 +95,8 @@ if (authBtn && supabase) {
 
 async function checkAuth() {
 
-const { data: { session } } = await supabase.auth.getSession();
+const res = await supabase.auth.getSession();
+const session = res.data.session;
 
 if (session) {
 authBtn.textContent = "Log out";
@@ -132,8 +127,7 @@ window.location.reload();
 });
 
 
-
-// GLOBAL FUNCTIONS (called from HTML)
+// GLOBAL FUNCTIONS
 
 function redirectTo(page){
 window.location.href = page;
