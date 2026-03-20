@@ -441,7 +441,7 @@ color:white;
 
   .hero-grid{
     grid-template-columns:1fr;
-    padding-left:0;
+    padding: 0 16px;
     gap:30px;
   }
 
