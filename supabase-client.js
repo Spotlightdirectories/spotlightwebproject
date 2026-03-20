@@ -6,7 +6,14 @@ const SUPABASE_ANON_KEY =
 
 window.supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
-  SUPABASE_ANON_KEY
+  SUPABASE_ANON_KEY,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  }
 );
 
 // 🔐 Track current logged-in user (vendor)

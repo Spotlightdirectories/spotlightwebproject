@@ -35,6 +35,10 @@ document.addEventListener("DOMContentLoaded", () => {
         email,
         password
       });
+      console.log("Logged in user:", data.user);
+
+  const { data: sessionData } = await window.supabaseClient.auth.getSession();
+  console.log("Session user:", sessionData.session?.user);
 
     if (error) {
       errorEl.textContent = error.message;
@@ -42,21 +46,41 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
    }
 
-    // 2. VERIFY ADMIN ROLE
-    const { data: roleRow, error: roleError } =
-      await window.supabaseClient
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", data.user.id)
-        .in("role", ["admin", "super_admin"])
-        .limit(1);
+   // Ensure session is fully established before querying
+   await new Promise(resolve => setTimeout(resolve, 300));
 
-     if (roleError || !roleRow || roleRow.length === 0) {
-      await window.supabaseClient.auth.signOut();
-      errorEl.textContent = "You are not authorized as an admin";
-      isSubmitting = false;
-      return;
-    }
+    // 2. VERIFY ADMIN ROLE
+    const {
+    data: { session }
+    } = await window.supabaseClient.auth.getSession();
+
+   const { data: roleRow, error: roleError } =
+     await window.supabaseClient
+    .from("user_roles")
+    .select("user_id, role")
+    .eq("user_id", session.user.id);
+
+    console.log("Role row:", roleRow);
+
+   if (
+  roleError ||
+  !roleRow ||
+  roleRow.length === 0
+) {
+  await window.supabaseClient.auth.signOut();
+  errorEl.textContent = "You are not authorized as an admin";
+  isSubmitting = false;
+  return;
+}
+
+const role = roleRow[0].role;
+
+if (!["admin", "super_admin"].includes(role)) {
+  await window.supabaseClient.auth.signOut();
+  errorEl.textContent = "You are not authorized as an admin";
+  isSubmitting = false;
+  return;
+}
 
     // 3. REDIRECT TO ADMIN DASHBOARD
     // 3. STORE ADMIN SESSION

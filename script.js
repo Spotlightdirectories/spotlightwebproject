@@ -246,8 +246,37 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await supabase.auth.signOut();
 
-    window.location.href = "index2.html";
+    window.location.href = "index.html";
 
+  });
+
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  const accordions = document.querySelectorAll(".accordion-header");
+
+  accordions.forEach(header => {
+    header.addEventListener("click", () => {
+
+      accordions.forEach(item => {
+        if (item !== header) {
+          item.classList.remove("active");
+          item.nextElementSibling.style.maxHeight = null;
+        }
+      });
+
+      header.classList.toggle("active");
+
+      const panel = header.nextElementSibling;
+
+      if (panel.style.maxHeight) {
+        panel.style.maxHeight = null;
+      } else {
+        panel.style.maxHeight = panel.scrollHeight + "px";
+      }
+
+    });
   });
 
 });

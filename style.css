@@ -1,20 +1,12 @@
 
 :root {
   --header-height: 100px;
+  --brand: #000;
+  --highlight: green;
+  --text-dark: #2b2b2b;
+  --bg-light: #fffaf5;
 }
 
-/* .homeimg {
-  max-width: 100%;
-  height: 100px;
-  display: block;
- /*  margin: 0 auto; centers the image */
-/* }
-
-@media (min-width: 992px) {
-  .homeimg {
-    height: 150px;
-}
-} */ */
 
 html, body {
   height: 100%;
@@ -25,171 +17,12 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 
   font-family: 'Poppins', 'Inter', sans-serif;
   background: var(--bg-light, #FEFBF2);
   color: var(--text-dark, #111827);
 }
-
-header.navbar {
-    display: flex;
-    position: fixed;  /* fixes the header to the top */
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 1000;    /* ensures header is above other content */
-    justify-content: space-between;
-    background-color: #000;  /* soft background */
-    height: var(--header-height);
-    padding: 0 1rem;
-    color: white;
-}
-
-.logo-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.logo-left img.homeimg {
-  height: 60px;       /* default mobile size */
-  width: auto;
-  display: block;
-  max-width: 100%;
-}
-
-.home {
-  color: white;
-  text-decoration: none;
-  font-size: 1rem;
-  font-weight: 500;    
-}
-
-.home:hover {
-  text-decoration: underline;
-}
-
-header div a {
-    margin-right: 30px;
-}
-
-
-nav a {
-      display: flex;
-      margin: 20px 20px;
-}
-
-.menu-open {
-  margin-top: 30px;
-  margin-right: 15px;
-  background: transparent;
-  border: none;
-  width: 60px;
-  height: 55px;
-  padding: 0;
-}
-
-.menu-open img {
-  display: block;
- }
-
- .xclose {
-  background: transparent;
- }
-
-.menu-open, .xclose {
-    display: block;
-    z-index: 1100;
-    cursor: pointer;
-    width: 20px;
-    height: 20px;
-   
-}
-  
-nav ul {
-    position:fixed;
-    background: white;
-    z-index: 1000;
-    opacity: 0;
-    pointer-events: none;
-    top: 0;
-    right: 0;
-    height: 100vh;
-    margin: 0;
-    list-style: none;
-    width: 70%;
-    text-align: right;
-    padding: 2em;
-    transform: translateX(100%); /* hides the menu off-screen */
-    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-}
-    /*flex-direction: row;*/
-  
-    
-  nav ul li {
-    margin: 2em 0;
-  }
-        
- nav ul li:nth-of-type(1) {
-    margin-bottom: 3em;
-    margin-right: 10em;
-}
-
-nav ul li a {
-   text-decoration: none;
-   color: black;
-   font-weight: bold;
-   font-size: 1rem;
-}
-            
-nav ul li a:hover {
-  text-decoration: underline;
-}
-
-nav ul.open {
-  transform: translateX(0%);
-  opacity: 1;
-  pointer-events: auto;
-}
-
-@media (min-width: 992px) {
-    .menu-open, .xclose {
-        display: none !important;
-    }
-
-    nav ul {
-        position: fixed;
-        display: flex;
-        top: 0;
-        right: 0;
-        height: auto;
-        width: auto;
-        background: none;
-        margin: -50px 20px 0 0;
-        opacity: 1;
-        pointer-events: auto;
-        transform: translateX(0%);
-    }
-
-    nav ul li a {
-      color: white;
-      font-weight: 400;
-    }
-
-  .logo-left  {
-    height: 80px;
-  }
-} 
-
- /* .logo-left  {
-    display: flex;
-    max-width: 100%;
-    height: auto; 
-    img {
-        height: 60px;
-        width: auto;
-        margin: 10px;
-   } */
    
 main {
   flex: 1;
@@ -765,6 +598,16 @@ div.benefits-intro p {
   transition: background 0.3s ease;
 }
 
+@media (max-width:768px){
+  .accordion-header {
+    font-size: 1.1rem;
+  }
+
+  .accordion-panel p {
+    font-size: 1rem;
+  }
+}
+
 .accordion-header:hover {
   background-color: green;
 }
@@ -807,7 +650,7 @@ div.benefits-intro p {
 /* Page Layout */
 .page-container {
   max-width: 1000px;
-  margin: 4rem auto;
+  margin: 6.5rem auto 4rem;
   padding: 0 1rem;
 }
 
@@ -854,6 +697,12 @@ section.card p.muted {
   flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 1.2rem;
+}
+
+@media (max-width:768px) {
+  .row {
+    flex-direction: column;
+  }
 }
 
 .row > div {
@@ -931,22 +780,12 @@ button.ghost:hover {
   font-size: 0.85rem;
 }
 
-/* #result form {
-  margin-bottom: 500px;
-} */
-  
+ 
 /*GET LISTED PAGE*/
-
-:root {
-  --brand: #000;
-  --highlight: green;
-  --text-dark: #2b2b2b;
-  --bg-light: #fffaf5;
-}
 
 /* ====== MAIN CONTENT ====== */
 .get-listed-content {
-  padding: 5rem 1rem 3rem;
+  padding: 6.5rem 1rem 3rem;
   text-align: center;
 }
 
@@ -1192,223 +1031,41 @@ input:checked + .glslider:before {
 
 /* ====== MOBILE ====== */
 @media (max-width: 768px) {
+
   .get-listed-content {
-    padding: 3rem 1rem;
+    padding: 5.5rem 1rem 2.5rem;
+  }
+
+  .toggle-container {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .glcard {
+    padding: 1.5rem 1rem;
+  }
+
+  .glcard h2 {
+    font-size: 1.3rem;
   }
 
   .price {
-    font-size: 1.6rem;
-  }
-}
-
-/* ADDONS SECTION */
-
-/* Add-Ons Toggle Wrapper */
-
-/* General Wrapper */
-
-
-:root {
-  --addon-primary: #004aad;
-  --addon-bg-light: #fdf9f3;
-  --addon-card-bg: #e3e9f6;
-  --addon-text-dark: #333;
-  --addon-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  --addon-transition: 0.3s ease;
-}
-
-.gladdons-wrapper {
-  text-align: center;
-  max-width: 800px;
-  margin: auto;
-}
-
-.addons-gray {
-  font-size: 1.8rem;
-  font-weight: 700;
-}
-
-.addons-title {
-  color: var(--addon-primary);
-}
-
-/* Toggle */
-.addon-toggle-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  margin: 1.5rem 0;
-  font-size: 0.95rem;
-}
-
-.addon-switch {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 24px;
-}
-
-.addon-switch input {
-  display: none;
-}
-
-.addon-slider {
-  position: absolute;
-  cursor: pointer;
-  inset: 0;
-  background-color: #ccc;
-  border-radius: 24px;
-  transition: var(--addon-transition);
-}
-
-.addon-slider::before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 4px;
-  bottom: 3px;
-  background-color: white;
-  border-radius: 50%;
-  transition: var(--addon-transition);
-}
-
-input:checked + .addon-slider {
-  background-color: var(--addon-primary);
-}
-
-input:checked + .addon-slider::before {
-  transform: translateX(26px);
-}
-
-Add-on Cards
-
-.addon-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.addon-card {
-  background: #f8fafc;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: var(--addon-shadow);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  transition: var(--addon-transition);
-}
-
-.addon-card a {
-  color: #0b5ed7;
-}
-
-.addon-card a:hover {
-  color: #084298;
-}
-
-.addon-header h2 {
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.addon-header p {
-  margin: 10px;
-}
-
-.addon-header a {
-  margin-left: 18px;
-}
-
-.select-addon {
-  color: #044ab2fe; /* clean blue */
-  font-size: 0.9rem;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.select-addon:hover {
-  text-decoration: underline;
-}
-
-.addon-desc {
-  font-size: 0.9rem;
-  color: #283854;
-}
-
-.addon-pricing {
-  display: flex;
-  justify-content: space-around;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.addon-plan {
-  background: var(--addon-card-bg);
-  padding: 12px;
-  border-radius: 10px;
-  flex: 1 1 45%;
-  box-shadow: inset 0 0 0 1px #e5e9f2;
-}
-
-.addon-price {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0.5rem 0;
-  transition: var(--addon-transition);
-}
-
-.addon-free {
-  margin: 0.5rem;
-}
-
-[id^="activate"] {
-  scroll-margin-top: 200px; /* adjust to match your header height */
-}
-
-.addon-subscribe-btn {
-  background: var(--addon-primary);
-  color: white;
-  border: none;
-  border-radius: 20px;
-  padding: 6px 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--addon-transition);
-}
-
-.addon-subscribe-btn:hover {
-  opacity: 0.9;
-}
-
-.addon-btn-small {
-  color: var(--addon-primary);
-  text-decoration: none;
-  font-size: 0.9rem;
-}
-
-/* Desktop layout */
-@media (min-width: 768px) {
-  .addon-card {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 30px;
+    font-size: 1.4rem;
   }
 
-  .addon-header {
-    flex: 1;
-    text-align: left;
+  .glcard ul li {
+    font-size: 0.9rem;
   }
 
-  .addon-pricing {
-    flex: 1;
-    justify-content: flex-end;
+  .btn, .btnwhite {
+    width: 100%;
+    display: block;
+  }
+
+  .pricing-grid {
+    gap: 1.2rem;
   }
 }
-
 
 /* PLANS COMPARISON */
 
@@ -1757,24 +1414,3 @@ pricing-body::-webkit-scrollbar {
   display: none !important;
 }
 
-/* ===============================
-   NAV LOGIN HIGHLIGHT
-   =============================== */
-
-.nav-login-btn {
-  background: #f7c600; /* spotlight yellow */
-  color: #2b1200 !important;
-  padding: 0.45rem 0.9rem;
-  border-radius: 6px;
-  font-weight: 600;
-  transition: background 0.2s ease, transform 0.15s ease;
-}
-
-.nav-login-btn:hover {
-  background: #e6b800;
-  transform: translateY(-1px);
-}
-
-.nav-login-btn:active {
-  transform: translateY(0);
-}

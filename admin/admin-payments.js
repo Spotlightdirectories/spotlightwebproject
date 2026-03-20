@@ -29,7 +29,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       vendors ( id, name, email )
     `)
     .eq("payment_method", "bank")
-    .eq("status", "awaiting_review");
+    .eq("status", "pending")
+
+    console.log("PAYMENTS RESULT:", payments, error);
+    
 
   if (error) {
     table.innerHTML = `<tr><td colspan="6">${error.message}</td></tr>`;
@@ -44,6 +47,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   table.innerHTML = "";
 
   payments.forEach(p => {
+    console.log("DB PAYMENT ID:", p.id);
+
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
@@ -181,7 +186,7 @@ if (e.target.dataset.verifyReject) {
      return;
   }
 
-  if (payment.status !== "awaiting_review") {
+  if (payment.status !== "pending") {
   alert("This payment is already processed.");
   return;
  }

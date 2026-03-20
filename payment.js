@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
+  console.log("PAYMENT JS STARTED");
   const supabase = window.supabaseClient;
 
   const planSummaryEl = document.getElementById("planSummary");
@@ -9,6 +10,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const payOnlineBtn = document.getElementById("payOnlineBtn");
   const payBankBtn = document.getElementById("payBankBtn");
   const submitReceiptBtn = document.getElementById("submitReceiptBtn");
+  console.log("SUBMIT BTN:", submitReceiptBtn);
   const receiptFileInput = document.getElementById("receiptFile");
 
   // ===============================
@@ -211,12 +213,17 @@ setTimeout(() => {
     bankSection.classList.remove("hidden");
   };
 
+  console.log("ATTACHING CLICK HANDLER");
+
   submitReceiptBtn.onclick = async () => {
+    
 
     submitReceiptBtn.disabled = true;
     submitReceiptBtn.textContent = "Uploading Receipt...";
 
     const file = receiptFileInput.files[0];
+    console.log("FILE INPUT:", receiptFileInput.files);
+
     if (!file) {
       alert("Select a receipt file.");
       submitReceiptBtn.disabled = false;
@@ -230,7 +237,10 @@ setTimeout(() => {
       .from("payment-receipts")
       .upload(filePath, file, { upsert: true });
 
+      console.log("UPLOAD COMPLETED");
+
     if (uploadError) {
+      console.log("UPLOAD ERROR:", uploadError);
       alert(uploadError.message);
       submitReceiptBtn.disabled = false;
       submitReceiptBtn.textContent = "Submit Receipt";
@@ -238,13 +248,15 @@ setTimeout(() => {
     }
 
     // 1️⃣ Update payment record
-    await supabase
+    const { data: updateData, error: updateError } = await supabase
       .from("vendorpayments")
       .update({
-        transfer_proof_url: filePath,
-        status: "awaiting_review"
-      })
-      .eq("id", window.currentPaymentId);
+       transfer_proof_url: filePath
+     })
+      .eq("id", window.currentPaymentId)
+      .select();
+
+console.log("UPDATE RESULT:", updateData, updateError, window.currentPaymentId);
 
 // 2️⃣ Ensure vendor subscription is pending
     await supabase
@@ -255,7 +267,7 @@ setTimeout(() => {
       .eq("auth_user_id", user.id);
 
 // 3️⃣ Redirect to status page (terminal state)
-    window.location.replace("payment-status.html");
+  window.location.replace("payment-status.html");
   };
 
   function getAmountInKobo(plan, billingType) {

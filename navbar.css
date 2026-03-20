@@ -137,8 +137,17 @@ right:30px;
 }
 
 /* DESKTOP */
+.hide-desktop{
+  display:block;
+}
 
-@media (min-width:768px){
+@media (min-width:1024px){
+  .hide-desktop{
+    display:none;
+  }
+}
+
+@media (min-width:1024px){
 
 .menu-open{
 display:none;
