@@ -9,51 +9,55 @@
 
 
 html, body {
-  height: 100%;
+  min-height: 100%;
 }
 
-body { 
+body {
   margin: 0;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
 
-  font-family: 'Poppins', 'Inter', sans-serif;
-  background: var(--bg-light, #FEFBF2);
-  color: var(--text-dark, #111827);
+  font-family: 'Inter', sans-serif;   /* ✅ ADD THIS */
+  color: #111;
 }
    
-main {
-  flex: 1;
-  min-height: 0;                /* REQUIRED for proper scrolling */
-
-  padding-top: var(--header-height);
-  background: #fffbf3;
-  overflow-y: auto;
+body {
   margin: 0;
+  min-height: 100vh;
+  display: block;
+
+  font-family: 'Inter', sans-serif;
+  color: #111;
+
+  background: #fffbf3;   /* ✅ IMPORTANT */
 }
 
 footer {
     grid-row: 3;          /*sits in the bottom row of the body grid*/
     background: #000;  /*dark background for footer*/
-    color: white;
+    color: #9ca3af;
     text-align: center;
     padding: 15px 10px;
-    font-size: 0.6em;
+    font-size: 12px;
     height: 100px;
 }
 
 footer a {
   text-decoration: none;
-  color: white;
+  color: #9ca3af;
   padding: 0 15px;
+  font-size: 15px;
+}
+
+.footer-content a:hover{
+color:white;
 }
  
 
 footer p {
   margin: 0.3rem 0;
-  font-size: 0.6rem;
+  font-size: 15px;
 }
 
 footer p {
@@ -785,7 +789,9 @@ button.ghost:hover {
 
 /* ====== MAIN CONTENT ====== */
 .get-listed-content {
-  padding: 6.5rem 1rem 3rem;
+  padding-top: 120px;
+  padding-left: 1rem;
+  padding-right: 1rem;
   text-align: center;
 }
 
@@ -868,12 +874,22 @@ input:checked + .glslider:before {
   gap: 2rem;
   max-width: 1600px;
   margin: auto;
+
+  margin-bottom: 60px;
 }
 
 .glcard.dark-card {
   background: #000;
   color: white;
   border: none;
+}
+
+.glcard.dark-card ul li {
+  color: #fff;
+}
+
+.glcard.dark-card ul li::before {
+  color: #00ff66;
 }
 
 .glcard.dark-card:hover {
@@ -898,6 +914,7 @@ input:checked + .glslider:before {
   flex-direction: column;
   justify-content: space-between;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  color: #111;  
 }
 
 .glcard:hover {
@@ -909,7 +926,6 @@ input:checked + .glslider:before {
   border: 2px solid var(--highlight);
   background: #fff5f5;
   position: relative;
-  transform: translateY(-10px); /* Raises it slightly */
   border-top: 4px solid #3366ff;
 }
 
@@ -930,7 +946,8 @@ input:checked + .glslider:before {
 .glcard h2 {
   color: var(--brand);
   font-size: 1.6rem;
-  margin-top: 1.5rem; 
+  margin: 0.8rem 0 0.2rem 0;
+  color: #000;
 }
 
 .dark-card h2 {
@@ -959,12 +976,14 @@ input:checked + .glslider:before {
 .glcard ul li {
   padding: 0.6rem 0;
   border-bottom: 1px solid #eee;
-  margin: 0rem 1.5rem 0rem 1.5rem;
+  margin: 0 1.5rem;
+
+  color: #111;     /* force dark text */
 }
 
 .glcard ul li::before {
   content: "✓";
-  color: darkgray;
+  color: green;   /* FIX: strong visible color */
   font-weight: bold;
   margin-right: 8px;
 }
@@ -973,6 +992,8 @@ input:checked + .glslider:before {
   font-weight: bold;
   font-size: 1.3rem;
   margin: 0;
+
+  color: #000;   /* ✅ FIX */
 }
 
 .yearly {
@@ -982,23 +1003,32 @@ input:checked + .glslider:before {
   transition: opacity 0.5s ease;
 }
 
-.yearly[style*="none"] {
+/* .yearly[style*="none"] {
   opacity: 0;
-}
+} */
 
 
 
 /* ====== BUTTON ====== */
 .btn {
-  display: inline-block;
+  display: block;
+
+  width: 50%;              /* not full width, not tiny */
+  max-width: 220px;        /* keeps it clean on desktop */
+
+  margin: 1.2rem auto 0;   /* centered */
+
+  text-align: center;
+  font-size: 0.95rem;      /* readable */
+  font-weight: 600;
+
+  padding: 0.7rem 1rem;    /* balanced height */
+
   background: var(--brand);
   color: #fff;
   text-decoration: none;
-  padding: 0.9rem 1.4rem;
-  margin: 0 0.9rem 1.2rem 0.9rem;
   border-radius: 8px;
   transition: background 0.3s;
-  margin-top: auto;
 }
 
 .recommendedbanner {
@@ -1011,14 +1041,24 @@ input:checked + .glslider:before {
 }
 
 .btnwhite {
-  display: inline-block;
+  display: block;
+
+  width: 50%;
+  max-width: 220px;
+
+  margin: 1.2rem auto 0;
+
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+
+  padding: 0.7rem 1rem;
+
   background: white;
   color: var(--brand);
   text-decoration: none;
-  padding: 0.9rem 1.4rem;
   border-radius: 8px;
   transition: background 0.3s;
-  margin: 0 0.9rem 1.2rem 0.9rem;
 }
 
 .btn:hover {

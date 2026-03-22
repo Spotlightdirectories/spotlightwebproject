@@ -27,12 +27,13 @@ align-items:center;
 .logo-left{
 display:flex;
 align-items:center;
-gap:12px;
+gap:24px;
 }
 
 .homeimg{
 height:50px;
 width:auto;
+margin-right: 14px;
 }
 
 .home{

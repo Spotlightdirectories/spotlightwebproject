@@ -10,7 +10,7 @@ body{
   color:#111;
 }
 
-.container{
+.hcontainer{
 max-width:1600px;
 margin:auto;
 padding:0 16px;
@@ -223,7 +223,7 @@ padding:120px 0;
 margin-top:120px;
 }
 
-.slideshow-container{
+.slideshow-hcontainer{
 position:relative;
 overflow:hidden;
 border-radius:20px;
@@ -254,10 +254,10 @@ padding:100px 0;
 }
 
 .app-text h2{
-font-size:36px;
-font-weight:700;
-line-height:1.2;
-margin-bottom:14px;
+  font-size: 23px;
+  line-height: 1.3;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .app-grid{
@@ -265,6 +265,8 @@ display:grid;
 grid-template-columns:1fr 1fr;
 align-items:center;
 gap:50px;
+
+justify-items: center;   /* ✅ ADD THIS */
 }
 
 .app-buttons img{
@@ -338,45 +340,45 @@ padding-left:20px;
 margin-top:10px;
 }
 
-.footer{
+.hfooter{
 background:#000;
 color:#e5e7eb;
 padding:90px 0 40px;
 }
 
-.footer-grid{
+.hfooter-grid{
 display:grid;
 grid-template-columns:1.6fr 1fr 1fr 1.6fr;
 gap:60px;
 align-items:start;
 }
 
-.footer-brand h3{
+.hfooter-brand h3{
 font-size:24px;
 font-weight:700;
 margin-bottom:12px;
 }
 
-.footer-brand span{
+.hfooter-brand span{
 color:#eab308;
 }
 
-.footer-brand p{
+.hfooter-brand p{
 max-width:280px;
 line-height:1.6;
 color:#9ca3af;
 }
 
-.footer-links h4,
-.footer-support h4,
-.footer-newsletter h4{
+.hfooter-links h4,
+.hfooter-support h4,
+.hfooter-newsletter h4{
 font-size:16px;
 margin-bottom:16px;
 color:white;
 }
 
-.footer-links a,
-.footer-support a{
+.hfooter-links a,
+.hfooter-support a{
 display:block;
 text-decoration:none;
 color:#9ca3af;
@@ -384,12 +386,12 @@ margin-bottom:10px;
 font-size:15px;
 }
 
-.footer-links a:hover,
-.footer-support a:hover{
+.hfooter-links a:hover,
+.hfooter-support a:hover{
 color:white;
 }
 
-.footer-newsletter p{
+.hfooter-newsletter p{
 color:#9ca3af;
 margin-bottom:14px;
 font-size:14px;
@@ -417,25 +419,32 @@ font-weight:600;
 cursor:pointer;
 }
 
-.footer-bottom{
-border-top:1px solid #1f2937;
-margin-top:50px;
-padding-top:20px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-flex-wrap:wrap;
-color:#9ca3af;
-font-size:14px;
+.hfooter-bottom{
+  flex-direction: row;
+  border-top:1px solid #1f2937;
+  margin-top:50px;
+  padding-top:20px;
+  padding-right:16px;
+  padding-left:16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:nowrap;
+  color:#9ca3af;
+  font-size:14px;
 }
 
-.footer-legal a{
-margin-left:18px;
+.hfooter-legal a{
+margin-right:20px;
 color:#9ca3af;
 text-decoration:none;
 }
 
-.footer-legal a:hover{
+.hfooter-legal a:last-child{
+  margin-right:0;
+}
+
+.hfooter-legal a:hover{
 color:white;
 }
 
@@ -481,20 +490,80 @@ color:white;
     grid-template-columns:1fr;
   }
 
+  .benefits-section h2{
+    font-size: 25px;
+  }
+
   .growth-grid{
     grid-template-columns:1fr;
+    justify-items: center;   /* ✅ THIS FIXES IT */
   }
 
-  .app-grid{
-    grid-template-columns:1fr;
-  }
+  .vendor-growth h2{
+font-size:25px;
+}
 
-  .footer-grid{
+  .vendor-growth h4{
+font-size:18px;
+}
+
+  .vendor-growth ul li{
+font-size:16px;
+}
+
+.app-grid{
+  grid-template-columns:1fr;
+  justify-items: center;
+  align-items: center;
+  text-align: center;
+  padding: 0;
+  gap: 24px;
+}
+
+.mobile-app{
+padding:0;
+margin-left: 0;
+}
+
+div.hcontainer.app-grid{
+  margin-left: 0;
+}
+
+.app-text {
+  text-align: center;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+  padding: 0 8px;
+}
+
+ .app-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.app-buttons a {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 260px;
+  margin: 0 auto;
+}
+
+.app-buttons img{
+  height:48px;
+  width:auto;
+}
+
+  .hfooter-grid{
     grid-template-columns:1fr;
     gap:40px;
   }
 
-  .slideshow-container{
+  .slideshow-hcontainer{
   max-height:300px;
 }
 
@@ -509,13 +578,25 @@ color:white;
   left:16px;
 }
 
+.hfooter-bottom{
+  font-size:10px;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.hfooter-bottom p{
+  white-space:nowrap;
+}
+
 }
 
 
 
 @media (min-width:768px){
 
-.container{
+.hcontainer{
 padding:0 40px;
 }
 
