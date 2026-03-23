@@ -17,20 +17,11 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-
-  font-family: 'Inter', sans-serif;   /* ✅ ADD THIS */
-  color: #111;
-}
-   
-body {
-  margin: 0;
-  min-height: 100vh;
-  display: block;
+  line-height: 1.6;
 
   font-family: 'Inter', sans-serif;
   color: #111;
-
-  background: #fffbf3;   /* ✅ IMPORTANT */
+  background: #fffbf3;
 }
 
 footer {
@@ -39,15 +30,14 @@ footer {
     color: #9ca3af;
     text-align: center;
     padding: 15px 10px;
-    font-size: 12px;
-    height: 100px;
+    font-size: 0.7rem;
 }
 
 footer a {
   text-decoration: none;
   color: #9ca3af;
-  padding: 0 15px;
-  font-size: 15px;
+  padding: 0 8px;
+  font-size: 0.7rem;
 }
 
 .footer-content a:hover{
@@ -56,25 +46,25 @@ color:white;
  
 
 footer p {
-  margin: 0.3rem 0;
-  font-size: 15px;
+  margin: 3px 0 0 0;
+  font-size: 0.7rem;
+} 
+
+main {
+  flex: 1;
+  padding-top: 80px;
 }
 
-footer p {
-  margin: 0.3rem 0;
-  font-size: 0.6rem;
-}
-
-@media (min-width: 992px) {
+@media (min-width: 900px) {
   :root {
     --header-height: 80px;
   }
 
-  footer {
+   footer {
     font-size: 1rem;
   }
   footer p {
-  font-size: 0.9rem;
+  font-size: 0.7rem;
   }
 }
     
@@ -1228,6 +1218,7 @@ pricing-body::-webkit-scrollbar {
       line-height: 1.6;
       color: #333;
     }
+
     .privatecontainer h1, 
     .privatecontainer h2, 
     .privatecontainer h3 {
@@ -1266,6 +1257,52 @@ pricing-body::-webkit-scrollbar {
       line-height: 1.6;
       color: #333;
     }
+
+@media (max-width: 768px) {
+
+  main {
+  padding-top: 100px;
+ }
+   .termscontainer,
+   .privatecontainer,
+   .disclaimercontainer {
+    padding: 1rem;
+    margin-top: 80px;
+    }
+
+.privatecontainer h1,
+.termscontainer h1,
+.disclaimercontainer h1 {
+  font-size: 1.5rem;
+}
+
+.privatecontainer h2,
+.termscontainer h2,
+.disclaimercontainer h2 {
+  font-size: 1.2rem;
+}
+
+.privatecontainer h3,
+.termscontainer h3,
+.disclaimercontainer h3 {
+  font-size: 1rem;
+}
+
+.privatecontainer p,
+.termscontainer p,
+.disclaimercontainer p {
+  font-size: 0.9rem;
+}
+
+.privatecontainer ul,
+.termscontainer ul,
+.disclaimercontainer ul,
+.privatecontainer li,
+.termscontainer li,
+.disclaimercontainer li {
+  font-size: 0.9rem;
+}
+  }
     .disclaimercontainer h1, 
     .disclaimercontainer h2
     {
@@ -1301,6 +1338,7 @@ pricing-body::-webkit-scrollbar {
       line-height: 1.6;
       color: #333;
     }
+
     .termscontainer h1, 
     .termscontainer h2
     {
@@ -1325,7 +1363,7 @@ pricing-body::-webkit-scrollbar {
     /*END OF TERMS OF SERVICE PAGE*/
 
     /*VENDOR ONBOARDING*/
-      .ob-container {
+  .ob-container {
     background: #fff;
     padding: 2rem 2.5rem;
     border-radius: 16px;
@@ -1334,6 +1372,35 @@ pricing-body::-webkit-scrollbar {
     width: 100%;
     margin: 2rem auto;
   }
+
+  @media (max-width: 768px){
+  .ob-container {
+    margin-top: 100px;
+    padding: 1rem;
+    margin: 100px 10px 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .navbar{
+  z-index: 9999;
+}
+
+  .ob-container div[style*="display:flex"]{
+    flex-direction: column;
+  }
+
+  .ob-input,
+  .ob-select,
+  .ob-textarea{
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+    body{
+    padding-top: 100px;
+  }
+}
 
   .ob-title {
     font-size: 1.6rem;
@@ -1454,3 +1521,11 @@ pricing-body::-webkit-scrollbar {
   display: none !important;
 }
 
+@media (min-width: 768px) and (max-width: 1024px){
+
+  .ob-container{
+    max-width: 700px;
+    margin: 120px auto 2rem;
+  }
+
+}

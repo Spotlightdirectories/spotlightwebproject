@@ -259,3 +259,35 @@ input {
   border: 1px solid #b00020 !important;
 }
 
+@media (max-width: 768px){
+
+  .auth-container{
+    padding: 1rem;
+  }
+
+  .auth-card{
+    width: 100%;
+    max-width: 100%;
+    padding: 1.2rem;
+  }
+
+  .auth-header h1{
+    font-size: 1.4rem;
+  }
+
+  .auth-header p{
+    font-size: 0.9rem;
+  }
+
+  .form-group input{
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+  .primary-btn{
+    width: 100%;
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+}

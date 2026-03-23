@@ -7,38 +7,54 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="navbar.css">
     <link rel="stylesheet" href="style.css">
+
     <link rel="icon" href="images/favicon.ico" type="image/x-icon">
     <link rel="apple-touch-icon" href="images/favicon.png" type="image/png">
 </head>
 <body>
-  <main>
-         <header class="navbar">
-        <div class="logo-left">
-          <a href="index.html"> 
-            <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg"/>
-          </a>
-          <!-- <a href="#"class="divider">|</a> -->
-          <a href="index.html" class="home">Home</a>        
-        </div>
 
-       <nav>
-          <a href="#" class="menu-open hide-desktop">
-            <img src="images/hbopen.png" alt="open-menu">
-          </a>
-          
-          <ul>
-            <li><a href="#"class="xclose">
-              <img src="images/xclose.png" alt="close menu"></a>
-            </li>
-            <li><a href="aboutUs.html">Why Spotlight?</a></li>
-            <li><a href="getListed.html">Get Listed</a></li>
-            <li><a href="contactUs.html">Contact Us</a></li>
-            <li><a href="FAQ.html">FAQ</a></li>
-            <li><a href="feedback.html">Feedback</a></li>            
-          </ul>
-       </nav>
-     </header>
+ <header class="navbar">
+
+  <div class="logo-left">
+    <a href="index.html">
+      <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg">
+    </a>
+    <a href="index.html" class="home">Home</a>
+  </div>
+
+  <nav>
+
+    <!-- HAMBURGER OPEN -->
+    <button class="menu-open hide-desktop" aria-label="Open menu">
+      <img src="images/hbopen.png" alt="Open menu" width="32" height="32">
+    </button>
+
+    <ul class="nav-links">
+
+      <!-- CLOSE BUTTON -->
+      <li class="menu-close">
+        <button class="xclose" aria-label="Close menu">
+          <img src="images/xclose.png" alt="Close menu" width="32" height="32">
+        </button>
+      </li>
+
+      <li><a href="aboutUs.html">Why Spotlight?</a></li>
+      <li><a href="getListed.html">Get Listed</a></li>
+      <li><a href="contact-us.html">Contact Us</a></li>
+      <li><a href="FAQ.html">FAQ</a></li>
+      <li><a href="feedback.html">Feedback</a></li>
+
+    </ul>
+
+  </nav>
+
+</header>
+
+
+  <main>
 
      <div class="termscontainer">
              
@@ -114,13 +130,14 @@
   </main>
    <footer>
         <div class="footer-content">
-             <a href="terms.html">Terms & Conditions</a> |
-             <a href="privacy.html">Privacy Policy</a>   |
+             <a href="terms.html">Terms</a> 
+             <a href="privacy.html">Privacy</a>   
              <a href="disclaimer.html">Disclaimer</a>   
              <p>&copy; 2025 Spotlight Digital Services Ltd. All Rights Reserved.</p>
         </div>
      </footer>
       <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-     <script src="script.js"></script>
+     <script defer src="script2.js"></script>
+
   </body>
 </html>

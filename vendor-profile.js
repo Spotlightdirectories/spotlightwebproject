@@ -118,13 +118,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ===============================
   function renderVendorProfile(vendor) {
 
-    console.log("FULL VENDOR OBJECT:", vendor);  // 👈 ADD THIS LINE HERE
-
     const isOwner = 
       currentUser &&
       vendor.auth_user_id === currentUser.id;
 
-      vendor.plan_tier = vendor.plan_tier || "free";
+      vendor.plan_tier = getSafePlanTier(vendor.plan_tier);
 
       const isFree = vendor.plan_tier === "free";
 
@@ -220,7 +218,7 @@ if (videoNote) {
       return;
     }
 
-    location.reload();
+    await loadGallery();
 
   });
 
@@ -312,7 +310,7 @@ if (videoDbError) {
   return;
 }
 
-location.reload();
+await loadVideo();
 
   });
 
@@ -347,11 +345,15 @@ location.reload();
       const subcategory = vendor.subcategory || "";
 
     if (category && subcategory) {
-      categoryEl.innerHTML = `${category} • <strong>${subcategory}</strong>`;
-     } else {
+  categoryEl.innerHTML = `
+    <span class="cat">${category}</span>
+    <span class="dot"> • </span>
+    <span class="subcat"><strong>${subcategory}</strong></span>
+    `;
+   } else {
       categoryEl.textContent = category || subcategory;
-    }
-    }
+   }
+  }
 
     const addressEl = document.getElementById("vendorAddress");
     if (addressEl) addressEl.textContent = vendor.address || "";
@@ -461,6 +463,32 @@ if (addressDetail) addressDetail.textContent = vendor.address || "";
     // -------------------------------
     const desc = document.getElementById("vendorDescription");
 
+    function applyFormat(command) {
+  const selection = window.getSelection();
+
+  if (!selection.rangeCount) return;
+
+  const range = selection.getRangeAt(0);
+
+  if (command === "bold") {
+    const strong = document.createElement("strong");
+    strong.appendChild(range.extractContents());
+    range.insertNode(strong);
+  }
+
+  if (command === "italic") {
+    const em = document.createElement("em");
+    em.appendChild(range.extractContents());
+    range.insertNode(em);
+  }
+
+  if (command === "underline") {
+    const u = document.createElement("u");
+    u.appendChild(range.extractContents());
+    range.insertNode(u);
+  }
+}
+
 if (desc) {
 
   if (isOwner) {
@@ -499,7 +527,7 @@ toolbar.querySelectorAll("button").forEach(btn => {
 
     const cmd = this.getAttribute("data-cmd");
 
-    document.execCommand(cmd, false, null);
+    applyFormat(cmd);
 
   });
 
@@ -602,8 +630,6 @@ async function loadGallery() {
 
       deleteBtn.addEventListener("click", async () => {
 
-        console.log("Delete button clicked");
-
         const confirmDelete = confirm("Delete this image?");
         if (!confirmDelete) return;
 
@@ -619,7 +645,7 @@ async function loadGallery() {
           .delete()
           .eq("id", imageList[i].id);
           
-          location.reload();
+          await loadGallery();
 
        });
 
@@ -647,7 +673,7 @@ moveUpBtn.addEventListener("click", async () => {
     .update({ display_order: tempOrder })
     .eq("id", above.id);
 
-  location.reload();
+  await loadGallery();
 
 });
 
@@ -675,7 +701,7 @@ moveDownBtn.addEventListener("click", async () => {
     .update({ display_order: tempOrder })
     .eq("id", below.id);
 
-  location.reload();
+  await loadGallery();
 
 });
 
@@ -718,11 +744,7 @@ moveDownBtn.addEventListener("click", async () => {
 
       async function saveMeta() {
 
-        console.log("saveMeta triggered");
-
     let priceValue = price.value.replace(/[^\d.]/g, "");
-
-    console.log("Raw price input:", price.value);
 
     if (priceValue) {
       priceValue = parseFloat(priceValue);
@@ -739,10 +761,8 @@ moveDownBtn.addEventListener("click", async () => {
     })
     .eq("id", imageList[i].id)
     .select();
-    console.log("Saved price value:", priceValue);
-    console.log("Update returned data:", data);
 
-  if (error) {
+    if (error) {
     console.error("Update error:", error.message);
   }
 
@@ -835,7 +855,8 @@ if (deleteBtn) {
     const confirmDelete = confirm("Delete this video?");
     if (!confirmDelete) return;
 
-    const videoPath = videoRecord.file_url.split("/vendor-videos/")[1];
+  const videoPath = extractStoragePath(videoRecord.file_url, "vendor-videos");
+   if (!videoPath) return;
 
     await supabase.storage
       .from("vendor-videos")
@@ -846,17 +867,17 @@ if (deleteBtn) {
       .delete()
       .eq("id", videoRecord.id);
 
-    location.reload();
+    await loadVideo();
 
   };
 
 }
 
-  const videoPlayer = document.getElementById("vendorVideo");
+const player = document.getElementById("vendorVideo");
 
-  if (videoPlayer) {
-  videoPlayer.src = videoRecord.file_url;
-  videoPlayer.style.display = "block";
+if (player) {
+  player.src = videoRecord.file_url;
+  player.style.display = "block";
 }
 
 const videoControls = document.getElementById("videoControls");
@@ -930,7 +951,7 @@ links.forEach(link => {
         .delete()
         .eq("id", link.id);
 
-      if (!error) location.reload();
+     if (!error) await loadSocialLinks();
 
     });
 
@@ -990,7 +1011,7 @@ if (addSocialBtn) {
       return;
     }
 
-    location.reload();
+    await loadSocialLinks();
 
   });
 
@@ -1108,7 +1129,6 @@ if (!branches || branches.length === 0 || limit === 0) return;
   // COVER UPLOAD
   if (coverInput) {
     coverInput.addEventListener("change", async (e) => {
-      console.log("Cover input triggered");
       const file = e.target.files[0];
       if (!file) return;
 
@@ -1126,7 +1146,6 @@ if (!branches || branches.length === 0 || limit === 0) return;
 
       const filePath = `${currentUser.id}/cover`;
 
-      console.log("Cover filePath being used:", filePath);
 
       // Step 1: Remove existing cover (if any)
       const { data: removeData, error: removeError } =
@@ -1134,8 +1153,6 @@ if (!branches || branches.length === 0 || limit === 0) return;
         .from("vendor-branding")
         .remove([filePath]);
 
-     console.log("Remove Result:", removeData);
-     console.log("Remove Error:", removeError);
 
       // Step 2: Upload new cover
      const { error } = await supabase.storage
@@ -1151,16 +1168,11 @@ if (!branches || branches.length === 0 || limit === 0) return;
         .from("vendor-branding")
         .getPublicUrl(filePath);
 
-        console.log("Public URL:", data.publicUrl);
-        console.log("Current User ID:", currentUser?.id);
-        console.log("Vendor auth_user_id:", vendor.auth_user_id);
 
       await supabase
         .from("vendors")
         .update({ cover_url: data.publicUrl })
         .eq("id", vendor.id);
-
-        console.log("Updated cover_url in DB");
 
       vendor.cover_url = data.publicUrl;
       document.getElementById("vendorCover").src =
@@ -1171,7 +1183,6 @@ if (!branches || branches.length === 0 || limit === 0) return;
   // LOGO UPLOAD
 if (logoInput) {
   logoInput.addEventListener("change", async (e) => {
-    console.log("Logo input triggered");
 
     const file = e.target.files[0];
     if (!file) return;
@@ -1232,5 +1243,34 @@ if (logoInput) {
  }
 }
 
-  loadVendorProfile();
+function sanitizeHTML(input) {
+  if (!input) return "";
+
+  const allowedTags = ["B", "I", "U", "STRONG", "EM", "BR"];
+
+  const temp = document.createElement("div");
+  temp.innerHTML = input;
+
+  const elements = temp.querySelectorAll("*");
+
+  elements.forEach(el => {
+    if (!allowedTags.includes(el.tagName)) {
+      el.replaceWith(document.createTextNode(el.textContent));
+    } else {
+      [...el.attributes].forEach(attr => el.removeAttribute(attr.name));
+    }
+  });
+
+  return temp.innerHTML;
+}
+
+function getSafePlanTier(plan) {
+  const validPlans = ["free", "standard", "enterprise", "elite", "custom"];
+
+  if (!validPlans.includes(plan)) return "free";
+
+  return plan;
+}
+
+loadVendorProfile();
 });

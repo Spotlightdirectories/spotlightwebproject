@@ -369,3 +369,36 @@ VERIFY BADGE FORM
   margin-top: 12px;
   font-size: 14px;
 }
+
+@media (max-width: 768px){
+
+  main{
+    max-width: 100% !important;
+    margin: 100px 1rem 2rem !important;
+    padding: 0;
+  }
+
+  #planSummary{
+    padding: 0.8rem !important;
+  }
+
+  #paymentActions{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  #paymentActions button{
+    width: 100%;
+    padding: 10px;
+  }
+
+  #bankSection{
+    font-size: 0.9rem;
+  }
+
+  #submitReceiptBtn{
+    width: 100%;
+  }
+
+}
