@@ -39,7 +39,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         slug,
         subscription_status
       `)
-      .eq("subscription_status", "active");
+      .eq("subscription_status", "active")
+      .eq("onboarding_completed", true);
+     
+
 
   const { data: branches } = await supabase
   .from("branches")
@@ -66,7 +69,9 @@ if (branches && branches.length) {
 
   branches.forEach(branch => {
 
-    const parentVendor = vendors.find(v => v.id === branch.vendor_id);
+  const parentVendor = vendors.find(v => v.id === branch.vendor_id);
+
+if (!parentVendor || !parentVendor.onboarding_completed) return;
 
     if (!parentVendor) return;
 
@@ -131,6 +136,10 @@ if (branches && branches.length) {
   }
 
   function renderVendorCard(v) {
+
+  const category = v.category || "";
+  const subcategory = v.subcategory || "";
+
   return `
     <article class="vendor-card">
       <h3 class="vendor-name">
@@ -138,14 +147,14 @@ if (branches && branches.length) {
         ${renderBadge(v.verification_status)}
       </h3>
 
-      <p>
-        ${(v.category || "")}
-        ${v.subcategory ? " • <strong>" + v.subcategory + "</strong>" : ""}
+      <p class="vendor-category">
+        ${category ? `<span class="cat">${category}</span>` : ""}
+        ${subcategory ? `<span class="dot"> • </span><span class="subcat">${subcategory}</span>` : ""}
       </p>
 
       <p>${v.address || ""}</p>
 
-      ${v.distance !== undefined
+      ${typeof v.distance === "number"
         ? `<p class="distance">${v.distance.toFixed(1)} km away</p>`
         : ""}
 
@@ -173,11 +182,14 @@ if (branches && branches.length) {
 }
 
   function renderVendors(list) {
-    vendorsGrid.innerHTML = list.length
-      ? list.map(renderVendorCard).join("")
-      : "<p>No vendors found</p>";
 
-    resultsCount.textContent = `${list.length} vendors found`;
+  const safeList = list.filter(v => v && v.name);
+
+  vendorsGrid.innerHTML = safeList.length
+    ? safeList.map(renderVendorCard).join("")
+    : "<p>No vendors found</p>";
+
+  resultsCount.textContent = `${safeList.length} vendors found`;
   }
 
   function populateCategories() {
@@ -265,6 +277,11 @@ if (branches && branches.length) {
     if (!locationToggle.checked) {
       userLocation = null;
       applyFilters();
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      console.error("Geolocation not supported");
       return;
     }
 

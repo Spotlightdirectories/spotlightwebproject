@@ -44,6 +44,7 @@ main {
 }
 
 #searchInput {
+  width: 100%;
   padding: 0.6rem;
   font-size: 0.95rem;
   border-radius: 4px;
@@ -113,13 +114,6 @@ button[type="submit"]:hover {
 /* =========================
    VENDOR CARD
 ========================= */
-.vendor-card {
-  background: #ffffff;
-  border: 1px solid #e5e5e5;
-  border-radius: 8px;
-  padding: 0.9rem;
-}
-
 .vendor-header {
   display: flex;
   justify-content: space-between;
@@ -137,6 +131,7 @@ button[type="submit"]:hover {
 .vendor-card p:first-of-type {
   color: #444;
   margin-bottom: 6px;
+  text-align: left;
 }
 
 .vendor-card p:nth-of-type(2) {
@@ -269,10 +264,12 @@ button[type="submit"]:hover {
 /*added depth to vendor cards*/
 .vendor-card {
   background: #ffffff;
+  border: 1px solid #e5e5e5;
   border-radius: 10px;
   padding: 18px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.06);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-align: left;
 }
 
 .vendor-card:hover {
@@ -401,4 +398,48 @@ VERIFY BADGE FORM
     width: 100%;
   }
 
+  .vendor-category{
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:flex-start;
+  text-align:left;
+  gap:2px;
+}
+
+.vendor-category .dot{
+  display:none;
+}
+
+.filters {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filters select {
+  width: 100%;
+}
+
+}
+
+.vendor-category{
+  display:flex;
+  align-items:flex-start;
+  justify-content:flex-start;
+  gap:6px;
+  flex-wrap:wrap;
+  text-align:left;
+}
+
+.vendor-category .cat{
+  font-size:0.8rem;
+  color:#6b7280;
+}
+
+.vendor-category .subcat{
+  font-size:0.95rem;
+  font-weight:600;
+}
+
+.vendor-category .dot{
+  color:#6b7280;
 }

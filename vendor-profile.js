@@ -553,12 +553,6 @@ toolbar.querySelectorAll("button").forEach(btn => {
       mediaSection.classList.remove("hidden");
     }
 
-    const videoWrap = document.getElementById("videoWrap");
-
-    if (videoWrap && VIDEO_LIMITS[vendor.plan_tier].allowed) {
-      videoWrap.classList.remove("hidden");
-   }
-
     const mediaHint = document.querySelector(".media-hint");
 
     if (mediaHint && !isOwner) {
@@ -586,7 +580,9 @@ async function loadGallery() {
 
   const imageList = images || [];
 
-  for (let i = 0; i < limit; i++) {
+  const totalItems = isOwner ? limit : imageList.length;
+
+for (let i = 0; i < totalItems; i++) {
 
     const slot = document.createElement("div");
     slot.className = "gallery-item";
@@ -842,7 +838,27 @@ async function loadVideo() {
     .eq("media_type", "video")
     .limit(1);
 
-  if (!videos || videos.length === 0) return;
+const videoWrap = document.getElementById("videoWrap");
+const videoLimits = VIDEO_LIMITS[vendor.plan_tier];
+
+// If plan does NOT allow video → hide for everyone
+if (!videoLimits.allowed) {
+  if (videoWrap) videoWrap.classList.add("hidden");
+  return;
+}
+
+// OWNER VIEW → always show if plan allows
+if (currentUser && vendor.auth_user_id === currentUser.id) {
+  if (videoWrap) videoWrap.classList.remove("hidden");
+} else {
+  // PUBLIC VIEW → only show if video exists
+  if (!videos || videos.length === 0) {
+    if (videoWrap) videoWrap.classList.add("hidden");
+    return;
+  }
+
+  if (videoWrap) videoWrap.classList.remove("hidden");
+}
 
   const videoRecord = videos[0];
 
