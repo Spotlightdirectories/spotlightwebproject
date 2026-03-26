@@ -1,7 +1,14 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const supabase = window.supabaseClient;
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data, error } = await supabase.auth.getUser();
+const user = data?.user;
+
+if (error) {
+  console.error("Auth error:", error);
+}
+
+
   if (!user) {
     window.location.replace("login.html");
     return;
@@ -11,10 +18,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   // PREFILL FROM AUTH (SOURCE OF TRUTH)
   // ===============================
 
-  const businessNameFromAuth = user.user_metadata?.full_name || "";
-
-  if (businessNameFromAuth) {
-    document.getElementById("name").value = businessNameFromAuth;
+   if (user.user_metadata?.full_name) {
+   document.getElementById("name").value = user.user_metadata.full_name;
   }
 
   if (user.email) {
@@ -32,9 +37,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   const locationStatus = document.getElementById("locationStatus");
   const statusMsg = document.getElementById("statusMsg");
   const submitBtn = document.getElementById("submitBtn");
+  const telephoneInput = document.getElementById("telephone");
 
   const categorySelect = document.getElementById("category");
   const subcategorySelect = document.getElementById("subcategory");
+  const addressInput = document.getElementById("address");
+  const stateSelectEl = document.getElementById("state");
+  const lgaSelectEl = document.getElementById("lga");
+  const whatsappInput = document.getElementById("whatsapp");
 
   // ===============================
   // Load categories
@@ -43,12 +53,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     .from("categories")
     .select("id, name");
 
+  if (categories) {
   categories.forEach(cat => {
     const opt = document.createElement("option");
     opt.value = cat.id;
     opt.textContent = cat.name;
     categorySelect.appendChild(opt);
   });
+}
 
   categorySelect.addEventListener("change", async () => {
     subcategorySelect.innerHTML = "<option value=''>Select Subcategory</option>";
@@ -60,12 +72,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       .select("id, name")
       .eq("category_id", categorySelect.value);
 
-    subs.forEach(s => {
-      const opt = document.createElement("option");
-      opt.value = s.id;
-      opt.textContent = s.name;
-      subcategorySelect.appendChild(opt);
-    });
+     if (subs) {
+       subs.forEach(s => {
+       const opt = document.createElement("option");
+       opt.value = s.id;
+       opt.textContent = s.name;
+       subcategorySelect.appendChild(opt);
+     });
+    }
   });
 
   // ===============================
@@ -73,6 +87,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ===============================
   if (detectBtn) {
     detectBtn.addEventListener("click", () => {
+
+      if (!confirmCheckbox.checked) {
+        locationStatus.textContent =
+         "Please confirm you are at your business location before detecting.";
+        return;
+      }
+
       if (!navigator.geolocation) {
         locationStatus.textContent = "Geolocation is not supported by your browser.";
         return;
@@ -133,10 +154,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const businessName = user.user_metadata?.full_name || "";
     const email = user.email;
 
-    const address = document.getElementById("address").value.trim();
-    const state = document.getElementById("state").value;
-    const lga = document.getElementById("lga").value;
-    const whatsapp = document.getElementById("whatsapp").value.trim();
+    const address = addressInput.value.trim();
+    const state = stateSelectEl.value;
+    const lga = lgaSelectEl.value;
+    const whatsapp = whatsappInput.value.trim();
 
     if (!businessName || !address || !state || !lga || !whatsapp || !email) {
       statusMsg.textContent = "Please fill all required fields.";
@@ -168,7 +189,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       state,
       lga,
       whatsapp,
-      telephone: document.getElementById("telephone").value.trim() || null,
+      telephone: telephoneInput.value.trim() || null,
       email,
       category_id: categorySelect.value,
       subcategory_id: subcategorySelect.value,
@@ -223,10 +244,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.location.replace("dashboard.html");
   });
 
-});
-
-//NIGERIA STATES AND LGAS SCRIPT
-document.addEventListener("DOMContentLoaded", () => {
+  //NIGERIA STATES AND LGAS SCRIPT
   const nigeriaData = {
     "Abia": ["Aba North","Aba South","Arochukwu","Bende","Ikwuano","Isiala Ngwa North","Isiala Ngwa South","Isuikwuato","Obi Ngwa","Ohafia","Osisioma","Ugwunagbo","Ukwa East","Ukwa West","Umuahia North","Umuahia South","Umu Nneochi"],
     "Adamawa": ["Demsa","Fufore","Ganye","Girei","Gombi","Guyuk","Hong","Jada","Lamurde","Madagali","Maiha","Mayo-Belwa","Michika","Mubi North","Mubi South","Numan","Shelleng","Song","Toungo","Yola North","Yola South"],
@@ -290,4 +308,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
   //END OF NIGERIA STATES AND LGAS SCRIPT
+
 });
+
+
+

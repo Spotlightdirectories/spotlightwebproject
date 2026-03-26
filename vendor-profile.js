@@ -1,4 +1,10 @@
 document.addEventListener("DOMContentLoaded", async () => {
+
+    const BADGE_TOOLTIPS = {
+  blue: "Verified Business — official business documents reviewed by Spotlight. This vendor operates a registered and credible business.",
+  gray: "Verified Identity — business owner identity confirmed"
+};
+
   console.log("✅ vendor-profile.js loaded");
 
   const supabase = window.supabaseClient;
@@ -50,21 +56,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ===============================
   // BADGE RENDERER
   // ===============================
-  function renderBadge(status) {
+function renderBadge(status) {
 
   if (!status) return "";
 
-  if (status === "blue") {
-  return `
-    <span class="badge-wrap" data-tooltip="Verified Business — official business documents reviewed by Spotlight. This vendor operates a registered and credible business..">
-      <img src="images/bluebadge.png" class="verification-badge">
-    </span>
-  `;
-}
+  const normalized = String(status).toLowerCase();
+
+  if (normalized === "blue") {
+    return `
+      <span class="badge-wrap" data-tooltip="${BADGE_TOOLTIPS.blue}">
+        <img src="images/bluebadge.png" class="verification-badge">
+      </span>
+    `;
+  }
 
   if (status === "gray") {
     return `
-      <span class="badge-wrap" data-tooltip="Identity Verified — business owner identity confirmed">
+      <span class="badge-wrap" data-tooltip="${BADGE_TOOLTIPS.gray}">
         <img src="images/graybadge.png" class="verification-badge">
       </span>
     `;
@@ -267,11 +275,18 @@ if (existingVideos && existingVideos.length > 0) {
 
   const oldVideo = existingVideos[0];
 
-  const oldPath = oldVideo.file_url.split("/vendor-videos/")[1];
+  const oldPath = oldVideo.file_url.includes("/vendor-videos/")
+  ? oldVideo.file_url.split("/vendor-videos/")[1]
+  : null;
+
+  if (!oldPath) {
+  console.error("Invalid video file path:", oldVideo.file_url);
+  return;
+  }
 
   await supabase.storage
-    .from("vendor-videos")
-    .remove([oldPath]);
+  .from("vendor-videos")
+  .remove([oldPath]);
 
   await supabase
     .from("vendor_media")
@@ -416,7 +431,10 @@ if (coverPlaceholder) {
     // BADGE
     // -------------------------------
     const badgeEl = document.getElementById("vendorBadge");
-    if (badgeEl) badgeEl.innerHTML = renderBadge(vendor.verification_status);
+    if (badgeEl) {
+       badgeEl.classList.remove("badge-skeleton");
+        badgeEl.innerHTML = renderBadge(vendor.verification_status);
+   }
 
     // -------------------------------
     // CONTACT
@@ -630,11 +648,19 @@ for (let i = 0; i < totalItems; i++) {
         if (!confirmDelete) return;
 
         const fileUrl = imageList[i].file_url;
-        const path = fileUrl.split("/vendor-branding/")[1];
+
+        const path = fileUrl.includes("/vendor-branding/")
+        ? fileUrl.split("/vendor-branding/")[1]
+        : null;
+
+       if (!path) {
+         console.error("Invalid gallery file path:", fileUrl);
+         return;
+        }
 
         await supabase.storage
-          .from("vendor-branding")
-          .remove([path]);
+        .from("vendor-branding")
+        .remove([path]);
 
         await supabase
           .from("vendor_media")
@@ -860,7 +886,9 @@ if (currentUser && vendor.auth_user_id === currentUser.id) {
   if (videoWrap) videoWrap.classList.remove("hidden");
 }
 
-  const videoRecord = videos[0];
+  const videoRecord = videos && videos.length > 0 ? videos[0] : null;
+
+  if (!videoRecord) return;
 
   const deleteBtn = document.getElementById("deleteVideoBtn");
 

@@ -111,6 +111,10 @@ button[type="submit"]:hover {
   gap: 1rem;
 }
 
+
+.vendors-grid > * {
+  min-width: 0;
+}
 /* =========================
    VENDOR CARD
 ========================= */
@@ -181,16 +185,9 @@ button[type="submit"]:hover {
 /* =========================
    BADGES
 ========================= */
-.badge {
-  font-size: 0.7rem;
-  padding: 0.2rem 0.4rem;
-  border-radius: 4px;
-  white-space: nowrap;
-}
-
 .verification-badge {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
 }
 
@@ -200,18 +197,12 @@ button[type="submit"]:hover {
   gap: 10px;
 }
 
-.card-badge {
-  width: 20px;
-  height: 20px;
-  transform: translateY(2px);
-}
-
 /* =========================
    DESKTOP ENHANCEMENT
 ========================= */
 @media (min-width: 768px) {
   .vendors-grid {
-    grid-template-columns: repeat(2, 1fr);
+   grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   #searchForm {
@@ -221,7 +212,7 @@ button[type="submit"]:hover {
 
 @media (min-width: 1024px) {
   .vendors-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     max-width: 1000px;
     margin: 0 auto;
   }
@@ -270,6 +261,7 @@ button[type="submit"]:hover {
   box-shadow: 0 4px 12px rgba(0,0,0,0.06);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   text-align: left;
+  min-width: 0;
 }
 
 .vendor-card:hover {
@@ -288,6 +280,7 @@ button[type="submit"]:hover {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .vendor-card .actions a {
@@ -299,6 +292,8 @@ button[type="submit"]:hover {
   color: #111;
   background: #f9fafb;
   transition: all 0.2s ease;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .vendor-card .actions a:hover {
@@ -443,3 +438,65 @@ VERIFY BADGE FORM
 .vendor-category .dot{
   color:#6b7280;
 }
+
+/*homepage displayed in search page*/
+
+.search-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.search-header a {
+  font-size: 0.9rem;
+  text-decoration: none;
+  color: #1e40af;
+  font-weight: 500;
+}
+
+.search-header a:hover {
+  text-decoration: underline;
+}
+
+.search-header a {
+  color: #374151;
+}
+
+.search-header a:hover {
+  color: #111;
+}
+
+/*verification badge*/
+
+.badge-wrap {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.badge-wrap::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 50%;
+  left: 120%;
+  transform: translateY(-50%);
+  background: #f9fafb;
+  color: #374151;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 400;
+  border-radius: 10px;
+  width: 260px;
+  line-height: 1.5;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 20;
+}
+
+.badge-wrap:hover::after {
+  opacity: 1;
+}
+

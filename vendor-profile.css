@@ -300,9 +300,9 @@ body {
 .badge-wrap::after {
   content: attr(data-tooltip);
   position: absolute;
-  top: 120%;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 50%;
+  left: 120%;
+  transform: translateY(-50%);
   width: 260px;
   max-width: 80vw;
   background: #fff;

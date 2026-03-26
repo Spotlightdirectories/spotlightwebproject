@@ -1,5 +1,10 @@
 document.addEventListener("DOMContentLoaded", async () => {
 
+  const BADGE_TOOLTIPS = {
+  blue: "Verified Business — official business documents reviewed by Spotlight. This vendor operates a registered and credible business.",
+  gray: "Verified Identity — business owner identity confirmed"
+};
+
   const supabase = window.supabaseClient;
 
   const searchForm = document.getElementById("searchForm");
@@ -37,14 +42,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         plan_tier,
         is_premium,
         slug,
-        subscription_status
+        subscription_status,
+        onboarding_completed
       `)
       .eq("subscription_status", "active")
       .eq("onboarding_completed", true);
      
 
 
-  const { data: branches } = await supabase
+  const { data: branches, error: branchesError } = await supabase
   .from("branches")
   .select(`
     id,
@@ -57,8 +63,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     whatsapp
   `);
 
+if (branchesError) {
+  console.error("Branches fetch error:", branchesError);
+}
+
     if (error) {
-      console.error("Supabase error:", error);
+      console.error("Vendors fetch error:", error);
       vendorsGrid.innerHTML = "<p>Error loading vendors</p>";
       return;
     }
@@ -72,8 +82,6 @@ if (branches && branches.length) {
   const parentVendor = vendors.find(v => v.id === branch.vendor_id);
 
 if (!parentVendor || !parentVendor.onboarding_completed) return;
-
-    if (!parentVendor) return;
 
     vendors.push({
       id: branch.id,
@@ -106,16 +114,26 @@ if (!parentVendor || !parentVendor.onboarding_completed) return;
   // HELPERS
   // ===============================
 
-  function renderBadge(status) {
+function renderBadge(status) {
 
   if (!status) return "";
 
-  if (status === "blue") {
-    return `<img src="images/bluebadge.png" class="card-badge">`;
+  const normalized = String(status).toLowerCase();
+
+  if (normalized === "blue") {
+    return `
+      <span class="badge-wrap" data-tooltip="${BADGE_TOOLTIPS.blue}">
+        <img src="images/bluebadge.png" class="verification-badge">
+      </span>
+    `;
   }
 
   if (status === "gray") {
-    return `<img src="images/graybadge.png" class="card-badge">`;
+    return `
+      <span class="badge-wrap" data-tooltip="${BADGE_TOOLTIPS.gray}">
+        <img src="images/graybadge.png" class="verification-badge">
+      </span>
+    `;
   }
 
   return "";
