@@ -27,6 +27,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const password = document.getElementById("password").value;
     const confirmPassword = document.getElementById("confirmPassword").value;
 
+    const agree = document.getElementById("agreeTerms");
+
+    if (agree && !agree.checked) {
+     showError("You must agree to the Terms, Privacy Policy, and Disclaimer.");
+     resetSubmitState();
+     return;
+   }
+
     if (!businessName || !email || !password || !confirmPassword) {
       showError("All fields are required.");
       resetSubmitState();
@@ -70,17 +78,21 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const { error: vendorError } = await supabase
-      .from("vendors")
-      .insert({
-        auth_user_id: data.user.id,
-        name: businessName,
-        email: email,
-        plan_tier: selectedPlan,
-        billing_cycle: billingType,
-        subscription_status: null,
-        is_premium: selectedPlan !== "free"
-      });
+const { error: vendorError } = await supabase
+  .from("vendors")
+  .insert({
+    auth_user_id: data.user.id,
+    name: businessName,
+    email: email,
+    plan_tier: selectedPlan,
+    billing_cycle: billingType,
+    subscription_status: null,
+    is_premium: selectedPlan !== "free",
+
+    // ✅ CONSENT RECORD
+    terms_accepted: true,
+    terms_accepted_at: new Date().toISOString()
+  });
 
     if (vendorError) {
       console.error("Vendor creation error:", vendorError);

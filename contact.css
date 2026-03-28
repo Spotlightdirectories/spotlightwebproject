@@ -194,6 +194,9 @@ margin-top:70px;
 
 .spot-right p{
 margin-bottom:16px;
+display:flex;
+align-items:center;
+gap:10px;
 }
 
 .spot-right a{
@@ -270,5 +273,30 @@ gap:80px;
 .hero h1{
 font-size:3.5rem;
 }
+
+}
+
+@media (max-width: 600px){
+
+  .spot-right{
+    margin-top: 40px; /* reduce excessive spacing */
+  }
+
+  .spot-right p{
+    font-size: 15px;
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+
+  .social-icons{
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .social-icons img{
+    width: 26px;
+    height: 26px;
+  }
 
 }

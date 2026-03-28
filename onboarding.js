@@ -128,6 +128,15 @@ if (error) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    const publicConsent = document.getElementById("publicConsent");
+
+    if (publicConsent && !publicConsent.checked) {
+      statusMsg.textContent =
+        "You must agree that your business information will be publicly displayed.";
+      submitBtn.disabled = false;
+    return;
+   }
+
     submitBtn.disabled = true;
     statusMsg.textContent = "Creating profile...";
 
@@ -197,6 +206,10 @@ if (error) {
       subcategory: selectedSubcategoryText,
       description: document.getElementById("description").value.trim() || null,
       auth_user_id: user.id,
+
+        // ✅ PUBLIC LISTING CONSENT (NEW)
+      public_listing_accepted: true,
+      public_listing_accepted_at: new Date().toISOString()
     };
 
     const { data: existingVendor } = await supabase

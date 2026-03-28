@@ -1,4 +1,4 @@
-/* global window */
+/* global window, supabaseClient */
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -35,13 +35,16 @@ function showSlide(index){
 
 if(slides.length === 0) return;
 
-slides.forEach(slide => slide.classList.remove("active"));
+let previousSlide = slides[currentSlide] || null;
 
 if(index >= slides.length) currentSlide = 0;
 else if(index < 0) currentSlide = slides.length - 1;
 else currentSlide = index;
 
-slides[currentSlide].classList.add("active");
+let nextSlide = slides[currentSlide] || null;
+
+if(previousSlide) previousSlide.classList.remove("active");
+if(nextSlide) nextSlide.classList.add("active");
 
 }
 
@@ -52,7 +55,9 @@ prevBtn.onclick = () => showSlide(currentSlide - 1);
 
 if(slides.length > 0){
 setInterval(()=>{
+if (!document.hidden) {
 showSlide(currentSlide + 1);
+}
 },5000);
 }
 
@@ -68,19 +73,24 @@ function showHeroSlide(index){
 
 if(heroSlides.length === 0) return;
 
-heroSlides.forEach(slide => slide.classList.remove("active"));
+let previousSlide = heroSlides[heroIndex] || null;
 
 if(index >= heroSlides.length) heroIndex = 0;
 else if(index < 0) heroIndex = heroSlides.length - 1;
 else heroIndex = index;
 
-heroSlides[heroIndex].classList.add("active");
+let nextSlide = heroSlides[heroIndex] || null;
+
+if(previousSlide) previousSlide.classList.remove("active");
+if(nextSlide) nextSlide.classList.add("active");
 
 }
 
 if(heroSlides.length > 0){
 setInterval(()=>{
+if (!document.hidden) {
 showHeroSlide(heroIndex + 1);
+}
 },4000);
 }
 
@@ -94,37 +104,36 @@ const supabase = window.supabaseClient || null;
 if (authBtn && supabase) {
 
 async function checkAuth() {
+  try {
+    const res = await supabase.auth.getSession();
+    const session = res.data.session;
 
-const res = await supabase.auth.getSession();
-const session = res.data.session;
-
-if (session) {
-authBtn.textContent = "Log out";
-authBtn.href = "#";
-} else {
-authBtn.textContent = "Log in";
-authBtn.href = "login.html";
+    if (session) {
+      authBtn.textContent = "Log out";
+      authBtn.href = "#";
+    } else {
+      authBtn.textContent = "Log in";
+      authBtn.href = "login.html";
+    }
+  } catch (error) {
+    console.error("Auth check failed:", error);
+  }
 }
 
-}
+  checkAuth();
 
-checkAuth();
+  authBtn.addEventListener("click", async (e) => {
+    const { data: { session } } = await supabase.auth.getSession();
 
-authBtn.addEventListener("click", async (e) => {
-
-const { data: { session } } = await supabase.auth.getSession();
-
-if (session) {
-e.preventDefault();
-await supabase.auth.signOut();
-window.location.reload();
-}
-
-});
+    if (session) {
+      e.preventDefault();
+      await supabase.auth.signOut();
+      window.location.reload();
+    }
+  });
 
 }
 
-});
 
 
 // GLOBAL FUNCTIONS
@@ -137,3 +146,5 @@ function newsletterPending(e){
 e.preventDefault();
 alert("Newsletter signup will be available soon.");
 }
+
+});

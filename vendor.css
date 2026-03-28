@@ -284,6 +284,10 @@ button[type="submit"]:hover {
 }
 
 .vendor-card .actions a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   padding: 6px 12px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -292,8 +296,9 @@ button[type="submit"]:hover {
   color: #111;
   background: #f9fafb;
   transition: all 0.2s ease;
-  min-width: 0;
+
   flex: 1 1 auto;
+  text-align: center;
 }
 
 .vendor-card .actions a:hover {
@@ -414,7 +419,25 @@ VERIFY BADGE FORM
   width: 100%;
 }
 
+.badge-wrap::after {
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+
+  top: auto;
 }
+
+  .badge-wrap::after {
+    top: auto !important;
+    left: 50% !important;
+    right: auto !important;
+
+    bottom: 120% !important;
+    transform: translateX(-50%) !important;
+  }
+
+}
+
 
 .vendor-category{
   display:flex;
