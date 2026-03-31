@@ -10,17 +10,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let isSubmitting = false;
 
   form.addEventListener("submit", async (e) => {
+    console.log("FORM SUBMIT TRIGGERED");
+
     e.preventDefault();
-
-    if (isSubmitting) return;
-    isSubmitting = true;
-
-    errorEl.classList.add("hidden");
-
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Creating account...";
-    }
 
     const businessName = document.getElementById("businessName").value.trim();
     const email = document.getElementById("email").value.trim();
@@ -45,6 +37,19 @@ document.addEventListener("DOMContentLoaded", () => {
       showError("Passwords do not match.");
       resetSubmitState();
       return;
+    }
+
+        // -----------------------------
+// DEBUG REF READ (SUBMIT LEVEL)
+// -----------------------------
+    if (isSubmitting) return;
+    isSubmitting = true;
+
+    errorEl.classList.add("hidden");
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Creating account...";
     }
 
     // 🔐 Create auth user (email confirmation ON)
@@ -72,18 +77,50 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectedPlan = localStorage.getItem("selectedPlan");
     const billingType = localStorage.getItem("billingType") || "monthly";
 
+    // -----------------------------
+// RESOLVE REFERRAL CODE → PARTNER ID
+// -----------------------------
+let partnerId = null;
+
+const storedReferral = localStorage.getItem("referral_code")?.trim().toUpperCase();
+console.log("RAW storedReferral:", storedReferral);
+console.log("TYPE:", typeof storedReferral);
+
+if (storedReferral) {
+  const { data: partners, error } = await supabase
+  .from("partners")
+  .select("id, referral_code");
+
+console.log("PARTNERS DATA:", partners);
+console.log("PARTNERS ERROR:", error);
+
+  if (partners && partners.length > 0) {
+    const match = partners.find(
+      p => p.referral_code?.trim().toUpperCase() === storedReferral
+    );
+
+    if (match) {
+      partnerId = match.id;
+    }
+  }
+}
+
+console.log("RESOLVED partnerId:", partnerId);
+
     if (!selectedPlan) {
       showError("Please select a plan first.");
       resetSubmitState();
       return;
     }
-
-const { error: vendorError } = await supabase
+   console.log("BEFORE VENDOR INSERT");
+   const insertResponse = await supabase
   .from("vendors")
-  .insert({
+  .insert([
+    {
     auth_user_id: data.user.id,
     name: businessName,
     email: email,
+    referred_by_partner_id: partnerId,
     plan_tier: selectedPlan,
     billing_cycle: billingType,
     subscription_status: null,
@@ -92,7 +129,10 @@ const { error: vendorError } = await supabase
     // ✅ CONSENT RECORD
     terms_accepted: true,
     terms_accepted_at: new Date().toISOString()
-  });
+  }
+  ]);
+const { data: vendorData, error: vendorError } = insertResponse;
+console.log("AFTER VENDOR INSERT", vendorError);
 
     if (vendorError) {
       console.error("Vendor creation error:", vendorError);

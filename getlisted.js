@@ -1,4 +1,16 @@
 document.addEventListener("DOMContentLoaded", () => {
+
+// -----------------------------
+// CAPTURE REFERRAL CODE (ENTRY PAGE)
+// -----------------------------
+const urlParams = new URLSearchParams(window.location.search);
+const referralCode = urlParams.get("ref");
+
+if (referralCode) {
+  localStorage.setItem("referral_code", referralCode);
+  console.log("REF SAVED FROM GETLISTED:", referralCode);
+}
+
   const billingToggle = document.getElementById("billingToggle");
   const planButtons = document.querySelectorAll(".glcard .btn");
 

@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const supabase = window.supabaseClient;
   const table = document.getElementById("paymentsTable");
   const verificationTable = document.getElementById("verificationsTable");
+  const partnersTable = document.getElementById("partnersTable");
   console.log("Verification table:", verificationTable);
 
   // -----------------------------
@@ -15,35 +16,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // -----------------------------
-  // LOAD PAYMENTS
-  // -----------------------------
-  const { data: payments, error } = await supabase
-    .from("vendorpayments")
-    .select(`
-      id,
-      plan,
-      billing_type,
-      status,
-      transfer_proof_url,
-      vendors ( id, name, email )
-    `)
-    .eq("payment_method", "bank")
-    .eq("status", "pending")
+// -----------------------------
+// LOAD PAYMENTS
+// -----------------------------
+const { data: payments, error } = await supabase
+  .from("vendorpayments")
+  .select(`
+    id,
+    plan,
+    billing_type,
+    status,
+    transfer_proof_url,
+    vendors ( id, name, email )
+  `)
+  .eq("payment_method", "bank")
+  .eq("status", "pending");
 
-    console.log("PAYMENTS RESULT:", payments, error);
-    
+console.log("PAYMENTS RESULT:", payments, error);
 
-  if (error) {
-    table.innerHTML = `<tr><td colspan="6">${error.message}</td></tr>`;
-    return;
-  }
-
-  if (!payments.length) {
-    table.innerHTML = `<tr><td colspan="6">No pending payments</td></tr>`;
-    
-  }
-
+if (error) {
+  table.innerHTML = `<tr><td colspan="6">${error.message}</td></tr>`;
+} else if (!payments.length) {
+  table.innerHTML = `<tr><td colspan="6">No pending payments</td></tr>`;
+} else {
   table.innerHTML = "";
 
   payments.forEach(p => {
@@ -74,7 +69,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     table.appendChild(tr);
   });
-
+}
   // -----------------------------
 // LOAD BADGE VERIFICATIONS
 // -----------------------------
@@ -131,6 +126,42 @@ if (verificationError) {
   });
 }
 
+// -----------------------------
+// LOAD PENDING PARTNERS
+// -----------------------------
+const { data: partners, error: partnersError } = await supabase
+  .from("partners")
+  .select("id, name, phone, state, local_government, status")
+  .eq("status", "pending");
+
+console.log("PARTNERS RESULT:", partners, partnersError);
+
+if (partnersError) {
+  partnersTable.innerHTML = `<tr><td colspan="6">${partnersError.message}</td></tr>`;
+} else if (!partners.length) {
+  partnersTable.innerHTML = `<tr><td colspan="6">No pending partners</td></tr>`;
+} else {
+  partnersTable.innerHTML = "";
+
+  partners.forEach(p => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${p.name || "—"}</td>
+      <td>${p.phone || "—"}</td>
+      <td>${p.state || "—"}</td>
+      <td>${p.local_government || "—"}</td>
+      <td>${p.status}</td>
+      <td>
+        <button class="approve-btn" data-partner-approve="${p.id}">Approve</button>
+        <button class="reject-btn" data-partner-reject="${p.id}">Reject</button>
+      </td>
+    `;
+
+    partnersTable.appendChild(tr);
+  });
+}
+
   document.addEventListener("click", async (e) => {
   const row = e.target.closest("tr");
 
@@ -148,6 +179,14 @@ if (verificationError) {
 
 if (e.target.dataset.verifyReject) {
   await rejectVerification(e.target.dataset.verifyReject, row);
+}
+
+if (e.target.dataset.partnerApprove) {
+  await approvePartner(e.target.dataset.partnerApprove, row);
+}
+
+if (e.target.dataset.partnerReject) {
+  await rejectPartner(e.target.dataset.partnerReject, row);
 }
 });
 
@@ -197,7 +236,7 @@ if (e.target.dataset.verifyReject) {
   const { error: updateError } = await supabase
   .from("vendorpayments")
   .update({
-    status: "approved",
+    status: "confirmed",
     reviewed_at: now,
     approved_at: now,
     rejected_at: null,
@@ -230,6 +269,7 @@ await supabase
     expires_at: expiry
   })
   .eq("id", payment.vendor_id);
+
 
   // 3️⃣ Send email
 
@@ -484,6 +524,99 @@ async function rejectVerification(verificationId, row) {
   }
 
   alert("Verification rejected");
+
+  if (row) row.remove();
+}
+
+// -----------------------------
+// APPROVE PARTNER
+// -----------------------------
+async function approvePartner(partnerId, row) {
+
+  if (!confirm("Approve this partner?")) return;
+
+  const now = new Date().toISOString();
+
+  const { data: partner, error } = await supabase
+    .from("partners")
+    .select("id, status")
+    .eq("id", partnerId)
+    .single();
+
+  if (error || !partner) {
+    alert("Partner not found.");
+    return;
+  }
+
+  if (partner.status === "approved") {
+    alert("This partner is already approved.");
+    return;
+  }
+
+  // 1️⃣ Generate referral code
+  const referralCode =
+    "SPOT" +
+    Math.random().toString(36).substring(2, 8).toUpperCase();
+
+  // 2️⃣ Update partner
+  const { error: updateError } = await supabase
+    .from("partners")
+    .update({
+      status: "approved",
+      referral_code: referralCode
+    })
+    .eq("id", partnerId);
+
+  if (updateError) {
+    alert("Failed to approve partner.");
+    return;
+  }
+
+  alert("Partner approved");
+
+  if (row) row.remove();
+}
+
+// -----------------------------
+// REJECT PARTNER
+// -----------------------------
+async function rejectPartner(partnerId, row) {
+
+  const reason = prompt("Reason for rejection?");
+  if (!reason) return;
+
+  const now = new Date().toISOString();
+
+  const { data: partner, error } = await supabase
+    .from("partners")
+    .select("id, status")
+    .eq("id", partnerId)
+    .single();
+
+  if (error || !partner) {
+    alert("Partner not found.");
+    return;
+  }
+
+  if (partner.status === "rejected") {
+    alert("This partner is already rejected.");
+    return;
+  }
+
+  // Update partner
+  const { error: updateError } = await supabase
+    .from("partners")
+    .update({
+      status: "rejected"
+    })
+    .eq("id", partnerId);
+
+  if (updateError) {
+    alert("Failed to reject partner.");
+    return;
+  }
+
+  alert("Partner rejected");
 
   if (row) row.remove();
 }

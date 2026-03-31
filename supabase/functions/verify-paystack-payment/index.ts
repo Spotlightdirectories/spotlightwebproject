@@ -93,7 +93,7 @@ if (!existingPayment) {
   );
 }
 
-if (existingPayment.status === "active") {
+if (existingPayment.status === "confirmed") {
   return new Response(
     JSON.stringify({ message: "Already processed" }),
     { headers: corsHeaders }
@@ -106,7 +106,7 @@ if (existingPayment.status === "active") {
   const { data: updatedPayment, error: paymentUpdateError } = await supabase
   .from("vendorpayments")
   .update({
-    status: "active",
+    status: "confirmed",
     approved_at: now,
     reviewed_at: now,
     notification_sent: true
