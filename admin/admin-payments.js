@@ -3,6 +3,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const table = document.getElementById("paymentsTable");
   const verificationTable = document.getElementById("verificationsTable");
   const partnersTable = document.getElementById("partnersTable");
+  const commissionsTable = document.getElementById("commissionsTable");
+  const summaryTable = document.getElementById("commissionSummaryTable");
   console.log("Verification table:", verificationTable);
 
   // -----------------------------
@@ -160,6 +162,102 @@ if (partnersError) {
 
     partnersTable.appendChild(tr);
   });
+}
+
+// -----------------------------
+// LOAD ALL COMMISSIONS
+// -----------------------------
+const { data: commissions, error: commissionsError } = await supabase
+  .from("commissions")
+  .select(`
+    amount,
+    status,
+    created_at,
+    partners ( name, referral_code, status ),
+    vendors ( name ),
+    vendorpayments ( plan )
+  `)
+  .order("created_at", { ascending: false });
+
+console.log("COMMISSIONS RESULT:", commissions, commissionsError);
+
+if (commissionsError) {
+  commissionsTable.innerHTML = `<tr><td colspan="8">${commissionsError.message}</td></tr>`;
+} else if (!commissions.length) {
+  commissionsTable.innerHTML = `<tr><td colspan="8">No commissions</td></tr>`;
+} else {
+  commissionsTable.innerHTML = "";
+
+  commissions.forEach(c => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${c.partners?.name || "—"}</td>
+      <td>${c.partners?.referral_code || "—"}</td>
+      <td>${c.vendors?.name || "—"}</td>
+      <td>${c.vendorpayments?.plan || "—"}</td>
+      <td>₦${(Number(c.amount) / 100).toLocaleString()}</td>
+      <td><span class="status-badge status-${c.status}">${c.status}</span></td>
+      <td>${c.partners?.status || "—"}</td>
+      <td>${new Date(c.created_at).toLocaleDateString()}</td>
+    `;
+
+    commissionsTable.appendChild(tr);
+  });
+
+// ==============================
+// COMMISSION SUMMARY (PER PARTNER)
+// ==============================
+const summaryMap = {};
+
+commissions.forEach(c => {
+  const partnerId = c.partners?.id || "unknown";
+
+  if (!summaryMap[partnerId]) {
+    summaryMap[partnerId] = {
+      id: c.partners?.id,
+      name: c.partners?.name || "—",
+      code: c.partners?.referral_code || "—",
+      pending: 0,
+      available: 0,
+      paid: 0
+    };
+  }
+
+  const amount = Number(c.amount) / 100;
+
+  if (c.status === "pending") summaryMap[partnerId].pending += amount;
+  if (c.status === "available") summaryMap[partnerId].available += amount;
+  if (c.status === "paid") summaryMap[partnerId].paid += amount;
+});
+
+if (!summaryTable) {
+  console.error("Summary table not found");
+  return;
+}
+summaryTable.innerHTML = "";
+
+Object.values(summaryMap).forEach(p => {
+  const tr = document.createElement("tr");
+
+  tr.innerHTML = `
+  <td>${p.name}</td>
+  <td>${p.code}</td>
+  <td>₦${Math.round(p.pending).toLocaleString()}</td>
+  <td>₦${Math.round(p.available).toLocaleString()}</td>
+  <td>₦${Math.round(p.paid).toLocaleString()}</td>
+  <td>
+    ${
+      p.available > 0
+        ? `<button class="approve-btn" data-pay="${p.id}">Pay</button>`
+        : "-"
+    }
+  </td>
+`;
+
+  summaryTable.appendChild(tr);
+});
+
 }
 
   document.addEventListener("click", async (e) => {
@@ -336,7 +434,7 @@ await supabase
 
   console.log("CURRENT STATUS:", payment.status);
 
-  if (payment.status !== "awaiting_review") {
+  if (payment.status !== "pending") {
   alert("This payment is rejected.");
   return;
 }

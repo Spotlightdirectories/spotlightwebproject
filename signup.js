@@ -144,6 +144,7 @@ console.log("AFTER VENDOR INSERT", vendorError);
     // 🔥 CLEAR PLAN INTENT AFTER SUCCESS
     localStorage.removeItem("selectedPlan");
     localStorage.removeItem("billingType");
+    localStorage.removeItem("referral_code");
 
     // Store business name and email for onboarding
     localStorage.setItem("pendingBusinessName", businessName);

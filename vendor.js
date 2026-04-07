@@ -47,6 +47,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       `)
       .eq("subscription_status", "active")
       .eq("onboarding_completed", true);
+
+    if (error) {
+     console.error("Vendors fetch error:", error);
+     vendorsGrid.innerHTML = "<p>Error loading vendors</p>";
+     return;
+    }
      
 
 
@@ -67,21 +73,20 @@ if (branchesError) {
   console.error("Branches fetch error:", branchesError);
 }
 
-    if (error) {
-      console.error("Vendors fetch error:", error);
-      vendorsGrid.innerHTML = "<p>Error loading vendors</p>";
-      return;
-    }
-
     vendors = data || [];
+
+  const vendorMap = {};
+   vendors.forEach(v => {
+    vendorMap[v.id] = v;
+  });
 
 if (branches && branches.length) {
 
   branches.forEach(branch => {
 
-  const parentVendor = vendors.find(v => v.id === branch.vendor_id);
+  const parentVendor = vendorMap[branch.vendor_id];
 
-if (!parentVendor || !parentVendor.onboarding_completed) return;
+if (!parentVendor || parentVendor.onboarding_completed !== true) return;
 
     vendors.push({
       id: branch.id,
@@ -305,19 +310,32 @@ function renderBadge(status) {
 
     navigator.geolocation.getCurrentPosition(
       pos => {
-        userLocation = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude
-        };
-        applyFilters();
-      },
+
+         // 🔒 Accuracy check
+     if (pos.coords.accuracy > 100) {
+        console.warn("Low accuracy location:", pos.coords.accuracy);
+
+        locationHint.classList.remove("hidden");
+        locationHint.textContent =
+         "Location not accurate. Please turn on GPS or move outdoors.";
+
+        return;
+      }
+
+       userLocation = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude
+      };
+
+      applyFilters();
+     },
       err => {
         console.error("Location error:", err);
      },
      {
-      enableHighAccuracy: false,
-      timeout: 5000,
-      maximumAge: 60000
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 0
      }
    );
   });

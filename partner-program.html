@@ -5,68 +5,279 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Partner Program | Spotlight</title>
-<link rel="stylesheet" href="style2.css">
-<link rel="stylesheet" href="navbar.css">
+
+<link rel="stylesheet" href="partner-program.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+
 </head>
 
 <body>
 
- <header class="navbar">
+<!-- HEADER -->
+<header class="partner-header">
+  <div class="partner-header-inner partner-container">
 
-  <div class="logo-left">
-    <a href="index.html">
-      <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg">
-    </a>
-    <a href="index.html" class="home">Home</a>
+    <div class="partner-logo">
+      <img src="images/partner-logo.jpg" class="partner-logo-img" alt="PartnerProgram Logo">
+      <span class="partner-logo-text">PartnerProgram</span>
+    </div>
+
+    <nav class="partner-nav">
+      <a href="#rewards">Rewards</a>
+      <a href="contact-us.html">Contact</a>
+      <a href="index.html">Home</a>
+    </nav>
+
+    <div class="partner-nav-actions">
+      <a href="#login" class="partner-login-link">Login</a>
+      <a href="#signup" class="partner-btn-primary">Sign Up Now</a>
+    </div>
+
   </div>
-
-  <nav>
-
-    <!-- HAMBURGER OPEN -->
-    <button class="menu-open hide-desktop" aria-label="Open menu">
-      <img src="images/hbopen.png" alt="Open menu" width="32" height="32">
-    </button>
-
-    <ul class="nav-links">
-
-      <!-- CLOSE BUTTON -->
-      <li class="menu-close">
-        <button class="xclose" aria-label="Close menu">
-          <img src="images/xclose.png" alt="Close menu" width="32" height="32">
-        </button>
-      </li>
-
-      <li><a href="aboutUs.html">Why Spotlight?</a></li>
-      <li><a href="getListed.html">Get Listed</a></li>
-      <li><a href="contact-us.html">Contact Us</a></li>
-      <li><a href="FAQ.html">FAQ</a></li>
-      <li><a href="feedback.html">Feedback</a></li>
-
-    </ul>
-
-  </nav>
-
 </header>
 
-<section style="padding:140px 40px; text-align:center;">
+<main>
 
-<h1>Partner Program</h1>
+<!-- HERO -->
+<section id="signup" class="partner-hero partner-section">
+  <div class="partner-container">
 
-<p style="max-width:600px; margin:20px auto; font-size:18px;">
-Our Partner Program is currently under development.
-Soon you will be able to collaborate with Spotlight to grow local businesses and earn rewards.
-</p>
+    <div class="partner-hero-left">
+      <span class="partner-badge">New Partnership Intake Open</span>
 
-<p style="margin-top:20px; font-weight:600;">
-🚧 Coming Soon
-</p>
+     <h1 class="partner-font-headline">
+  <span class="line-desktop">
+    Do You Want to Be
+  </span>
 
-<a href="index.html" class="btn-primary" style="margin-top:30px; display:inline-block;">
-Return to Home
-</a>
+  <span class="line-mobile">
+    Do You Want
+  </span>
 
+  <span class="line-mobile">
+    to Be
+  </span>
+
+  <span>
+    <span class="partner-highlight">Our Partner</span>?
+  </span>
+</h1>
+
+      <p class="partner-hero-subtext">
+        Join our high-paying affiliate network and start earning commissions today with our industry-leading tools and support.
+      </p>
+
+      <div class="partner-hero-image"></div>
+    </div>
+
+    <div class="partner-card">
+      <h2 class="partner-font-headline partner-text-center">Get Started</h2>
+
+      <form class="partner-form">
+
+        <label>Full Name</label>
+        <input type="text" placeholder="Enter your name" class="partner-input">
+
+        <label>Email Address</label>
+        <input type="email" placeholder="name@email.com" class="partner-input">
+
+        <label>Phone Number</label>
+        <input type="tel" placeholder="+234-802-345-6789" class="partner-input">
+
+        <label>State</label>
+        <input type="text" placeholder="Enter your state" class="partner-input">
+
+        <label>LGA</label>
+        <input type="text" placeholder="Enter your LGA" class="partner-input">
+
+        <label for="dob">Date of Birth</label>
+        <input type="date" id="dob" name="dob" class="partner-input" value="">
+
+        <button type="submit" name="submit" class="partner-btn-primary">Apply to Join</button>
+
+        <p class="partner-consent">
+          By signing up, you agree to our 
+          <a href="#">Terms</a> and 
+          <a href="#">Privacy Policy</a>
+        </p>
+
+      </form>
+    </div>
+
+  </div>
 </section>
 
-<script src="script2.js"></script>
+<!-- REWARDS -->
+<section id="rewards" class="partner-section">
+  <div class="partner-container">
+
+    <div class="partner-text-center">
+      <h2 class="partner-rewards-heading">Partner Rewards & Bonuses</h2>
+      <p class="partner-rewards-subtext">
+        We reward performance. As you grow, your earnings grow with you.
+      </p>
+    </div>
+
+    <div class="partner-grid">
+
+      <!-- Card 1 -->
+
+      <div class="partner-reward-card">
+
+  <div class="partner-card-icon partner-icon-1">
+    <span class="material-symbols-outlined">payments</span>
+  </div>
+
+  <h3 class="partner-reward-title">High Commission</h3>
+
+     <p class="partner-reward-text">
+       Earn 20% commission on every paid vendor you bring, plus 10% on renewals.
+     </p>
+
+     <h2 class="partner-card-value partner-value-1">20%</h2>
+     <small>FLAT RATE</small>
+
+   </div>
+
+   <!-- Card 2 -->
+
+      <div class="partner-reward-card partner-reward-featured">
+        <div class="partner-card-icon partner-icon-2">
+          <span class="material-symbols-outlined">military_tech</span>
+        </div>
+
+        <h3 class="partner-reward-title">Monthly Performance Bonus</h3>
+
+         <p class="partner-reward-text">
+          Hit 50 paid vendors in a month and earn a ₦30,000 cash bonus.
+         </p>
+
+         <h2 class="partner-card-value partner-value-2">₦30,000</h2>
+        <small>TARGET BONUS</small>
+       </div>
+
+        <!-- Card 3 -->
+
+      <div class="partner-reward-card">
+        <div class="partner-card-icon partner-icon-3">
+          <span class="material-symbols-outlined">groups</span>
+        </div>
+
+        <h3 class="partner-reward-title">Growth Rewards</h3>
+
+          <p class="partner-reward-text">
+             Earn ₦500 for every verified free vendor you onboard after your first 50 paid vendors.
+          </p>
+
+          <h2 class="partner-card-value partner-value-3">₦500 + 5%</h2>
+        <small>BONUS + TEAM EARNINGS</small>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<section id="login" class="partner-section">
+  <div class="partner-container">
+
+    <div class="partner-login">
+
+      <!-- LEFT IMAGE -->
+      <div class="partner-login-left"></div>
+
+      <!-- RIGHT -->
+      <div class="partner-login-right">
+
+        <h2 class="partner-font-headline">Already a Partner?</h2>
+
+        <p class="partner-login-subtext">
+          Access your dashboard to track earnings and performance.
+        </p>
+
+        <form class="partner-form partner-login-form">
+
+          <label>Email Address</label>
+          <input type="email" name="email" placeholder="Enter your email address" class="partner-input" autocomplete="off">
+
+          <label>Password</label>
+          <div class="partner-password-field">
+         <input type="password" name="password" placeholder="Enter your password" class="partner-input" id="login-password" autocomplete="new-password">
+         <span class="partner-password-toggle material-symbols-outlined" id="toggle-password">visibility</span>
+         </div>
+
+          <button type="submit" class="partner-btn-primary">
+            Login to Dashboard
+          </button>
+
+          <div class="partner-remember-row">
+
+           <label class="partner-remember">
+            <input type="checkbox" name="remember">
+             Remember me
+           </label>
+
+           <a href="#" class="partner-forgot-password">Forgot Password?</a>
+
+         </div>
+
+        </form>
+
+        <div class="partner-login-footer">
+          <small>New here?</small><br>
+          <a href="#signup">Apply for an account</a>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<footer class="partner-footer">
+  <div class="partner-container">
+
+    <div class="partner-footer-grid">
+
+      <div class="partner-footer-brand">
+        <h3 class="partner-font-headline">PartnerProgram</h3>
+        <p class="partner-footer-desc">
+          The premium destination for high-performing affiliate marketers.
+        </p>
+      </div>
+
+      <div>
+        <h4 class="partner-footer-title">Quick Links</h4>
+        <ul class="partner-footer-links">
+          <li><a href="#">Program Terms</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Marketing Assets</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="partner-footer-title">Support</h4>
+        <ul class="partner-footer-links">
+          <li><a href="#">FAQ</a></li>
+          <li><a href="contact-us.html">Contact Support</a></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="partner-footer-bottom">
+      <span>© 2026 Spotlight Digital Services Ltd. All Rights Reserved.</span>
+    </div>
+
+  </div>
+</footer>
+
+<script defer src="partner-program.js"></script>
+
 </body>
 </html>

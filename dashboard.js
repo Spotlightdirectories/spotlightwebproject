@@ -136,7 +136,7 @@ if (branchesCard && manageBranchesBtn) {
      .from("vendorpayments")
      .select("amount")
      .eq("vendor_id", vendor.id)
-     .in("status", ["approved", "active"])
+     .in("status", ["confirmed"])
      .order("approved_at", { ascending: false })
      .limit(1)
      .single();
