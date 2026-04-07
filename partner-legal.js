@@ -1,43 +1,69 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-  const tabs = document.querySelectorAll(".partner-tab");
-  const contents = document.querySelectorAll(".partner-tab-content");
+  // PASSWORD TOGGLE (safe — only runs if elements exist)
+  const togglePassword = document.getElementById("toggle-password");
+  const passwordInput = document.getElementById("login-password");
 
-  tabs.forEach(tab => {
-    tab.addEventListener("click", () => {
-
-      // remove active from all tabs
-      tabs.forEach(t => t.classList.remove("active"));
-
-      // hide all content
-      contents.forEach(c => c.classList.remove("active"));
-
-      // activate clicked tab
-      tab.classList.add("active");
-
-      // show matching content
-      const target = tab.getAttribute("data-tab");
-      document.getElementById(target).classList.add("active");
-
+  if (togglePassword && passwordInput) {
+    togglePassword.addEventListener("click", () => {
+      passwordInput.type =
+        passwordInput.type === "password" ? "text" : "password";
     });
-  });
+  }
 
-  const faqItems = document.querySelectorAll(".partner-faq-item");
+  // TABS
+const tabs = document.querySelectorAll(".partner-tab");
+const contents = document.querySelectorAll(".partner-tab-content");
+
+tabs.forEach(tab => {
+  tab.addEventListener("click", () => {
+    const target = tab.getAttribute("data-tab");
+
+    tabs.forEach(t => t.classList.remove("active"));
+    contents.forEach(c => c.classList.remove("active"));
+
+    tab.classList.add("active");
+
+    const targetContent = document.getElementById(target);
+    if (targetContent) targetContent.classList.add("active");
+  });
+});
+
+// FAQ ACCORDION
+const faqItems = document.querySelectorAll(".partner-faq-item");
 
 faqItems.forEach(item => {
   const question = item.querySelector(".partner-faq-question");
 
-  question.addEventListener("click", () => {
+  if (question) {
+    question.addEventListener("click", () => {
+      faqItems.forEach(i => {
+        if (i !== item) i.classList.remove("active");
+      });
 
-    // close others (optional: remove if you want multiple open)
-    faqItems.forEach(i => {
-      if (i !== item) i.classList.remove("active");
+      item.classList.toggle("active");
     });
-
-    // toggle current
-    item.classList.toggle("active");
-
-  });
+  }
 });
 
+  });
+
+  window.addEventListener("load", () => {
+  const hash = window.location.hash.replace("#", "");
+
+  if (!hash) return;
+
+  const tabs = document.querySelectorAll(".partner-tab");
+  const contents = document.querySelectorAll(".partner-tab-content");
+
+  const targetTab = document.querySelector(`.partner-tab[data-tab="${hash}"]`);
+  const targetContent = document.getElementById(hash);
+
+  if (targetTab && targetContent) {
+    tabs.forEach(t => t.classList.remove("active"));
+    contents.forEach(c => c.classList.remove("active"));
+
+    targetTab.classList.add("active");
+    targetContent.classList.add("active");
+  }
 });

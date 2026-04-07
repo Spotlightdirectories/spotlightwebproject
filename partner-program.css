@@ -729,3 +729,35 @@ body {
 .partner-faq-item.active .partner-faq-answer {
   display: block;
 }
+
+/* =========================
+   LEGAL NAV RIGHT ALIGN
+========================= */
+
+.partner-legal-nav {
+  margin-left: auto;
+  display: flex;
+  gap: 12px;
+}
+
+/* =========================
+   LEGAL NAV LINK STYLE
+========================= */
+
+.partner-legal-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1c1c18;
+  text-decoration: none;
+  padding: 8px 14px;
+  border: 1px solid #ddd;
+  border-radius: 999px;
+  background: #fff;
+  transition: all 0.2s ease;
+}
+
+.partner-legal-link:hover {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}

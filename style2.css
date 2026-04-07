@@ -451,6 +451,41 @@ text-decoration:none;
 color:white;
 }
 
+/* =========================
+   FOOTER PARTNER BUTTON (FINAL FIX)
+========================= */
+
+.hfooter-partner-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ffd700;
+  color: #000; /* force dark text */
+
+  font-weight: 600;
+  font-size: 13px;
+
+  padding: 6px 12px;
+  border-radius: 8px;
+
+  text-decoration: none;
+  white-space: nowrap;
+  width: fit-content;
+
+  transition: all 0.2s ease;
+}
+
+/* 🔴 THIS IS THE FIX */
+.hfooter-support .hfooter-partner-btn {
+  color: #000;
+}
+
+.hfooter-partner-btn:hover {
+  background: #e6c200;
+  color: #fff; /* keep hover white */
+}
+
 @media(max-width:900px){
 
   .hero{
