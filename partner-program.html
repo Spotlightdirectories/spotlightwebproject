@@ -81,30 +81,35 @@
       <form class="partner-form">
 
         <label>Full Name</label>
-        <input type="text" placeholder="Enter your name" class="partner-input">
+        <input type="text" id="partner-name" placeholder="Enter your name" class="partner-input" required>
 
         <label>Email Address</label>
-        <input type="email" placeholder="name@email.com" class="partner-input">
+        <input type="email" id="partner-email" placeholder="name@email.com" class="partner-input" required>
 
         <label>Phone Number</label>
-        <input type="tel" placeholder="+234-802-345-6789" class="partner-input">
+        <input type="tel" id="partner-phone" placeholder="+234-802-345-6789" class="partner-input" required>
 
-        <label>State</label>
-        <input type="text" placeholder="Enter your state" class="partner-input">
+        <label for="partner-state">State</label>
+        <select id="partner-state" name="state" class="partner-input" required>
+        <option value="" disabled selected>Select State</option>
+        </select>
 
-        <label>LGA</label>
-        <input type="text" placeholder="Enter your LGA" class="partner-input">
+        <label for="partner-lga">LGA</label>
+        <select id="partner-lga" name="lga" class="partner-input" required>
+        <option value="" disabled selected>Select LGA</option>
+        </select>
 
-        <label for="dob">Date of Birth</label>
-        <input type="date" id="dob" name="dob" class="partner-input" value="">
+        <label for="partner-dob">Date of Birth</label>
+        <input type="date" id="partner-dob" name="dob" class="partner-input" required>
 
         <button type="submit" name="submit" class="partner-btn-primary">Apply to Join</button>
 
-        <p class="partner-consent">
-          By signing up, you agree to our 
-          <a href="#">Terms</a> and 
-          <a href="#">Privacy Policy</a>
-        </p>
+        <label class="partner-consent">
+         <input type="checkbox" id="partner-consent" required>
+         By signing up, you agree to our 
+         <a href="#">Terms</a> and 
+         <a href="#">Privacy Policy</a>
+        </label>
 
       </form>
     </div>
@@ -203,11 +208,11 @@
         <form class="partner-form partner-login-form">
 
           <label>Email Address</label>
-          <input type="email" name="email" placeholder="Enter your email address" class="partner-input" autocomplete="off">
+          <input id="login-email" type="email" name="email" placeholder="Enter your email address" class="partner-input" autocomplete="off">
 
           <label>Password</label>
           <div class="partner-password-field">
-         <input type="password" name="password" placeholder="Enter your password" class="partner-input" id="login-password" autocomplete="new-password">
+         <input id="login-password" type="password" name="password" placeholder="Enter your password" class="partner-input" autocomplete="new-password">
          <span class="partner-password-toggle material-symbols-outlined" id="toggle-password">visibility</span>
          </div>
 
@@ -222,7 +227,7 @@
              Remember me
            </label>
 
-           <a href="#" class="partner-forgot-password">Forgot Password?</a>
+           <a href="/forgot-password.html?type=partner" class="partner-forgot-password">Forgot Password?</a>
 
          </div>
 
@@ -280,6 +285,9 @@
   </div>
 </footer>
 
+<!-- Supabase CDN (FIRST) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="supabase-client.js"></script>
 <script defer src="partner-program.js"></script>
 
 </body>

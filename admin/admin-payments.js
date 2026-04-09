@@ -170,13 +170,13 @@ if (partnersError) {
 const { data: commissions, error: commissionsError } = await supabase
   .from("commissions")
   .select(`
-    amount,
-    status,
-    created_at,
-    partners ( name, referral_code, status ),
-    vendors ( name ),
-    vendorpayments ( plan )
-  `)
+  amount,
+  status,
+  created_at,
+  partners ( name, referral_code, status ),
+  vendors ( name ),
+  vendorpayments ( plan )
+`)
   .order("created_at", { ascending: false });
 
 console.log("COMMISSIONS RESULT:", commissions, commissionsError);
@@ -633,11 +633,9 @@ async function approvePartner(partnerId, row) {
 
   if (!confirm("Approve this partner?")) return;
 
-  const now = new Date().toISOString();
-
   const { data: partner, error } = await supabase
     .from("partners")
-    .select("id, status")
+    .select("id, name, email, status")
     .eq("id", partnerId)
     .single();
 
@@ -661,7 +659,7 @@ async function approvePartner(partnerId, row) {
     .from("partners")
     .update({
       status: "approved",
-      referral_code: referralCode
+      referral_code: referralCode,
     })
     .eq("id", partnerId);
 
@@ -670,7 +668,31 @@ async function approvePartner(partnerId, row) {
     return;
   }
 
-  alert("Partner approved");
+  // 3️⃣ Send email
+  const vendorReferralLink = `https://spotlightdirectories.com/getlisted?ref=${referralCode}`;
+  const partnerReferralLink = `https://spotlightdirectories.com/partner-program.html?ref=${referralCode}`;
+
+  await sendEmail({
+    to: partner.email,
+    subject: "You're Approved 🎉",
+    html: `
+      <p>Hello ${partner.name},</p>
+      <p>Your partner application has been approved.</p>
+      <p><a href="https://spotlightdirectories.com/partner-create-account.html">Create your account</a></p>
+      <p><strong>Your Referral Code:</strong> ${referralCode}</p>
+      <p><strong>Vendor Referral Link:</strong> ${vendorReferralLink}</p>
+      <p><strong>Partner Referral Link:</strong> ${partnerReferralLink}</p>
+      <p><a href="https://spotlightdirectories.com/partner-legal.html#assets"> for induction</a></p>
+    `
+  });
+
+  // 4️⃣ Mark notification sent
+  await supabase
+    .from("partners")
+    .update({ notification_sent: true })
+    .eq("id", partnerId);
+
+  alert("Partner approved and email sent");
 
   if (row) row.remove();
 }
@@ -683,11 +705,9 @@ async function rejectPartner(partnerId, row) {
   const reason = prompt("Reason for rejection?");
   if (!reason) return;
 
-  const now = new Date().toISOString();
-
   const { data: partner, error } = await supabase
     .from("partners")
-    .select("id, status")
+    .select("id, name, email, status")
     .eq("id", partnerId)
     .single();
 
@@ -701,7 +721,7 @@ async function rejectPartner(partnerId, row) {
     return;
   }
 
-  // Update partner
+  // 1️⃣ Update status
   const { error: updateError } = await supabase
     .from("partners")
     .update({
@@ -714,7 +734,25 @@ async function rejectPartner(partnerId, row) {
     return;
   }
 
-  alert("Partner rejected");
+  // 2️⃣ Send email
+  await sendEmail({
+    to: partner.email,
+    subject: "Application Update",
+    html: `
+      <p>Hello ${partner.name},</p>
+      <p>We regret to inform you that your partner application was not approved.</p>
+      <p><strong>Reason:</strong> ${reason}</p>
+      <p>You may reapply after addressing the issue.</p>
+    `
+  });
+
+  // 3️⃣ Mark notification sent
+  await supabase
+    .from("partners")
+    .update({ notification_sent: true })
+    .eq("id", partnerId);
+
+  alert("Partner rejected and email sent");
 
   if (row) row.remove();
 }

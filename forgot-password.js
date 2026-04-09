@@ -9,9 +9,10 @@ document.addEventListener("DOMContentLoaded", () => {
     msg.textContent = "Sending reset link...";
 
     const email = document.getElementById("email").value.trim();
+    localStorage.setItem("reset_type", "partner");
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: "https://spotlightdirectories.com/reset-password.html"
+    redirectTo: "https://spotlightdirectories.com/reset-password.html?type=partner"
   });
 
 

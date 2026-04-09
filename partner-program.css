@@ -12,7 +12,7 @@ body {
 
 /* Layout */
 .partner-container {
-  max-width: 1600px;
+  max-width: 1300px;
   margin: auto;
   padding: 0 20px;
 }
@@ -35,7 +35,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 15px 30px;
-  max-width: 1600px;
+  max-width: 1300px;
   margin: 0 auto;
 }
 
@@ -760,4 +760,133 @@ body {
   background: #000;
   color: #fff;
   border-color: #000;
+}
+
+/* =========================
+   PARTNER SELECT (MATCH INPUT)
+========================= */
+
+.partner-select {
+  height: 55px;
+  margin-top: 6px;
+  border-radius: 12px;
+  border: none;
+  background: #f4f3f1;
+  padding: 0 15px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1c1c18;
+  cursor: pointer;
+}
+
+/* =========================
+   PARTNER LOGIN CREATE WRAPPER
+========================= */
+
+.partner-create-wrapper {
+  width: 100%;
+  max-width: 420px;
+  margin: 60px auto;
+  padding: 30px 20px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-sizing: border-box;
+  border: 1px solid #d9d9d9;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.partner-create-wrapper h2 {
+  margin-bottom: 10px;
+}
+
+.partner-create-wrapper p {
+  margin-bottom: 25px;
+  color: #666;
+}
+
+.partner-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.partner-create-form input {
+  width: 100%;
+  height: 50px;
+  padding: 0 15px;
+  border-radius: 10px;
+  border: none;
+  background: #f4f3f1;
+  box-sizing: border-box;
+  border: 1px solid #e0e0e0;
+}
+
+.partner-create-form button {
+  width: 100%;
+  height: 50px;
+  border: none;
+  border-radius: 10px;
+  background: #f4c400;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 45px;
+}
+
+.password-field span {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.partner-create-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #f0f0f0;
+}
+
+.partner-btn-loading {
+  opacity: 0.6;
+  pointer-events: none;
+  position: relative;
+}
+
+.partner-btn-loading::after {
+  content: "";
+  width: 16px;
+  height: 16px;
+  border: 2px solid #fff;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: translateY(-50%) rotate(360deg);
+  }
+}
+
+
+@media (max-width: 480px) {
+  .partner-create-wrapper {
+    margin: 30px 15px;
+    padding: 20px 15px;
+  }
 }

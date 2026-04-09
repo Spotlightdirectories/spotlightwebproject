@@ -171,3 +171,45 @@ tbody tr:hover {
 .verification-heading {
   margin-top: 100px;
 }
+
+/* STATUS COLORS */
+.status-pending {
+  color: #ea580c; /* orange */
+  font-weight: 600;
+}
+
+.status-available {
+  color: #2563eb; /* blue */
+  font-weight: 600;
+}
+
+.status-paid {
+  color: #16a34a; /* green */
+  font-weight: 600;
+}
+
+/* TABLE CARD STYLE */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+/* first row (thead) */
+table thead tr:first-child th:first-child {
+  border-top-left-radius: 10px;
+}
+
+table thead tr:first-child th:last-child {
+  border-top-right-radius: 10px;
+}
+
+/* last row (tbody) */
+table tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 10px;
+}
+
+table tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 10px;
+}

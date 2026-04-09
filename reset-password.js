@@ -1,4 +1,8 @@
 document.addEventListener("DOMContentLoaded", async () => {
+  const params = new URLSearchParams(window.location.search);
+
+  const userType = localStorage.getItem("reset_type");
+
   const supabase = window.supabaseClient;
 
   // Password toggle
@@ -68,8 +72,13 @@ document.querySelectorAll(".toggle-password").forEach(btn => {
       msg.style.marginTop = "15px";
 
       setTimeout(() => {
-      window.location.href = "login.html";
-      }, 2500);
+      if (userType === "partner") {
+       localStorage.removeItem("reset_type");
+       window.location.href = "/partner-program.html";
+     } else {
+       window.location.href = "/login.html";
+     }
+    }, 2500);
 
   });
 });

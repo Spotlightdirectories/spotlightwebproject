@@ -5,24 +5,27 @@
   <title>Partner Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Reuse SAME admin CSS -->
   <link rel="stylesheet" href="./admin.css" />
-
   <link rel="icon" href="../images/favicon.ico" type="image/x-icon" />
 </head>
 
 <body>
   <main class="admin-container">
-    
-    <h1>My Commissions</h1>
 
+    <h1>Partner Dashboard</h1>
+
+    <!-- ========================= -->
     <!-- SUMMARY -->
+    <!-- ========================= -->
+    <h2 class="verification-heading">Earnings Summary</h2>
+
     <table>
       <thead>
         <tr>
           <th>Pending</th>
           <th>Available</th>
           <th>Paid</th>
+          <th>Total Earnings</th>
         </tr>
       </thead>
       <tbody>
@@ -30,18 +33,104 @@
           <td id="pendingTotal">₦0</td>
           <td id="availableTotal">₦0</td>
           <td id="paidTotal">₦0</td>
+          <td id="totalEarnings">₦0</td>
         </tr>
       </tbody>
     </table>
 
-    <!-- COMMISSION TABLE -->
-    <h1 class="verification-heading">Commission History</h1>
+    <!-- ========================= -->
+    <!-- PERFORMANCE -->
+    <!-- ========================= -->
+    <h2 class="verification-heading">Performance</h2>
+
+          <table>
+            <thead>
+                <tr>
+                  <th>Paid Vendors</th>
+                  <th>Free Vendors</th>
+                  <th>Referred Partners</th>
+                  <th>This Month</th>
+                  <th>Bonus Progress</th>
+                </tr>
+            </thead>
+          <tbody>
+              <tr>
+                 <td id="paidVendors">0</td>
+                 <td id="freeVendors">0</td>
+                 <td id="referredPartners">0</td>
+                 <td id="monthlyVendors">0</td>
+                 <td id="bonusProgress">0 / 50</td>
+              </tr>
+          </tbody>
+        </table>
+
+    <!-- ========================= -->
+    <!-- BONUS TRACKER -->
+    <!-- ========================= -->
+    <h2 class="verification-heading">Monthly Bonus</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Target</th>
+          <th>Current</th>
+          <th>Reward</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>50 Vendors</td>
+          <td id="bonusCurrent">0</td>
+          <td>₦30,000</td>
+          <td id="bonusStatus">Not Achieved</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ========================= -->
+    <!-- EARNINGS BREAKDOWN -->
+    <!-- ========================= -->
+    <h2 class="verification-heading">Earnings Breakdown</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Vendor Commissions</td>
+          <td id="vendorEarnings">₦0</td>
+        </tr>
+        <tr>
+          <td>Free Vendor Earnings (₦500 each)</td>
+          <td id="freeVendorEarnings">₦0</td>
+        </tr>
+        <tr>
+          <td>Override Earnings (5%)</td>
+          <td id="overrideEarnings">₦0</td>
+        </tr>
+        <tr>
+          <td>Monthly Bonuses</td>
+          <td id="bonusEarnings">₦0</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ========================= -->
+    <!-- REWARD & BONUS HISTORY -->
+    <!-- ========================= -->
+    <h2 class="verification-heading">Reward & Bonus History</h2>
 
     <table>
       <thead>
         <tr>
           <th>Vendor</th>
           <th>Plan</th>
+          <th>Type</th>
           <th>Amount</th>
           <th>Status</th>
           <th>Date</th>
@@ -50,15 +139,38 @@
 
       <tbody id="commissionTable">
         <tr>
-          <td colspan="5">Loading…</td>
+          <td colspan="6">Loading…</td>
         </tr>
       </tbody>
     </table>
+
+    <!-- ========================= -->
+    <!-- DOWNLINE -->
+    <!-- ========================= -->
+    <h2 class="verification-heading">Referred Partners (Downline)</h2>
+
+      <table>
+        <thead>
+         <tr>
+          <th>Partner Name</th>
+          <th>Vendors</th>
+          <th>Their Earnings</th>
+          <th>Your 5% Earnings</th>
+         </tr>
+        </thead>
+
+        <tbody id="downlineTable">
+         <tr>
+         <td colspan="4">Loading…</td>
+         </tr>
+        </tbody>
+      </table>
 
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../supabase-client.js"></script>
   <script src="partner-dashboard.js"></script>
+
 </body>
 </html>

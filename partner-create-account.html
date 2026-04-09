@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Partner Account</title>
+  <link rel="stylesheet" href="partner-program.css">
+</head>
+<body class="partner-create-page">
+
+<div class="partner-create-account">
+
+  <h3>Create Your Account</h3>
+   <p>Set your password to access your partner dashboard.</p>
+
+<form class="partner-create-form">
+
+  <input id="create-email" type="email" placeholder="Email" required>
+
+  <div class="password-field">
+    <input id="create-password" type="password" placeholder="Password" required>
+    <span id="toggle-create-password">👁</span>
+  </div>
+
+  <div class="password-field">
+    <input id="create-confirm-password" type="password" placeholder="Confirm Password" required>
+    <span id="toggle-confirm-password">👁</span>
+  </div>
+
+  <button type="submit">Create Account</button>
+
+</form>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script defer src="partner-create-account.js"></script>
+
+</body>
+</html>
