@@ -173,7 +173,7 @@ const { data: commissions, error: commissionsError } = await supabase
   amount,
   status,
   created_at,
-  partners ( name, referral_code, status ),
+  partners ( id, name, referral_code, status ),
   vendors ( name ),
   vendorpayments ( plan )
 `)
@@ -286,6 +286,10 @@ if (e.target.dataset.partnerApprove) {
 if (e.target.dataset.partnerReject) {
   await rejectPartner(e.target.dataset.partnerReject, row);
 }
+  if (e.target.dataset.pay) {
+  await payPartner(e.target.dataset.pay);
+}
+
 });
 
   // -----------------------------
@@ -669,7 +673,7 @@ async function approvePartner(partnerId, row) {
   }
 
   // 3️⃣ Send email
-  const vendorReferralLink = `https://spotlightdirectories.com/getlisted?ref=${referralCode}`;
+  const vendorReferralLink = `https://spotlightdirectories.com/getlisted.html?ref=${referralCode}`;
   const partnerReferralLink = `https://spotlightdirectories.com/partner-program.html?ref=${referralCode}`;
 
   await sendEmail({
@@ -678,11 +682,11 @@ async function approvePartner(partnerId, row) {
     html: `
       <p>Hello ${partner.name},</p>
       <p>Your partner application has been approved.</p>
-      <p><a href="https://spotlightdirectories.com/partner-create-account.html">Create your account</a></p>
+      <p><a href="https://spotlightdirectories.com/partner-create-account.html?partner_id=${partner.id}">Create your account</a></p>
       <p><strong>Your Referral Code:</strong> ${referralCode}</p>
       <p><strong>Vendor Referral Link:</strong> ${vendorReferralLink}</p>
       <p><strong>Partner Referral Link:</strong> ${partnerReferralLink}</p>
-      <p><a href="https://spotlightdirectories.com/partner-legal.html#assets"> for induction</a></p>
+      <p><a href="https://spotlightdirectories.com/partner-legal.html#assets"> visit here for induction</a></p>
     `
   });
 
@@ -755,6 +759,37 @@ async function rejectPartner(partnerId, row) {
   alert("Partner rejected and email sent");
 
   if (row) row.remove();
+}
+
+// -----------------------------
+// PAY PARTNER (MARK COMMISSIONS AS PAID)
+// -----------------------------
+async function payPartner(partnerId) {
+
+  if (!confirm("Mark all available commissions as paid for this partner?")) return;
+
+  const now = new Date().toISOString();
+
+  // 1️⃣ Update commissions
+  const { error } = await supabase
+    .from("commissions")
+    .update({
+      status: "paid",
+      paid_at: now
+    })
+    .eq("partner_id", partnerId)
+    .eq("status", "available");
+
+  if (error) {
+    console.error("Payment update failed:", error);
+    alert("Failed to mark commissions as paid.");
+    return;
+  }
+
+  alert("Partner commissions marked as paid");
+
+  // 2️⃣ Refresh page (simple & safe)
+  location.reload();
 }
   // -----------------------------
   // EMAIL (RESEND EDGE)

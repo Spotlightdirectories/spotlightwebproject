@@ -26,6 +26,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       data: { user },
       error: authError
     } = await supabase.auth.getUser();
+    console.log("7fc1e3c0-a9b9-4d05-93b3-a4c73f2ac199:", user.id);
 
     if (authError || !user) {
       table.innerHTML = `<tr><td colspan="6">Not logged in</td></tr>`;
@@ -48,6 +49,54 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const partnerId = partner.id;
 
+// ===============================
+// LOAD DOWNLINE PARTNERS
+// ===============================
+const downlineTable = document.getElementById("downlineTable");
+
+if (downlineTable) {
+
+  downlineTable.innerHTML = "<tr><td colspan='4'>Loading...</td></tr>";
+
+  const { data: downline, error: downlineError } = await supabase
+    .from("partners")
+    .select("id, name")
+    .eq("referred_by", partnerId);
+
+  if (downlineError) {
+    downlineTable.innerHTML = `<tr><td colspan="4">${downlineError.message}</td></tr>`;
+  } else if (!downline || downline.length === 0) {
+    downlineTable.innerHTML = `<tr><td colspan="4">No referred partners</td></tr>`;
+  } else {
+
+    downlineTable.innerHTML = "";
+
+    for (const p of downline) {
+
+      const { data: earnings } = await supabase
+        .from("commissions")
+        .select("amount")
+        .eq("partner_id", p.id);
+
+      const total = (earnings || [])
+        .reduce((sum, c) => sum + Number(c.amount || 0), 0) / 100;
+
+      const override = total * 0.05;
+
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>${p.name}</td>
+        <td>-</td>
+        <td>₦${total.toLocaleString()}</td>
+        <td>₦${override.toLocaleString()}</td>
+      `;
+
+      downlineTable.appendChild(tr);
+    }
+  }
+}
+
     // ===============================
     // FETCH COMMISSIONS
     // ===============================
@@ -62,8 +111,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         vendors (
           name,
           plan_tier
-        )
-      `)
+      ),
+      vendorpayments (
+      plan
+     )
+   `)
       .eq("partner_id", partnerId)
       .order("created_at", { ascending: false });
 
@@ -147,8 +199,82 @@ document.addEventListener("DOMContentLoaded", async () => {
     overrideEl.textContent = `₦${overrideTotal.toLocaleString()}`;
     bonusEl.textContent = `₦${bonusTotal.toLocaleString()}`;
 
+    const downloadBtn = document.getElementById("downloadStatementBtn");
+
+if (downloadBtn) {
+  downloadBtn.addEventListener("click", () => {
+    downloadCSV(commissions);
+  });
+}
+
   } catch (err) {
     console.error(err);
     table.innerHTML = `<tr><td colspan="6">Unexpected error</td></tr>`;
   }
 });
+
+function downloadCSV(data) {
+
+  if (!data || data.length === 0) {
+    alert("No data to export");
+    return;
+  }
+
+  // 1️⃣ Remove pending
+  const filtered = data.filter(c => c.status !== "pending");
+
+  if (filtered.length === 0) {
+    alert("No available or paid records to export");
+    return;
+  }
+
+  // 2️⃣ Sort by date ASC (important for balance)
+  filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+  let balance = 0;
+
+  const rows = [];
+
+  filtered.forEach(c => {
+    const amount = Number(c.amount) / 100;
+
+    let credit = 0;
+    let debit = 0;
+    let description = "";
+
+    if (c.status === "available") {
+      credit = amount;
+      balance += amount;
+      description = `${c.type} earning`;
+    }
+
+    if (c.status === "paid") {
+      debit = amount;
+      balance -= amount;
+      description = "Payout";
+    }
+
+    rows.push({
+      Date: new Date(c.created_at).toLocaleDateString(),
+      Description: description,
+      Credit: credit ? credit.toFixed(2) : "",
+      Debit: debit ? debit.toFixed(2) : "",
+      Balance: balance.toFixed(2)
+    });
+  });
+
+  const csvContent = [
+    Object.keys(rows[0]).join(","),
+    ...rows.map(r => Object.values(r).join(","))
+  ].join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "statement.csv";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}

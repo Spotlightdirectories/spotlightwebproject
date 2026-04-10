@@ -4,12 +4,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const supabase = window.supabaseClient;
 
-const { data: { user } } = await supabase.auth.getUser();
+  // ===============================
+// CAPTURE REFERRAL FROM URL → STORE
+// ===============================
+const urlParams = new URLSearchParams(window.location.search);
+const refFromUrl = urlParams.get("ref");
 
-if (!user) {
-  window.location.href = "partner-program.html";
-  return;
+if (refFromUrl) {
+  localStorage.setItem("referral_code", refFromUrl.trim().toUpperCase());
 }
+
+const { data: { session } } = await supabase.auth.getSession();
+
 
   // ===============================
   // PASSWORD TOGGLE
@@ -67,8 +73,7 @@ if (loginForm) {
       await supabase
         .from("partners")
         .update({ user_id: user.id })
-        .eq("email", user.email)
-        .is("user_id", null);
+        .eq("email", user.email);
 
      window.location.href = "/admin/partner-dashboard.html";
      loginBtn.classList.remove("partner-btn-loading");
@@ -151,26 +156,22 @@ if (age < 18) {
    return;
  }
 
- // -----------------------------
+// ===============================
 // RESOLVE REFERRAL → PARTNER ID
-// -----------------------------
+// ===============================
 let parentPartnerId = null;
 
-const storedReferral = localStorage.getItem("referral_code")?.trim().toUpperCase();
+const storedReferral = localStorage.getItem("referral_code");
 
 if (storedReferral) {
-  const { data: partners } = await supabase
+  const { data: refPartner } = await supabase
     .from("partners")
-    .select("id, referral_code");
+    .select("id")
+    .eq("referral_code", storedReferral)
+    .maybeSingle();
 
-  if (partners && partners.length > 0) {
-    const match = partners.find(
-      p => p.referral_code?.trim().toUpperCase() === storedReferral
-    );
-
-    if (match) {
-      parentPartnerId = match.id;
-    }
+  if (refPartner) {
+    parentPartnerId = refPartner.id;
   }
 }
       // INSERT INTO SUPABASE
@@ -185,7 +186,6 @@ if (storedReferral) {
             local_government: lga,
             date_of_birth: dob,
             referred_by: parentPartnerId,
-            user_id: user.id
           }
         ]);
 

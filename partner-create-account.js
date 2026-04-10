@@ -4,6 +4,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!form) return;
 
+  // ===============================
+  // FORM SUBMIT
+  // ===============================
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -18,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password
     });
@@ -30,36 +33,54 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const { data: userData } = await supabase.auth.getUser();
 
-if (userData?.user) {
-  await supabase
-    .from("partners")
-    .update({ user_id: userData.user.id })
-    .eq("email", userData.user.email);
-}
+    if (userData?.user) {
 
-    alert("Account created successfully. You can now log in.");
+      // ===============================
+      // GET partner_id FROM URL
+      // ===============================
+      const params = new URLSearchParams(window.location.search);
+      const partnerId = params.get("partner_id");
 
-    window.location.href = "partner-program.html";
+      if (!partnerId) {
+        alert("Invalid or missing partner link.");
+        return;
+      }
+
+      // ===============================
+      // LINK USER TO PARTNER
+      // ===============================
+      await supabase
+        .from("partners")
+        .update({ user_id: userData.user.id })
+        .eq("id", partnerId);
+
+      alert("Account created successfully. Check your email and confirm your account before logging in.");
+      window.location.href = "/partner-program.html";
+    }
+
   });
 
+  // ===============================
+  // PASSWORD TOGGLE
+  // ===============================
   const toggleCreate = document.getElementById("toggle-create-password");
-const createPassword = document.getElementById("create-password");
+  const createPassword = document.getElementById("create-password");
 
-if (toggleCreate) {
-  toggleCreate.addEventListener("click", () => {
-    createPassword.type =
-      createPassword.type === "password" ? "text" : "password";
-  });
-}
+  if (toggleCreate) {
+    toggleCreate.addEventListener("click", () => {
+      createPassword.type =
+        createPassword.type === "password" ? "text" : "password";
+    });
+  }
 
-const toggleConfirm = document.getElementById("toggle-confirm-password");
-const confirmPassword = document.getElementById("create-confirm-password");
+  const toggleConfirm = document.getElementById("toggle-confirm-password");
+  const confirmPassword = document.getElementById("create-confirm-password");
 
-if (toggleConfirm) {
-  toggleConfirm.addEventListener("click", () => {
-    confirmPassword.type =
-      confirmPassword.type === "password" ? "text" : "password";
-  });
-}
+  if (toggleConfirm) {
+    toggleConfirm.addEventListener("click", () => {
+      confirmPassword.type =
+        confirmPassword.type === "password" ? "text" : "password";
+    });
+  }
 
 });

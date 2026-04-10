@@ -72,12 +72,20 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  // 🔹 Prevent duplicate processing
-  const { data: existingPayment, error: fetchError } = await supabase
+    const { data: debugAllPayments } = await supabase
   .from("vendorpayments")
-  .select("id, status, vendor_id, plan, billing_type")
-  .eq("id", payment_id)
-  .single();
+  .select("id, gateway_ref, status")
+  .order("created_at", { ascending: false })
+  .limit(5);
+
+console.log("LATEST PAYMENTS:", debugAllPayments);
+
+  // 🔹 Prevent duplicate processing
+    const { data: existingPayment, error: fetchError } = await supabase
+     .from("vendorpayments")
+     .select("id, status, vendor_id, plan, billing_type")
+     .eq("id", payment_id)
+     .single();
 
   console.log("FETCHED PAYMENT:", existingPayment);
 
@@ -101,6 +109,8 @@ if (existingPayment.status === "confirmed") {
 }
 
   const now = new Date().toISOString();
+
+  console.log("PAYMENT ID:", payment_id);
 
   // 🔹 Update vendorpayment
   const { data: updatedPayment, error: paymentUpdateError } = await supabase
