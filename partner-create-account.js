@@ -7,58 +7,86 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===============================
   // FORM SUBMIT
   // ===============================
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+let isSubmitting = false;
 
-    const supabase = window.supabaseClient;
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    const email = document.getElementById("create-email").value.trim();
-    const password = document.getElementById("create-password").value;
-    const confirmPassword = document.getElementById("create-confirm-password").value;
+  if (isSubmitting) return;
+  isSubmitting = true;
 
-    if (password !== confirmPassword) {
-      alert("Passwords do not match");
-      return;
+  const submitBtn = form.querySelector("button[type='submit']");
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Creating account...";
+  }
+
+  const supabase = window.supabaseClient;
+
+  const email = document.getElementById("create-email").value.trim();
+  const password = document.getElementById("create-password").value;
+  const confirmPassword = document.getElementById("create-confirm-password").value;
+
+  if (password !== confirmPassword) {
+    alert("Passwords do not match");
+
+    isSubmitting = false;
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerText = "Create Account";
     }
+    return;
+  }
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password
-    });
+  const { data, error } = await supabase.auth.signUp({
+  email,
+  password,
+  options: {
+    emailRedirectTo: `${window.location.origin}/partner-program.html#login`
+  }
+});
 
-    if (error) {
-      alert(error.message);
-      return;
+  if (error) {
+    alert(error.message);
+
+    isSubmitting = false;
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerText = "Create Account";
     }
+    return;
+  }
 
-    const { data: userData } = await supabase.auth.getUser();
+  const user = data?.user;
 
-    if (userData?.user) {
+if (!user) {
+  alert("Account created, but session not ready. Please verify your email and log in.");
+  return;
+}
 
-      // ===============================
-      // GET partner_id FROM URL
-      // ===============================
-      const params = new URLSearchParams(window.location.search);
-      const partnerId = params.get("partner_id");
+    const params = new URLSearchParams(window.location.search);
+    const partnerId = params.get("partner_id");
 
-      if (!partnerId) {
-        alert("Invalid or missing partner link.");
-        return;
+    if (!partnerId) {
+      alert("Invalid or missing partner link.");
+
+      isSubmitting = false;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Create Account";
       }
-
-      // ===============================
-      // LINK USER TO PARTNER
-      // ===============================
-      await supabase
-        .from("partners")
-        .update({ user_id: userData.user.id })
-        .eq("id", partnerId);
-
-      alert("Account created successfully. Check your email and confirm your account before logging in.");
-      window.location.href = "/partner-program.html";
+      return;
     }
 
-  });
+    await supabase
+      .from("partners")
+      .update({ user_id: user.id })
+      .eq("id", partnerId);
+
+    alert("Account created successfully. Check your email and confirm your account before logging in.");
+    window.location.href = "/partner-program.html";
+
+});
 
   // ===============================
   // PASSWORD TOGGLE
