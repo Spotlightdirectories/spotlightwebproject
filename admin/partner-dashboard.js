@@ -41,14 +41,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       .select("id")
       .eq("user_id", user.id)
       .single();
+      console.log("PARTNER:", partner, "ERROR:", partnerError);
 
     if (partnerError || !partner) {
       table.innerHTML = `<tr><td colspan="6">Partner not found</td></tr>`;
       return;
     }
 
-    const partnerId = partner.id;
-
+const partnerId = partner.id;
+    
 // ===============================
 // LOAD DOWNLINE PARTNERS
 // ===============================
@@ -108,12 +109,14 @@ if (downlineTable) {
         status,
         type,
         created_at,
+        available_at,
         vendors (
           name,
           plan_tier
       ),
       vendorpayments (
-      plan
+      plan,
+      billing_type
      )
    `)
       .eq("partner_id", partnerId)
@@ -184,6 +187,37 @@ if (downlineTable) {
     });
 
     // ===============================
+// MONTHLY BONUS CALCULATION (STEP 3)
+// ===============================
+let monthlyQualified = 0;
+
+const now = new Date();
+const currentMonth = now.getMonth();
+const currentYear = now.getFullYear();
+
+commissions.forEach(c => {
+
+  const isVendor = c.type === "vendor";
+  const isAvailable = c.status === "available";
+  const isYearly = c.vendorpayments?.billing_type === "yearly";
+
+  const availableDate = c.available_at ? new Date(c.available_at) : null;
+
+  const isCurrentMonth =
+    availableDate &&
+    availableDate.getMonth() === currentMonth &&
+    availableDate.getFullYear() === currentYear;
+
+  if (isVendor && isAvailable && isYearly && isCurrentMonth) {
+    monthlyQualified++;
+  }
+
+});
+
+const bonusUnits = Math.floor(monthlyQualified / 50);
+const bonusAmount = bonusUnits * 30000;
+
+    // ===============================
     // UPDATE SUMMARY
     // ===============================
     pendingEl.textContent = `₦${pending.toLocaleString()}`;
@@ -199,11 +233,37 @@ if (downlineTable) {
     overrideEl.textContent = `₦${overrideTotal.toLocaleString()}`;
     bonusEl.textContent = `₦${bonusTotal.toLocaleString()}`;
 
+    // ===============================
+// UPDATE BONUS UI (YEARLY COUNT)
+// ===============================
+const bonusCurrentEl = document.getElementById("bonusCurrent");
+const bonusStatusEl = document.getElementById("bonusStatus");
+
+const monthlyEl = document.getElementById("monthlyVendors");
+const progressEl = document.getElementById("bonusProgress");
+
+if (monthlyEl) {
+  monthlyEl.innerText = monthlyQualified;
+}
+
+if (progressEl) {
+  progressEl.innerText = `${monthlyQualified} / 50`;
+}
+
+if (bonusCurrentEl) {
+  bonusCurrentEl.innerText = monthlyQualified;
+}
+
+if (bonusStatusEl) {
+  bonusStatusEl.innerText =
+    bonusUnits > 0 ? `₦${bonusAmount.toLocaleString()} Earned` : "Not Achieved";
+}
+
     const downloadBtn = document.getElementById("downloadStatementBtn");
 
 if (downloadBtn) {
   downloadBtn.addEventListener("click", () => {
-    downloadCSV(commissions);
+    downloadCSV(commissions, bonusAmount);
   });
 }
 
@@ -213,7 +273,7 @@ if (downloadBtn) {
   }
 });
 
-function downloadCSV(data) {
+function downloadCSV(data, bonusAmount) {
 
   if (!data || data.length === 0) {
     alert("No data to export");
@@ -223,7 +283,7 @@ function downloadCSV(data) {
   // 1️⃣ Remove pending
   const filtered = data.filter(c => c.status !== "pending");
 
-  if (filtered.length === 0) {
+  if (filtered.length === 0 && bonusAmount === 0) {
     alert("No available or paid records to export");
     return;
   }
@@ -262,6 +322,23 @@ function downloadCSV(data) {
       Balance: balance.toFixed(2)
     });
   });
+
+  // ===============================
+// ADD MONTHLY BONUS TO STATEMENT
+// ===============================
+if (bonusAmount > 0) {
+
+  balance += bonusAmount;
+
+  rows.push({
+    Date: new Date().toLocaleDateString(),
+    Description: "Monthly Bonus",
+    Credit: bonusAmount.toFixed(2),
+    Debit: "",
+    Balance: balance.toFixed(2)
+  });
+
+}
 
   const csvContent = [
     Object.keys(rows[0]).join(","),
