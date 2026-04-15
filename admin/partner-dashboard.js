@@ -49,7 +49,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
 const partnerId = partner.id;
-    
+
+// ===== PAID VENDORS COUNT (CORRECT SOURCE: COMMISSIONS) =====
+const { data: paidData } = await supabase
+  .from("commissions")
+  .select("vendor_id")
+  .eq("partner_id", partnerId)
+  .eq("type", "vendor");
+
+const uniquePaidVendors = new Set(
+  (paidData || []).map(v => v.vendor_id)
+).size;
+
+const paidVendorsEl = document.getElementById("paidVendors");
+if (paidVendorsEl) {
+  paidVendorsEl.textContent = uniquePaidVendors;
+}
+
+ 
 // ===============================
 // LOAD DOWNLINE PARTNERS
 // ===============================
@@ -59,10 +76,17 @@ if (downlineTable) {
 
   downlineTable.innerHTML = "<tr><td colspan='4'>Loading...</td></tr>";
 
-  const { data: downline, error: downlineError } = await supabase
-    .from("partners")
-    .select("id, name")
-    .eq("referred_by", partnerId);
+const { data: downline, error: downlineError } = await supabase
+  .from("partners")
+  .select("id, name")
+  .eq("referred_by", partnerId);
+
+// SET REFERRED PARTNERS COUNT
+const referredPartnersEl = document.getElementById("referredPartners");
+
+if (referredPartnersEl) {
+  referredPartnersEl.textContent = (downline || []).length;
+}
 
   if (downlineError) {
     downlineTable.innerHTML = `<tr><td colspan="4">${downlineError.message}</td></tr>`;
@@ -201,18 +225,17 @@ commissions.forEach(c => {
   const isAvailable = c.status === "available";
   const isYearly = c.vendorpayments?.billing_type === "yearly";
 
-  const availableDate = c.available_at ? new Date(c.available_at) : null;
+  const createdDate = new Date(c.created_at);
 
   const isCurrentMonth =
-    availableDate &&
-    availableDate.getMonth() === currentMonth &&
-    availableDate.getFullYear() === currentYear;
+    createdDate.getMonth() === currentMonth &&
+    createdDate.getFullYear() === currentYear;
 
-  if (isVendor && isAvailable && isYearly && isCurrentMonth) {
-    monthlyQualified++;
-  }
+   if (isVendor && isYearly && isCurrentMonth) {
+     monthlyQualified++;
+    }
 
-});
+ });
 
 const bonusUnits = Math.floor(monthlyQualified / 50);
 const bonusAmount = bonusUnits * 30000;

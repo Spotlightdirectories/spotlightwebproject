@@ -597,255 +597,205 @@ async function loadGallery() {
     .order("display_order", { ascending: true });
 
   const imageList = images || [];
-
   const totalItems = isOwner ? limit : imageList.length;
 
-for (let i = 0; i < totalItems; i++) {
+  for (let i = 0; i < totalItems; i++) {
 
     const slot = document.createElement("div");
     slot.className = "gallery-item";
 
     if (!isOwner) {
-
-  slot.addEventListener("click", () => {
-
-    if (!imageList[i]) return;
-
-    const mediaId = imageList[i].id;
-
-    window.location.href = `vendor-product.html?media_id=${mediaId}`;
-
-  });
-
-}
+      slot.addEventListener("click", () => {
+        if (!imageList[i]) return;
+        window.location.href = `vendor-product.html?media_id=${imageList[i].id}`;
+      });
+    }
 
     if (imageList[i]) {
 
-      const img = document.createElement("img");
-      img.src = imageList[i].file_url;
-
-      const moveUpBtn = document.createElement("button");
-      moveUpBtn.className = "gallery-move-up";
-      moveUpBtn.textContent = "↑";
-
-      const moveDownBtn = document.createElement("button");
-      moveDownBtn.className = "gallery-move-down";
-      moveDownBtn.textContent = "↓";
-
-      const deleteBtn = document.createElement("button");
-      deleteBtn.className = "gallery-delete";
-      deleteBtn.textContent = "✕";
-
-      if (!isOwner) {
-      moveUpBtn.style.display = "none";
-      moveDownBtn.style.display = "none";
-      deleteBtn.style.display = "none";
-      }
-
-      deleteBtn.addEventListener("click", async () => {
-
-        const confirmDelete = confirm("Delete this image?");
-        if (!confirmDelete) return;
-
-        const fileUrl = imageList[i].file_url;
-
-        const path = fileUrl.includes("/vendor-branding/")
-        ? fileUrl.split("/vendor-branding/")[1]
-        : null;
-
-       if (!path) {
-         console.error("Invalid gallery file path:", fileUrl);
-         return;
-        }
-
-        await supabase.storage
-        .from("vendor-branding")
-        .remove([path]);
-
-        await supabase
-          .from("vendor_media")
-          .delete()
-          .eq("id", imageList[i].id);
-          
-          await loadGallery();
-
-       });
-
-moveUpBtn.addEventListener("click", async () => {
-
-  if (i === 0) return;
-
-  const current = imageList[i];
-  const above = imageList[i - 1];
-
-  const tempOrder = current.display_order;
-
-  await supabase
-    .from("vendor_media")
-    .update({ display_order: -1 })
-    .eq("id", above.id);
-
-  await supabase
-    .from("vendor_media")
-    .update({ display_order: above.display_order })
-    .eq("id", current.id);
-
-  await supabase
-    .from("vendor_media")
-    .update({ display_order: tempOrder })
-    .eq("id", above.id);
-
-  await loadGallery();
-
-});
-
-moveDownBtn.addEventListener("click", async () => {
-
-  if (i === imageList.length - 1) return;
-
-  const current = imageList[i];
-  const below = imageList[i + 1];
-
-  const tempOrder = current.display_order;
-
-  await supabase
-    .from("vendor_media")
-    .update({ display_order: -1 })
-    .eq("id", below.id);
-
-  await supabase
-    .from("vendor_media")
-    .update({ display_order: below.display_order })
-    .eq("id", current.id);
-
-  await supabase
-    .from("vendor_media")
-    .update({ display_order: tempOrder })
-    .eq("id", below.id);
-
-  await loadGallery();
-
-});
-
-      const meta = document.createElement("div");
-      meta.className = "gallery-meta";
-
-      const title = document.createElement("input");
-      title.className = "gallery-title";
-      title.placeholder = "Product or service name";
-      title.value = imageList[i].title || "";
-
-      if (!isOwner) {
-        title.readOnly = true;
-      }
-
-      const desc = document.createElement("textarea");
-      desc.className = "gallery-desc";
-      desc.placeholder = "Describe the product or service (features, size, benefits, usage, delivery if applicable)";
-      desc.value = imageList[i].description || "";
-
-      if (!isOwner) {
-        desc.readOnly = true;
-      }
-
-      const price = document.createElement("input");
-      price.className = "gallery-price";
-      price.type = "text";
-      price.placeholder = "Price";
-      price.step = "0.01";
-
-      if (!isOwner) {
-         price.readOnly = true;
-      } 
-      price.value = imageList[i].price
-        ? "₦ " + Number(imageList[i].price).toLocaleString("en-NG", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        })
-     : "";
-
-      async function saveMeta() {
-
-    let priceValue = price.value.replace(/[^\d.]/g, "");
-
-    if (priceValue) {
-      priceValue = parseFloat(priceValue);
-    } else {
-      priceValue = null;
-    }
-
-  const { data, error } = await supabase
-    .from("vendor_media")
-    .update({
-      title: title.value.trim(),
-      description: desc.value.trim(),
-      price: priceValue
-    })
-    .eq("id", imageList[i].id)
-    .select();
-
-    if (error) {
-    console.error("Update error:", error.message);
-  }
-
-}
-
-      title.addEventListener("blur", saveMeta);
-      desc.addEventListener("blur", saveMeta);
-      price.addEventListener("blur", saveMeta);
-
-      meta.appendChild(desc);
-      meta.appendChild(price);
+      const data = imageList[i];
 
       const wrapper = document.createElement("div");
       wrapper.className = "gallery-content";
 
-      wrapper.appendChild(title);
-      wrapper.appendChild(img);
+      const img = document.createElement("img");
+      img.src = data.file_url;
+
+      /* ---------- TITLE ---------- */
+      const title = document.createElement("input");
+        title.className = "gallery-title";
+        title.value = data.title || "";
+
+        if (isOwner) {
+        title.placeholder = "Product or service name";
+        } else {
+        title.readOnly = true;
+
+        if (!data.title) {
+        title.style.display = "none";
+        }
+       }
+
+      /* ---------- KEY DETAILS ---------- */
+      const rawKeyDetails = data.key_details || "";
+
+      const keyDetailsInput = document.createElement("textarea");
+      keyDetailsInput.className = "gallery-key-details";
+      keyDetailsInput.value = rawKeyDetails;
+      keyDetailsInput.placeholder = "Key Details (each on a new line)";
+
+      const keyDetailsPreview = document.createElement("div");
+      keyDetailsPreview.className = "gallery-key-preview";
+
+      const lines = rawKeyDetails
+        .split("\n")
+        .map(l => l.trim())
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(line => line.length > 22 ? line.slice(0, 22) + "..." : line);
+
+      keyDetailsPreview.innerHTML = lines.map(l => `• ${l}`).join("<br>");
+
+      /* ---------- DESCRIPTION ---------- */
+      const desc = document.createElement("textarea");
+      desc.className = "gallery-desc";
+      desc.value = data.description || "";
+      desc.placeholder = "Product description";
+
+      if (!isOwner) desc.style.display = "none";
+
+      /* ---------- PRICE ---------- */
+      const price = document.createElement("input");
+      price.className = "gallery-price";
+      price.type = "text";
+
+      price.addEventListener("input", () => {
+      price.value = price.value.replace(/[^\d.]/g, "");
+     });
+
+      price.value = data.price
+        ? "₦ " + Number(data.price).toLocaleString("en-NG", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })
+        : "";
+
+      if (!isOwner) price.readOnly = true;
+
+      /* ---------- SAVE (DEBOUNCE) ---------- */
+      let saveTimer;
+
+ function saveMeta() {
+
+  clearTimeout(saveTimer);
+
+  if (saveStatus) {
+    saveStatus.textContent = "Saving...";
+  }
+
+  saveTimer = setTimeout(async () => {
+
+    const cleanTitle = title.value.trim();
+
+    if (!cleanTitle) {
+      if (saveStatus) saveStatus.textContent = "Title required";
+      return;
+    }
+
+    let priceValue = price.value.replace(/[^\d.]/g, "");
+    priceValue = priceValue ? parseFloat(priceValue) : null;
+
+    const rawLines = keyDetailsInput.value.split("\n");
+
+    const cleanedKeyDetails = rawLines
+      .map(l => l.trim())
+      .filter(l => l.length > 0)
+      .slice(0, 2)
+      .join("\n");
+
+    const { error } = await supabase
+      .from("vendor_media")
+      .update({
+        title: cleanTitle,
+        description: desc.value.trim(),
+        key_details: cleanedKeyDetails,
+        price: priceValue
+      })
+      .eq("id", data.id);
+
+    if (error) {
+      if (saveStatus) saveStatus.textContent = "Failed";
+      return;
+    }
+
+    if (saveStatus) saveStatus.textContent = "Saved";
+
+    setTimeout(() => {
+      if (saveStatus) saveStatus.textContent = "";
+    }, 1200);
+
+  }, 600);
+
+}
 
       if (isOwner) {
-        wrapper.appendChild(moveUpBtn);
-        wrapper.appendChild(moveDownBtn);
-        wrapper.appendChild(deleteBtn);
+        title.addEventListener("input", saveMeta);
+        desc.addEventListener("input", saveMeta);
+        price.addEventListener("input", saveMeta);
+        keyDetailsInput.addEventListener("input", saveMeta);
       }
 
+      /* ---------- META ---------- */
+  const meta = document.createElement("div");
+  meta.className = "gallery-meta";
+
+  const saveStatus = document.createElement("div");
+  saveStatus.className = "save-status";
+  meta.appendChild(saveStatus);
+     
+  if (isOwner) {
+
+  const keyLabel = document.createElement("div");
+  keyLabel.textContent = "Key Details";
+  keyLabel.className = "field-label";
+
+  const priceLabel = document.createElement("div");
+  priceLabel.textContent = "Price";
+  priceLabel.className = "field-label";
+
+  meta.appendChild(keyLabel);
+  meta.appendChild(keyDetailsInput);
+
+  meta.appendChild(desc);
+
+  meta.appendChild(priceLabel);
+  meta.appendChild(price);
+
+} else {
+
+  meta.appendChild(keyDetailsPreview);
+  meta.appendChild(price);
+
+}
+      wrapper.appendChild(title);
+      wrapper.appendChild(img);
       wrapper.appendChild(meta);
 
       slot.appendChild(wrapper);
 
     } else if (isOwner && !isFree) {
 
-  const placeholder = document.createElement("div");
-  placeholder.className = "gallery-placeholder";
-  placeholder.textContent = "+";
+      const wrapper = document.createElement("div");
+      wrapper.className = "gallery-content";
 
-  const meta = document.createElement("div");
-  meta.className = "gallery-meta";
+      const placeholder = document.createElement("div");
+      placeholder.className = "gallery-placeholder";
+      placeholder.textContent = "+";
 
-  const title = document.createElement("div");
-  title.className = "gallery-title";
-  title.textContent = "Title";
+      wrapper.appendChild(placeholder);
+      slot.appendChild(wrapper);
 
-  const desc = document.createElement("div");
-  desc.className = "gallery-desc";
-  desc.textContent = "Description";
-
-  const price = document.createElement("div");
-  price.className = "gallery-price";
-  price.textContent = "Price";
-
-  meta.appendChild(desc);
-  meta.appendChild(price);
-
-  const wrapper = document.createElement("div");
-  wrapper.className = "gallery-content";
-
-  wrapper.appendChild(placeholder);
-  wrapper.appendChild(meta);
-
-  slot.appendChild(wrapper);
-
-}
+    }
 
     grid.appendChild(slot);
 
@@ -854,6 +804,7 @@ moveDownBtn.addEventListener("click", async () => {
 }
 
 loadGallery();
+
 
 async function loadVideo() {
 
@@ -1285,27 +1236,6 @@ if (logoInput) {
   });
   }
  }
-}
-
-function sanitizeHTML(input) {
-  if (!input) return "";
-
-  const allowedTags = ["B", "I", "U", "STRONG", "EM", "BR"];
-
-  const temp = document.createElement("div");
-  temp.innerHTML = input;
-
-  const elements = temp.querySelectorAll("*");
-
-  elements.forEach(el => {
-    if (!allowedTags.includes(el.tagName)) {
-      el.replaceWith(document.createTextNode(el.textContent));
-    } else {
-      [...el.attributes].forEach(attr => el.removeAttribute(attr.name));
-    }
-  });
-
-  return temp.innerHTML;
 }
 
 function getSafePlanTier(plan) {

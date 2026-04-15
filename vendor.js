@@ -271,7 +271,7 @@ function renderBadge(status) {
             v.longitude
           )
         }))
-        .filter(v => v.distance <= 10)
+        .filter(v => v.distance <= 15)
         .sort((a, b) => a.distance - b.distance);
     }
 
@@ -317,9 +317,7 @@ function renderBadge(status) {
 
         locationHint.classList.remove("hidden");
         locationHint.textContent =
-         "Location not accurate. Please turn on GPS or move outdoors.";
-
-        return;
+           "Using approximate location. Results may be less accurate.";
       }
 
        userLocation = {
@@ -329,9 +327,31 @@ function renderBadge(status) {
 
       applyFilters();
      },
-      err => {
-        console.error("Location error:", err);
-     },
+     err => {
+  console.error("Location error:", err);
+
+  // ===============================
+  // GEOJS FALLBACK
+  // ===============================
+  fetch("https://get.geojs.io/v1/ip/geo.json")
+    .then(res => res.json())
+    .then(data => {
+      userLocation = {
+        lat: parseFloat(data.latitude),
+        lng: parseFloat(data.longitude)
+      };
+
+      locationHint.classList.remove("hidden");
+      locationHint.textContent =
+        "Using approximate location based on network.";
+
+      applyFilters();
+    })
+    .catch(e => {
+      console.error("GeoJS fallback failed:", e);
+    });
+},
+
      {
       enableHighAccuracy: true,
       timeout: 15000,

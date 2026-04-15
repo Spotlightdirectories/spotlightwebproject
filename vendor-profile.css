@@ -183,6 +183,40 @@ body {
   flex-wrap:wrap;
 }
 
+.hero-actions a {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  margin-right: 10px;
+  transition: all 0.2s ease;
+}
+
+/* WhatsApp = primary */
+#whatsappLink {
+  background: #25D366;
+  color: #fff;
+}
+
+/* Map = secondary */
+#mapLink {
+  background: #f1f1f1;
+  color: #333;
+}
+
+.hero-actions a:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+
+.contact-prompt {
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: #444;
+}
+
 @media (max-width: 600px){
 
   /* COVER IMAGE */
@@ -615,17 +649,17 @@ body {
 ================================ */
 
 .gallery-content {
-  position:relative;
-  display:flex;
-  flex-direction:column;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .gallery-content img {
   width:100%;
   height:110px;
   object-fit:contain;
-  background:#f3f4f6;
-  order:2;
+  background:#ffffff;
   transition:transform 0.2s ease;
 }
 
@@ -672,34 +706,59 @@ body {
 ================================ */
 
 .gallery-meta {
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  padding:6px;
-  order:3;
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  min-height: 80px;
 }
 
 /* editable fields */
 
 .gallery-meta input,
 .gallery-meta textarea {
-  width:100%;
-  border:none;
-  outline:none;
-  background:#fff;
-  padding:3px 4px;
-  font-size:12px;
-  border-radius:4px;
+  width: 100%;
+  border: none;
+  outline: none;
+  background: #fff;
+
+  padding: 6px 8px;   /* ← FIXED */
+  font-size: 12px;
+  border-radius: 4px;
 }
 
 /* typography */
 
 .gallery-title {
-  font-weight:600;
-  font-size:10px;
-  padding:4px 6px;
-  border-bottom:1px solid #e5e7eb;
-  order:1;
+  width: 100%;
+
+  display: block;
+
+  text-align: center;
+
+  font-weight: 700;
+  font-size: 1rem;
+
+  border: none;
+  background: transparent;
+  outline: none;
+
+  box-shadow: none;
+
+  padding: 9px 0;   /* ← IMPORTANT: remove side padding */
+
+  margin: 0 auto;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gallery-title:focus {
+  outline: none;
+  border: none;
+  box-shadow: none;
 }
 
 .gallery-desc {
@@ -709,10 +768,47 @@ body {
 }
 
 .gallery-price {
-  font-weight:600;
+  font-weight:700;
   color:#111;
+  text-align: left;
+  font-size: 2rem;
 }
 
+.gallery-key-details {
+  width: 100%;
+  font-size: 0.9rem;
+  line-height: 1.4;
+
+  border: none;
+  background: transparent;
+  resize: none;
+
+  overflow: hidden;
+
+   /* ADD THESE */
+  white-space: pre-line;
+  max-height: 2.8em;
+}
+
+.gallery-key-preview {
+  font-size: 0.85rem;
+  line-height: 1.3;
+  color: #374151;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+
+  overflow: hidden;
+
+  text-align: left;
+}
+
+.gallery-key-details.preview-mode {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
 /* note */
 
 .media-note {
@@ -802,6 +898,36 @@ body {
     gap:8px;
   }
 
+}
+
+/* === PRODUCT PAGE LAYOUT FIX === */
+
+.product-container {
+  display: flex;
+  gap: 30px;
+  align-items: flex-start;
+}
+
+.product-container img {
+  width: 45%;
+  max-width: 400px;
+  border-radius: 10px;
+}
+
+.product-details {
+  width: 55%;
+}
+
+/* Mobile fallback */
+@media (max-width: 768px) {
+  .product-container {
+    flex-direction: column;
+  }
+
+  .product-container img,
+  .product-details {
+    width: 100%;
+  }
 }
 
 /* ===============================
@@ -938,4 +1064,16 @@ body {
   text-decoration: underline;
 }
 
+.save-status {
+  font-size: 0.7rem;
+  color: #6b7280;
+  text-align: right;
+}
+
+.field-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
 

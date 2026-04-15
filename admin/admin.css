@@ -213,3 +213,86 @@ table tbody tr:last-child td:first-child {
 table tbody tr:last-child td:last-child {
   border-bottom-right-radius: 10px;
 }
+
+/* ===============================
+   MOBILE RESPONSIVE (PARTNER DASHBOARD)
+================================= */
+
+@media (max-width: 768px) {
+
+  .admin-container {
+    margin: 1.5rem;
+    padding: 16px;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+  }
+
+  .verification-heading {
+    margin-top: 40px;
+    font-size: 1.05rem;
+  }
+
+  /* REMOVE TABLE HEADER ON MOBILE */
+  table thead {
+    display: none;
+  }
+
+  /* TURN ROWS INTO CARDS */
+  table tbody tr {
+    display: block;
+    background: #fff;
+    margin-bottom: 12px;
+    padding: 12px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+
+  /* STACK CELLS */
+  table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 6px 0;
+    border: none;
+    font-size: 0.9rem;
+  }
+
+  /* LABEL STYLE */
+  table tbody td::before {
+    font-weight: 600;
+    color: #6b7280;
+  }
+
+  /* ===== SUMMARY ===== */
+  #pendingTotal::before { content: "Pending"; }
+  #availableTotal::before { content: "Available"; }
+  #paidTotal::before { content: "Paid"; }
+  #totalEarnings::before { content: "Total"; }
+
+  /* ===== PERFORMANCE ===== */
+  #paidVendors::before { content: "Paid Vendors"; }
+  #freeVendors::before { content: "Free Vendors"; }
+  #referredPartners::before { content: "Partners"; }
+  #monthlyVendors::before { content: "This Month"; }
+  #bonusProgress::before { content: "Bonus"; }
+
+  /* ===== BONUS ===== */
+  #bonusCurrent::before { content: "Current"; }
+  #bonusStatus::before { content: "Status"; }
+
+  /* ===== EARNINGS ===== */
+  #vendorEarnings::before { content: "Vendor Earnings"; }
+  #freeVendorEarnings::before { content: "Free Earnings"; }
+  #overrideEarnings::before { content: "Override"; }
+  #bonusEarnings::before { content: "Bonus"; }
+
+  /* BUTTON FULL WIDTH */
+  #downloadStatementBtn {
+    width: 100%;
+    margin-top: 10px;
+  }
+
+}

@@ -21,33 +21,7 @@
     <a href="index.html" class="home">Home</a>
   </div>
 
-  <nav>
-
-    <!-- HAMBURGER OPEN -->
-    <button class="menu-open hide-desktop" aria-label="Open menu">
-      <img src="images/hbopen.png" alt="Open menu" width="32" height="32">
-    </button>
-
-    <ul class="nav-links">
-
-      <!-- CLOSE BUTTON -->
-      <li class="menu-close">
-        <button class="xclose" aria-label="Close menu">
-          <img src="images/xclose.png" alt="Close menu" width="32" height="32">
-        </button>
-      </li>
-
-      <li><a href="aboutUs.html">Why Spotlight?</a></li>
-      <li><a href="getListed.html">Get Listed</a></li>
-      <li><a href="contact-us.html">Contact Us</a></li>
-      <li><a href="FAQ.html">FAQ</a></li>
-      <li><a href="feedback.html">Feedback</a></li>
-
-    </ul>
-
-  </nav>
-
-</header>
+ </header>
 
 
 <main class="product-page">
@@ -55,9 +29,18 @@
 
   <div class="product-container">
 
-    <div class="product-image-wrap">
-      <img id="productImage" alt="Product image">
-    </div>
+  <div class="product-media">
+
+     <div class="product-image-wrap">
+       <img id="productImage" alt="Product image">
+     </div>
+
+     <div id="productKeyDetails" class="product-key-details hidden">
+      <h3>Key Details</h3>
+      <ul id="keyDetailsList"></ul>
+     </div>
+
+   </div>
 
     <div class="product-info">
 
@@ -65,10 +48,12 @@
 
       <p id="productPrice" class="product-price"></p>
 
-      <p id="productDescription" class="product-description"></p>
       <div class="product-actions">
-        <a id="contactVendorBtn" target="_blank">Contact Vendor</a>
+       <a id="contactVendorBtn" target="_blank">Chat Vendor on WhatsApp</a>
       </div>
+
+      <p id="productDescription" class="product-description"></p>
+    </div>
 
     </div>
 
