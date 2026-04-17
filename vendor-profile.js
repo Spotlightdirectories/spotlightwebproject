@@ -201,7 +201,7 @@ if (videoNote) {
           .upload(filePath, file);
 
           if (uploadError) {
-        console.error("Upload error:", uploadError.message);
+          console.error("Upload error:", uploadError.message);
           alert("Upload failed.");
           return;
           }
@@ -212,14 +212,26 @@ if (videoNote) {
            .getPublicUrl(filePath);
 
     // save record in vendor_media
-        const { error: dbError } = await supabase
-          .from("vendor_media")
-          .insert({
-            vendor_id: vendor.id,
-            media_type: "image",
-            file_url: data.publicUrl,
-            display_order: Math.floor(Date.now() / 1000)
-         });
+        // GET CURRENT MAX ORDER
+const { data: existing } = await supabase
+  .from("vendor_media")
+  .select("display_order")
+  .eq("vendor_id", vendor.id)
+  .order("display_order", { ascending: false })
+  .limit(1);
+
+const nextOrder = existing && existing.length > 0
+  ? existing[0].display_order + 1
+  : 1;
+
+const { error: dbError } = await supabase
+  .from("vendor_media")
+  .insert({
+    vendor_id: vendor.id,
+    media_type: "image",
+    file_url: data.publicUrl,
+    display_order: nextOrder
+  });
 
     if (dbError) {
       console.error("DB error:", dbError.message);
@@ -238,6 +250,14 @@ if (videoInput) {
 
     const file = e.target.files[0];
     if (!file) return;
+
+    videoInput.disabled = true;
+
+    if (file.type !== "video/mp4") {
+     alert("Only MP4 videos are allowed.");
+     videoInput.disabled = false;
+     return;
+    }
 
     const limits = VIDEO_LIMITS[vendor.plan_tier];
 
@@ -304,6 +324,7 @@ if (existingVideos && existingVideos.length > 0) {
    if (uploadError) {
      console.error("Video upload error:", uploadError.message);
      alert("Video upload failed.");
+     videoInput.disabled = false;
      return;
    }
 
@@ -322,10 +343,13 @@ const { error: videoDbError } = await supabase
 
 if (videoDbError) {
   console.error("Video DB error:", videoDbError.message);
+  videoInput.disabled = false;
   return;
 }
 
 await loadVideo();
+videoInput.value = "";
+videoInput.disabled = false;
 
   });
 
@@ -585,7 +609,7 @@ async function loadGallery() {
   const grid = document.getElementById("galleryGrid");
   if (!grid) return;
 
-  grid.innerHTML = "";
+  grid.innerHTML = "<div class='gallery-loading'>Loading...</div>";
 
   const limit = GALLERY_LIMITS[vendor.plan_tier] ?? 0;
 
@@ -597,6 +621,8 @@ async function loadGallery() {
     .order("display_order", { ascending: true });
 
   const imageList = images || [];
+  grid.innerHTML = "";
+
   const totalItems = isOwner ? limit : imageList.length;
 
   for (let i = 0; i < totalItems; i++) {
@@ -611,20 +637,38 @@ async function loadGallery() {
       });
     }
 
-    if (imageList[i]) {
+   if (imageList[i]) {
 
-      const data = imageList[i];
+  const data = imageList[i];
+
+  // SKIP EMPTY ITEMS FOR PUBLIC
+  if (!isOwner && (!data.title || !data.title.trim())) {
+    continue;
+  }
 
       const wrapper = document.createElement("div");
       wrapper.className = "gallery-content";
 
-      const img = document.createElement("img");
-      img.src = data.file_url;
+const img = document.createElement("img");
+
+// SET SRC FIRST
+img.src = data.file_url;
+
+// THEN HANDLE ERROR (IMPORTANT ORDER)
+img.onerror = function () {
+  this.onerror = null;
+  this.src = "images/placeholder.png";
+};
+
+   img.src = data.file_url;
 
       /* ---------- TITLE ---------- */
       const title = document.createElement("input");
         title.className = "gallery-title";
         title.value = data.title || "";
+        if (!isOwner && !data.title) {
+        wrapper.style.display = "none";
+      }
 
         if (isOwner) {
         title.placeholder = "Product or service name";
@@ -695,12 +739,18 @@ async function loadGallery() {
 
   saveTimer = setTimeout(async () => {
 
-    const cleanTitle = title.value.trim();
+  const cleanTitle = title.value.trim();
 
-    if (!cleanTitle) {
-      if (saveStatus) saveStatus.textContent = "Title required";
-      return;
-    }
+if (!cleanTitle) {
+  if (saveStatus) saveStatus.textContent = "Title required";
+
+  // PREVENT EMPTY DISPLAY
+  title.style.border = "1px solid red";
+
+  return;
+} else {
+  title.style.border = "";
+}
 
     let priceValue = price.value.replace(/[^\d.]/g, "");
     priceValue = priceValue ? parseFloat(priceValue) : null;
@@ -777,11 +827,113 @@ async function loadGallery() {
   meta.appendChild(price);
 
 }
-      wrapper.appendChild(title);
-      wrapper.appendChild(img);
-      wrapper.appendChild(meta);
+wrapper.appendChild(title);
+wrapper.appendChild(img);
 
-      slot.appendChild(wrapper);
+// ===== REORDER CONTROLS (OWNER ONLY) =====
+if (isOwner) {
+
+  const controls = document.createElement("div");
+  controls.className = "gallery-controls";
+
+  const upBtn = document.createElement("button");
+  upBtn.textContent = "↑";
+
+  const downBtn = document.createElement("button");
+  downBtn.textContent = "↓";
+
+  upBtn.onclick = async () => {
+
+    if (i === 0) return;
+
+    const prev = imageList[i - 1];
+
+    await supabase
+      .from("vendor_media")
+      .update({ display_order: prev.display_order })
+      .eq("id", data.id);
+
+    await supabase
+      .from("vendor_media")
+      .update({ display_order: data.display_order })
+      .eq("id", prev.id);
+
+    await loadGallery();
+  };
+
+  downBtn.onclick = async () => {
+
+    if (i === imageList.length - 1) return;
+
+    const next = imageList[i + 1];
+
+    await supabase
+      .from("vendor_media")
+      .update({ display_order: next.display_order })
+      .eq("id", data.id);
+
+    await supabase
+      .from("vendor_media")
+      .update({ display_order: data.display_order })
+      .eq("id", next.id);
+
+    await loadGallery();
+  };
+
+  controls.appendChild(upBtn);
+  controls.appendChild(downBtn);
+
+  wrapper.appendChild(controls);
+}
+
+// ===== ADD DELETE BUTTON (OWNER ONLY) =====
+if (isOwner) {
+
+  const delBtn = document.createElement("button");
+  delBtn.className = "gallery-delete";
+  delBtn.textContent = "×";
+
+delBtn.addEventListener("click", async () => {
+
+  delBtn.disabled = true;
+
+  const confirmDelete = confirm("Delete this image?");
+  if (!confirmDelete) {
+    delBtn.disabled = false;
+    return;
+  }
+
+  // DELETE FROM DATABASE FIRST
+const { data: deleted, error: dbError } = await supabase
+  .from("vendor_media")
+  .delete()
+  .eq("id", data.id)
+  .select();
+
+console.log("DELETE RESULT:", deleted, dbError);
+
+if (dbError) {
+  alert("DB ERROR");
+  return;
+}
+
+if (!deleted || deleted.length === 0) {
+  alert("NOT DELETED (RLS BLOCK)");
+  return;
+}
+
+  // RELOAD UI IMMEDIATELY
+  await loadGallery();
+  delBtn.disabled = false;
+
+});
+
+  wrapper.appendChild(delBtn);
+}
+
+wrapper.appendChild(meta);
+
+slot.appendChild(wrapper);
 
     } else if (isOwner && !isFree) {
 
@@ -797,7 +949,7 @@ async function loadGallery() {
 
     }
 
-    grid.appendChild(slot);
+grid.appendChild(slot);
 
   }
 
@@ -850,29 +1002,57 @@ if (deleteBtn) {
     const confirmDelete = confirm("Delete this video?");
     if (!confirmDelete) return;
 
-  const videoPath = extractStoragePath(videoRecord.file_url, "vendor-videos");
+  const videoPath = videoRecord.file_url.split("/vendor-videos/")[1];
    if (!videoPath) return;
 
     await supabase.storage
       .from("vendor-videos")
       .remove([videoPath]);
 
-    await supabase
-      .from("vendor_media")
-      .delete()
-      .eq("id", videoRecord.id);
+   const { data: deleted, error } = await supabase
+     .from("vendor_media")
+     .delete()
+     .eq("id", videoRecord.id)
+     .eq("vendor_id", vendor.id)
+     .select();
 
-    await loadVideo();
+   if (error || !deleted || deleted.length === 0) {
+     alert("Video delete blocked");
+     return;
+   }
 
-  };
+// RESET VIDEO UI PROPERLY
+const player = document.getElementById("vendorVideo");
+if (player) {
+  player.src = "";
+  player.removeAttribute("src");
+  player.load();
+}
+
+const videoControls = document.getElementById("videoControls");
+if (videoControls) {
+  videoControls.classList.add("hidden");
+}
+
+// RELOAD VIDEO STATE (IMPORTANT)
+await loadVideo();
+
+};
 
 }
 
 const player = document.getElementById("vendorVideo");
 
 if (player) {
+
+  player.style.opacity = "0.5";
+
   player.src = videoRecord.file_url;
-  player.style.display = "block";
+
+  player.onloadeddata = () => {
+    player.style.opacity = "1";
+  };
+
 }
 
 const videoControls = document.getElementById("videoControls");
@@ -973,13 +1153,26 @@ if (addSocialBtn) {
 
   addSocialBtn.addEventListener("click", async () => {
 
-    const platform = document.getElementById("socialPlatform").value;
-    const url = document.getElementById("socialUrl").value.trim();
+  const platform = document.getElementById("socialPlatform").value;
+let url = document.getElementById("socialUrl").value.trim();
 
-    if (!url) {
-      alert("Please enter a link.");
-      return;
-    }
+if (!url) {
+  alert("Please enter a link.");
+  return;
+}
+
+// ENSURE VALID URL FORMAT
+if (!url.startsWith("http://") && !url.startsWith("https://")) {
+  url = "https://" + url;
+}
+
+// BASIC VALIDATION
+try {
+  new URL(url);
+} catch {
+  alert("Invalid link format.");
+  return;
+}
     
     // Check plan limit
     const { data: existingLinks } = await supabase
