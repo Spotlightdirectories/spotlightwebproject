@@ -64,6 +64,20 @@ body {
   z-index: 2;
 }
 
+.cover-delete{
+  position:absolute;
+  top:12px;
+  right:12px;
+  width:32px;
+  height:32px;
+  border:none;
+  border-radius:50%;
+  background:#ef4444;
+  color:#fff;
+  cursor:pointer;
+  z-index:5;
+}
+
 /* Content row */
 .hero-content {
   padding: 0 32px 32px;
@@ -119,6 +133,21 @@ body {
   text-align: center;
   padding: 8px;
   pointer-events: none;
+}
+
+.logo-delete{
+  position:absolute;
+  top:6px;
+  right:6px;
+  width:24px;
+  height:24px;
+  border:none;
+  border-radius:50%;
+  background:#ef4444;
+  color:#fff;
+  font-size:12px;
+  cursor:pointer;
+  z-index:5;
 }
 
 .logo-wrap.has-logo .logo-placeholder {
@@ -649,6 +678,7 @@ body {
 ================================ */
 
 .gallery-content {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;

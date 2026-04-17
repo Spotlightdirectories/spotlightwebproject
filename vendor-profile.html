@@ -38,10 +38,12 @@
   <div class="hero-cover">
   <img id="vendorCover" alt="Vendor cover" />
 
-  <label id="coverUploadLabel" class="camera-overlay hidden">
-    📷
-    <input type="file" id="coverInput" accept="image/*" hidden />
-  </label>
+   <label id="coverUploadLabel" class="camera-overlay hidden">
+     📷
+     <input type="file" id="coverInput" accept="image/*" hidden />
+   </label>
+
+   <button id="deleteCoverBtn" class="cover-delete hidden" type="button">×</button>
 
   <div class="cover-placeholder" id="coverPlaceholder">
   Recommended size: 920 × 300px<br>
@@ -55,13 +57,22 @@
 <div class="hero-content">
 
   <div class="hero-left">
-    <div class="logo-wrap">
-      <img id="vendorLogo" alt="Vendor logo" />
+      <div class="logo-wrap">
+
+        <img id="vendorLogo" alt="Vendor logo" />
+
+     <div id="logoPlaceholder" class="logo-placeholder">
+    112 × 112px<br>
+    Max size: 1MB<br>
+    JPG, PNG, WEBP
+  </div>
 
       <label id="logoUploadLabel" class="camera-overlay small hidden">
-        📷
+         📷
         <input type="file" id="logoInput" accept="image/*" hidden />
       </label>
+
+      <button id="deleteLogoBtn" class="logo-delete hidden" type="button">×</button>
     </div>
   </div>
 
@@ -232,7 +243,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-client.js"></script>
   <script src="vendor-profile.js" defer></script>
-  <script defer src="script2.js"></script>
+  <!-- <script defer src="script2.js"></script> -->
   
 </body>
 </html>

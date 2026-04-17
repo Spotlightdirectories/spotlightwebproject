@@ -397,59 +397,69 @@ videoInput.disabled = false;
     const addressEl = document.getElementById("vendorAddress");
     if (addressEl) addressEl.textContent = vendor.address || "";
 
-    // -------------------------------
-    // LOGO & COVER
-    // -------------------------------
- 
-const logo = document.getElementById("vendorLogo");
-if (logo) {
-  if (vendor.logo_url) {
-    logo.src = vendor.logo_url + "?t=" + new Date().getTime();
-    logo.style.display = "block";
-  } else {
-    logo.style.display = "none";
-  }
-}
-
-const logoWrap = document.querySelector(".logo-wrap");
-
-if (logoWrap) {
-  // Remove any existing placeholder first
-  const existing = logoWrap.querySelector(".logo-placeholder");
-  if (existing) existing.remove();
-
-  if (isOwner && !vendor.logo_url) {
-    const placeholder = document.createElement("div");
-    placeholder.className = "logo-placeholder";
-    placeholder.innerHTML = `
-      112 × 112px<br>
-      Max size: 1MB<br>
-      JPG, PNG, WEBP
-    `;
-    logoWrap.appendChild(placeholder);
-  }
-}
-
-
+// -------------------------------
+// LOGO & COVER
+// -------------------------------
 
 const cover = document.getElementById("vendorCover");
-if (cover) {
-  if (vendor.cover_url) {
-    cover.src = vendor.cover_url + "?t=" + new Date().getTime();
-    cover.style.display = "block";
-  } else {
-    cover.style.display = "none";
-  }
-}
+const logo = document.getElementById("vendorLogo");
 
 const coverPlaceholder = document.getElementById("coverPlaceholder");
-if (coverPlaceholder) {
-  if (isOwner && !vendor.cover_url) {
-    coverPlaceholder.style.display = "flex";
-  } else {
-    coverPlaceholder.style.display = "none";
+const logoPlaceholder = document.getElementById("logoPlaceholder");
+
+const deleteCoverBtn = document.getElementById("deleteCoverBtn");
+const deleteLogoBtn = document.getElementById("deleteLogoBtn");
+
+function renderBranding() {
+
+  if (cover) {
+
+    if (vendor.cover_url) {
+      cover.src = vendor.cover_url;
+      cover.style.display = "block";
+    } else {
+      cover.removeAttribute("src");
+      cover.style.display = "none";
+    }
+
   }
+
+  if (coverPlaceholder) {
+    coverPlaceholder.style.display =
+      isOwner && !vendor.cover_url ? "flex" : "none";
+  }
+
+  if (deleteCoverBtn) {
+    deleteCoverBtn.style.display =
+      isOwner && vendor.cover_url ? "flex" : "none";
+  }
+
+  if (logo) {
+
+    if (vendor.logo_url) {
+      logo.src = vendor.logo_url;
+      logo.style.display = "block";
+    } else {
+      logo.removeAttribute("src");
+      logo.style.display = "none";
+    }
+
+  }
+
+  if (logoPlaceholder) {
+    logoPlaceholder.style.display =
+      isOwner && !vendor.logo_url ? "flex" : "none";
+  }
+
+  if (deleteLogoBtn) {
+    deleteLogoBtn.style.display =
+      isOwner && vendor.logo_url ? "flex" : "none";
+  }
+
 }
+
+renderBranding();
+
 
     // -------------------------------
     // BADGE
@@ -1311,90 +1321,242 @@ if (!branches || branches.length === 0 || limit === 0) return;
   const coverInput = document.getElementById("coverInput");
   const logoInput = document.getElementById("logoInput");
 
-  if (coverLabel) coverLabel.classList.remove("hidden");
-  if (logoLabel) logoLabel.classList.remove("hidden");
-
-  // COVER UPLOAD
   if (coverInput) {
-    coverInput.addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
 
-      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-      if (!allowedTypes.includes(file.type)) {
+  coverInput.addEventListener("change", async (e) => {
+
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
       alert("Only JPG, PNG or WEBP images allowed.");
+      coverInput.value = "";
       return;
     }
 
-    // 1MB file size limit
     if (file.size > 1024 * 1024) {
-       alert("Cover image must be less than 1MB.");
-       return;
+      alert("Cover image must be less than 1MB.");
+      coverInput.value = "";
+      return;
     }
 
-      const filePath = `${currentUser.id}/cover`;
+    if (vendor.cover_url) {
 
+      const oldPath =
+        vendor.cover_url.split("/vendor-branding/")[1];
 
-      // Step 1: Remove existing cover (if any)
-      const { data: removeData, error: removeError } =
-      await supabase.storage
-        .from("vendor-branding")
-        .remove([filePath]);
-
-
-      // Step 2: Upload new cover
-     const { error } = await supabase.storage
-       .from("vendor-branding")
-       .upload(filePath, file);
-
-      if (error) {
-        console.error("Storage Upload Error:", error.message);
-        return;
+      if (oldPath) {
+        await supabase.storage
+          .from("vendor-branding")
+          .remove([oldPath]);
       }
 
-      const { data } = supabase.storage
-        .from("vendor-branding")
-        .getPublicUrl(filePath);
+    }
 
+    const ext =
+      file.name.split(".").pop().toLowerCase();
 
-      await supabase
-        .from("vendors")
-        .update({ cover_url: data.publicUrl })
-        .eq("id", vendor.id);
+    const filePath =
+      `${currentUser.id}/cover-${Date.now()}.${ext}`;
 
-      vendor.cover_url = data.publicUrl;
-      document.getElementById("vendorCover").src =
-      data.publicUrl + "?t=" + new Date().getTime();
-      document.getElementById("vendorCover").style.display = "block";
-    });
+    const { error } = await supabase.storage
+      .from("vendor-branding")
+      .upload(filePath, file);
+
+    if (error) {
+      alert("Cover upload failed.");
+      coverInput.value = "";
+      return;
+    }
+
+    const { data } = supabase.storage
+      .from("vendor-branding")
+      .getPublicUrl(filePath);
+
+    await supabase
+      .from("vendors")
+      .update({
+        cover_url: data.publicUrl
+      })
+      .eq("id", vendor.id);
+
+    vendor.cover_url = data.publicUrl;
+
+    renderBranding();
+
+    coverInput.value = "";
+
+  });
+
+}
+
+  if (coverLabel) coverLabel.classList.remove("hidden");
+  if (logoLabel) logoLabel.classList.remove("hidden");
+
+const deleteCoverBtn = document.getElementById("deleteCoverBtn");
+const deleteLogoBtn = document.getElementById("deleteLogoBtn");
+
+if (deleteCoverBtn && vendor.cover_url) {
+  deleteCoverBtn.classList.remove("hidden");
+}
+
+if (deleteLogoBtn && vendor.logo_url) {
+  deleteLogoBtn.classList.remove("hidden");
+}
+
+if (deleteCoverBtn) {
+
+  if (!vendor.cover_url) {
+    deleteCoverBtn.style.display = "none";
   }
-  // LOGO UPLOAD
+
+  deleteCoverBtn.onclick = async () => {
+
+    const ok = confirm("Delete cover image?");
+    if (!ok) return;
+
+    await supabase.storage
+      .from("vendor-branding")
+      .remove([`${currentUser.id}/cover`]);
+
+    await supabase
+      .from("vendors")
+      .update({ cover_url: null })
+      .eq("id", vendor.id);
+
+    const cover = document.getElementById("vendorCover");
+    if (cover) {
+      cover.removeAttribute("src");
+      cover.style.display = "none";
+    }
+
+    const placeholder = document.getElementById("coverPlaceholder");
+    if (placeholder) {
+      placeholder.style.display = "flex";
+    }
+
+    deleteCoverBtn.style.display = "none";
+  };
+
+}
+
+if (deleteLogoBtn) {
+
+  if (!vendor.logo_url) {
+    deleteLogoBtn.style.display = "none";
+  }
+
+  deleteLogoBtn.onclick = async () => {
+
+    const ok = confirm("Delete logo image?");
+    if (!ok) return;
+
+    if (vendor.logo_url) {
+
+      const oldPath =
+        vendor.logo_url.split("/vendor-branding/")[1];
+
+      if (oldPath) {
+        await supabase.storage
+          .from("vendor-branding")
+          .remove([oldPath]);
+      }
+
+    }
+
+    await supabase
+      .from("vendors")
+      .update({ logo_url: null })
+      .eq("id", vendor.id);
+
+    vendor.logo_url = null;
+
+    renderBranding();
+
+  };
+
+}
+
+if (deleteCoverBtn) {
+
+  if (!vendor.cover_url) {
+    deleteCoverBtn.style.display = "none";
+  }
+
+  deleteCoverBtn.onclick = async () => {
+
+    const ok = confirm("Delete cover image?");
+    if (!ok) return;
+
+    if (vendor.cover_url) {
+
+      const oldPath =
+        vendor.cover_url.split("/vendor-branding/")[1];
+
+      if (oldPath) {
+        await supabase.storage
+          .from("vendor-branding")
+          .remove([oldPath]);
+      }
+
+    }
+
+    await supabase
+      .from("vendors")
+      .update({ cover_url: null })
+      .eq("id", vendor.id);
+
+    vendor.cover_url = null;
+
+    renderBranding();
+
+  };
+
+}
+  
+// LOGO UPLOAD
 if (logoInput) {
+
   logoInput.addEventListener("change", async (e) => {
 
     const file = e.target.files[0];
     if (!file) return;
 
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
     if (!allowedTypes.includes(file.type)) {
       alert("Only JPG, PNG or WEBP images allowed.");
       return;
     }
 
-    // 1MB size limit
     if (file.size > 1024 * 1024) {
       alert("Logo image must be less than 1MB.");
       return;
     }
 
-    const filePath = `${currentUser.id}/logo`;
+    if (vendor.logo_url) {
 
-    // Remove existing logo
-    await supabase.storage
-      .from("vendor-branding")
-      .remove([filePath]);
+      const oldPath = vendor.logo_url.split("/vendor-branding/")[1];
 
-    // Upload new logo
+      if (oldPath) {
+        await supabase.storage
+          .from("vendor-branding")
+          .remove([oldPath]);
+      }
+
+    }
+
+    const ext = file.name.split(".").pop().toLowerCase();
+
+    const filePath =
+      `${currentUser.id}/logo-${Date.now()}.${ext}`;
+
     const { error } = await supabase.storage
       .from("vendor-branding")
       .upload(filePath, file);
@@ -1408,26 +1570,19 @@ if (logoInput) {
       .from("vendor-branding")
       .getPublicUrl(filePath);
 
-    // Update database
     await supabase
       .from("vendors")
       .update({ logo_url: data.publicUrl })
       .eq("id", vendor.id);
 
-    // Update UI immediately (cache-busted)
-    const logoImg = document.getElementById("vendorLogo");
-    if (logoImg) {
-      logoImg.src = data.publicUrl + "?t=" + new Date().getTime();
-      logoImg.style.display = "block";
-    }
+    vendor.logo_url = data.publicUrl;
 
-    // Hide placeholder
-    const logoPlaceholder = document.getElementById("logoPlaceholder");
-    if (logoPlaceholder) {
-      logoPlaceholder.style.display = "none";
-    }
+    renderBranding();
+
   });
-  }
+
+}
+
  }
 }
 
