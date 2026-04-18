@@ -22,6 +22,16 @@ document.addEventListener("DOMContentLoaded", async () => {
    console.log("Vendor record:", vendor);
 
    // ===============================
+// FORCE BLOCK IF CLOSED
+// ===============================
+if (vendor.account_status === "closed") {
+  await supabase.auth.signOut();
+  alert("Your account has been closed. Please contact support.");
+  window.location.href = "login.html";
+  return;
+}
+
+   // ===============================
 // AUTO TRANSITION TO CLOSED
 // ===============================
 if (
@@ -125,10 +135,21 @@ if (
     banner.className = "status-banner danger";
   }
 
-  if (isActive) {
-    banner.textContent = "Account Active";
-    banner.className = "status-banner success";
-  }
+ if (vendor.account_status === "closed") {
+
+  banner.textContent = "Account Closed";
+  banner.className = "status-banner danger";
+
+} else if (vendor.account_status === "closing") {
+
+  banner.classList.add("hidden");
+
+} else if (isActive) {
+
+  banner.textContent = "Account Active";
+  banner.className = "status-banner success";
+
+}
 
   // ===============================
 // ACCOUNT CLOSING STATE

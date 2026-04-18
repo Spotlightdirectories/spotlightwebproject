@@ -8,18 +8,26 @@ if (error) {
   console.error("Auth error:", error);
 }
 
-function normalizePhone(input){
+function normalizePhone(input) {
 
   if (!input) return "";
 
   let clean = String(input).replace(/\D/g, "");
 
+  // Convert 080... → 23480...
   if (clean.startsWith("0")) {
     clean = "234" + clean.slice(1);
   }
 
-  if (clean.startsWith("234")) {
-    return clean;
+  // Fix cases like 234080...
+  if (clean.startsWith("2340")) {
+    clean = "234" + clean.slice(4);
+  }
+
+  // FINAL VALIDATION
+  // Must be 234 + 10 digits (total 13)
+  if (!/^234[789][01]\d{8}$/.test(clean)) {
+    return "";
   }
 
   return clean;
@@ -197,8 +205,8 @@ function normalizePhone(input){
       return;
     }
 
-    if (whatsapp.length < 11) {
-      statusMsg.textContent = "Enter a valid WhatsApp number.";
+    if (!whatsapp) {
+      statusMsg.textContent = "Enter a valid Nigerian WhatsApp number.";
       submitBtn.disabled = false;
       return;
     }

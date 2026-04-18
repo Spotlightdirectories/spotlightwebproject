@@ -120,7 +120,7 @@ console.log("RESOLVED partnerId:", partnerId);
     auth_user_id: data.user.id,
     name: businessName,
     email: email,
-    referred_by_partner_id: partnerId,
+    referred_by_partner_id: partnerId || null,
     plan_tier: selectedPlan,
     billing_cycle: billingType,
     subscription_status: null,

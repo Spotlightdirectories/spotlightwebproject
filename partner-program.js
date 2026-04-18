@@ -140,10 +140,10 @@ if (age < 18) {
       }
 
   const { data: existing } = await supabase
-   .from("partners")
-   .select("id")
-   .or(`email.eq.${email},phone.eq.${phone}`)
-   .maybeSingle();
+  .from("partners")
+  .select("id, referred_by")
+  .or(`email.eq.${email},phone.eq.${phone}`)
+  .maybeSingle();
 
  if (existing) {
    alert("You already have a partner application with this email or telephone number.");
@@ -156,18 +156,23 @@ if (age < 18) {
 // ===============================
 let parentPartnerId = null;
 
-const storedReferral = localStorage.getItem("referral_code");
+// 🚫 ONLY allow referral for NEW users
+if (!existing) {
 
-if (storedReferral) {
-  const { data: refPartner } = await supabase
-    .from("partners")
-    .select("id")
-    .eq("referral_code", storedReferral)
-    .maybeSingle();
+  const storedReferral = localStorage.getItem("referral_code");
 
-  if (refPartner) {
-    parentPartnerId = refPartner.id;
+  if (storedReferral) {
+    const { data: refPartner } = await supabase
+      .from("partners")
+      .select("id")
+      .eq("referral_code", storedReferral)
+      .maybeSingle();
+
+    if (refPartner) {
+      parentPartnerId = refPartner.id;
+    }
   }
+
 }
       // INSERT INTO SUPABASE
       const { error } = await supabase

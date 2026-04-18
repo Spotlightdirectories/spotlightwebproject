@@ -43,7 +43,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         is_premium,
         slug,
         subscription_status,
-        onboarding_completed
+        onboarding_completed,
+        account_status
       `)
       .eq("subscription_status", "active")
       .eq("onboarding_completed", true);
@@ -54,8 +55,6 @@ document.addEventListener("DOMContentLoaded", async () => {
      return;
     }
      
-
-
   const { data: branches, error: branchesError } = await supabase
   .from("branches")
   .select(`
@@ -73,7 +72,7 @@ if (branchesError) {
   console.error("Branches fetch error:", branchesError);
 }
 
-    vendors = data || [];
+    vendors = (data || []).filter(v => v.account_status === "active");
 
   const vendorMap = {};
    vendors.forEach(v => {

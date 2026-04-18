@@ -77,6 +77,17 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    // ===============================
+// BLOCK CLOSED ACCOUNT
+// ===============================
+if (vendor.account_status === "closed") {
+  errorEl.textContent = "Your account has been closed. Please contact support.";
+  errorEl.style.display = "block";
+  await supabase.auth.signOut();
+  resetSubmitState();
+  return;
+}
+
     // =====================================================
     // FREE PLAN
     // =====================================================

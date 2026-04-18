@@ -7,6 +7,28 @@ const urlParams = new URLSearchParams(window.location.search);
 const referralCode = urlParams.get("ref");
 
 if (referralCode) {
+
+  const supabase = window.supabaseClient;
+
+  const { data } = await supabase.auth.getUser();
+  const user = data?.user;
+
+  // 🚫 If user already exists → ignore referral
+  if (user) {
+
+    const { data: existingVendor } = await supabase
+      .from("vendors")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+
+    if (existingVendor) {
+      console.log("Existing vendor detected — referral ignored");
+      return;
+    }
+  }
+
+  // ✅ Only save for new users
   localStorage.setItem("referral_code", referralCode);
   console.log("REF SAVED FROM GETLISTED:", referralCode);
 }
