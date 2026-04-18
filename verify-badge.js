@@ -61,6 +61,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    const verifyConsent =
+      document.getElementById("verifyConsent");
+
+    if (verifyConsent && !verifyConsent.checked) {
+      verifyMsg.textContent =
+         "You must accept the consent terms before submitting.";
+       return;
+    }
+
     verifyMsg.textContent = "Uploading documents...";
     console.log("Submitting verification form...");
 
@@ -141,7 +150,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       utility_url: utilityUrl,
       memart_url: memartUrl,
       status_report_url: statusReportUrl,
-      status: "pending"
+      status: "pending",
+      consent_accepted: true,
+      consent_accepted_at: new Date().toISOString(),
+      consent_text_version: "v1"
     });
 
   if (error) throw error;

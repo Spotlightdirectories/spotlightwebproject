@@ -21,6 +21,78 @@ document.addEventListener("DOMContentLoaded", async () => {
 
    console.log("Vendor record:", vendor);
 
+   // ===============================
+// AUTO TRANSITION TO CLOSED
+// ===============================
+if (
+  vendor.account_status === "closing" &&
+  vendor.scheduled_deletion_at
+) {
+  const now = new Date();
+  const deletionDate = new Date(vendor.scheduled_deletion_at);
+
+  if (now >= deletionDate) {
+
+    await supabase
+      .from("vendors")
+      .update({
+        account_status: "closed"
+      })
+      .eq("auth_user_id", vendor.auth_user_id);
+
+    // force reload after transition
+    location.reload();
+    return;
+  }
+ }
+
+    const closeAccountBtn = document.getElementById("closeAccountBtn");
+
+    if (closeAccountBtn) {
+    closeAccountBtn.addEventListener("click", async () => {
+
+    const confirmClose = confirm(
+      "Are you sure you want to close your account?\n\n" +
+      "Your profile will be removed immediately and permanently deleted after 14 days.\n\n" +
+      "Closing your account does NOT cancel or refund any active subscription. All payments are final."
+    );
+
+    if (!confirmClose) return;
+
+    // ===============================
+    // USE EXISTING vendor OBJECT
+    // ===============================
+    if (!vendor) {
+      alert("Unable to verify account.");
+      return;
+    }
+
+    // ===============================
+    // SCHEDULE CLOSURE
+    // ===============================
+    const deletionDate = new Date();
+    deletionDate.setDate(deletionDate.getDate() + 14);
+
+    const { error: updateError } = await supabase
+      .from("vendors")
+      .update({
+        account_status: "closing",
+        scheduled_deletion_at: deletionDate.toISOString()
+      })
+      .eq("auth_user_id", vendor.auth_user_id);
+
+    if (updateError) {
+      alert("Failed to schedule account closure.");
+      return;
+    }
+
+    alert("Your account has been scheduled for closure.");
+
+    location.reload();
+
+  });
+}
+
   if (!vendor) {
     window.location.href = "onboarding.html";
     return;
@@ -39,6 +111,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ===============================
   const banner = document.getElementById("statusBanner");
 
+  const closingBanner = document.getElementById("closingBanner");
+  const closingText = document.getElementById("closingText");
+  const restoreAccountBtn = document.getElementById("restoreAccountBtn");
+
   if (isPending) {
     banner.textContent = "Account Pending – Payment Verification";
     banner.className = "status-banner warning";
@@ -53,6 +129,38 @@ document.addEventListener("DOMContentLoaded", async () => {
     banner.textContent = "Account Active";
     banner.className = "status-banner success";
   }
+
+  // ===============================
+// ACCOUNT CLOSING STATE
+// ===============================
+if (vendor.account_status === "closing") {
+
+  banner.classList.add("hidden");
+
+  if (closingBanner) {
+    closingBanner.classList.remove("hidden");
+
+    const deletionDate = new Date(vendor.scheduled_deletion_at);
+    const now = new Date();
+
+    const daysLeft = Math.ceil(
+      (deletionDate - now) / (1000 * 60 * 60 * 24)
+    );
+
+    closingText.textContent =
+      `Your account is scheduled for deletion in ${daysLeft} day(s).`;
+
+  }
+
+    // ===============================
+  // LOCK DASHBOARD ACTIONS
+  // ===============================
+  document.getElementById("editProfileBtn")?.setAttribute("disabled", true);
+  document.getElementById("upgradeBtn")?.setAttribute("disabled", true);
+  document.getElementById("applyGrayBtn")?.setAttribute("disabled", true);
+  document.getElementById("applyBlueBtn")?.setAttribute("disabled", true);
+
+}
 
   // ===============================
   // ACCOUNT INFO
@@ -87,17 +195,58 @@ if (branchesCard && manageBranchesBtn) {
 
   const badgeStatus = document.getElementById("badgeStatus");
 
-  if (badgeStatus) {
-    if (vendor.verification_status === "blue") {
-      badgeStatus.textContent = "Blue Verified";
-    } 
-    else if (vendor.verification_status === "gray") {
+  const applyGrayBtn =
+  document.getElementById("applyGrayBtn");
+
+  const applyBlueBtn =
+  document.getElementById("applyBlueBtn");
+
+if (badgeStatus) {
+
+  if (vendor.verification_status === "blue") {
+
+    badgeStatus.textContent = "Blue Verified";
+
+    if (applyGrayBtn) {
+      applyGrayBtn.style.display = "none";
+    }
+
+    if (applyBlueBtn) {
+      applyBlueBtn.style.display = "none";
+    }
+
+  }
+
+  else if (vendor.verification_status === "gray") {
+
     badgeStatus.textContent = "Gray Verified";
-   } 
-    else {
-      badgeStatus.textContent = "None";
+
+    if (applyGrayBtn) {
+      applyGrayBtn.style.display = "none";
+    }
+
+    if (applyBlueBtn) {
+      applyBlueBtn.style.display = "inline-block";
+      applyBlueBtn.textContent = "Upgrade to Blue Badge";
    }
- }
+
+  }
+
+  else {
+
+    badgeStatus.textContent = "None";
+
+    if (applyGrayBtn) {
+      applyGrayBtn.style.display = "inline-block";
+    }
+
+    if (applyBlueBtn) {
+      applyBlueBtn.style.display = "inline-block";
+    }
+
+  }
+
+}
 
   document.getElementById("spotId").textContent =
     vendor.spot_id || "Not generated yet";
@@ -168,6 +317,38 @@ if (branchesCard && manageBranchesBtn) {
     localStorage.setItem("pendingBadgeType", "blue");
     window.location.href = "verify-badge.html";
   });
+
+  // ===============================
+// RESTORE ACCOUNT
+// ===============================
+if (restoreAccountBtn) {
+  restoreAccountBtn.addEventListener("click", async () => {
+
+    const confirmRestore = confirm(
+      "Do you want to restore your account?"
+    );
+
+    if (!confirmRestore) return;
+
+    const { error } = await supabase
+      .from("vendors")
+      .update({
+        account_status: "active",
+        scheduled_deletion_at: null
+      })
+      .eq("auth_user_id", vendor.auth_user_id);
+
+    if (error) {
+      alert("Failed to restore account.");
+      return;
+    }
+
+    alert("Account restored successfully.");
+
+    location.reload();
+
+  });
+}
 
   // ===============================
   // LOGOUT

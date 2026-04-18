@@ -239,3 +239,83 @@ body {
 }
 
 }
+
+/* ===============================
+   VERIFICATION GUIDE
+================================ */
+
+.dashboard-card .verify-guide{
+  margin-top:14px;
+  padding:16px;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  background:#f8fafc;
+}
+
+.dashboard-card .verify-guide h3{
+  margin:0 0 10px;
+  font-size:1rem;
+  font-weight:700;
+  color:#111827;
+}
+
+.dashboard-card .verify-lead{
+  margin:0 0 14px;
+  font-size:0.92rem;
+  line-height:1.55;
+  color:#4b5563;
+}
+
+.dashboard-card .verify-tier{
+  margin-bottom:12px;
+  padding:12px;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  background:#ffffff;
+}
+
+.dashboard-card .verify-tier h4{
+  margin:0 0 6px;
+  font-size:0.95rem;
+  font-weight:700;
+  color:#111827;
+}
+
+.dashboard-card .verify-tier p{
+  margin:0 0 8px;
+  font-size:0.88rem;
+  line-height:1.45;
+  color:#6b7280;
+}
+
+.dashboard-card .verify-tier ul{
+  margin:0;
+  padding-left:18px;
+}
+
+.dashboard-card .verify-tier li{
+  margin:0 0 4px;
+  font-size:0.88rem;
+  color:#374151;
+}
+
+.dashboard-card .verify-consent{
+  margin-top:6px;
+  padding-top:10px;
+  border-top:1px solid #e5e7eb;
+  font-size:0.82rem;
+  line-height:1.55;
+  color:#6b7280;
+}
+
+@media (max-width:600px){
+
+  .dashboard-card .verify-guide{
+    padding:14px;
+  }
+
+  .dashboard-card .verify-tier{
+    padding:10px;
+  }
+
+}

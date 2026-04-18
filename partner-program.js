@@ -56,12 +56,7 @@ if (loginForm) {
        password
     });
 
-   // control session persistence
-    if (!remember) {
-      await supabase.auth.signOut();
-      await supabase.auth.signInWithPassword({ email, password });
-   }
-   
+ 
     if (error) {
       alert(error.message);
       loginBtn.classList.remove("partner-btn-loading");

@@ -61,6 +61,16 @@
   <!-- STATUS BANNER -->
   <div id="statusBanner" class="status-banner hidden"></div>
 
+  <div id="closingBanner" class="status-banner danger hidden">
+
+  <span id="closingText"></span>
+
+  <button id="restoreAccountBtn" class="secondary-btn">
+    Restore Account
+  </button>
+
+</div>
+
   <!-- ACCOUNT SECTION -->
   <section class="dashboard-card">
     <h2>Account</h2>
@@ -86,6 +96,24 @@
     <button id="editProfileBtn" class="primary-btn">
       Edit Profile
     </button>
+
+    <hr class="account-divider">
+
+<div class="account-danger">
+
+  <h3>Close Account</h3>
+
+  <p class="muted-text">
+    Closing your account will remove your public profile and disable access
+    to your dashboard. This action can be reversed within 14 days.
+  </p>
+
+  <button id="closeAccountBtn" class="danger-btn">
+    Close My Account
+  </button>
+
+</div>
+
   </section>
 
   <!-- BRANCHES SECTION -->
@@ -127,6 +155,45 @@
     <p class="badge-info">
       Verified vendors receive higher trust and increased visibility.
     </p>
+
+    <div class="verify-guide">
+
+  <h3>Why Verify?</h3>
+
+  <p class="verify-lead">
+    Verified vendors gain stronger trust, improved visibility,
+    and better customer confidence on Spotlight.
+  </p>
+
+  <div class="verify-tier">
+    <h4>Gray Badge</h4>
+    <p>Best for sole owners and identity verification.</p>
+    <ul>
+      <li>Government ID</li>
+      <li>Passport Photograph</li>
+    </ul>
+  </div>
+
+  <div class="verify-tier">
+    <h4>Blue Badge</h4>
+    <p>Best for registered companies and stronger corporate trust.</p>
+    <ul>
+      <li>Government ID</li>
+      <li>CAC Certificate</li>
+      <li>Utility Bill</li>
+      <li>MEMART</li>
+      <li>CAC Status Report</li>
+    </ul>
+  </div>
+
+  <p class="verify-consent">
+    By applying, you consent to Spotlight receiving and reviewing
+    submitted verification documents for trust and compliance
+    purposes. Where required by law or fraud investigation,
+    information may be shared with relevant authorities.
+  </p>
+
+</div>
 
     <div class="badge-options">
       <button id="applyGrayBtn" class="primary-btn">

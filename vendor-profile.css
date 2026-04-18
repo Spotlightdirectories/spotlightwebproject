@@ -92,7 +92,7 @@ body {
 /* Logo — overlapping */
 .hero-left {
   position: relative;
-  top: -60px; /* overlap cover */
+  top: -85px; /* overlap cover */
 }
 
 .logo-wrap {
@@ -322,6 +322,15 @@ body {
 
 #vendorCategory .dot{
   display:none;
+}
+
+.logo-delete{
+  top: 10px;
+  right: 16px;
+  width: 26px;
+  height: 26px;
+  font-size: 13px;
+  z-index: 10;
 }
 
 }

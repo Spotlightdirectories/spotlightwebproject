@@ -1,6 +1,15 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const supabase = window.supabaseClient;
 
+  const logoutBtn = document.getElementById("logoutBtn");
+
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/partner-program.html#login";
+  });
+}
+
   await supabase.rpc("unlock_commissions");
 
   // ===============================

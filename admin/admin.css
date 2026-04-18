@@ -296,3 +296,28 @@ table tbody tr:last-child td:last-child {
   }
 
 }
+
+/* ===============================
+   HEADER + LOGOUT
+================================ */
+
+.dashboard-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+.logout-btn{
+  padding:8px 14px;
+  border:none;
+  border-radius:6px;
+  background:#ef4444;
+  color:#fff;
+  font-size:0.9rem;
+  cursor:pointer;
+}
+
+.logout-btn:hover{
+  background:#dc2626;
+}

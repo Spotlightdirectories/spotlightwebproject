@@ -8,6 +8,23 @@ if (error) {
   console.error("Auth error:", error);
 }
 
+function normalizePhone(input){
+
+  if (!input) return "";
+
+  let clean = String(input).replace(/\D/g, "");
+
+  if (clean.startsWith("0")) {
+    clean = "234" + clean.slice(1);
+  }
+
+  if (clean.startsWith("234")) {
+    return clean;
+  }
+
+  return clean;
+}
+
 
   if (!user) {
     window.location.replace("login.html");
@@ -166,7 +183,7 @@ if (error) {
     const address = addressInput.value.trim();
     const state = stateSelectEl.value;
     const lga = lgaSelectEl.value;
-    const whatsapp = whatsappInput.value.trim();
+    const whatsapp = normalizePhone(whatsappInput.value);
 
     if (!businessName || !address || !state || !lga || !whatsapp || !email) {
       statusMsg.textContent = "Please fill all required fields.";
@@ -176,6 +193,12 @@ if (error) {
 
     if (!categorySelect.value || !subcategorySelect.value) {
       statusMsg.textContent = "Please select category and subcategory.";
+      submitBtn.disabled = false;
+      return;
+    }
+
+    if (whatsapp.length < 11) {
+      statusMsg.textContent = "Enter a valid WhatsApp number.";
       submitBtn.disabled = false;
       return;
     }

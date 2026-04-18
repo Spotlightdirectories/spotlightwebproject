@@ -119,6 +119,25 @@ if (!parentVendor || parentVendor.onboarding_completed !== true) return;
   // HELPERS
   // ===============================
 
+  function formatWhatsAppNumber(num) {
+
+  if (!num) return "";
+
+  let clean = String(num).replace(/\D/g, "");
+
+  // Nigeria fix
+  if (clean.startsWith("0")) {
+    clean = "234" + clean.slice(1);
+  }
+
+  // If already starts with 234 → keep
+  if (clean.startsWith("234")) {
+    return clean;
+  }
+
+  return clean;
+}
+
 function renderBadge(status) {
 
   if (!status) return "";
@@ -183,7 +202,9 @@ function renderBadge(status) {
 
       <div class="actions">
         ${v.whatsapp ? `
-          <a href="https://wa.me/${v.whatsapp}" target="_blank">WhatsApp</a>
+          <a href="https://wa.me/${formatWhatsAppNumber(v.whatsapp)}" target="_blank">
+            WhatsApp
+          </a>
         ` : ""}
 
         ${v.telephone ? `
