@@ -658,27 +658,36 @@ async function approvePartner(partnerId, row) {
     "SPOT" +
     Math.random().toString(36).substring(2, 8).toUpperCase();
 
-  // 2️⃣ Update partner
-  const { error: updateError } = await supabase
-    .from("partners")
-    .update({
-      status: "approved",
-      referral_code: referralCode,
-    })
-    .eq("id", partnerId);
+// 2️⃣ Update partner
+const { data: updateData, error: updateError } = await supabase
+  .from("partners")
+  .update({
+    status: "approved",
+    referral_code: referralCode,
+  })
+  .eq("id", partnerId)
+  .select();
 
-  if (updateError) {
-    alert("Failed to approve partner.");
-    return;
-  }
+console.log("PARTNER UPDATE RESULT:", updateData);
+console.log("PARTNER UPDATE ERROR:", updateError);
+
+if (updateError) {
+  alert("Failed to approve partner: " + updateError.message);
+  return;
+}
 
   // 3️⃣ Send email
   const vendorReferralLink = `https://spotlightdirectories.com/getlisted.html?ref=${referralCode}`;
   const partnerReferralLink = `https://spotlightdirectories.com/partner-program.html?ref=${referralCode}`;
 
-  await sendEmail({
-    to: partner.email,
-    subject: "You're Approved 🎉",
+  if (!partner.email) {
+  alert("Partner has no email. Cannot send approval email.");
+  return;
+}
+
+await sendEmail({
+  to: partner.email,
+  subject: "You're Approved 🎉",
     html: `
       <p>Hello ${partner.name},</p>
       <p>Your partner application has been approved.</p>

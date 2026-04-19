@@ -1,6 +1,36 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
 
   const form = document.querySelector(".partner-create-form");
+
+  const supabase = window.supabaseClient;
+
+const params = new URLSearchParams(window.location.search);
+const partnerId = params.get("partner_id");
+
+if (!partnerId) {
+  alert("Invalid partner link.");
+  return;
+}
+
+const { data: partner, error } = await supabase
+  .from("partners")
+  .select("email")
+  .eq("id", partnerId)
+  .single();
+
+if (error || !partner) {
+  alert("Partner not found.");
+  return;
+}
+
+const emailInput = document.getElementById("create-email");
+
+if (!partner.email) {
+  alert("No email found for this partner.");
+  return;
+}
+
+emailInput.value = partner.email;
 
   if (!form) return;
 

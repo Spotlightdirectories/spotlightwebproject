@@ -17,6 +17,14 @@
   <button id="logoutBtn" class="logout-btn">Logout</button>
 </div>
 
+<!-- ACCOUNT CLOSING NOTICE -->
+<div id="accountClosingNotice" class="account-notice hidden">
+  <p>
+    Your account is scheduled for deletion in 14 day(s).
+    <button id="restoreAccountBtn">Restore Account</button>
+  </p>
+</div>
+
     <!-- ========================= -->
     <!-- SUMMARY -->
     <!-- ========================= -->
@@ -170,6 +178,32 @@
          </tr>
         </tbody>
       </table>
+
+      <!-- ========================= -->
+<!-- ACCOUNT SETTINGS -->
+<!-- ========================= -->
+<h2 class="verification-heading">Account</h2>
+
+<div class="account-section">
+
+  <table>
+    <tbody>
+      <tr>
+        <td>Partner Since</td>
+        <td id="partnerSince">Loading...</td>
+      </tr>
+      <tr>
+        <td>Account Status</td>
+        <td id="accountStatus">Loading...</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="account-actions">
+    <button id="closeAccountBtn" class="danger-btn">Close Account</button>
+  </div>
+
+</div>
 
   </main>
 
