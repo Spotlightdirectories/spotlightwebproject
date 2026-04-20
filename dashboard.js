@@ -56,10 +56,10 @@ if (
   }
  }
 
-    const closeAccountBtn = document.getElementById("closeAccountBtn");
+const closeAccountBtn = document.getElementById("closeAccountBtn");
 
-    if (closeAccountBtn) {
-    closeAccountBtn.addEventListener("click", async () => {
+if (closeAccountBtn) {
+  closeAccountBtn.addEventListener("click", async () => {
 
     const confirmClose = confirm(
       "Are you sure you want to close your account?\n\n" +
@@ -69,35 +69,31 @@ if (
 
     if (!confirmClose) return;
 
-    // ===============================
-    // USE EXISTING vendor OBJECT
-    // ===============================
     if (!vendor) {
       alert("Unable to verify account.");
       return;
     }
 
-    // ===============================
-    // SCHEDULE CLOSURE
-    // ===============================
     const deletionDate = new Date();
     deletionDate.setDate(deletionDate.getDate() + 14);
 
-    const { error: updateError } = await supabase
+    const { data, error: updateError } = await supabase
       .from("vendors")
       .update({
         account_status: "closing",
         scheduled_deletion_at: deletionDate.toISOString()
       })
-      .eq("auth_user_id", vendor.auth_user_id);
+      .eq("auth_user_id", vendor.auth_user_id)
+      .eq("account_status", "active")
+      .select();
 
     if (updateError) {
-      alert("Failed to schedule account closure.");
+      console.error("CLOSE ERROR:", updateError);
+      alert(`Failed to schedule account closure: ${updateError.message}`);
       return;
     }
 
     alert("Your account has been scheduled for closure.");
-
     location.reload();
 
   });
@@ -180,6 +176,7 @@ if (vendor.account_status === "closing") {
   document.getElementById("upgradeBtn")?.setAttribute("disabled", true);
   document.getElementById("applyGrayBtn")?.setAttribute("disabled", true);
   document.getElementById("applyBlueBtn")?.setAttribute("disabled", true);
+  document.getElementById("closeAccountBtn")?.setAttribute("disabled", true);
 
 }
 
@@ -357,12 +354,14 @@ if (restoreAccountBtn) {
         account_status: "active",
         scheduled_deletion_at: null
       })
-      .eq("auth_user_id", vendor.auth_user_id);
+      .eq("auth_user_id", vendor.auth_user_id)
+      .eq("account_status", "closing");
 
     if (error) {
-      alert("Failed to restore account.");
+      console.error("RESTORE ERROR:", error);
+      alert(`Failed to restore account: ${error.message}`);
       return;
-    }
+   }
 
     alert("Account restored successfully.");
 

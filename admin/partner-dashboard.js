@@ -43,6 +43,8 @@ All commission earnings will stop immediately, and any pending or unpaid commiss
   }
 
   const partnerId = partner.id;
+  console.log("CURRENT PARTNER ID:", partnerId);
+  console.log("ACCOUNT STATUS:", partner.account_status);
 
   // SET 14 DAYS FROM NOW
   const deletionDate = new Date();
@@ -132,6 +134,7 @@ if (logoutBtn) {
       .eq("user_id", user.id)
       .single();
       console.log("PARTNER:", partner, "ERROR:", partnerError);
+      console.log("ACCOUNT STATUS ON LOAD:", partner.account_status);
 
     if (partnerError || !partner) {
       table.innerHTML = `<tr><td colspan="6">Partner not found</td></tr>`;
@@ -145,63 +148,86 @@ const partnerId = partner.id;
 // ===============================
 const noticeEl = document.getElementById("accountClosingNotice");
 
-if (noticeEl && partner.account_status === "closing") {
+if (noticeEl) {
 
-  const deletionDate = new Date(partner.scheduled_deletion_at);
-  const now = new Date();
+  let restoreBtn = document.getElementById("restoreAccountBtn");
 
-  const diffTime = deletionDate - now;
-  const daysRemaining = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  if (partner.account_status === "closing") {
 
-  noticeEl.classList.remove("hidden");
+    const deletionDate = new Date(partner.scheduled_deletion_at);
+    const now = new Date();
 
-  noticeEl.querySelector("p").innerHTML =
-    `Your account is scheduled for deletion in ${daysRemaining} day(s).
-     <button id="restoreAccountBtn">Restore Account</button>`;
-}
+    const diffTime = deletionDate - now;
+    const daysRemaining = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
 
-// ===============================
-// RESTORE ACCOUNT
-// ===============================
-const restoreBtn = document.getElementById("restoreAccountBtn");
+    noticeEl.classList.remove("hidden");
 
-if (restoreBtn) {
-  restoreBtn.addEventListener("click", async () => {
-
-    const confirmRestore = confirm("Do you want to restore your account?");
-
-    if (!confirmRestore) return;
-
-    try {
-     const { data, error } = await supabase
-       .from("partners")
-       .update({
-         account_status: "active",
-         scheduled_deletion_at: null
-     })
-      .eq("id", partnerId)
-      .select();
-
-if (error) {
-  console.error("RESTORE ERROR:", error);
-  alert(error.message || "Failed to restore account");
-  return;
-}
-
-if (!data || data.length === 0) {
-  alert("Update blocked. No rows affected.");
-  return;
-}
-
-      alert("Your account has been restored.");
-
-      window.location.reload();
-
-    } catch (err) {
-      console.error(err);
-      alert("Unexpected error occurred");
+    const textNode = noticeEl.querySelector("p");
+    if (textNode) {
+      textNode.textContent = `Your account is scheduled for deletion in ${daysRemaining} day(s).`;
     }
-  });
+
+    // 🔥 CREATE BUTTON IF MISSING
+    if (!restoreBtn) {
+      restoreBtn = document.createElement("button");
+      restoreBtn.id = "restoreAccountBtn";
+      restoreBtn.textContent = "Restore Account";
+      noticeEl.appendChild(restoreBtn);
+    }
+
+    // 🔥 ENSURE CLICK HANDLER
+    if (!restoreBtn.dataset.bound) {
+      restoreBtn.dataset.bound = "true";
+
+      restoreBtn.addEventListener("click", async () => {
+        const confirmRestore = confirm("Do you want to restore your account?");
+        if (!confirmRestore) return;
+
+        try {
+          const { data, error } = await supabase
+            .from("partners")
+            .update({
+              account_status: "active",
+              scheduled_deletion_at: null
+            })
+            .eq("id", partnerId)
+            .select();
+
+          if (error) {
+            console.error("RESTORE ERROR:", error);
+            alert(error.message || "Failed to restore account");
+            return;
+          }
+
+          if (!data || data.length === 0) {
+            alert("Update blocked. No rows affected.");
+            return;
+          }
+
+          alert("Your account has been restored.");
+          window.location.reload();
+
+        } catch (err) {
+          console.error(err);
+          alert("Unexpected error occurred");
+        }
+      });
+    }
+
+  } else {
+
+    noticeEl.classList.add("hidden");
+
+    // 🔥 REMOVE BUTTON COMPLETELY
+    if (restoreBtn) {
+      restoreBtn.remove();
+    }
+
+    const textNode = noticeEl.querySelector("p");
+    if (textNode) {
+      textNode.textContent = "";
+    }
+  }
 }
 
 // ===== PAID VENDORS COUNT (CORRECT SOURCE: COMMISSIONS) =====
