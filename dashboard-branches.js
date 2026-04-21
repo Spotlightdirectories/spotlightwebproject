@@ -70,16 +70,42 @@ branchForm.addEventListener("submit", async (e) => {
 
 e.preventDefault();
 
-const name = document.getElementById("branchName").value.trim();
+const branchInput = document.getElementById("branchName").value.trim();
+
+if (!branchInput) {
+  alert("Branch name and address are required.");
+  return;
+}
+
+// Block vendor name usage
+if (branchInput.toLowerCase().includes(vendor.name.toLowerCase())) {
+  alert("Do not include your business name. Enter only the branch identifier (e.g. 'Isolo').");
+  return;
+}
+
+// Block formatted input
+if (branchInput.includes(" - ")) {
+  alert("Enter only branch identifier without '-' formatting.");
+  return;
+}
+
+const name = `${vendor.name} - ${branchInput}`;
+
 const address = document.getElementById("branchAddress").value.trim();
 const phone = document.getElementById("branchPhone").value.trim();
 const whatsapp = document.getElementById("branchWhatsapp").value.trim();
 const latitude = document.getElementById("branchLatitude").value.trim();
 const longitude = document.getElementById("branchLongitude").value.trim();
 
-if (!name || !address) {
-alert("Branch name and address are required.");
-return;
+if (!branchInput || !address) {
+  alert("Branch name and address are required.");
+  return;
+}
+
+// Prevent user from typing full business name
+if (branchInput.toLowerCase().includes(vendor.name.toLowerCase())) {
+  alert("Enter only branch identifier (e.g. 'Isolo'), not full business name.");
+  return;
 }
 
 // check plan limit

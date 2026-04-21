@@ -31,16 +31,18 @@ All commission earnings will stop immediately, and any pending or unpaid commiss
   }
 
   // GET PARTNER ID
-  const { data: partner, error: partnerError } = await supabase
-    .from("partners")
-    .select("id")
-    .eq("user_id", user.id)
-    .single();
+const { data: partner, error: partnerError } = await supabase
+  .from("partners")
+  .select("id, account_status")
+  .eq("user_id", user.id)
+  .maybeSingle();
 
-  if (partnerError || !partner) {
-    alert("Partner not found");
-    return;
-  }
+if (partnerError || !partner) {
+  alert("Invalid session. Please login again.");
+  await supabase.auth.signOut();
+  window.location.href = "/partner-program.html#login";
+  return;
+}
 
   const partnerId = partner.id;
   console.log("CURRENT PARTNER ID:", partnerId);
@@ -51,18 +53,26 @@ All commission earnings will stop immediately, and any pending or unpaid commiss
   deletionDate.setDate(deletionDate.getDate() + 14);
 
   // 1️⃣ UPDATE PARTNER STATUS
-  const { error: updateError } = await supabase
-    .from("partners")
-    .update({
-      account_status: "closing",
-      scheduled_deletion_at: deletionDate.toISOString()
-    })
-    .eq("id", partnerId);
+const { data, error: updateError } = await supabase
+  .from("partners")
+  .update({
+    account_status: "closing",
+    scheduled_deletion_at: deletionDate.toISOString()
+  })
+  .eq("id", partnerId)
+  .eq("account_status", "active")
+  .select();
 
-  if (updateError) {
-    alert("Failed to update account");
-    return;
-  }
+if (updateError) {
+  console.error("CLOSE ERROR:", updateError);
+  alert(`Failed to update account: ${updateError.message}`);
+  return;
+}
+
+if (!data || data.length === 0) {
+  alert("Close not allowed. Account is not active.");
+  return;
+}
 
   // 2️⃣ DETACH VENDORS
   const { error: vendorError } = await supabase
@@ -93,12 +103,21 @@ if (logoutBtn) {
   });
 }
 
-  await supabase.rpc("unlock_commissions");
+const { error: unlockError } = await supabase.rpc("unlock_commissions");
+
+if (unlockError) {
+  console.error("UNLOCK COMMISSIONS ERROR:", unlockError);
+}
 
   // ===============================
   // ELEMENTS
   // ===============================
   const table = document.getElementById("commissionTable");
+
+if (!table) {
+  console.error("commissionTable not found");
+  return;
+}
 
   const pendingEl = document.getElementById("pendingTotal");
   const availableEl = document.getElementById("availableTotal");
@@ -134,14 +153,125 @@ if (logoutBtn) {
       .eq("user_id", user.id)
       .single();
       console.log("PARTNER:", partner, "ERROR:", partnerError);
-      console.log("ACCOUNT STATUS ON LOAD:", partner.account_status);
 
     if (partnerError || !partner) {
-      table.innerHTML = `<tr><td colspan="6">Partner not found</td></tr>`;
+  console.error("INVALID SESSION: Not a partner");
+
+  await supabase.auth.signOut();
+
+  window.location.href = "/partner-program.html#login";
+  return;
+}
+
+    console.log("ACCOUNT STATUS ON LOAD:", partner.account_status);
+
+
+const partnerId = partner.id;
+
+// ===============================
+// ENFORCE ACCOUNT EXPIRATION
+// ===============================
+if (partner.scheduled_deletion_at) {
+
+  const now = new Date();
+  const deletionDate = new Date(partner.scheduled_deletion_at);
+
+  if (now >= deletionDate) {
+
+    console.log("ENFORCING ACCOUNT CLOSURE:", partnerId);
+
+    // 1. UPDATE STATUS TO CLOSED
+    const { error: closeError } = await supabase
+      .from("partners")
+      .update({
+        account_status: "closed"
+      })
+      .eq("id", partnerId);
+
+    if (closeError) {
+      console.error("FORCE CLOSE ERROR:", closeError);
+      alert("Account enforcement failed. Contact support.");
       return;
     }
 
-const partnerId = partner.id;
+    // 2. DETACH VENDORS
+    const { error: vendorDetachError } = await supabase
+      .from("vendors")
+      .update({ referred_by_partner_id: null })
+      .eq("referred_by_partner_id", partnerId);
+
+    if (vendorDetachError) {
+      console.error("DETACH VENDORS ERROR:", vendorDetachError);
+    }
+
+    // 3. DETACH DOWNLINE PARTNERS
+    const { error: partnerDetachError } = await supabase
+      .from("partners")
+      .update({ referred_by: null })
+      .eq("referred_by", partnerId);
+
+    if (partnerDetachError) {
+      console.error("DETACH PARTNERS ERROR:", partnerDetachError);
+    }
+
+    // 4. FORCE LOGOUT
+    alert("Your account has been permanently closed.");
+
+    await supabase.auth.signOut();
+    window.location.href = "/partner-program.html#login";
+    return;
+  }
+}
+
+// ===============================
+// ACCOUNT INFO DISPLAY
+// ===============================
+const partnerSinceEl = document.getElementById("partnerSince");
+const accountStatusEl = document.getElementById("accountStatus");
+
+if (partnerSinceEl && partner.created_at) {
+  const createdDate = new Date(partner.created_at);
+  partnerSinceEl.textContent = createdDate.toLocaleDateString();
+}
+
+if (accountStatusEl) {
+  accountStatusEl.textContent = partner.account_status;
+}
+
+// ===============================
+// ACTIVITY STATUS (30 DAYS RULE)
+// ===============================
+const { data: recentVendors } = await supabase
+  .from("vendors")
+  .select("id, created_at")
+  .eq("referred_by_partner_id", partnerId);
+
+let isActive = false;
+
+if (recentVendors && recentVendors.length > 0) {
+  const now = new Date();
+
+  isActive = recentVendors.some(v => {
+    const created = new Date(v.created_at);
+    const diffDays = (now - created) / (1000 * 60 * 60 * 24);
+    return diffDays <= 30;
+  });
+}
+
+// Update display
+if (accountStatusEl) {
+  let displayStatus = "";
+
+  if (partner.scheduled_deletion_at) {
+    displayStatus = "Closing";
+  } else if (partner.account_status === "closed") {
+    displayStatus = "Closed";
+  } else {
+    displayStatus = isActive ? "Active" : "Inactive";
+  }
+
+  accountStatusEl.textContent = displayStatus;
+}
 
 // ===============================
 // ACCOUNT CLOSING NOTICE
@@ -150,9 +280,11 @@ const noticeEl = document.getElementById("accountClosingNotice");
 
 if (noticeEl) {
 
-  let restoreBtn = document.getElementById("restoreAccountBtn");
+  // CLEAR any existing restore button (prevents duplicates or stale state)
+  const existingBtn = document.getElementById("restoreAccountBtn");
+  if (existingBtn) existingBtn.remove();
 
-  if (partner.account_status === "closing") {
+  if (partner.scheduled_deletion_at) {
 
     const deletionDate = new Date(partner.scheduled_deletion_at);
     const now = new Date();
@@ -167,67 +299,71 @@ if (noticeEl) {
       textNode.textContent = `Your account is scheduled for deletion in ${daysRemaining} day(s).`;
     }
 
-    // 🔥 CREATE BUTTON IF MISSING
-    if (!restoreBtn) {
-      restoreBtn = document.createElement("button");
-      restoreBtn.id = "restoreAccountBtn";
-      restoreBtn.textContent = "Restore Account";
-      noticeEl.appendChild(restoreBtn);
-    }
+    // CREATE restore button ONLY in closing state
+    const restoreBtn = document.createElement("button");
+    restoreBtn.id = "restoreAccountBtn";
+    restoreBtn.textContent = "Restore Account";
 
-    // 🔥 ENSURE CLICK HANDLER
-    if (!restoreBtn.dataset.bound) {
-      restoreBtn.dataset.bound = "true";
+    restoreBtn.onclick = async () => {
+      const confirmRestore = confirm("Do you want to restore your account?");
+      if (!confirmRestore) return;
 
-      restoreBtn.addEventListener("click", async () => {
-        const confirmRestore = confirm("Do you want to restore your account?");
-        if (!confirmRestore) return;
+      try {
+        const { data, error } = await supabase
+          .from("partners")
+          .update({
+            account_status: "active",
+            scheduled_deletion_at: null
+          })
+          .eq("id", partnerId)
+          .select();
 
-        try {
-          const { data, error } = await supabase
-            .from("partners")
-            .update({
-              account_status: "active",
-              scheduled_deletion_at: null
-            })
-            .eq("id", partnerId)
-            .select();
-
-          if (error) {
-            console.error("RESTORE ERROR:", error);
-            alert(error.message || "Failed to restore account");
-            return;
-          }
-
-          if (!data || data.length === 0) {
-            alert("Update blocked. No rows affected.");
-            return;
-          }
-
-          alert("Your account has been restored.");
-          window.location.reload();
-
-        } catch (err) {
-          console.error(err);
-          alert("Unexpected error occurred");
+        if (error) {
+          console.error("RESTORE ERROR:", error);
+          alert(error.message || "Failed to restore account");
+          return;
         }
-      });
-    }
+
+        if (!data || data.length === 0) {
+          alert("Update blocked. No rows affected.");
+          return;
+        }
+
+        alert("Your account has been restored.");
+       
+        // ===============================
+// FORCE UI RESET (NO RELOAD)
+// ===============================
+
+noticeEl.classList.add("hidden");
+
+const restoreTextNode = noticeEl.querySelector("p");
+if (restoreTextNode) {
+  restoreTextNode.textContent = "";
+}
+
+restoreBtn.remove();
+
+if (accountStatusEl) {
+  accountStatusEl.textContent = "Active";
+}
+
+      } catch (err) {
+        console.error(err);
+        alert("Unexpected error occurred");
+      }
+    };
+
+    noticeEl.appendChild(restoreBtn);
 
   } else {
+  noticeEl.classList.add("hidden");
 
-    noticeEl.classList.add("hidden");
-
-    // 🔥 REMOVE BUTTON COMPLETELY
-    if (restoreBtn) {
-      restoreBtn.remove();
-    }
-
-    const textNode = noticeEl.querySelector("p");
-    if (textNode) {
-      textNode.textContent = "";
-    }
+  const textNode = noticeEl.querySelector("p");
+  if (textNode) {
+    textNode.textContent = "";
   }
+}
 }
 
 // ===== PAID VENDORS COUNT (CORRECT SOURCE: COMMISSIONS) =====
@@ -470,10 +606,15 @@ if (downloadBtn) {
   });
 }
 
-  } catch (err) {
-    console.error(err);
+ } catch (err) {
+  console.error("MAIN ERROR:", err);
+
+  if (table) {
     table.innerHTML = `<tr><td colspan="6">Unexpected error</td></tr>`;
+  } else {
+    alert("A critical error occurred. Check console.");
   }
+}
 });
 
 function downloadCSV(data, bonusAmount) {
