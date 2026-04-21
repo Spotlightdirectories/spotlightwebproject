@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
 
 // -----------------------------
 // CAPTURE REFERRAL CODE (ENTRY PAGE)
