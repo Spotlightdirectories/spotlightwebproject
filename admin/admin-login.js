@@ -91,6 +91,6 @@ localStorage.setItem("admin_session", JSON.stringify({
 }));
 
 // 4. REDIRECT
-window.location.href = "admin-payments.html";
+window.location.href = "admin-payments";
   });
 });

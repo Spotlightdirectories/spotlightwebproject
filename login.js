@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // IF NO VENDOR ROW → something is wrong
     // =====================================================
     if (!vendor) {
-      window.location.replace("getlisted.html");
+      window.location.replace("getlisted");
       return;
     }
 
@@ -94,9 +94,9 @@ if (vendor.account_status === "closed") {
     if (vendor.plan_tier === "free") {
 
       if (!vendor.onboarding_completed) {
-        window.location.replace("onboarding.html");
+        window.location.replace("onboarding");
       } else {
-        window.location.replace("dashboard.html");
+        window.location.replace("dashboard");
       }
 
       return;
@@ -106,28 +106,28 @@ if (vendor.account_status === "closed") {
     // PAID PLAN
     // =====================================================
     if (vendor.subscription_status === "pending") {
-      window.location.replace("payment-status.html");
+      window.location.replace("payment-status");
       return;
     }
 
     if (vendor.subscription_status === "failed") {
-      window.location.replace("payment-failed.html");
+      window.location.replace("payment-failed");
       return;
     }
 
     if (vendor.subscription_status === "active") {
 
       if (!vendor.onboarding_completed) {
-        window.location.replace("onboarding.html");
+        window.location.replace("onboarding");
      } else {
-        window.location.replace("dashboard.html");
+        window.location.replace("dashboard");
      }
 
      return;
   }
 
     // Fallback
-    window.location.replace("payment.html");
+    window.location.replace("payment");
   });
 
   function resetSubmitState() {

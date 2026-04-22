@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (!adminSession || !["admin", "super_admin"].includes(adminSession.role)) {
     alert("Admin access only");
-    window.location.href = "admin-login.html";
+    window.location.href = "admin-login";
     return;
   }
 

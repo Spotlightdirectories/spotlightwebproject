@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ===============================
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    window.location.replace("login.html");
+    window.location.replace("login");
     return;
   }
 
@@ -40,23 +40,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
   if (!vendor) {
-    window.location.replace("onboarding.html");
+    window.location.replace("onboarding");
     return;
   }
   if (vendor.plan_tier === "free") {
-    window.location.replace("dashboard.html");
+    window.location.replace("dashboard");
     return;
   }
 
   // 🔹 If payment approved
   if (vendor.subscription_status === "active") {
-    window.location.replace("onboarding.html");
+    window.location.replace("onboarding");
     return;
   }
 
   // 🔹 If payment awaiting review
   if (vendor.subscription_status === "pending") {
-    window.location.replace("payment-status.html");
+    window.location.replace("payment-status");
     return;
   }
 
@@ -173,7 +173,7 @@ document.body.innerHTML = `
 
 // Redirect automatically
 setTimeout(() => {
-  window.location.replace("onboarding.html");
+  window.location.replace("onboarding");
 }, 2500);
 
   } catch (err) {
@@ -267,7 +267,7 @@ console.log("UPDATE RESULT:", updateData, updateError, window.currentPaymentId);
       .eq("auth_user_id", user.id);
 
 // 3️⃣ Redirect to status page (terminal state)
-  window.location.replace("payment-status.html");
+  window.location.replace("payment-status");
   };
 
   function getAmountInKobo(plan, billingType) {

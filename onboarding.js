@@ -35,7 +35,7 @@ function normalizePhone(input) {
 
 
   if (!user) {
-    window.location.replace("login.html");
+    window.location.replace("login");
     return;
   }
 
@@ -285,7 +285,7 @@ function normalizePhone(input) {
     })
     .eq("auth_user_id", user.id);
 
-    window.location.replace("dashboard.html");
+    window.location.replace("dashboard");
   });
 
   //NIGERIA STATES AND LGAS SCRIPT

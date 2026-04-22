@@ -10,7 +10,7 @@ import_map = "./functions/send-email-resend/deno.json"
 entrypoint = "./functions/send-email-resend/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/send-email-resend/*.html" ]
+# static_files = [ "./functions/send-email-resend/*" ]
 
 [functions.send-whatsapp-otp]
 enabled = true
@@ -21,7 +21,7 @@ import_map = "./functions/send-whatsapp-otp/deno.json"
 entrypoint = "./functions/send-whatsapp-otp/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/send-whatsapp-otp/*.html" ]
+# static_files = [ "./functions/send-whatsapp-otp/*" ]
 
 [functions.verify-whatsapp-otp]
 enabled = true
@@ -32,4 +32,4 @@ import_map = "./functions/verify-whatsapp-otp/deno.json"
 entrypoint = "./functions/verify-whatsapp-otp/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/verify-whatsapp-otp/*.html" ]
+# static_files = [ "./functions/verify-whatsapp-otp/*" ]

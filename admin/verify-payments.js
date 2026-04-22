@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   } = await supabase.auth.getUser();
 
   if (!user || !ADMIN_EMAILS.includes(user.email)) {
-    window.location.href = "../login.html";
+    window.location.href = "../login";
     return;
   }
 

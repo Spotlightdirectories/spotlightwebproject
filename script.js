@@ -246,7 +246,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await supabase.auth.signOut();
 
-    window.location.href = "index.html";
+    window.location.href = "index";
 
   });
 

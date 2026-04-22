@@ -88,7 +88,7 @@ if (referralCode) {
       localStorage.setItem("selectedPlan", plan);
       localStorage.setItem("billingType", billing);
 
-      window.location.href = "signup.html";
+      window.location.href = "signup";
     });
   });
 });
@@ -106,12 +106,12 @@ document.querySelectorAll(".verify-btn").forEach(btn => {
 
     if (!user) {
       localStorage.setItem("pendingBadgeType", badgeType);
-      window.location.href = "login.html";
+      window.location.href = "login";
       return;
     }
 
     localStorage.setItem("pendingBadgeType", badgeType);
-    window.location.href = "verify-badge.html";
+    window.location.href = "verify-badge";
   });
 });
 

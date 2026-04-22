@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
         data: {
           full_name: businessName
         },
-        emailRedirectTo: "https://spotlightdirectories.com/login.html"
+        emailRedirectTo: "https://spotlightdirectories.com/login"
       }
     });
 

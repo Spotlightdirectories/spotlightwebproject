@@ -114,7 +114,7 @@ if (!user) {
       .eq("id", partnerId);
 
     alert("Account created successfully. Check your email and confirm your account before logging in.");
-    window.location.href = "/partner-program.html";
+    window.location.href = "/partner-program";
 
 });
 

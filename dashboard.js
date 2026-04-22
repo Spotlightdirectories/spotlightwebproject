@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ===============================
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    window.location.href = "login.html";
+    window.location.href = "login";
     return;
   }
 
@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 if (vendor.account_status === "closed") {
   await supabase.auth.signOut();
   alert("Your account has been closed. Please contact support.");
-  window.location.href = "login.html";
+  window.location.href = "login";
   return;
 }
 
@@ -100,7 +100,7 @@ if (closeAccountBtn) {
 }
 
   if (!vendor) {
-    window.location.href = "onboarding.html";
+    window.location.href = "onboarding";
     return;
   }
 
@@ -203,7 +203,7 @@ if (branchesCard && manageBranchesBtn) {
     branchesCard.classList.remove("hidden");
 
     manageBranchesBtn.addEventListener("click", () => {
-      window.location.href = "dashboard-branches.html";
+      window.location.href = "dashboard-branches";
     });
 
   }
@@ -288,7 +288,7 @@ if (badgeStatus) {
   }
 
   document.getElementById("editProfileBtn").addEventListener("click", () => {
-    window.location.href = "onboarding.html";
+    window.location.href = "onboarding";
   });
 
   // ===============================
@@ -320,7 +320,7 @@ if (badgeStatus) {
     : "—";
 
   document.getElementById("upgradeBtn").addEventListener("click", () => {
-    window.location.href = "getlisted.html";
+    window.location.href = "getlisted";
   });
 
   // ===============================
@@ -328,12 +328,12 @@ if (badgeStatus) {
   // ===============================
   document.getElementById("applyGrayBtn")?.addEventListener("click", () => {
     localStorage.setItem("pendingBadgeType", "gray");
-    window.location.href = "verify-badge.html";
+    window.location.href = "verify-badge";
   });
 
   document.getElementById("applyBlueBtn")?.addEventListener("click", () => {
     localStorage.setItem("pendingBadgeType", "blue");
-    window.location.href = "verify-badge.html";
+    window.location.href = "verify-badge";
   });
 
   // ===============================
@@ -375,6 +375,6 @@ if (restoreAccountBtn) {
   // ===============================
   document.getElementById("logoutBtn").addEventListener("click", async () => {
     await supabase.auth.signOut();
-    window.location.href = "login.html";
+    window.location.href = "login";
   });
 });

@@ -113,7 +113,7 @@ async function checkAuth() {
       authBtn.href = "#";
     } else {
       authBtn.textContent = "Log in";
-      authBtn.href = "login.html";
+      authBtn.href = "login";
     }
   } catch (error) {
     console.error("Auth check failed:", error);

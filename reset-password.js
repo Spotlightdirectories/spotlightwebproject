@@ -74,9 +74,9 @@ document.querySelectorAll(".toggle-password").forEach(btn => {
       setTimeout(() => {
       if (userType === "partner") {
        localStorage.removeItem("reset_type");
-       window.location.href = "/partner-program.html";
+       window.location.href = "/partner-program";
      } else {
-       window.location.href = "/login.html";
+       window.location.href = "/login";
      }
     }, 2500);
 

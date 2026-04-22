@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    window.location.href = "login.html";
+    window.location.href = "login";
     return;
   }
 
@@ -84,11 +84,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("Selected Plan:", selectedPlan);
 
    if (selectedPlan === "free") {
-     window.location.replace("onboarding.html");
+     window.location.replace("onboarding");
      return;
    }
 
-     window.location.replace("payment.html");
+     window.location.replace("payment");
 
   });
 });

@@ -4,14 +4,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   const badgeType = localStorage.getItem("pendingBadgeType");
 
   if (!badgeType) {
-    window.location.href = "dashboard.html";
+    window.location.href = "dashboard";
     return;
   }
 
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    window.location.href = "login.html";
+    window.location.href = "login";
     return;
   }
 
@@ -164,7 +164,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   localStorage.removeItem("pendingBadgeType");
 
   setTimeout(() => {
-    window.location.href = "dashboard.html";
+    window.location.href = "dashboard";
   }, 1500);
 
 } catch (err) {

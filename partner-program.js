@@ -70,7 +70,7 @@ if (loginForm) {
         .update({ user_id: user.id })
         .eq("email", user.email);
 
-     window.location.href = "/admin/partner-dashboard.html";
+     window.location.href = "/admin/partner-dashboard";
      loginBtn.classList.remove("partner-btn-loading");
 
      });
