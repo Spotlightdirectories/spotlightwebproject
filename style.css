@@ -860,12 +860,15 @@ input:checked + .glslider:before {
 /* ====== PRICING GRID ====== */
 .pricing-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(5, minmax(260px, 1fr));
   gap: 2rem;
-  max-width: 1600px;
-  margin: auto;
+  max-width: 100%;
+  margin: 0 auto;
+}
 
-  margin-bottom: 60px;
+.pricing-wrapper {
+  width: 100%;
+  overflow-x: auto;
 }
 
 .glcard.dark-card {
@@ -1062,6 +1065,10 @@ input:checked + .glslider:before {
 /* ====== MOBILE ====== */
 @media (max-width: 768px) {
 
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+
   .get-listed-content {
     padding: 5.5rem 1rem 2.5rem;
   }
@@ -1092,9 +1099,6 @@ input:checked + .glslider:before {
     display: block;
   }
 
-  .pricing-grid {
-    gap: 1.2rem;
-  }
 }
 
 /* PLANS COMPARISON */
