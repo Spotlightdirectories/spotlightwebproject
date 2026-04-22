@@ -64,6 +64,25 @@ custom: Infinity
 
 const branchForm = document.getElementById("branchForm");
 
+const branchWhatsappInput = document.getElementById("branchWhatsapp");
+
+// FORCE +234 PREFIX
+branchWhatsappInput.value = "+234";
+
+branchWhatsappInput.addEventListener("input", () => {
+  let raw = branchWhatsappInput.value.replace("+234", "");
+
+  raw = raw.replace(/\D/g, "");
+
+  if (raw.startsWith("0")) {
+    raw = raw.slice(1);
+  }
+
+  raw = raw.slice(0, 10);
+
+  branchWhatsappInput.value = "+234" + raw;
+});
+
 if (branchForm) {
 
 branchForm.addEventListener("submit", async (e) => {

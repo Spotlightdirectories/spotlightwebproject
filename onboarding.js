@@ -71,6 +71,26 @@ function normalizePhone(input) {
   const lgaSelectEl = document.getElementById("lga");
   const whatsappInput = document.getElementById("whatsapp");
 
+// FORCE +234 PREFIX
+whatsappInput.value = "+234";
+
+whatsappInput.addEventListener("input", () => {
+  let raw = whatsappInput.value.replace("+234", "");
+
+  // remove non-digits
+  raw = raw.replace(/\D/g, "");
+
+  // remove leading 0
+  if (raw.startsWith("0")) {
+    raw = raw.slice(1);
+  }
+
+  // LIMIT to 10 digits (Nigeria standard after 234)
+  raw = raw.slice(0, 10);
+
+  whatsappInput.value = "+234" + raw;
+});
+
   // ===============================
   // Load categories
   // ===============================
