@@ -70,25 +70,65 @@ if (!authUserId) {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-// 🔒 Prevent double activation
-const { data: existingVendor } = await supabase
-  .from("vendors")
-  .select("subscription_status")
-  .eq("auth_user_id", authUserId)
+// ✅ Activate vendor
+// 🔹 Get payment record using reference
+const { data: payment } = await supabase
+  .from("vendorpayments")
+  .select("id, vendor_id, plan, billing_type, status")
+  .eq("gateway_ref", reference)
   .maybeSingle();
 
-if (existingVendor?.subscription_status === "active") {
+if (!payment) {
   return new Response(
-    JSON.stringify({ message: "Already activated" }),
+    JSON.stringify({ error: "Payment record not found" }),
+    { status: 400, headers: corsHeaders }
+  );
+}
+
+// 🔒 Retry protection (PAYMENT LEVEL)
+if (payment.status === "confirmed") {
+  // 🔹 Still log audit for retries
+  await supabase
+    .from("vendorpayments")
+    .update({
+      webhook_event: event,
+      webhook_received_at: new Date().toISOString()
+    })
+    .eq("id", payment.id);
+
+  return new Response(
+    JSON.stringify({ message: "Payment already processed (audit logged)" }),
     { status: 200, headers: corsHeaders }
   );
 }
 
-// ✅ Activate vendor
+const now = new Date().toISOString();
+
+const expiry =
+  payment.billing_type === "monthly"
+    ? new Date(new Date(now).setMonth(new Date(now).getMonth() + 1))
+    : new Date(new Date(now).setFullYear(new Date(now).getFullYear() + 1));
+
+// 🔒 Prevent double activation
+const { data: existingVendor } = await supabase
+  .from("vendors")
+  .select("subscription_status, paid_at")
+  .eq("id", payment.vendor_id)
+  .maybeSingle();
+
+// ✅ FULL activation
 await supabase
   .from("vendors")
-  .update({ subscription_status: "active" })
-  .eq("auth_user_id", authUserId);
+  .update({
+    subscription_status: "active",
+    plan_tier: payment.plan,
+    billing_cycle: payment.billing_type,
+    is_premium: true,
+    paystack_reference: reference,
+    paid_at: now,
+    expires_at: expiry
+  })
+  .eq("id", payment.vendor_id);
 
   return new Response(
     JSON.stringify({ success: true }),

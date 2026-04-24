@@ -132,24 +132,24 @@ if (!updatedPayment || updatedPayment.length === 0) {
   console.error("No payment matched reference:", reference);
 }
 
-  // 🔹 Activate vendor
-  const expiry =
-  existingPayment.billing_type === "monthly"
-    ? new Date(new Date(now).setMonth(new Date(now).getMonth() + 1))
-    : new Date(new Date(now).setFullYear(new Date(now).getFullYear() + 1));
+//   // 🔹 Activate vendor
+//   const expiry =
+//   existingPayment.billing_type === "monthly"
+//     ? new Date(new Date(now).setMonth(new Date(now).getMonth() + 1))
+//     : new Date(new Date(now).setFullYear(new Date(now).getFullYear() + 1));
 
-await supabase
-  .from("vendors")
-  .update({
-    subscription_status: "active",
-    plan_tier: existingPayment.plan,
-    billing_cycle: existingPayment.billing_type,
-    is_premium: true,
-    paystack_reference: reference,
-    paid_at: now,
-    expires_at: expiry
-  })
-  .eq("id", existingPayment.vendor_id);
+// await supabase
+//   .from("vendors")
+//   .update({
+//     subscription_status: "active",
+//     plan_tier: existingPayment.plan,
+//     billing_cycle: existingPayment.billing_type,
+//     is_premium: true,
+//     paystack_reference: reference,
+//     paid_at: now,
+//     expires_at: expiry
+//   })
+//   .eq("id", existingPayment.vendor_id);
 
   // 🔹 Send activation email
   const { data: vendorData } = await supabase
