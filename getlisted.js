@@ -86,7 +86,7 @@ console.log("PLAN BUTTONS FOUND:", planButtons.length);
      }
 
       // 🔒 ALLOWED PLANS ONLY
-      const allowedPlans = ["test", "free", "standard", "enterprise", "elite", "custom"];
+      const allowedPlans = ["free", "standard", "enterprise", "elite", "custom"];
       if (!allowedPlans.includes(plan)) {
         console.error("Invalid plan selected:", plan);
         return;

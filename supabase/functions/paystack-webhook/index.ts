@@ -130,6 +130,15 @@ await supabase
   })
   .eq("id", payment.vendor_id);
 
+  // 🔹 Audit (first successful processing)
+await supabase
+  .from("vendorpayments")
+  .update({
+    webhook_event: event,
+    webhook_received_at: new Date().toISOString()
+  })
+  .eq("id", payment.id);
+
   return new Response(
     JSON.stringify({ success: true }),
     { status: 200, headers: corsHeaders }

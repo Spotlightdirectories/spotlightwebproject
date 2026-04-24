@@ -66,6 +66,7 @@ function normalizePhone(input) {
 
   const categorySelect = document.getElementById("category");
   const subcategorySelect = document.getElementById("subcategory");
+  subcategorySelect.disabled = true;
   const addressInput = document.getElementById("address");
   const stateSelectEl = document.getElementById("state");
   const lgaSelectEl = document.getElementById("lga");
@@ -108,24 +109,38 @@ whatsappInput.addEventListener("input", () => {
 }
 
   categorySelect.addEventListener("change", async () => {
+  subcategorySelect.disabled = false;
+
+  const categoryId = categorySelect.value;
+
+  // 🔹 Show loading immediately
+  subcategorySelect.innerHTML = "<option>Loading...</option>";
+
+  if (!categoryId) {
     subcategorySelect.innerHTML = "<option value=''>Select Subcategory</option>";
+    return;
+  }
 
-    if (!categorySelect.value) return;
+  const { data: subs } = await supabase
+    .from("subcategories")
+    .select("id, name")
+    .eq("category_id", categoryId)
+    .order("name", { ascending: true });
 
-    const { data: subs } = await supabase
-      .from("subcategories")
-      .select("id, name")
-      .eq("category_id", categorySelect.value);
+  // 🔹 Reset properly after loading
+  subcategorySelect.innerHTML = "<option value=''>Select Subcategory</option>";
 
-     if (subs) {
-       subs.forEach(s => {
-       const opt = document.createElement("option");
-       opt.value = s.id;
-       opt.textContent = s.name;
-       subcategorySelect.appendChild(opt);
-     });
-    }
-  });
+  if (subs && subs.length > 0) {
+    subs.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s.id;
+      opt.textContent = s.name;
+      subcategorySelect.appendChild(opt);
+    });
+  } else {
+    subcategorySelect.innerHTML = "<option>No subcategories available</option>";
+  }
+});
 
   // ===============================
   // GEOLOCATION (UNCHANGED)

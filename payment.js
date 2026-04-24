@@ -272,7 +272,6 @@ console.log("UPDATE RESULT:", updateData, updateError, window.currentPaymentId);
 
   function getAmountInKobo(plan, billingType) {
   const prices = {
-    test: { monthly: 15000, yearly: 15000 },
     standard: { monthly: 299800, yearly: 2597600 },
     enterprise: { monthly: 899800, yearly: 8297600 },
     elite: { monthly: 2299800, yearly: 11097600 }
