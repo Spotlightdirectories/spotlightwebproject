@@ -34,9 +34,14 @@ if (referralCode) {
 }
 
   const billingToggle = document.getElementById("billingToggle");
-  const planButtons = document.querySelectorAll(".glcard .btn");
+  const planButtons = document.querySelectorAll(".glcard .btn, .plan-btn");
 
-  if (!billingToggle || planButtons.length === 0) return;
+  if (planButtons.length === 0) {
+  console.error("No plan buttons found");
+  return;
+}
+
+console.log("PLAN BUTTONS FOUND:", planButtons.length);
 
   // -----------------------------
   // Billing toggle UI (UNCHANGED)
@@ -63,21 +68,25 @@ if (referralCode) {
   // -----------------------------
   planButtons.forEach(btn => {
     btn.addEventListener("click", (e) => {
+
+      console.log("BUTTON CLICKED");
+
+      // ✅ Skip custom plan → allow normal link/navigation
       e.preventDefault();
 
       const card = btn.closest(".glcard");
-      if (!card) return;
 
-      // 🔒 AUTHORITATIVE PLAN SOURCE
-      const plan = card.querySelector("h2")?.dataset.plan;
+      let plan =
+        card?.querySelector("h2")?.dataset.plan ||
+        btn.dataset.plan;
 
       if (!plan) {
-        console.error("Plan missing data-plan attribute on h2");
+        console.error("Plan not detected");
         return;
-      }
+     }
 
       // 🔒 ALLOWED PLANS ONLY
-      const allowedPlans = ["free", "standard", "enterprise", "elite", "custom"];
+      const allowedPlans = ["test", "free", "standard", "enterprise", "elite", "custom"];
       if (!allowedPlans.includes(plan)) {
         console.error("Invalid plan selected:", plan);
         return;

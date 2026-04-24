@@ -779,7 +779,7 @@ button.ghost:hover {
 
 /* ====== MAIN CONTENT ====== */
 .get-listed-content {
-  padding-top: 120px;
+  padding-top: 40px;
   padding-left: 1rem;
   padding-right: 1rem;
   text-align: center;
@@ -863,7 +863,7 @@ input:checked + .glslider:before {
   grid-template-columns: repeat(5, minmax(260px, 1fr));
   gap: 2rem;
   max-width: 100%;
-  margin: 0 auto;
+  margin: 40px auto 0; /* ✅ adds top gap */
 }
 
 .pricing-wrapper {
@@ -901,11 +901,10 @@ input:checked + .glslider:before {
   background: #fff;
   border: 1px solid #f6cbcb;
   border-radius: 16px;
-  /*padding: 2rem 1.5rem 2.5rem;*/
+  /*padding: 2rem 1.5rem 2rem;*/
   text-align: center;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   color: #111;  
 }
@@ -1016,6 +1015,7 @@ input:checked + .glslider:before {
   font-weight: 600;
 
   padding: 0.7rem 1rem;    /* balanced height */
+  margin-top: auto;
 
   background: var(--brand);
   color: #fff;
@@ -1046,12 +1046,17 @@ input:checked + .glslider:before {
   font-weight: 600;
 
   padding: 0.7rem 1rem;
+  margin-top: auto;
 
   background: white;
   color: var(--brand);
   text-decoration: none;
   border-radius: 8px;
   transition: background 0.3s;
+}
+
+.plan-btn {
+  text-decoration: none;
 }
 
 .btn:hover {

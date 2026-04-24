@@ -99,6 +99,23 @@
 
    <div class="pricing-wrapper">
     <section class="pricing-grid">
+
+      <div class="glcard">
+  <h2 data-plan="test">Test Plan</h2>
+  <p class="price" data-monthly="₦150" data-yearly="₦150">₦150</p>
+
+  <div class="recommendedbanner">
+    <p>Internal Testing Only</p>
+  </div>
+
+  <ul>
+    <li>Full payment flow test</li>
+    <li>Webhook validation</li>
+    <li>Activation check</li>
+  </ul>
+
+  <a href="#" class="btn">Test Payment</a>
+</div>
       <!-- BASIC PLAN -->
       <div class="glcard">
         <h2 data-plan="free">Basic (Free)</h2>
@@ -170,7 +187,7 @@
         <p class="big"><br>Everything in Enterprise</br></p>
 
         <ul>
-          <li>Up to 50 branches</li>
+          <li>Up to 30 branches</li>
           <li>5 social media handles</li>
           <li>Help setting up Google Business profile</li>
           <li>Dedicated Support</li>
@@ -213,27 +230,27 @@
     
     <div class="plan-header">
     <h3>Basic(Free)</h3>
-    <button class="plan-btn">Get Started</button>
+    <button class="plan-btn" data-plan="free">Get Started</button>
     </div>
     
     <div class="plan-header">
     <h3>Standard</h3>
-    <button class="plan-btn">Choose Plan</button>
+    <button class="plan-btn" data-plan="standard">Choose Plan</button>
     </div>
 
     <div class="plan-header">
     <h3>Enterprise</h3>
-    <button class="plan-btn">Choose Plan</button>
+    <button class="plan-btn" data-plan="enterprise">Choose Plan</button>
     </div>
 
     <div class="plan-header">
     <h3>Elite</h3>
-    <button class="plan-btn">Choose Plan</button>
+    <button class="plan-btn" data-plan="elite">Choose Plan</button>
     </div>
 
     <div class="plan-header">
     <h3>Custom</h3>
-    <button class="plan-btn">Go Unlimited</button>
+      <a href="contact-us" class="plan-btn">Go Unlimited</a>
     </div>
   </div>
 
@@ -245,12 +262,12 @@
 
   <div class="row">
     <div class="feature-name">Vendor Address</div>
-    <div>1 Address</div><div>1 Address</div><div>Up to 10 Addresses</div><div>Up to 50 Addresses</div><div>Unlimited Addresses</div>
+    <div>1 Address</div><div>1 Address</div><div>Up to 10 Addresses</div><div>Up to 30 Addresses</div><div>Unlimited Addresses</div>
   </div>
 
   <div class="row">
     <div class="feature-name">Click-to-call & WhatsApp</div>
-    <div>1 WhatsApp No</div><div>1 WhatsApp No</div><div>Up to 10 WhatsApp Nos</div><div>Up to 50 WhatsApp Nos</div><div>Unlimited WhatsApp Nos</div>
+    <div>1 WhatsApp No</div><div>1 WhatsApp No</div><div>Up to 10 WhatsApp Nos</div><div>Up to 30 WhatsApp Nos</div><div>Unlimited WhatsApp Nos</div>
   </div>
 
     <div class="row">
@@ -345,7 +362,6 @@
      <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
      <script src="script2.js"></script>
      <script src="script.js"></script>
-     <script src="vendor.js"></script>
      <script src="supabase-client.js"></script>
      <script src="getlisted.js"></script>
 

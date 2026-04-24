@@ -98,7 +98,7 @@ const { data, error } = await supabase
 
   // 2️⃣ Open Paystack
   const handler = PaystackPop.setup({
-    key: "pk_test_3dc48990c568ef43d2b42a9571cde21b9175d699",
+    key: "pk_live_3bb98d5dc8a2fa57534c307db789248d24c629de",
     email: user.email,
     amount: getAmountInKobo(vendor.plan_tier, billingType),
     currency: "NGN",
@@ -272,6 +272,7 @@ console.log("UPDATE RESULT:", updateData, updateError, window.currentPaymentId);
 
   function getAmountInKobo(plan, billingType) {
   const prices = {
+    test: { monthly: 15000, yearly: 15000 },
     standard: { monthly: 299800, yearly: 2597600 },
     enterprise: { monthly: 899800, yearly: 8297600 },
     elite: { monthly: 2299800, yearly: 11097600 }
