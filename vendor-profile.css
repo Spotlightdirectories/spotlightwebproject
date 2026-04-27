@@ -29,7 +29,8 @@ body {
 /* Cover */
 .hero-cover {
   width: 100%;
-  height: 300px;
+  aspect-ratio: 920 / 360;
+  max-height: 348px;
   overflow: hidden;
   border-radius: 8px;
   background: linear-gradient(
@@ -44,8 +45,9 @@ body {
 .hero-cover img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
+    object-position: center 35%;
   filter: brightness(0.98);
 }
 
@@ -250,14 +252,13 @@ body {
 
   /* COVER IMAGE */
   .hero-cover{
-    height: 160px;
-  }
+  max-height: 220px;
+}
 
-  .hero-cover img{
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+.hero-cover img{
+  object-fit: cover;
+  object-position: center;
+}
 
   /* HERO CONTENT STACK */
   .hero-content{
@@ -502,10 +503,6 @@ body {
 
 .camera-overlay:hover {
   background: rgba(0,0,0,0.85);
-}
-
-.hero-cover {
-  position: relative;
 }
 
 .camera-overlay.small {

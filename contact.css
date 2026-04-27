@@ -193,10 +193,11 @@ margin-top:70px;
 }
 
 .spot-right p{
-margin-bottom:16px;
-display:flex;
-align-items:center;
-gap:10px;
+  margin-bottom:16px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
 }
 
 .spot-right a{
@@ -206,6 +207,16 @@ text-decoration:none;
 
 .spot-right a:hover{
 color:#ffd400;
+}
+
+/* ICON STYLING FOR CONTACT */
+
+.spot-right i{
+  font-size:20px;
+  min-width:24px;
+  text-align:center;
+  color:#ffd400;
+  flex-shrink:0;
 }
 
 
@@ -220,11 +231,20 @@ align-items:center;
 flex-wrap:wrap;
 }
 
-.social-icons img{
-width: 30px;
-height: 30px;
+/* SOCIAL ICON STYLING */
+
+.social-icons a{
+  font-size:24px;
+  color:white;
+  transition:0.2s ease;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
 }
 
+.social-icons a:hover{
+  color:#ffd400;
+}
 
 
 /* FOOTER */
@@ -294,9 +314,13 @@ font-size:3.5rem;
     margin-top: 12px;
   }
 
-  .social-icons img{
-    width: 26px;
-    height: 26px;
+    .spot-right i{
+    font-size:18px;
+    min-width:22px;
+  }
+
+  .social-icons a{
+    font-size:22px;
   }
 
 }

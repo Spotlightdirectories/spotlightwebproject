@@ -47,7 +47,23 @@ console.log("PLAN BUTTONS FOUND:", planButtons.length);
   // Billing toggle UI (UNCHANGED)
   // -----------------------------
   const prices = document.querySelectorAll(".price");
-  const yearlyTexts = document.querySelectorAll(".yearly");
+  const yearlyTexts = document.querySelectorAll(".yearly"); 
+  // ✅ FORCE DEFAULT TO YEARLY ON LOAD
+billingToggle.checked = true;
+
+// ✅ APPLY YEARLY PRICING IMMEDIATELY
+prices.forEach(price => {
+  price.textContent = price.dataset.yearly;
+});
+
+yearlyTexts.forEach(text => {
+  text.style.display = "none";
+});
+
+// ✅ ENSURE DEFAULT BILLING IS ALWAYS SET
+if (!localStorage.getItem("billingType")) {
+  localStorage.setItem("billingType", "yearly");
+}
 
   billingToggle.addEventListener("change", () => {
     const yearly = billingToggle.checked;
