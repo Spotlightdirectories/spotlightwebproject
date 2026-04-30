@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit Profile | Spotlight Directories</title>
+
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="navbar.css">
+  <link rel="stylesheet" href="editvendor-profile.css">
+
+  <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+
+<header class="navbar">
+
+  <div class="logo-left">
+    <a href="index">
+      <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg">
+    </a>
+    <a href="index" class="home">Home</a>
+  </div>
+
+  <nav>
+    <ul class="nav-links">
+      <li><a href="dashboard">Business Profile</a></li>
+    </ul>
+  </nav>
+
+</header>
+
+<div class="profile-container">
+
+  <h2 class="profile-title">Business Profile</h2>
+
+  <!-- STATUS MESSAGE -->
+
+  <!-- BUSINESS NAME (READONLY) -->
+<div class="profile-field">
+  <div class="field-header">
+    <label>Business Name</label>
+  </div>
+  <p id="view-name" class="field-value"></p>
+</div>
+
+  <!-- EMAIL (READONLY) -->
+<div class="profile-field">
+  <div class="field-header">
+    <label>Email</label>
+  </div>
+  <p id="view-email" class="field-value"></p>
+</div>
+
+  <!-- WHATSAPP -->
+<div class="profile-field">
+  <div class="field-header">
+    <label>WhatsApp</label>
+    <button class="edit-btn" data-field="whatsapp">Edit</button>
+  </div>
+  <p id="view-whatsapp" class="field-value"></p>
+</div>
+
+  <!-- TELEPHONE -->
+<div class="profile-field">
+  <div class="field-header">
+    <label>Telephone</label>
+    <button class="edit-btn" data-field="telephone">Edit</button>
+  </div>
+  <p id="view-telephone" class="field-value"></p>
+</div>
+
+  <!-- ADDRESS -->
+<div class="profile-field">
+  
+  <div class="field-header">
+    <label>Address</label>
+    <button class="edit-btn" data-field="address">Edit</button>
+  </div>
+
+  <p id="view-address" class="field-value"></p>
+
+</div>
+
+  <!-- DESCRIPTION -->
+<div class="profile-field">
+  <div class="field-header">
+    <label>Description</label>
+    <button class="edit-btn" data-field="description">Edit</button>
+  </div>
+  <p id="view-description" class="field-value"></p>
+</div>
+
+  <!-- CATEGORY -->
+<div class="profile-field">
+  <div class="field-header">
+    <label>Category / Subcategory</label>
+    <button class="edit-btn" data-field="category">Edit</button>
+  </div>
+  <p id="view-category" class="field-value"></p>
+</div>
+
+<!-- STATE -->
+<div class="profile-field">
+  <div class="field-header">
+    <label>State / LGA</label>
+    <button class="edit-btn" data-field="state">Edit</button>
+  </div>
+  <p id="view-state" class="field-value"></p>
+</div>
+
+<!-- BUSINESS COORDINATES -->
+<div class="profile-field">
+
+  <div class="field-header">
+    <label>Business Coordinates</label>
+  </div>
+
+  <p class="coords-instruction">
+  Click "Detect My Business Location" while at your office or shop.
+  If you are not there, you may manually enter coordinates.
+  Visit
+  <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer">
+    maps.google.com
+  </a>,
+  type your address, right-click the pin to copy coordinates.
+</p>
+
+  <div class="coords-row">
+    <input type="text" id="latitude" class="edit-input" placeholder="Lat e.g. 6.5244">
+    <input type="text" id="longitude" class="edit-input" placeholder="Lng e.g. 3.3792">
+  </div>
+
+  <button id="detectLocationBtn" class="ob-btn secondary">
+    Detect My Business Location
+  </button>
+
+  <div class="coords-confirm">
+    <input type="checkbox" id="confirmLocationCheckbox">
+    <label for="confirmLocationCheckbox">
+      I confirm this is my business location
+    </label>
+  </div>
+
+  <p id="locationStatus" class="status-message"></p>
+
+</div>
+
+  <div id="statusMsg" class="status-message"></div>
+
+  <!-- SAVE BUTTON -->
+  <div class="profile-actions">
+    <button id="saveBtn" class="edit-save-btn">Save Changes</button>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="editvendor-profile.js"></script>
+
+</body>
+</html>

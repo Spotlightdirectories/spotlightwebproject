@@ -320,6 +320,7 @@ whatsappInput.addEventListener("input", () => {
     })
     .eq("auth_user_id", user.id);
 
+    console.log("Redirecting to edit profile page...");
     window.location.replace("dashboard");
   });
 

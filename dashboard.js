@@ -288,7 +288,7 @@ if (badgeStatus) {
   }
 
   document.getElementById("editProfileBtn").addEventListener("click", () => {
-    window.location.href = "onboarding";
+    window.location.href = "editvendor-profile.html";
   });
 
   // ===============================

@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // PLAN CAPABILITIES
   // ===============================
   const TIER_CAPABILITIES = {
-    free: { media: false },
+    free: { media: true },
     standard: { media: true },
     enterprise: { media: true },
     elite: { media: true },
@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   const SOCIAL_LIMITS = {
-    free: 0,
+    free: 1,
     standard: 2,
     enterprise: 3,
     elite: 5,
@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   free: 0,
   standard: 1,
   enterprise: 10,
-  elite: 50,
+  elite: 30,
   custom: Infinity
 };
 
@@ -132,16 +132,62 @@ function renderBadge(status) {
 
       vendor.plan_tier = getSafePlanTier(vendor.plan_tier);
 
+// ===============================
+// TRIAL STATE
+// ===============================
+let trial_active = false;
+let trial_expired = false;
+
+if (vendor.plan_tier === "free" && vendor.trial_started_at) {
+
+  const start = new Date(vendor.trial_started_at);
+  const now = new Date();
+
+  const diffDays = Math.floor(
+    (now - start) / (1000 * 60 * 60 * 24)
+  );
+
+  if (diffDays <= 90) {
+    trial_active = true;
+  } else {
+    trial_expired = true;
+  }
+
+}
+
+// ===============================
+// EFFECTIVE LIMITS (PLAN + TRIAL)
+// ===============================
+let effectiveSocialLimit = 0;
+let effectiveGalleryLimit = 0;
+
+if (vendor.plan_tier === "free") {
+
+  if (trial_active) {
+    effectiveSocialLimit = 1;
+    effectiveGalleryLimit = 3;
+  }
+
+  if (trial_expired) {
+    effectiveSocialLimit = 0;
+    effectiveGalleryLimit = 1;
+  }
+
+} else {
+  effectiveSocialLimit = SOCIAL_LIMITS[vendor.plan_tier] ?? 0;
+
+  const GALLERY_LIMITS = {
+    free: 3,
+    standard: 6,
+    enterprise: 12,
+    elite: 24,
+    custom: 24
+  };
+
+  effectiveGalleryLimit = GALLERY_LIMITS[vendor.plan_tier] ?? 0;
+}
+
       const isFree = vendor.plan_tier === "free";
-
-      const GALLERY_LIMITS = {
-        free: 0,
-        standard: 6,
-        enterprise: 12,
-        elite: 24,
-        custom: 24
-     };
-
       const isPaid = !isFree;
 
       const galleryInput = document.getElementById("galleryInput");
@@ -172,12 +218,77 @@ if (videoNote) {
 
 }
 
-      if (galleryInput && !isFree) {
+if (galleryInput) {
 
-         galleryInput.addEventListener("change", async (e) => {
+galleryInput.addEventListener("change", async (e) => {
 
-           const file = e.target.files[0];
-           if (!file) return;
+let file = e.target.files[0];
+if (!file) return;
+
+// ===============================
+// RESIZE + COMPRESS IMAGE
+// ===============================
+const img = document.createElement("img");
+img.src = URL.createObjectURL(file);
+
+await new Promise(resolve => {
+  img.onload = resolve;
+});
+
+const canvas = document.createElement("canvas");
+const ctx = canvas.getContext("2d");
+
+// MAX SIZE
+const MAX_WIDTH = 1200;
+const MAX_HEIGHT = 1200;
+
+let width = img.width;
+let height = img.height;
+
+// Maintain aspect ratio
+if (width > height) {
+  if (width > MAX_WIDTH) {
+    height *= MAX_WIDTH / width;
+    width = MAX_WIDTH;
+  }
+} else {
+  if (height > MAX_HEIGHT) {
+    width *= MAX_HEIGHT / height;
+    height = MAX_HEIGHT;
+  }
+}
+
+canvas.width = width;
+canvas.height = height;
+
+ctx.drawImage(img, 0, 0, width, height);
+
+// COMPRESS
+const blob = await new Promise(resolve =>
+  canvas.toBlob(resolve, "image/jpeg", 0.7)
+);
+
+// Replace file
+file = new File([blob], `optimized-${Date.now()}.jpg`, {
+  type: "image/jpeg"
+});
+
+
+// ===============================
+// ENFORCE GALLERY LIMIT
+// ===============================
+const limit = effectiveGalleryLimit;
+
+const { data: existingImages } = await supabase
+  .from("vendor_media")
+  .select("id")
+  .eq("vendor_id", vendor.id)
+  .eq("media_type", "image");
+
+if (existingImages && existingImages.length >= limit) {
+  alert("You have reached the maximum number of images allowed for your plan.");
+  return;
+}
 
        // file type validation
            const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
@@ -191,6 +302,24 @@ if (videoNote) {
            alert("Image must be less than 750KB.");
            return;
           }
+
+          // ===============================
+// INSTANT PREVIEW (UX IMPROVEMENT)
+// ===============================
+const previewUrl = URL.createObjectURL(file);
+
+const grid = document.getElementById("galleryGrid");
+if (grid) {
+  const previewItem = document.createElement("div");
+  previewItem.className = "gallery-item";
+
+  const previewImg = document.createElement("img");
+  previewImg.src = previewUrl;
+  previewImg.style.opacity = "0.5";
+
+  previewItem.appendChild(previewImg);
+  grid.prepend(previewItem);
+}
 
            const fileName = `${Date.now()}-${file.name}`;
            const filePath = `${vendor.id}/gallery/${fileName}`;
@@ -358,7 +487,7 @@ videoInput.disabled = false;
       const galleryUploader = document.getElementById("galleryUploader");
 
       
-      if (galleryUploader && isOwner) {
+     if (galleryUploader && isOwner && TIER_CAPABILITIES[vendor.plan_tier].media) {
         galleryUploader.classList.remove("hidden");
     }
 
@@ -368,8 +497,8 @@ videoInput.disabled = false;
       videoUploader.classList.remove("hidden");
     }
 
-      if (isFree && galleryInput) {
-      galleryInput.disabled = true;
+     if (isFree && galleryInput) {
+     galleryInput.disabled = false;
     }
 
     // -------------------------------
@@ -412,17 +541,25 @@ const deleteLogoBtn = document.getElementById("deleteLogoBtn");
 
 function renderBranding() {
 
-  if (cover) {
+if (cover) {
 
-    if (vendor.cover_url) {
-      cover.src = vendor.cover_url;
-      cover.style.display = "block";
-    } else {
-      cover.removeAttribute("src");
-      cover.style.display = "none";
-    }
+  if (vendor.cover_url) {
 
+    cover.style.opacity = "0.3";
+    cover.src = vendor.cover_url;
+
+    cover.onload = () => {
+      cover.style.opacity = "1";
+    };
+
+    cover.style.display = "block";
+
+  } else {
+    cover.removeAttribute("src");
+    cover.style.display = "none";
   }
+
+}
 
   if (coverPlaceholder) {
     coverPlaceholder.style.display =
@@ -436,10 +573,17 @@ function renderBranding() {
 
   if (logo) {
 
-    if (vendor.logo_url) {
+      if (vendor.logo_url) {
+
+      logo.style.opacity = "0.3";
       logo.src = vendor.logo_url;
+
+      logo.onload = () => {
+      logo.style.opacity = "1";
+     };
+
       logo.style.display = "block";
-    } else {
+     } else {
       logo.removeAttribute("src");
       logo.style.display = "none";
     }
@@ -621,7 +765,7 @@ async function loadGallery() {
 
   grid.innerHTML = "<div class='gallery-loading'>Loading...</div>";
 
-  const limit = GALLERY_LIMITS[vendor.plan_tier] ?? 0;
+  const limit = effectiveGalleryLimit;
 
   const { data: images } = await supabase
     .from("vendor_media")
@@ -633,7 +777,9 @@ async function loadGallery() {
   const imageList = images || [];
   grid.innerHTML = "";
 
-  const totalItems = isOwner ? limit : imageList.length;
+  const totalItems = isOwner
+  ? effectiveGalleryLimit
+  : Math.min(imageList.length, effectiveGalleryLimit);
 
   for (let i = 0; i < totalItems; i++) {
 
@@ -661,16 +807,17 @@ async function loadGallery() {
 
 const img = document.createElement("img");
 
-// SET SRC FIRST
+// LAZY LOAD
+img.loading = "lazy";
+
+// SET SRC
 img.src = data.file_url;
 
-// THEN HANDLE ERROR (IMPORTANT ORDER)
+// ERROR FALLBACK
 img.onerror = function () {
   this.onerror = null;
   this.src = "images/placeholder.png";
 };
-
-   img.src = data.file_url;
 
       /* ---------- TITLE ---------- */
       const title = document.createElement("input");
@@ -945,7 +1092,7 @@ wrapper.appendChild(meta);
 
 slot.appendChild(wrapper);
 
-    } else if (isOwner && !isFree) {
+    } else if (isOwner) {
 
       const wrapper = document.createElement("div");
       wrapper.className = "gallery-content";
@@ -1109,7 +1256,7 @@ loadVideo();
     website: `<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm6.9 9h-3.2a15 15 0 0 0-1.1-5A8.1 8.1 0 0 1 18.9 11zM12 4c.9 1.3 1.6 3.3 1.8 5H10.2c.2-1.7.9-3.7 1.8-5zM4.3 13h3.2a15 15 0 0 0 1.1 5A8.1 8.1 0 0 1 4.3 13zm3.2-2H4.3a8.1 8.1 0 0 1 4.3-5 15 15 0 0 0-1.1 5zM12 20c-.9-1.3-1.6-3.3-1.8-5h3.6c-.2 1.7-.9 3.7-1.8 5zm2.4-2a15 15 0 0 0 1.1-5h3.2a8.1 8.1 0 0 1-4.3 5z"/></svg>`
   };
 
-links.forEach(link => {
+  links.slice(0, effectiveSocialLimit).forEach(link => {
 
   if (!iconMap[link.platform]) return;
 
@@ -1129,16 +1276,24 @@ links.forEach(link => {
     del.className = "social-delete";
     del.textContent = "×";
 
-    del.addEventListener("click", async () => {
+del.addEventListener("click", async () => {
 
-      const { error } = await supabase
-        .from("vendor_social_links")
-        .delete()
-        .eq("id", link.id);
+  del.disabled = true;
 
-     if (!error) await loadSocialLinks();
+  const { error } = await supabase
+    .from("vendor_social_links")
+    .delete()
+    .eq("id", link.id);
 
-    });
+  if (error) {
+    del.disabled = false;
+    return;
+  }
+
+  // instant UI removal
+  wrapper.remove();
+
+});
 
     wrapper.appendChild(del);
 
@@ -1190,7 +1345,7 @@ try {
       .select("id")
       .eq("vendor_id", vendor.id);
 
-    const limit = SOCIAL_LIMITS[vendor.plan_tier] ?? 0;
+    const limit = effectiveSocialLimit;
 
     if (existingLinks && existingLinks.length >= limit) {
       alert("You have reached the maximum number of social links allowed for your plan.");
@@ -1292,7 +1447,7 @@ if (!branches || branches.length === 0 || limit === 0) return;
     if (isOwner) {
 
     const socialEditor = document.getElementById("socialEditor");
-    const socialLimit = SOCIAL_LIMITS[vendor.plan_tier] ?? 0;
+    const socialLimit = effectiveSocialLimit;
 
     if (socialEditor) {
 
@@ -1408,42 +1563,6 @@ if (deleteCoverBtn && vendor.cover_url) {
 
 if (deleteLogoBtn && vendor.logo_url) {
   deleteLogoBtn.classList.remove("hidden");
-}
-
-if (deleteCoverBtn) {
-
-  if (!vendor.cover_url) {
-    deleteCoverBtn.style.display = "none";
-  }
-
-  deleteCoverBtn.onclick = async () => {
-
-    const ok = confirm("Delete cover image?");
-    if (!ok) return;
-
-    await supabase.storage
-      .from("vendor-branding")
-      .remove([`${currentUser.id}/cover`]);
-
-    await supabase
-      .from("vendors")
-      .update({ cover_url: null })
-      .eq("id", vendor.id);
-
-    const cover = document.getElementById("vendorCover");
-    if (cover) {
-      cover.removeAttribute("src");
-      cover.style.display = "none";
-    }
-
-    const placeholder = document.getElementById("coverPlaceholder");
-    if (placeholder) {
-      placeholder.style.display = "flex";
-    }
-
-    deleteCoverBtn.style.display = "none";
-  };
-
 }
 
 if (deleteLogoBtn) {
