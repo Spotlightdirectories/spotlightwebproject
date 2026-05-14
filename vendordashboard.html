@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="UTF-8" />
+  <title>Vendor Dashboard | Spotlight</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <meta property="og:type" content="business.business" />
+  <meta property="og:title" content="Vendor Profile on Spotlight" />
+  <meta property="og:description" content="Verified business profile on Spotlight." />
+  <meta property="og:image" content="https://yourdomain.com/images/og-default.png" />
+  <meta property="og:url" content="" id="ogUrl" />
+
+
+  <!-- SEO placeholders -->
+  <meta name="description" content="Discover verified vendors near you on Spotlight." />
+  <link rel="canonical" href="https://www.spotlightdirectories.com/vendor-profile" />
+
+  <link rel="stylesheet" href="navbar.css">
+  <link rel="stylesheet" href="vendordashboard.css"> 
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<!-- ✅ UPDATED FAVICONS -->
+<link rel="icon" type="image/png" sizes="48x48" href="/images/favicon-48.png">
+<link rel="icon" type="image/png" sizes="64x64" href="/images/favicon-64.png">
+<link rel="apple-touch-icon" href="/images/favicon-180.png">
+
+<!-- ✅ STRUCTURED DATA (GOOGLE LOGO CONTROL) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Spotlight Directories",
+  "url": "https://spotlightdirectories.com",
+  "logo": "https://spotlightdirectories.com/images/spotlightlogo-512.png"
+}
+</script>  
+
+</head>
+
+<body>
+
+<!-- ========================= -->
+<!-- SIDEBAR -->
+<!-- ========================= -->
+<aside class="vd-sidebar">
+  <div class="vd-sidebar-inner">
+
+    <h2 class="vd-logo">Spotlight Directories</h2>
+
+    <div class="vd-nav-wrapper">
+<nav class="vd-nav">
+
+  <button class="vd-nav-item active" data-tab="overview">
+    <i class="fa-regular fa-square"></i>
+    <span>Overview</span>
+  </button>
+
+  <button class="vd-nav-item" data-tab="profile">
+    <i class="fa-regular fa-user"></i>
+    <span>Profile</span>
+  </button>
+
+<button
+  id="mediaSidebarLink"
+  class="vd-nav-item"
+  type="button"
+>
+  <i class="fa-regular fa-image"></i>
+  <span>Media</span>
+</button>
+
+  <button class="vd-nav-item" data-tab="subscription">
+    <i class="fa-regular fa-credit-card"></i>
+    <span>Subscription</span>
+  </button>
+
+  
+
+  <button class="vd-nav-item" data-tab="verification">
+    <i class="fa-regular fa-circle-check"></i>
+    <span>Verification</span>
+  </button>
+
+  <button class="vd-nav-item" data-tab="settings">
+    <i class="fa-solid fa-gear"></i>
+    <span>Settings</span>
+  </button>
+
+</nav>
+    </div>
+
+    <div class="vd-plan-card">
+      <p class="vd-plan-label">Current Plan</p>
+      <p id="vdSidebarPlan">—</p>
+      <button
+        id="sidebarUpgradeBtn"
+        class="vd-upgrade-btn"
+        type="button"
+      >
+       Upgrade
+      </button>
+    </div>
+
+  </div>
+</aside>
+
+<!-- ========================= -->
+<!-- MAIN -->
+<!-- ========================= -->
+<main class="vd-main">
+
+<header class="vd-header">
+  <h1 id="vdPageTitle">Overview</h1>
+
+  <div class="vd-header-right">
+    <div class="vd-user-info">
+      <span id="vdUserName">—</span>
+      <small id="vdUserSpotId">—</small>
+    </div>
+
+<div class="vd-profile-menu">
+
+  <button
+    id="profileMenuBtn"
+    class="vd-profile-btn"
+    type="button"
+  >
+
+    <img
+      id="vdProfileAvatar"
+      class="vd-profile-avatar hidden"
+      alt="Profile Logo"
+    >
+
+    <span
+      id="vdProfileFallback"
+      class="vd-profile-fallback"
+    >
+      —
+    </span>
+
+  </button>
+
+  <div
+    id="profileDropdown"
+    class="vd-dropdown hidden"
+  >
+
+    <button
+      type="button"
+      class="vd-dropdown-item"
+    >
+      Performance
+    </button>
+
+    <button
+      type="button"
+      class="vd-dropdown-item"
+    >
+      Preferences
+    </button>
+
+    <button
+      id="logoutBtn"
+      type="button"
+      class="vd-dropdown-item danger"
+    >
+      Logout
+    </button>
+
+  </div>
+
+  </div>
+  </div>
+</header>
+
+<!-- ========================= -->
+<!-- OVERVIEW -->
+<!-- ========================= -->
+<section id="overview" class="vd-section active">
+
+   <!-- PLAN CARD -->
+<div class="vd-overview-layout">
+
+  <!-- LEFT: STATUS -->
+  <div class="vd-status-card vd-card">
+    <div class="vd-status-top">
+      <div id="profileStatusIcon" class="vd-status-icon">✔</div>
+
+      <div class="vd-status-main">
+        <p class="vd-card-label">Profile Status</p>
+        <h3 id="profileStatusText">—</h3>
+        <p id="profileStatusSubtext" class="vd-status-subtext">—</p>
+      </div>
+    </div>
+
+    <ul id="profileChecklist" class="vd-checklist"></ul>
+
+    <div class="vd-progress-bar">
+      <div id="profileProgress" class="vd-progress-fill"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDE -->
+  <div class="vd-overview-right">
+
+    <!-- TOP ROW -->
+    <div class="vd-top-cards">
+
+      <!-- PLAN -->
+<div class="vd-card vd-plan-box">
+
+  <div class="vd-plan-top">
+
+    <div class="vd-plan-icon">
+      <i class="fa-solid fa-bolt"></i>
+    </div>
+
+    <div class="vd-plan-heading">
+
+      <p class="vd-card-label vd-plan-label-top">
+        Current Plan
+      </p>
+
+      <h3 id="planText">—</h3>
+
+    </div>
+
+  </div>
+
+ <div class="vd-trial-box">
+
+  <p class="vd-trial-label">
+    Free Trial
+  </p>
+
+  <p id="trialDaysLeft" class="vd-trial-days">
+    90 Days Left
+  </p>
+
+  <p id="trialTimeLeft" class="vd-trial-time">
+    0h 0m remaining
+  </p>
+
+</div>
+
+</div>
+
+      <!-- UPGRADE -->
+      <div class="vd-card vd-cta-dark">
+        <h2 class="vd-cta-title">Upgrade</h2>
+        <p class="vd-cta-text">
+          Unlock access to more media, video and social links.
+        </p>
+        <button
+           id="overviewUpgradeBtn"
+           class="vd-upgrade-btn vd-cta-btn"
+           type="button"
+        >
+          Compare Plans
+        </button>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM ROW -->
+    <div class="vd-card">
+
+      <div class="vd-card-header">
+         <h3>Business Quick Info</h3>
+      </div>
+
+      <div class="vd-card-grid">
+
+        <div>
+          <p class="vd-label">BUSINESS NAME</p>
+          <p id="bizName"></p>
+
+          <p class="vd-label">SPOT ID</p>
+          <p id="spotId"></p>
+        </div>
+
+       <div>
+
+  <p class="vd-label">
+    REGISTERED EMAIL
+  </p>
+
+  <div class="vd-email-row">
+
+    <p id="bizEmail"></p>
+
+    <button
+      id="verifyEmailBtn"
+      class="vd-verify-email-btn hidden"
+      type="button"
+    >
+      Verify Email
+    </button>
+
+    <span
+      id="verifiedEmailBadge"
+      class="vd-email-verified hidden"
+    >
+      Verified
+    </span>
+
+  </div>
+
+  <div class="vd-cat-grid">
+    <div>
+      <p class="vd-label">CATEGORY</p>
+      <p id="overviewCategory"></p>
+    </div>
+
+    <div>
+      <p class="vd-label">SUBCATEGORY</p>
+      <p id="overviewSubcategory"></p>
+    </div>
+  </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+<!-- ========================= -->
+<!-- PROFILE -->
+<!-- ========================= -->
+<section id="profile" class="vd-section">
+
+  <div class="vd-card vd-profile-card">
+
+    <!-- HEADER -->
+    <div class="vd-profile-header">
+
+      <div>
+        <h3>Edit Business Profile</h3>
+
+        <p class="vd-profile-subtext">
+          Update your public information and location details.
+        </p>
+      </div>
+
+    </div>
+
+<!-- BUSINESS NAME + EMAIL -->
+<div class="vd-profile-grid">
+
+  <!-- BUSINESS NAME -->
+  <div class="vd-profile-row">
+
+    <div class="vd-profile-row-top">
+      <label>Business Display Name</label>
+    </div>
+
+    <div class="vd-profile-value">
+      <span id="profileBusinessName">
+        —
+      </span>
+    </div>
+
+  </div>
+
+  <!-- EMAIL -->
+  <div class="vd-profile-row">
+
+    <div class="vd-profile-row-top">
+      <label>Email Address</label>
+    </div>
+
+    <div class="vd-profile-value">
+      <span id="profileEmailText">
+        —
+      </span>
+    </div>
+
+  </div>
+
+</div>
+
+    <!-- CONTACT -->
+<!-- CONTACT -->
+<div
+  class="vd-profile-grid vd-editable-group"
+  data-edit="contact"
+>
+
+  <!-- WHATSAPP -->
+  <div class="vd-profile-row">
+
+    <div class="vd-profile-row-top">
+      <label>WhatsApp</label>
+    </div>
+
+    <div class="vd-profile-value">
+      <span id="profileWhatsappText">
+        —
+      </span>
+    </div>
+
+  </div>
+
+  <!-- TELEPHONE -->
+  <div class="vd-profile-row">
+
+    <div class="vd-profile-row-top vd-group-edit-header">
+
+      <label>Telephone</label>
+
+      <button
+          type="button"
+          class="vd-edit-btn"
+          data-toggle="contactEditor"
+          >
+        <i class="fa-solid fa-pen"></i>
+        Edit
+      </button>
+
+    </div>
+
+    <div class="vd-profile-value">
+      <span id="profileTelephoneText">
+        —
+      </span>
+    </div>
+
+    <div
+  id="contactEditor"
+  class="vd-inline-editor"
+>
+
+  <div class="vd-coordinates-row">
+
+    <!-- WHATSAPP -->
+    <div class="vd-phone-group">
+
+      <span class="vd-phone-prefix">
+        +234
+      </span>
+
+      <input
+       type="text"
+       id="whatsapp"
+       class="vd-input vd-phone-input"
+       placeholder="8021234567"
+       maxlength="10"
+       inputmode="numeric"
+       pattern="[1-9][0-9]{9}"
+       >
+
+    </div>
+
+    <!-- TELEPHONE -->
+    <input
+      type="text"
+      id="telephone"
+      class="vd-input"
+      placeholder="Telephone Number"
+    >
+
+  </div>
+
+</div>
+
+  </div>
+
+</div>
+
+    <!-- ADDRESS -->
+    <div
+      class="vd-profile-row vd-editable-row"
+      data-edit="address"
+    >
+
+      <div class="vd-profile-row-top">
+
+        <label>Address</label>
+
+        <button
+          type="button"
+          class="vd-edit-btn"
+          data-toggle="addressEditor"
+        >
+          <i class="fa-solid fa-pen"></i>
+          Edit
+        </button>
+
+      </div>
+
+      <div class="vd-profile-value">
+        <span id="profileAddressText">
+          —
+        </span>
+      </div>
+
+      <div
+  id="addressEditor"
+  class="vd-inline-editor"
+>
+
+  <textarea
+    id="address"
+    class="vd-textarea"
+    rows="4"
+  ></textarea>
+
+</div>
+
+    </div>
+
+<!-- CATEGORY -->
+<div
+  class="vd-profile-grid vd-editable-group"
+  data-edit="category"
+>
+
+  <!-- CATEGORY -->
+  <div class="vd-profile-row">
+
+    <div class="vd-profile-row-top">
+      <label>Category</label>
+    </div>
+
+    <div class="vd-profile-value">
+      <span id="profileCategoryText">
+        —
+      </span>
+    </div>
+
+  </div>
+
+  <!-- SUBCATEGORY -->
+  <div class="vd-profile-row">
+
+    <div class="vd-profile-row-top vd-group-edit-header">
+
+      <label>Subcategory</label>
+
+      <button
+        type="button"
+        class="vd-edit-btn"
+        data-toggle="categoryEditor"
+      >
+        <i class="fa-solid fa-pen"></i>
+        Edit
+      </button>
+
+    </div>
+
+    <div class="vd-profile-value">
+      <span id="profileSubcategoryText">
+        —
+      </span>
+    </div>
+
+    <div
+  id="categoryEditor"
+  class="vd-inline-editor"
+>
+
+  <div class="vd-coordinates-row">
+
+    <select
+      id="category"
+      class="vd-input"
+    >
+      <option value="">
+        Select Category
+      </option>
+    </select>
+
+    <select
+      id="subcategory"
+      class="vd-input"
+    >
+      <option value="">
+        Select Subcategory
+      </option>
+    </select>
+
+  </div>
+
+</div>
+
+  </div>
+
+</div>
+
+<!-- STATE + LGA -->
+<div
+  class="vd-profile-grid vd-editable-group"
+  data-edit="region"
+>
+
+  <!-- STATE -->
+  <div class="vd-profile-row">
+
+    <div class="vd-profile-row-top">
+      <label>State</label>
+    </div>
+
+    <div class="vd-profile-value">
+      <span id="profileStateText">
+        —
+      </span>
+    </div>
+
+  </div>
+
+  <!-- LGA -->
+  <div class="vd-profile-row">
+
+    <div class="vd-profile-row-top vd-group-edit-header">
+
+      <label>LGA</label>
+
+      <button
+        type="button"
+        class="vd-edit-btn"
+        data-toggle="regionEditor"
+      >
+        <i class="fa-solid fa-pen"></i>
+        Edit
+      </button>
+
+    </div>
+
+    <div class="vd-profile-value">
+      <span id="profileLgaText">
+        —
+      </span>
+    </div>
+
+    <div
+  id="regionEditor"
+  class="vd-inline-editor"
+>
+
+  <div class="vd-coordinates-row">
+
+    <select
+      id="state"
+      class="vd-input"
+    >
+      <option value="">
+        Select State
+      </option>
+    </select>
+
+    <select
+      id="lga"
+      class="vd-input"
+    >
+      <option value="">
+        Select LGA
+      </option>
+    </select>
+
+  </div>
+
+</div>
+
+  </div>
+
+</div>
+
+<!-- LOCATION -->
+<div class="vd-profile-row vd-editable-row"   data-edit="location">
+
+  <div class="vd-profile-row-top">
+
+    <label>Business Coordinates</label>
+
+    <button
+      type="button"
+      class="vd-edit-btn"
+      data-toggle="locationEditor"
+    >
+      <i class="fa-solid fa-pen"></i>
+      Edit
+    </button>
+
+  </div>
+
+  <div class="vd-profile-value">
+
+    <span id="profileCoordinatesText">
+      —
+    </span>
+
+  </div>
+
+    
+  <!-- EXPANDABLE LOCATION EDITOR -->
+  <div
+    id="locationEditor"
+    class="vd-inline-editor"
+  >
+
+    <p class="vd-helper-text">
+
+      Click "Detect My Business Location"
+      while at your office or shop.
+
+      If you are not there, you may manually
+      enter coordinates.
+
+      Visit
+
+      <a
+        href="https://maps.google.com"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        maps.google.com
+      </a>
+
+      and search your address. Right-click
+      the map pin to reveal your coordinates.
+
+    </p>
+
+    <div class="vd-coordinates-row">
+
+      <input
+        type="text"
+        id="latitude"
+        class="vd-input"
+        placeholder="Latitude"
+      >
+
+      <input
+        type="text"
+        id="longitude"
+        class="vd-input"
+        placeholder="Longitude"
+      >
+
+    </div>
+
+    <button
+      type="button"
+      id="detectLocationBtn"
+      class="vd-secondary-btn"
+    >
+      Detect My Business Location
+    </button>
+
+    <div class="vd-location-confirm">
+
+      <input
+        type="checkbox"
+        id="confirmLocationCheckbox"
+      >
+
+      <label for="confirmLocationCheckbox">
+        I confirm this is my business location
+      </label>
+
+    </div>
+
+    <div
+      id="locationStatus"
+      class="vd-location-status"
+    ></div>
+
+   </div>
+
+  </div>
+
+<!-- DESCRIPTION -->
+<div
+  class="vd-profile-row vd-editable-row"
+  data-edit="description"
+>
+
+  <div class="vd-profile-row-top">
+
+    <label>Description</label>
+
+    <button
+      type="button"
+      class="vd-edit-btn"
+      data-toggle="descriptionEditor"
+    >
+      <i class="fa-solid fa-pen"></i>
+      Edit
+    </button>
+
+  </div>
+
+  <div
+    id="descriptionEditor"
+    class="vd-inline-editor"
+  >
+
+    <div
+      id="aboutToolbar"
+      class="about-toolbar hidden"
+    >
+
+      <button
+        type="button"
+        data-cmd="bold"
+      >
+        B
+      </button>
+
+      <button
+        type="button"
+        data-cmd="italic"
+      >
+        I
+      </button>
+
+      <button
+        type="button"
+        data-cmd="underline"
+      >
+        U
+      </button>
+
+    </div>
+
+    <div
+      id="descriptionInput"
+      class="about-editor"
+      contenteditable="true"
+    ></div>
+
+  </div>
+
+</div>
+
+  <!-- PUBLIC LISTING CONSENT -->
+<div class="vd-profile-row">
+
+  <label class="vd-checkbox-wrap">
+
+    <input
+      type="checkbox"
+      id="publicConsent"
+    >
+
+    <span>
+      I understand that my business information
+      (including phone number and location)
+      will be publicly displayed on Spotlight
+      Directories.
+    </span>
+
+  </label>
+
+</div>
+
+<!-- SAVE -->
+<div class="vd-profile-actions">
+
+  <button
+    type="button"
+    id="saveProfileBtn"
+    class="vd-primary-btn"
+  >
+    Save Changes
+  </button>
+
+</div>
+
+<div
+  id="profileStatusMsg"
+  class="vd-profile-status"
+></div>
+
+  </div>
+
+</section>
+
+<section id="media" class="vd-section"></section>
+<section id="subscription" class="vd-section">
+
+  <div class="vd-subscription-layout">
+
+    <!-- LEFT -->
+    <div class="vd-card vd-subscription-main">
+
+      <div class="vd-subscription-header">
+        <h3>Current Subscription</h3>
+      </div>
+
+      <div class="vd-subscription-top">
+
+        <div>
+          <p class="vd-sub-label">
+            ACTIVE PLAN
+          </p>
+
+          <div class="vd-plan-inline">
+
+            <h2 id="subscriptionPlanName">
+              —
+            </h2>
+
+            <span
+              id="subscriptionStatusBadge"
+              class="vd-status-badge"
+            >
+              ACTIVE
+            </span>
+
+          </div>
+
+        </div>
+
+        <div class="vd-subscription-side">
+
+          <p class="vd-sub-label">
+            BILLING INTERVAL
+          </p>
+
+          <p
+            id="subscriptionBillingCycle"
+            class="vd-subscription-value"
+          >
+            —
+          </p>
+
+        </div>
+
+      </div>
+
+      <div class="vd-sub-divider"></div>
+
+      <div class="vd-subscription-bottom">
+
+        <div>
+
+          <p class="vd-sub-label">
+            NEXT PAYMENT AMOUNT
+          </p>
+
+          <h2
+            id="subscriptionAmount"
+            class="vd-payment-amount"
+          >
+            —
+          </h2>
+
+        </div>
+
+        <div>
+
+          <p class="vd-sub-label">
+            BILLING DATE
+          </p>
+
+          <p
+            id="subscriptionBillingDate"
+            class="vd-subscription-value"
+          >
+            —
+          </p>
+
+        </div>
+
+      </div>
+
+      <div class="vd-subscription-actions">
+
+        <button
+          id="subscriptionUpgradeBtn"
+          class="vd-primary-btn"
+          type="button"
+        >
+          Upgrade Plan
+        </button>
+
+        <button
+          id="manageBranchesBtn"
+          class="vd-secondary-outline-btn"
+          type="button"
+        >
+          Manage Branches
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="vd-card vd-billing-history-card">
+
+      <h3 class="vd-billing-title">
+        Billing History
+      </h3>
+
+      <div
+        id="billingHistoryList"
+        class="vd-billing-history-list"
+      >
+
+        <div class="vd-history-row">
+          <span>—</span>
+          <strong>—</strong>
+        </div>
+
+      </div>
+
+      <button
+         id="managePaymentMethodBtn"
+         class="vd-secondary-outline-btn vd-payment-method-btn"
+         type="button"
+>
+  Manage Payment Method
+</button>
+
+    </div>
+
+  </div>
+
+</section>
+
+<section id="verification" class="vd-section">
+
+  <div class="vd-verification-layout">
+
+    <!-- LEFT -->
+    <div class="vd-card vd-verification-main">
+
+      <div class="vd-verification-header">
+
+        <div>
+
+          <p class="vd-verification-label">
+            VERIFICATION STATUS
+          </p>
+
+          <div class="vd-verification-status-row">
+
+            <h2 id="verificationStatusText">
+              Unverified
+            </h2>
+
+            <span
+              id="verificationBadge"
+              class="vd-verification-badge"
+            >
+              NONE
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="vd-verification-divider"></div>
+
+      <div class="vd-verification-benefits">
+
+        <h3>
+          Why Verify?
+        </h3>
+
+        <p class="vd-verification-intro">
+          Verified vendors gain stronger trust,
+          improved visibility, and better customer
+          confidence on Spotlight.
+        </p>
+
+        <div class="vd-verification-grid">
+
+          <!-- GRAY -->
+          <div class="vd-tier-card">
+
+            <div class="vd-tier-top">
+
+              <h4>
+                Gray Badge
+              </h4>
+
+              <span class="vd-gray-dot"></span>
+
+            </div>
+
+            <p>
+              Best for sole owners and
+              identity verification.
+            </p>
+
+            <ul>
+              <li>Government ID</li>
+              <li>Passport Photograph</li>
+            </ul>
+
+          </div>
+
+          <!-- BLUE -->
+          <div class="vd-tier-card">
+
+            <div class="vd-tier-top">
+
+              <h4>
+                Blue Badge
+              </h4>
+
+              <span class="vd-blue-dot"></span>
+
+            </div>
+
+            <p>
+              Best for registered companies
+              and stronger corporate trust.
+            </p>
+
+            <ul>
+              <li>Government ID</li>
+              <li>CAC Certificate</li>
+              <li>Utility Bill</li>
+              <li>MEMART</li>
+              <li>CAC Status Report</li>
+            </ul>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="vd-card vd-verification-actions-card">
+
+      <h3 class="vd-verification-action-title">
+        Apply for Verification
+      </h3>
+
+      <p class="vd-verification-side-text">
+        Choose your preferred verification level.
+      </p>
+
+      <div class="vd-verification-action-buttons">
+
+        <button
+          id="applyGrayBtn"
+          class="vd-gray-verify-btn"
+          type="button"
+        >
+          Apply for Gray Badge
+        </button>
+
+        <button
+          id="applyBlueBtn"
+          class="vd-blue-verify-btn"
+          type="button"
+        >
+          Apply for Blue Badge
+        </button>
+
+       </div>
+
+             <div class="vd-verification-consent">
+
+        By applying, you consent to Spotlight
+        receiving and reviewing submitted
+        verification documents for trust and
+        compliance purposes.
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+<section id="settings" class="vd-section">
+
+  <div class="vd-settings-layout">
+
+    <!-- NOTIFICATIONS -->
+    <div class="vd-card vd-settings-card">
+
+      <div class="vd-settings-card-header">
+        <h3>Notification Preferences</h3>
+      </div>
+
+      <div class="vd-settings-content">
+
+        <div class="vd-setting-row">
+
+          <div>
+
+            <h4>Email Notifications</h4>
+
+            <p>
+              Receive weekly performance reports.
+            </p>
+
+          </div>
+
+          <label class="vd-switch">
+
+            <input
+              type="checkbox"
+              checked
+            >
+
+            <span class="vd-slider"></span>
+
+          </label>
+
+        </div>
+
+        <div class="vd-setting-row">
+
+          <div>
+
+            <h4>Lead Alerts</h4>
+
+            <p>
+              Instant notification when a customer clicks "Call".
+            </p>
+
+          </div>
+
+          <label class="vd-switch">
+
+            <input
+              type="checkbox"
+              checked
+            >
+
+            <span class="vd-slider"></span>
+
+          </label>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- DANGER ZONE -->
+    <div class="vd-card vd-danger-card">
+
+      <div class="vd-danger-header">
+        <h3>Danger Zone</h3>
+      </div>
+
+      <div class="vd-danger-content">
+
+        <p class="vd-danger-text">
+          Permanently disable your business listing
+          and vendor access on Spotlight.
+        </p>
+
+        <div class="vd-danger-warning">
+
+          <span>
+            Closing your account will immediately disable
+            your vendor access and remove your public
+            profile from Spotlight. Your subscription
+            remains non-refundable and all payments are final.
+
+            <br><br>
+
+            You will have a 14-day restoration period before
+            the closure becomes permanent and your vendor
+            associations are permanently severed.
+          </span>
+
+        </div>
+
+        <button
+          id="closeAccountBtn"
+          class="vd-close-account-btn"
+          type="button"
+        >
+          Close Account
+        </button>
+
+        <div
+          id="closingBanner"
+          class="vd-danger-warning hidden"
+        >
+
+          <span id="closingText"></span>
+
+          <button
+            id="restoreAccountBtn"
+            class="vd-restore-btn"
+            type="button"
+          >
+            Restore Account
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="vendordashboard.js"></script>
+
+</body>
+</html>

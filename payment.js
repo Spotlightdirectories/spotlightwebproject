@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ===============================
   const { data: vendor } = await supabase
     .from("vendors")
-    .select("id, plan_tier, subscription_status, billing_cycle")
+    .select("id, plan_tier, subscription_status, billing_cycle, created_at")
     .eq("auth_user_id", user.id)
     .maybeSingle();
 
@@ -40,19 +40,40 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
   if (!vendor) {
-    window.location.replace("onboarding");
+    window.location.replace(
+  "vendordashboard"
+);
     return;
   }
   if (vendor.plan_tier === "free") {
-    window.location.replace("dashboard");
+    window.location.replace(
+  "vendordashboard"
+);
     return;
   }
 
   // 🔹 If payment approved
-  if (vendor.subscription_status === "active") {
-    window.location.replace("onboarding");
-    return;
-  }
+const paidPlans = [
+  "standard",
+  "enterprise",
+  "elite",
+  "custom"
+];
+
+if (
+  paidPlans.includes(
+    (vendor.plan_tier || "").toLowerCase()
+  ) &&
+  vendor.subscription_status === "active"
+) {
+
+  window.location.replace(
+    "vendordashboard"
+  );
+
+  return;
+
+}
 
   // 🔹 If payment awaiting review
   if (vendor.subscription_status === "pending") {
@@ -60,15 +81,84 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // 🔹 If payment failed → allow retry
-  if (vendor.subscription_status === "failed") {
-    // Stay on payment page
+if (
+  vendor.subscription_status === "pending"
+) {
+
+  const { data: latestPendingPayment } =
+    await supabase
+      .from("vendorpayments")
+      .select("created_at")
+      .eq("vendor_id", vendor.id)
+      .eq("status", "pending")
+      .order("created_at", {
+        ascending: false
+      })
+      .limit(1)
+      .maybeSingle();
+
+  if (latestPendingPayment?.created_at) {
+
+    const createdAt =
+      new Date(
+        latestPendingPayment.created_at
+      );
+
+    const now =
+      new Date();
+
+    const hoursPassed =
+      (now - createdAt) /
+      (1000 * 60 * 60);
+
+    // 24-hour recovery fallback
+    if (hoursPassed >= 24) {
+
+   await supabase
+  .from("vendors")
+  .update({
+    plan_tier: "free",
+    billing_cycle: null,
+    subscription_status: "free",
+    is_premium: false
+  })
+  .eq("id", vendor.id);
+
+  await supabase
+    .from("vendorpayments")
+    .update({
+    status: "expired"
+    })
+    .eq("vendor_id", vendor.id)
+    .eq("status", "pending");
+
+      window.location.replace(
+        "vendordashboard"
+      );
+
+      return;
+
+    }
+
   }
+
+}
 
   // ===============================
   // PAY ONLINE
   // ===============================
   payOnlineBtn.onclick = async () => {
+
+
+    // Expire older pending card payments
+await supabase
+  .from("vendorpayments")
+  .update({
+    status: "expired"
+  })
+  .eq("vendor_id", vendor.id)
+  .eq("payment_method", "card")
+  .eq("status", "pending");
 
   // 1️⃣ Create payment record first
    const paystackReference = `SPOT_${Date.now()}`;
@@ -98,7 +188,7 @@ const { data, error } = await supabase
 
   // 2️⃣ Open Paystack
   const handler = PaystackPop.setup({
-    key: "pk_live_3bb98d5dc8a2fa57534c307db789248d24c629de",
+    key: "pk_test_3dc48990c568ef43d2b42a9571cde21b9175d699",
     email: user.email,
     amount: getAmountInKobo(vendor.plan_tier, billingType),
     currency: "NGN",
@@ -111,9 +201,17 @@ const { data, error } = await supabase
       verifyPayment(response.reference);
     },
 
-    onClose: function () {
-      alert("Payment cancelled");
-    }
+onClose: function () {
+
+  alert(
+    "Payment window closed. If payment was completed successfully, your account will update automatically after verification."
+  );
+
+  window.location.replace(
+    "vendordashboard"
+  );
+
+}
   });
 
   handler.openIframe();
@@ -173,7 +271,9 @@ document.body.innerHTML = `
 
 // Redirect automatically
 setTimeout(() => {
-  window.location.replace("onboarding");
+  window.location.replace(
+  "vendordashboard"
+);
 }, 2500);
 
   } catch (err) {
@@ -277,7 +377,12 @@ console.log("UPDATE RESULT:", updateData, updateError, window.currentPaymentId);
     elite: { monthly: 2299800, yearly: 11097600 }
   };
 
-  return prices[plan]?.[billingType] ?? prices[plan]?.monthly ?? 0;
+  const normalizedPlan =
+  plan?.toLowerCase();
+
+return prices[normalizedPlan]?.[billingType]
+  ?? prices[normalizedPlan]?.monthly
+  ?? 0;
 }
 
 });

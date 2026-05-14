@@ -15,9 +15,29 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
 
     const businessName = document.getElementById("businessName").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-    const confirmPassword = document.getElementById("confirmPassword").value;
+  const email =
+  document.getElementById("email")
+    .value
+    .trim();
+
+const telephone =
+  document.getElementById("telephone")
+    .value
+    .trim();
+
+let whatsapp =
+  document.getElementById("whatsapp")
+    .value
+    .trim();
+
+const password =
+  document.getElementById("password")
+    .value;
+
+const confirmPassword =
+  document.getElementById(
+    "confirmPassword"
+  ).value;
 
     const agree = document.getElementById("agreeTerms");
 
@@ -27,17 +47,77 @@ document.addEventListener("DOMContentLoaded", () => {
      return;
    }
 
-    if (!businessName || !email || !password || !confirmPassword) {
-      showError("All fields are required.");
-      resetSubmitState();
-      return;
-    }
+   if (
+  !businessName ||
+  !email ||
+  !telephone ||
+  !whatsapp ||
+  !password ||
+  !confirmPassword
+) {
+
+  showError(
+    "All fields are required."
+  );
+
+  resetSubmitState();
+
+  return;
+}
 
     if (password !== confirmPassword) {
       showError("Passwords do not match.");
       resetSubmitState();
       return;
     }
+
+  /* ===============================
+NORMALIZE WHATSAPP
+=============================== */
+
+whatsapp = whatsapp.replace(
+  /\s+/g,
+  ""
+);
+
+if (
+  whatsapp.startsWith("0")
+) {
+
+  whatsapp =
+    "+234" +
+    whatsapp.substring(1);
+}
+
+/* REMOVE EXTRA 0
+AFTER +234 */
+whatsapp = whatsapp.replace(
+  /^\+2340+/,
+  "+234"
+);
+
+if (
+  whatsapp.startsWith("234")
+) {
+  whatsapp =
+    "+" + whatsapp;
+}
+
+const validWhatsapp =
+  /^\+234\d{10}$/.test(
+    whatsapp
+  );
+
+if (!validWhatsapp) {
+
+  showError(
+    "WhatsApp number must use valid Nigerian format."
+  );
+
+  resetSubmitState();
+
+  return;
+}
 
         // -----------------------------
 // DEBUG REF READ (SUBMIT LEVEL)
@@ -116,20 +196,40 @@ console.log("RESOLVED partnerId:", partnerId);
    const insertResponse = await supabase
   .from("vendors")
   .insert([
+   
     {
-    auth_user_id: data.user.id,
-    name: businessName,
-    email: email,
-    referred_by_partner_id: partnerId || null,
-    plan_tier: selectedPlan,
-    billing_cycle: billingType,
-    subscription_status: null,
-    is_premium: selectedPlan !== "free",
+  auth_user_id: data.user.id,
 
-    // ✅ CONSENT RECORD
-    terms_accepted: true,
-    terms_accepted_at: new Date().toISOString()
-  }
+  name: businessName,
+
+  email: email,
+
+  telephone: telephone,
+
+  whatsapp: whatsapp,
+
+  referred_by_partner_id:
+    partnerId || null,
+
+  plan_tier: selectedPlan,
+
+  billing_cycle: billingType,
+
+  subscription_status:
+  selectedPlan === "free"
+    ? "free"
+    : "pending",
+
+  is_premium:
+    selectedPlan !== "free",
+
+  // ✅ CONSENT RECORD
+  terms_accepted: true,
+
+  terms_accepted_at:
+    new Date().toISOString()
+}
+
   ]);
 const { data: vendorData, error: vendorError } = insertResponse;
 console.log("AFTER VENDOR INSERT", vendorError);
@@ -152,15 +252,65 @@ console.log("AFTER VENDOR INSERT", vendorError);
 
     // ✅ Success message
     errorEl.textContent =
-      "Account created. Please check your email to verify before logging in.";
+       "Account created successfully. You can now log in to continue.";
     errorEl.classList.remove("hidden");
     errorEl.classList.remove("form-error");
     errorEl.classList.add("form-success");
 
-    submitBtn.textContent = "Verification email sent";
+    submitBtn.textContent =
+      "Account created";
     submitBtn.disabled = true;
   });
 
+
+  /* ===============================
+WHATSAPP INPUT GUARD
+=============================== */
+
+const whatsappInput =
+  document.getElementById(
+    "whatsapp"
+  );
+
+if (whatsappInput) {
+
+  whatsappInput.addEventListener(
+    "input",
+    () => {
+
+      let value =
+        whatsappInput.value;
+
+      value = value.replace(
+        /[^\d+]/g,
+        ""
+      );
+
+      value = value.replace(
+         /^\+2340+/,
+         "+234"
+     );
+
+     if (
+       !value.startsWith("+234")
+     ) {
+
+      value = value
+       .replace(/^0+/, "")
+       .replace(/^234/, "");
+
+      value =
+        "+234" + value;
+
+     }
+
+      whatsappInput.value =
+        value;
+
+    }
+  );
+
+}
   // 👁️ Password toggle
   document.querySelectorAll(".toggle-password").forEach(btn => {
     btn.addEventListener("click", (e) => {

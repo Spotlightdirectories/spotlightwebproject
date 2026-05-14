@@ -43,17 +43,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const user = data.user;
 
     // ===============================
-    // EMAIL VERIFICATION CHECK
-    // ===============================
-    if (!user.email_confirmed_at) {
-      errorEl.textContent = "Please verify your email before logging in.";
-      errorEl.style.display = "block";
-      await supabase.auth.signOut();
-      resetSubmitState();
-      return;
-    }
-
-    // ===============================
     // FETCH VENDOR (DATABASE IS TRUTH)
     // ===============================
     const { data: vendor, error: vendorError } = await supabase
@@ -91,16 +80,14 @@ if (vendor.account_status === "closed") {
     // =====================================================
     // FREE PLAN
     // =====================================================
-    if (vendor.plan_tier === "free") {
+if (vendor.plan_tier === "free") {
 
-      if (!vendor.onboarding_completed) {
-        window.location.replace("onboarding");
-      } else {
-        window.location.replace("dashboard");
-      }
+  window.location.replace(
+    "vendordashboard"
+  );
 
-      return;
-    }
+  return;
+}
 
     // =====================================================
     // PAID PLAN
@@ -115,37 +102,59 @@ if (vendor.account_status === "closed") {
       return;
     }
 
-    if (vendor.subscription_status === "active") {
+if (
+  vendor.subscription_status ===
+  "active"
+) {
 
-      if (!vendor.onboarding_completed) {
-        window.location.replace("onboarding");
-     } else {
-        window.location.replace("dashboard");
-     }
+  window.location.replace(
+    "vendordashboard"
+  );
 
-     return;
+  return;
+}
+
+/* ===============================
+UNPAID / FAILED / ABANDONED
+PAID FLOW FALLBACK
+=============================== */
+
+window.location.replace(
+  "payment"
+);
+
+function resetSubmitState() {
+  isSubmitting = false;
+
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Log in";
   }
+}
 
-    // Fallback
-    window.location.replace("payment");
-  });
+});
 
-  function resetSubmitState() {
-    isSubmitting = false;
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Log in";
-    }
-  }
+// Password toggle
+document.querySelectorAll(".toggle-password").forEach(btn => {
 
-  // Password toggle
-  document.querySelectorAll(".toggle-password").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      const input = document.getElementById(btn.dataset.target);
-      if (!input) return;
-      input.type = input.type === "password" ? "text" : "password";
-    });
+  btn.addEventListener("click", (e) => {
+
+    e.preventDefault();
+
+    const input = document.getElementById(
+      btn.dataset.target
+    );
+
+    if (!input) return;
+
+    input.type =
+      input.type === "password"
+        ? "text"
+        : "password";
+
   });
 
 });
+
+});
+

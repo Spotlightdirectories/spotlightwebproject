@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         onboarding_completed,
         account_status
       `)
-      .eq("subscription_status", "active")
+      .in("subscription_status", ["active", "free"])
       .eq("onboarding_completed", true);
 
     if (error) {
@@ -72,7 +72,9 @@ if (branchesError) {
   console.error("Branches fetch error:", branchesError);
 }
 
-    vendors = (data || []).filter(v => v.account_status === "active");
+vendors = (data || []).filter(
+  v => v.account_status !== "closing"
+);
 
   const vendorMap = {};
    vendors.forEach(v => {

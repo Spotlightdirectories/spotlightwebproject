@@ -173,7 +173,7 @@ if (!updatedPayment || updatedPayment.length === 0) {
       to: vendorData.email,
       subject: "Payment Successful 🎉",
       html: `<p>Your payment has been confirmed.</p>
-             <p>You can now complete onboarding and access your dashboard.</p>`
+             <p>You can now access your dashboard to complete onboarding. Make sure you get to 100% to optimize your business page.</p>`
     })
   }
 );

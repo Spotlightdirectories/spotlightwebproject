@@ -102,6 +102,20 @@ if (payment.status === "confirmed") {
   );
 }
 
+if (payment.status !== "pending") {
+
+  return new Response(
+    JSON.stringify({
+      message: "Payment already handled"
+    }),
+    {
+      status: 200,
+      headers: corsHeaders
+    }
+  );
+
+}
+
 const now = new Date().toISOString();
 
 const expiry =
@@ -129,6 +143,16 @@ await supabase
     expires_at: expiry
   })
   .eq("id", payment.vendor_id);
+
+  await supabase
+  .from("vendorpayments")
+  .update({
+    status: "confirmed",
+    approved_at: now,
+    reviewed_at: now,
+    notification_sent: true
+  })
+  .eq("id", payment.id);
 
   // 🔹 Audit (first successful processing)
 await supabase

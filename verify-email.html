@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>Email Verification | Spotlight</title>
+
+  <link rel="stylesheet" href="theme.css">
+
+  <style>
+
+    body {
+
+      font-family:
+        system-ui,
+        sans-serif;
+
+      background:
+        #f8fafc;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      min-height:
+        100vh;
+
+      margin: 0;
+
+      padding: 20px;
+
+    }
+
+    .verify-card {
+
+      background:
+        #fff;
+
+      padding:
+        40px;
+
+      border-radius:
+        16px;
+
+      max-width:
+        500px;
+
+      width:
+        100%;
+
+      text-align:
+        center;
+
+      box-shadow:
+        0 10px 25px rgba(0,0,0,0.08);
+
+    }
+
+    h1 {
+
+      margin-bottom:
+        10px;
+
+    }
+
+    p {
+
+      color:
+        #475569;
+
+      line-height:
+        1.6;
+
+    }
+
+    .success {
+
+      color:
+        #16a34a;
+
+      font-weight:
+        700;
+
+    }
+
+    .error {
+
+      color:
+        #dc2626;
+
+      font-weight:
+        700;
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <div class="verify-card">
+
+    <h1>Email Verification</h1>
+
+    <p id="verifyMessage">
+      Verifying your email...
+    </p>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script src="supabase-client.js"></script>
+
+  <script>
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      async () => {
+
+        const supabase =
+          window.supabaseClient;
+
+        const message =
+          document.getElementById(
+            "verifyMessage"
+          );
+
+        try {
+
+          const params =
+            new URLSearchParams(
+              window.location.search
+            );
+
+          const token =
+            params.get("token");
+
+          if (!token) {
+
+            message.textContent =
+              "Invalid verification link.";
+
+            message.className =
+              "error";
+
+            return;
+
+          }
+
+          /* =========================
+          FIND TOKEN
+          ========================= */
+
+          const {
+            data: tokenRow,
+            error: tokenError
+          } = await supabase
+            .from(
+              "email_verification_tokens"
+            )
+            .select("*")
+            .eq("token", token)
+            .maybeSingle();
+
+          if (
+            tokenError ||
+            !tokenRow
+          ) {
+
+            message.textContent =
+              "Verification token not found.";
+
+            message.className =
+              "error";
+
+            return;
+
+          }
+
+          /* =========================
+          ALREADY USED
+          ========================= */
+
+          if (tokenRow.used) {
+
+            message.textContent =
+              "This verification link has already been used.";
+
+            message.className =
+              "error";
+
+            return;
+
+          }
+
+          /* =========================
+          EXPIRED
+          ========================= */
+
+          const now =
+            new Date();
+
+          const expiry =
+            new Date(
+              tokenRow.expires_at
+            );
+
+          if (expiry < now) {
+
+            message.textContent =
+              "Verification link expired.";
+
+            message.className =
+              "error";
+
+            return;
+
+          }
+
+          /* =========================
+          VERIFY EMAIL
+          ========================= */
+
+          const {
+            error: vendorError
+          } = await supabase
+            .from("vendors")
+            .update({
+              email_verified: true
+            })
+            .eq(
+              "id",
+              tokenRow.vendor_id
+            );
+
+          if (vendorError) {
+
+            message.textContent =
+              "Unable to verify email.";
+
+            message.className =
+              "error";
+
+            return;
+
+          }
+
+          /* =========================
+          MARK TOKEN USED
+          ========================= */
+
+          await supabase
+            .from(
+              "email_verification_tokens"
+            )
+            .update({
+              used: true,
+              used_at:
+                new Date()
+                  .toISOString()
+            })
+            .eq("id", tokenRow.id);
+
+          message.textContent =
+            "Your email has been verified successfully.";
+
+          message.className =
+            "success";
+
+        } catch (err) {
+
+          console.error(err);
+
+          message.textContent =
+            "Verification failed.";
+
+          message.className =
+            "error";
+
+        }
+
+      }
+    );
+
+  </script>
+
+</body>
+</html>
