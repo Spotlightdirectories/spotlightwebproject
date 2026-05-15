@@ -925,58 +925,104 @@ if (applyBlueBtn) {
 
 }
 
-  /* ========================= */
+/* ========================= */
 /* FREE TRIAL COUNTDOWN */
 /* ========================= */
 
+const trialBox =
+  document.getElementById(
+    "trialBox"
+  );
+
 const trialDaysLeftEl =
-  document.getElementById("trialDaysLeft");
+  document.getElementById(
+    "trialDaysLeft"
+  );
 
 const trialTimeLeftEl =
-  document.getElementById("trialTimeLeft");
+  document.getElementById(
+    "trialTimeLeft"
+  );
 
-if (trialDaysLeftEl && vendor.trial_started_at) {
+const isFreeVendor =
+  vendor.plan_tier === "free";
 
-  const startDate = new Date(vendor.trial_started_at);
+if (
+  isFreeVendor &&
+  vendor.trial_started_at &&
+  trialBox
+) {
 
-  const expiryDate = new Date(startDate);
-  expiryDate.setDate(expiryDate.getDate() + 90);
+  trialBox.classList.remove(
+    "hidden"
+  );
 
-  const updateTrialCountdown = () => {
-
-    const now = new Date();
-
-    let timeDiff = expiryDate - now;
-
-    if (timeDiff < 0) {
-      timeDiff = 0;
-    }
-
-    const daysLeft = Math.floor(
-      timeDiff / (1000 * 60 * 60 * 24)
+  const startDate =
+    new Date(
+      vendor.trial_started_at
     );
 
-    const hoursLeft = Math.floor(
-      (timeDiff / (1000 * 60 * 60)) % 24
-    );
+  const expiryDate =
+    new Date(startDate);
 
-    const minutesLeft = Math.floor(
-      (timeDiff / (1000 * 60)) % 60
-    );
+  expiryDate.setDate(
+    expiryDate.getDate() + 90
+  );
 
-    trialDaysLeftEl.textContent =
-      `${daysLeft} Days Left`;
+  const updateTrialCountdown =
+    () => {
 
-    if (trialTimeLeftEl) {
-      trialTimeLeftEl.textContent =
-        `${hoursLeft}h ${minutesLeft}m remaining`;
-    }
+      const now =
+        new Date();
 
-  };
+      let timeDiff =
+        expiryDate - now;
+
+      if (timeDiff < 0) {
+        timeDiff = 0;
+      }
+
+      const daysLeft =
+        Math.floor(
+          timeDiff /
+          (1000 * 60 * 60 * 24)
+        );
+
+      const hoursLeft =
+        Math.floor(
+          (
+            timeDiff /
+            (1000 * 60 * 60)
+          ) % 24
+        );
+
+      const minutesLeft =
+        Math.floor(
+          (
+            timeDiff /
+            (1000 * 60)
+          ) % 60
+        );
+
+      trialDaysLeftEl.textContent =
+        `${daysLeft} Days Left`;
+
+      if (trialTimeLeftEl) {
+
+        trialTimeLeftEl.textContent =
+          `${hoursLeft}h ${minutesLeft}m remaining`;
+
+      }
+
+    };
 
   updateTrialCountdown();
 
-  setInterval(updateTrialCountdown, 60000);
+  setInterval(
+    updateTrialCountdown,
+    60000
+  );
+
 }
 
   // PROFILE FORM

@@ -106,14 +106,15 @@ body {
 .vd-main {
   margin-left: 260px;
   padding: 20px;
-  height: 100vh;
+
+  min-height: 100vh;
+
+  overflow-x: hidden;
   overflow-y: auto;
 
-  height: 100vh;
-  display: grid;
-  grid-template-rows: auto 1fr 1fr;
-  gap: 20px;
+  box-sizing: border-box;
 }
+
 /* HEADER */
 .vd-header {
   position: sticky;
@@ -1748,3 +1749,134 @@ EMAIL VERIFICATION
   font-weight: 700;
 }
 
+/* ========================= */
+/* MOBILE RESPONSIVENESS */
+/* ========================= */
+
+@media (max-width: 900px) {
+
+  body {
+    overflow-x: hidden;
+  }
+
+  /* SIDEBAR */
+
+  .vd-sidebar {
+    position: relative;
+
+    width: 100%;
+    height: auto;
+
+    left: 0;
+    top: 0;
+
+    padding: 12px;
+
+    box-sizing: border-box;
+  }
+
+  .vd-sidebar-inner {
+    border-radius: 0;
+    height: auto;
+  }
+
+  .vd-plan-card {
+    position: relative;
+
+    left: auto;
+    right: auto;
+    bottom: auto;
+
+    margin-top: 20px;
+  }
+
+  /* MAIN */
+
+  .vd-main {
+    margin-left: 0;
+
+    width: 100%;
+
+    padding: 12px;
+
+    box-sizing: border-box;
+  }
+
+  /* HEADER */
+
+  .vd-header {
+    flex-direction: column;
+    align-items: flex-start;
+
+    gap: 12px;
+  }
+
+  .vd-header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  /* OVERVIEW */
+
+  .vd-overview-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .vd-top-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .vd-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vd-cat-grid {
+    grid-template-columns: 1fr;
+
+    gap: 12px;
+  }
+
+  /* PROFILE */
+
+  .vd-profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vd-coordinates-row {
+    grid-template-columns: 1fr;
+  }
+
+  .vd-profile-row {
+    padding: 18px;
+  }
+
+  /* SUBSCRIPTION */
+
+  .vd-subscription-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .vd-subscription-top,
+  .vd-subscription-bottom {
+    flex-direction: column;
+  }
+
+  /* BUTTONS */
+
+  .vd-upgrade-btn,
+  .vd-primary-btn,
+  .vd-secondary-btn {
+    width: 100%;
+  }
+
+  /* TYPOGRAPHY */
+
+  .vd-plan-box h3 {
+    font-size: 24px;
+  }
+
+  .vd-cta-title {
+    font-size: 20px;
+  }
+
+}

@@ -133,6 +133,22 @@
         const supabase =
           window.supabaseClient;
 
+const params =
+  new URLSearchParams(
+    window.location.search
+  );
+
+const code =
+  params.get("code");
+
+if (code) {
+
+  await supabase.auth.exchangeCodeForSession(
+    code
+  );
+
+}
+
         const message =
           document.getElementById(
             "verifyMessage"
@@ -140,146 +156,60 @@
 
         try {
 
-          const params =
-            new URLSearchParams(
-              window.location.search
-            );
+      const {
+  data: { session },
+  error
+} = await supabase.auth.getSession();
 
-          const token =
-            params.get("token");
+if (
+  error ||
+  !session?.user
+) {
 
-          if (!token) {
+  message.textContent =
+    "Invalid or expired verification link.";
 
-            message.textContent =
-              "Invalid verification link.";
+  message.className =
+    "error";
 
-            message.className =
-              "error";
+  return;
 
-            return;
+}
 
-          }
+const user =
+  session.user;
 
-          /* =========================
-          FIND TOKEN
-          ========================= */
+const {
+  error: vendorError
+} = await supabase
+  .from("vendors")
+  .update({
+    email_verified: true
+  })
+  .eq(
+    "auth_user_id",
+    user.id
+  );
 
-          const {
-            data: tokenRow,
-            error: tokenError
-          } = await supabase
-            .from(
-              "email_verification_tokens"
-            )
-            .select("*")
-            .eq("token", token)
-            .maybeSingle();
+if (vendorError) {
 
-          if (
-            tokenError ||
-            !tokenRow
-          ) {
+  message.textContent =
+    "Unable to verify email.";
 
-            message.textContent =
-              "Verification token not found.";
+  message.className =
+    "error";
 
-            message.className =
-              "error";
+  return;
 
-            return;
+}
 
-          }
+message.textContent =
+  "Your email has been verified successfully.";
 
-          /* =========================
-          ALREADY USED
-          ========================= */
+message.className =
+  "success";
 
-          if (tokenRow.used) {
-
-            message.textContent =
-              "This verification link has already been used.";
-
-            message.className =
-              "error";
-
-            return;
-
-          }
-
-          /* =========================
-          EXPIRED
-          ========================= */
-
-          const now =
-            new Date();
-
-          const expiry =
-            new Date(
-              tokenRow.expires_at
-            );
-
-          if (expiry < now) {
-
-            message.textContent =
-              "Verification link expired.";
-
-            message.className =
-              "error";
-
-            return;
-
-          }
-
-          /* =========================
-          VERIFY EMAIL
-          ========================= */
-
-          const {
-            error: vendorError
-          } = await supabase
-            .from("vendors")
-            .update({
-              email_verified: true
-            })
-            .eq(
-              "id",
-              tokenRow.vendor_id
-            );
-
-          if (vendorError) {
-
-            message.textContent =
-              "Unable to verify email.";
-
-            message.className =
-              "error";
-
-            return;
-
-          }
-
-          /* =========================
-          MARK TOKEN USED
-          ========================= */
-
-          await supabase
-            .from(
-              "email_verification_tokens"
-            )
-            .update({
-              used: true,
-              used_at:
-                new Date()
-                  .toISOString()
-            })
-            .eq("id", tokenRow.id);
-
-          message.textContent =
-            "Your email has been verified successfully.";
-
-          message.className =
-            "success";
-
+  
         } catch (err) {
 
           console.error(err);

@@ -777,9 +777,17 @@ async function loadGallery() {
   const imageList = images || [];
   grid.innerHTML = "";
 
-  const totalItems = isOwner
-  ? effectiveGalleryLimit
-  : Math.min(imageList.length, effectiveGalleryLimit);
+const totalItems = isOwner
+  ? (
+      imageList.length <
+      effectiveGalleryLimit
+    )
+      ? effectiveGalleryLimit
+      : imageList.length
+  : Math.min(
+      imageList.length,
+      effectiveGalleryLimit
+    );
 
   for (let i = 0; i < totalItems; i++) {
 
@@ -1097,9 +1105,36 @@ slot.appendChild(wrapper);
       const wrapper = document.createElement("div");
       wrapper.className = "gallery-content";
 
-      const placeholder = document.createElement("div");
-      placeholder.className = "gallery-placeholder";
-      placeholder.textContent = "+";
+const placeholder =
+  document.createElement("button");
+
+placeholder.type = "button";
+
+placeholder.className =
+  "gallery-add-card";
+
+placeholder.innerHTML = `
+  <span class="gallery-add-plus">
+    +
+  </span>
+
+  <span class="gallery-add-text">
+    Add New
+  </span>
+
+  <span class="gallery-add-note">
+    1200×1200px • Max 750KB
+  </span>
+`;
+
+placeholder.addEventListener(
+  "click",
+  () => {
+
+    galleryInput.click();
+
+  }
+);
 
       wrapper.appendChild(placeholder);
       slot.appendChild(wrapper);
@@ -1441,6 +1476,41 @@ if (!branches || branches.length === 0 || limit === 0) return;
         upgradeSection.style.display = "none";
       }
     }
+
+    const editProfileBtn =
+  document.getElementById(
+    "editProfileBtn"
+  );
+
+if (
+  editProfileBtn
+) {
+
+  if (isOwner) {
+
+    editProfileBtn.classList.remove(
+      "hidden"
+    );
+
+  } else {
+
+    editProfileBtn.classList.add(
+      "hidden"
+    );
+
+  }
+
+editProfileBtn.addEventListener(
+  "click",
+  () => {
+
+    window.location.href =
+      "vendordashboard.html";
+
+  }
+);
+
+}
     // -------------------------------
     // OWNER MODE — Enable Branding Upload
     // -------------------------------
@@ -1449,11 +1519,16 @@ if (!branches || branches.length === 0 || limit === 0) return;
     const socialEditor = document.getElementById("socialEditor");
     const socialLimit = effectiveSocialLimit;
 
-    if (socialEditor) {
+if (
+  socialEditor &&
+  isOwner
+) {
 
-      socialEditor.classList.remove("hidden");
+  socialEditor.classList.remove(
+    "hidden"
+  );
 
-    if (socialLimit === 0) {
+if (socialLimit === 0) {
 
     const platform = document.getElementById("socialPlatform");
     const url = document.getElementById("socialUrl");

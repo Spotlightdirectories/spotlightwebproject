@@ -110,31 +110,57 @@
       <a id="whatsappLink" target="_blank">WhatsApp</a>
       <a id="mapLink" target="_blank">View on Map</a>
     </div>
-    <div id="socialLinksRow" class="social-links hidden"></div>
 
-   <div id="socialEditor" class="hidden form-group">
+<div
+  id="socialLinksRow"
+  class="social-links hidden"
+></div>
 
-  <label for="socialPlatform">Platform</label>
-  <select id="socialPlatform">
-    <option value="instagram">Instagram</option>
-    <option value="facebook">Facebook</option>
-    <option value="tiktok">TikTok</option>
-    <option value="youtube">YouTube</option>
-    <option value="website">Website</option>
-  </select>
+<div class="social-editor-row">
 
-  <label for="socialUrl">Link</label>
-  <input
-    type="text"
-    id="socialUrl"
-    placeholder="Paste full link"
-  />
+  <div id="socialEditor" class="hidden form-group">
 
-  <button id="addSocialBtn" class="primary-btn">
-    Add
-  </button>
+    <label for="socialPlatform">
+      Platform
+    </label>
+
+    <select id="socialPlatform">
+      <option value="instagram">Instagram</option>
+      <option value="facebook">Facebook</option>
+      <option value="tiktok">TikTok</option>
+      <option value="youtube">YouTube</option>
+      <option value="website">Website</option>
+    </select>
+
+    <label for="socialUrl">
+      Link
+    </label>
+
+    <input
+      type="text"
+      id="socialUrl"
+      placeholder="Paste full link"
+    />
+
+    <button
+      id="addSocialBtn"
+      class="primary-btn"
+    >
+      Add
+    </button>
 
   </div>
+
+  <button
+    id="editProfileBtn"
+    class="edit-profile-btn hidden"
+    type="button"
+  >
+    ✏️ Edit Profile
+  </button>
+
+</div>
+
 </div>
 
 </div>
@@ -172,21 +198,16 @@
 
   <div id="galleryGrid"></div>
 
-  <div id="galleryUploader" class="hidden">
+<div id="galleryUploader" class="hidden">
 
-    <label for="galleryInput">Add Photo</label>
+  <input
+    type="file"
+    id="galleryInput"
+    accept="image/jpeg,image/png,image/webp"
+    hidden
+  >
 
-    <input
-      type="file"
-      id="galleryInput"
-      accept="image/jpeg,image/png,image/webp"
-    >
-
-    <p class="media-note">
-      Recommended: 1200×1200px • Max size: 750KB
-    </p>
-
-   </div>
+</div>
 
   </div>
     <div id="videoWrap" class="media-video hidden">
