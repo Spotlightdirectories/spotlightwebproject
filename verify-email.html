@@ -4,14 +4,41 @@
 
   <meta charset="UTF-8" />
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   />
 
   <title>Email Verification | Spotlight</title>
 
   <link rel="stylesheet" href="theme.css">
+
+
+  <meta property="og:type" content="business.business" />
+  <meta property="og:title" content="Vendor Profile on Spotlight" />
+  <meta property="og:description" content="Verified business profile on Spotlight." />
+  <meta property="og:image" content="https://yourdomain.com/images/og-default.png" />
+  <meta property="og:url" content="" id="ogUrl" />
+
+
+  <!-- SEO placeholders -->
+  <meta name="description" content="Discover verified vendors near you on Spotlight." />
+  <link rel="canonical" href="https://www.spotlightdirectories.com/vendor-profile" />
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<!-- ✅ UPDATED FAVICONS -->
+<link rel="icon" type="image/png" sizes="48x48" href="/images/favicon-48.png">
+<link rel="icon" type="image/png" sizes="64x64" href="/images/favicon-64.png">
+
+<!-- ✅ STRUCTURED DATA (GOOGLE LOGO CONTROL) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Spotlight Directories",
+  "url": "https://spotlightdirectories.com",
+  "logo": "https://spotlightdirectories.com/images/spotlightlogo-512.png"
+}
+</script>  
 
   <style>
 
@@ -208,6 +235,17 @@ message.textContent =
 
 message.className =
   "success";
+
+// Refresh auth session
+await supabase.auth.refreshSession();
+
+// Redirect owner back to dashboard
+setTimeout(() => {
+
+  window.location.href =
+    "vendordashboard.html";
+
+}, 1500);
 
   
         } catch (err) {

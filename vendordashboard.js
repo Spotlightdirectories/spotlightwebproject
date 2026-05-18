@@ -588,8 +588,19 @@ if (subscriptionPlanName) {
 
 if (subscriptionBillingCycle) {
 
-  subscriptionBillingCycle.textContent =
-    vendor.billing_cycle || "—";
+  if (
+    vendor.plan_tier === "free"
+  ) {
+
+    subscriptionBillingCycle.textContent =
+      "Free Forever";
+
+  } else {
+
+    subscriptionBillingCycle.textContent =
+      vendor.billing_cycle || "—";
+
+  }
 
 }
 
@@ -627,12 +638,63 @@ const { data: latestPayment } =
 
 if (subscriptionAmount) {
 
-  subscriptionAmount.textContent =
-    latestPayment?.amount
-      ? `₦${(
-          latestPayment.amount / 100
-        ).toLocaleString()}`
-      : "₦0.00";
+  if (
+    vendor.plan_tier === "free"
+  ) {
+
+    subscriptionAmount.textContent =
+      "No active billing";
+
+  } else {
+
+    subscriptionAmount.textContent =
+      latestPayment?.amount
+        ? `₦${(
+            latestPayment.amount / 100
+          ).toLocaleString()}`
+        : "₦0.00";
+
+  }
+
+}
+
+if (manageBranchesBtn) {
+
+  if (
+    vendor.plan_tier === "free"
+  ) {
+
+    manageBranchesBtn.classList.add(
+      "hidden"
+    );
+
+  } else {
+
+    manageBranchesBtn.classList.remove(
+      "hidden"
+    );
+
+  }
+
+}
+
+if (managePaymentMethodBtn) {
+
+  if (
+    vendor.plan_tier === "free"
+  ) {
+
+    managePaymentMethodBtn.classList.add(
+      "hidden"
+    );
+
+  } else {
+
+    managePaymentMethodBtn.classList.remove(
+      "hidden"
+    );
+
+  }
 
 }
 
