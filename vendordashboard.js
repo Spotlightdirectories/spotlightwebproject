@@ -156,6 +156,25 @@ if (
           target.charAt(0).toUpperCase() + target.slice(1);
       }
 
+      /* MOBILE AUTO CLOSE */
+
+if (
+  window.innerWidth <= 900 &&
+  sidebar &&
+  mobileSidebarOverlay
+) {
+
+  sidebar.classList.remove(
+    "active"
+  );
+
+  mobileSidebarOverlay
+    .classList.add(
+      "hidden"
+    );
+
+}
+
     });
 
   });
@@ -2544,6 +2563,68 @@ if (restoreAccountBtn) {
         );
 
         window.location.reload();
+
+      }
+    );
+
+}
+
+/* ========================= */
+/* MOBILE SIDEBAR */
+/* ========================= */
+
+const mobileMenuToggle =
+  document.getElementById(
+    "mobileMenuToggle"
+  );
+
+const mobileSidebarOverlay =
+  document.getElementById(
+    "mobileSidebarOverlay"
+  );
+
+const sidebar =
+  document.querySelector(
+    ".vd-sidebar"
+  );
+
+if (
+  mobileMenuToggle &&
+  mobileSidebarOverlay &&
+  sidebar
+) {
+
+  /* OPEN MENU */
+  mobileMenuToggle.addEventListener(
+    "click",
+    () => {
+
+      sidebar.classList.add(
+        "active"
+      );
+
+      mobileSidebarOverlay
+        .classList.remove(
+          "hidden"
+        );
+
+    }
+  );
+
+  /* CLOSE MENU */
+  mobileSidebarOverlay
+    .addEventListener(
+      "click",
+      () => {
+
+        sidebar.classList.remove(
+          "active"
+        );
+
+        mobileSidebarOverlay
+          .classList.add(
+            "hidden"
+          );
 
       }
     );

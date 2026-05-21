@@ -89,7 +89,7 @@ body {
   padding: 12px;
   border-radius: 8px;
   border: none;
-  background: #2563eb;
+  background: #000;
   color: #fff;
   font-size: 0.95rem;
   font-weight: 600;
@@ -97,7 +97,8 @@ body {
 }
 
 .auth-btn:hover {
-  background: #1d4ed8;
+  background: #e6c200;
+  color: #000;
 }
 
 /* ===============================
@@ -211,14 +212,15 @@ input {
   width: 100%;
   padding: 12px;
   border-radius: 10px;
-  background: #111;
+  background: #000;
   color: #fff;
   border: none;
   cursor: pointer;
 }
 
 .primary-btn:hover {
-  opacity: 0.9;
+  background: #e6c200;
+  color: #000;
 }
 
 /* ===============================

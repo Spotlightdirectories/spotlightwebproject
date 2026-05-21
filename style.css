@@ -2,7 +2,7 @@
 :root {
   --header-height: 100px;
   --brand: #000;
-  --highlight: green;
+  --highlight: #e6c200;
   --text-dark: #2b2b2b;
   --bg-light: #fffaf5;
 }
@@ -113,7 +113,7 @@ main {
 }
 
 .getlisted-button:hover {
-    background-color: green /* Darker shade on hover */
+    background-color: #e6c200; /* Darker shade on hover */
 }
 
 #goToSearch {
@@ -361,7 +361,7 @@ main {
 }
 
 .cta:hover {
-    background-color: green;
+    background-color: #e6c200;
 }
 
 [id^="homepage"] {
@@ -457,7 +457,7 @@ div.benefits-intro p {
 }
 
 .box4 .cta-btn:hover {
-    background-color: green;
+    background-color:#e6c200;
 }
 
 /* BOX 4 PART 2 */
@@ -540,7 +540,7 @@ div.benefits-intro p {
       margin: 1em auto;
 
       &:hover {
-       background-color:green;
+       background-color:#e6c200;
       }
     }
 
@@ -603,7 +603,8 @@ div.benefits-intro p {
 }
 
 .accordion-header:hover {
-  background-color: green;
+  background-color:#e6c200;
+  color: #000;
 }
 
 /* + / - indicator */
@@ -755,7 +756,8 @@ button.primary {
 }
 
 button.primary:hover {
-  background: #3b0a0a;
+  background: #e6c200;
+  color: #000;
 }
 
 button.ghost {
@@ -1061,6 +1063,7 @@ input:checked + .glslider:before {
 
 .btn:hover {
   background: var(--highlight);
+  color: #000;
 }
 
 .btnwhite:hover {
