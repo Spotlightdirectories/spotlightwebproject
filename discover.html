@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="UTF-8" />
+
+  <title>
+    Discover Vendors | Spotlight
+  </title>
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <!-- SEO -->
+  <meta
+    name="description"
+    content="Search vendors, products and services near you on Spotlight."
+  />
+
+  <!-- FAVICONS -->
+  <link
+    rel="icon"
+    type="image/png"
+    sizes="48x48"
+    href="/images/favicon-48.png"
+  >
+
+  <link
+    rel="icon"
+    type="image/png"
+    sizes="64x64"
+    href="/images/favicon-64.png"
+  >
+
+  <link
+    rel="apple-touch-icon"
+    href="/images/favicon-180.png"
+  >
+
+  <!-- FONTAWESOME -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  >
+
+  <!-- PAGE CSS -->
+  <link
+    rel="stylesheet"
+    href="discover.css"
+  >
+
+</head>
+
+<body>
+
+  <!-- ========================= -->
+  <!-- DISCOVER PAGE -->
+  <!-- ========================= -->
+
+  <main class="discover-page">
+
+    <!-- ========================= -->
+    <!-- HEADER -->
+    <!-- ========================= -->
+
+    <header class="discover-header">
+
+      <div class="discover-brand">
+
+        <img
+          src="/images/spotlightlogo-512.png"
+          alt="Spotlight"
+          class="discover-logo"
+        >
+
+        <span class="discover-brand-text">
+          Spotlight
+        </span>
+
+      </div>
+
+    </header>
+
+    <!-- ========================= -->
+    <!-- SEARCH SECTION -->
+    <!-- ========================= -->
+
+    <section class="discover-search-section">
+
+      <!-- SEARCH BOX -->
+
+      <div class="discover-search-wrap">
+
+        <i class="fa-solid fa-magnifying-glass"></i>
+
+        <input
+          type="text"
+          id="discoverSearchInput"
+          class="discover-search-input"
+          placeholder="Search vendors, categories or services"
+          autocomplete="off"
+        >
+
+      </div>
+
+      <p
+  id="discoverSearchError"
+  class="discover-search-error"
+>
+  Enter a keyword or use at least one filter.
+</p>
+
+      <!-- SEARCH TYPE -->
+
+      <div class="discover-search-tabs">
+
+        <button
+          type="button"
+          class="discover-tab active"
+          data-type="vendor"
+        >
+          Vendor
+        </button>
+
+        <button
+          type="button"
+          class="discover-tab"
+          data-type="category"
+        >
+          Category
+        </button>
+
+        <button
+          type="button"
+          class="discover-tab"
+          data-type="service"
+        >
+          Service
+        </button>
+
+      </div>
+
+      <!-- QUICK FILTERS -->
+
+      <div class="discover-quick-filters">
+
+        <!-- VERIFIED -->
+
+        <label class="discover-toggle-wrap">
+
+          <input
+            type="checkbox"
+            id="verifiedOnlyToggle"
+          >
+
+          <span class="discover-toggle-slider"></span>
+
+          <span class="discover-toggle-label">
+            Verified Only
+          </span>
+
+        </label>
+
+        <!-- MORE FILTERS -->
+
+        <button
+          type="button"
+          id="moreFiltersBtn"
+          class="discover-more-filters-btn"
+        >
+
+          More Filters
+
+          <i class="fa-solid fa-sliders"></i>
+
+        </button>
+
+      </div>
+
+    <!-- DISTANCE SEARCH -->
+
+<div class="discover-distance-card">
+
+  <!-- TOP ROW -->
+
+  <div class="discover-distance-top">
+
+    <label class="discover-distance-toggle">
+
+      <input
+        type="checkbox"
+        id="enableDistanceSearch"
+      >
+
+      <span class="discover-distance-checkbox"></span>
+
+      <span class="discover-distance-text">
+        Enable Distance Search
+      </span>
+
+    </label>
+
+    <button
+      type="button"
+      id="useLocationBtn"
+      class="discover-location-btn"
+    >
+
+      <i class="fa-solid fa-location-crosshairs"></i>
+
+      Use Current
+
+    </button>
+
+  </div>
+
+  <!-- SLIDER -->
+
+  <div class="discover-distance-slider-wrap">
+
+    <input
+      type="range"
+      id="distanceRadiusSlider"
+      class="discover-distance-slider"
+      min="1"
+      max="20"
+      value="5"
+    >
+
+    <div class="discover-distance-scale">
+
+      <span>
+        0km
+      </span>
+
+      <span id="distanceRadiusValue">
+        5km
+      </span>
+
+      <span>
+        20km
+      </span>
+
+    </div>
+
+  </div>
+
+</div>
+</section>
+
+    <!-- ========================= -->
+    <!-- SPONSORED VENDORS -->
+    <!-- ========================= -->
+
+    <section class="discover-sponsored-section">
+
+      <div class="discover-section-heading">
+
+        <h2>
+          Sponsored Vendors Near You
+        </h2>
+
+      </div>
+
+      <div class="discover-sponsored-scroll">
+
+       <!-- DYNAMIC SPONSORED VENDORS -->
+
+      </div>
+
+    </section>
+
+    <!-- ========================= -->
+    <!-- TRENDING SEARCHES -->
+    <!-- ========================= -->
+
+    <section class="discover-trending-section">
+
+      <div class="discover-section-heading">
+
+        <h2>
+          Trending Searches
+        </h2>
+
+      </div>
+
+      <div class="discover-trending-tags">
+
+        <button type="button">
+          Plumber Near Me
+        </button>
+
+        <button type="button">
+          Catering Services
+        </button>
+
+        <button type="button">
+          POS Agent
+        </button>
+
+        <button type="button">
+          Dry Cleaners
+        </button>
+
+        <button type="button">
+          Makeup Artist
+        </button>
+
+      </div>
+
+    </section>
+
+    <!-- ========================= -->
+    <!-- RECENT SEARCHES -->
+    <!-- ========================= -->
+
+    <section class="discover-recent-section">
+
+      <div class="discover-section-heading">
+
+        <h2>
+          Recent Searches
+        </h2>
+
+      </div>
+
+      <div class="discover-recent-list">
+
+
+
+      </div>
+
+    </section>
+
+    <!-- ========================= -->
+    <!-- MOBILE BOTTOM NAV -->
+    <!-- ========================= -->
+
+    <nav class="discover-bottom-nav">
+
+      <button
+        type="button"
+        class="discover-bottom-item active"
+      >
+
+        <i class="fa-solid fa-compass"></i>
+
+        <span>
+          Explore
+        </span>
+
+      </button>
+
+      <button
+        type="button"
+        class="discover-bottom-item"
+      >
+
+        <i class="fa-solid fa-store"></i>
+
+        <span>
+          Market
+        </span>
+
+      </button>
+
+      <button
+        type="button"
+        class="discover-bottom-item"
+      >
+
+        <i class="fa-regular fa-bookmark"></i>
+
+        <span>
+          Saved
+        </span>
+
+      </button>
+
+      <button
+        type="button"
+        class="discover-bottom-item"
+      >
+
+        <i class="fa-regular fa-user"></i>
+
+        <span>
+          Profile
+        </span>
+
+      </button>
+
+    </nav>
+
+  <div
+  id="discoverSearchLoading"
+  class="discover-search-loading"
+>
+
+  <div class="discover-search-spinner"></div>
+
+  <p>
+    Searching vendors...
+  </p>
+
+</div>
+
+  </main>
+
+  <!-- ========================= -->
+  <!-- MORE FILTERS DRAWER -->
+  <!-- ========================= -->
+
+  <aside
+    id="discoverFiltersDrawer"
+    class="discover-filters-drawer"
+  >
+
+    <div class="discover-filters-header">
+
+      <h3>
+        More Filters
+      </h3>
+
+      <button
+        type="button"
+        id="closeFiltersDrawerBtn"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div class="discover-filters-body">
+
+  <!-- CATEGORY -->
+
+  <div class="discover-filter-group">
+
+    <label for="discoverCategory">
+      Category
+    </label>
+
+    <select
+      id="discoverCategory"
+      class="discover-filter-select"
+    >
+
+      <option value="">
+        Select Category
+      </option>
+
+    </select>
+
+  </div>
+
+  <!-- SUBCATEGORY -->
+
+  <div class="discover-filter-group">
+
+    <label for="discoverSubcategory">
+      Subcategory
+    </label>
+
+    <select
+      id="discoverSubcategory"
+      class="discover-filter-select"
+    >
+
+      <option value="">
+        Select Subcategory
+      </option>
+
+    </select>
+
+  </div>
+
+  <!-- STATE -->
+
+  <div class="discover-filter-group">
+
+    <label for="discoverState">
+      State
+    </label>
+
+    <select
+      id="discoverState"
+      class="discover-filter-select"
+    >
+
+      <option value="">
+        Select State
+      </option>
+
+    </select>
+
+  </div>
+
+  <!-- LGA -->
+
+  <div class="discover-filter-group">
+
+    <label for="discoverLga">
+      LGA
+    </label>
+
+    <select
+      id="discoverLga"
+      class="discover-filter-select"
+    >
+
+      <option value="">
+        Select LGA
+      </option>
+
+    </select>
+
+  </div>
+
+  </div>
+
+    <div class="discover-filters-footer">
+
+      <button
+        type="button"
+        id="resetFiltersBtn"
+        class="discover-reset-btn"
+      >
+        Reset
+      </button>
+
+      <button
+        type="button"
+        id="applyFiltersBtn"
+        class="discover-apply-btn"
+      >
+        Apply Filters
+      </button>
+
+    </div>
+
+  </aside>
+
+  <!-- OVERLAY -->
+
+  <div
+    id="discoverDrawerOverlay"
+    class="discover-drawer-overlay"
+  ></div>
+
+  <!-- PAGE JS -->
+
+<!-- SUPABASE -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<script src="supabase-client.js"></script>
+
+<!-- PAGE JS -->
+
+<script src="discover-config.js"></script>
+
+<script src="badge-utils.js"></script>
+
+<script src="nigeria-data.js"></script>
+
+<script src="discover.js" defer></script>
+
+</body>
+</html>

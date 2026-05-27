@@ -77,6 +77,19 @@
   </button>
 
 <button
+  class="vd-nav-item"
+  data-tab="services"
+>
+
+  <i class="fa-solid fa-briefcase"></i>
+
+  <span>
+    Services
+  </span>
+
+</button>
+
+<button
   id="mediaSidebarLink"
   class="vd-nav-item"
   type="button"
@@ -376,6 +389,123 @@
     </div>
   </div>
         </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+<!-- ========================= -->
+<!-- SERVICES -->
+<!-- ========================= -->
+
+<section
+  id="services"
+  class="vd-section"
+>
+
+  <div class="vd-card vd-profile-card">
+
+    <!-- HEADER -->
+
+    <div class="vd-profile-header">
+
+      <div>
+
+        <h3>
+          Service Offerings
+        </h3>
+
+        <p class="vd-profile-subtext">
+
+          Add and manage the services
+          your business provides.
+
+        </p>
+
+      </div>
+
+      <button
+        id="addServiceBtn"
+        class="vd-service-btn"
+        type="button"
+      >
+
+        <i class="fa-solid fa-plus"></i>
+
+        Add Service
+
+      </button>
+
+    </div>
+
+    <!-- SERVICES FORM -->
+
+    <div
+      id="serviceFormWrap"
+      class="vd-inline-editor"
+    >
+
+      <!-- INPUT + ADD -->
+
+      <div class="vd-service-add-row">
+
+        <input
+          type="text"
+          id="serviceName"
+          class="vd-input"
+          placeholder="Enter service name"
+        >
+
+        <button
+          id="addServiceItemBtn"
+          class="vd-service-btn"
+          type="button"
+        >
+
+          Add
+
+        </button>
+
+      </div>
+
+      <!-- PLAN LIMIT -->
+
+      <p
+        id="serviceLimitText"
+        class="vd-service-limit-text"
+      ></p>
+
+      <!-- PENDING SERVICES -->
+
+      <div
+        id="pendingServicesList"
+        class="vd-pending-services"
+      ></div>
+
+      <!-- SAVED SERVICES -->
+
+       <div
+         id="savedServicesList"
+         class="vd-saved-services"
+       ></div>
+
+      <!-- SAVE -->
+
+      <div class="vd-profile-actions">
+
+        <button
+          id="saveServiceBtn"
+          class="vd-service-btn"
+          type="button"
+        >
+
+          Save Services
+
+        </button>
 
       </div>
 
@@ -1371,6 +1501,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
+<script src="badge-utils.js"></script>
 <script src="vendordashboard.js"></script>
 
 </body>

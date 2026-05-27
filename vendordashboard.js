@@ -7,6 +7,41 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 const supabase = window.supabaseClient;
 
+
+/* ===============================
+SERVICE LIMITS
+=============================== */
+
+const SERVICE_LIMITS = {
+
+  free: 3,
+
+  standard: 10,
+
+  enterprise: 25,
+
+  elite: 50,
+
+  custom: Infinity
+
+};
+
+/* ===============================
+GET SERVICE LIMIT
+=============================== */
+
+function getServiceLimit(
+  planTier
+) {
+
+  return (
+    SERVICE_LIMITS[
+      planTier
+    ] || 3
+  );
+
+}
+
 // Get logged in user
 const { data: authData, error: authError } = await supabase.auth.getUser();
 const user = authData?.user;
@@ -63,6 +98,650 @@ const overviewUpgradeBtn =
 
 const upgradeUrl =
   "getlisted.html";
+
+/* ========================= */
+/* SERVICES UI */
+/* ========================= */
+
+const addServiceBtn =
+  document.getElementById(
+    "addServiceBtn"
+  );
+
+const serviceFormWrap =
+  document.getElementById(
+    "serviceFormWrap"
+  );
+
+if (
+  addServiceBtn &&
+  serviceFormWrap
+) {
+
+  addServiceBtn
+    .addEventListener(
+      "click",
+      () => {
+
+        serviceFormWrap
+          .classList
+          .toggle("active");
+
+      }
+    );
+
+}
+
+/* ========================= */
+/* SERVICES STATE */
+/* ========================= */
+
+let pendingServices = [];
+
+let savedServices = [];
+
+/* ========================= */
+/* SERVICE ELEMENTS */
+/* ========================= */
+
+const addServiceItemBtn =
+  document.getElementById(
+    "addServiceItemBtn"
+  );
+
+const serviceNameInput =
+  document.getElementById(
+    "serviceName"
+  );
+
+const pendingServicesList =
+  document.getElementById(
+    "pendingServicesList"
+  );
+
+const savedServicesList =
+  document.getElementById(
+    "savedServicesList"
+  );
+
+const serviceLimitText =
+  document.getElementById(
+    "serviceLimitText"
+  );
+
+const saveServiceBtn =
+  document.getElementById(
+    "saveServiceBtn"
+  );
+
+/* ========================= */
+/* CURRENT LIMIT */
+/* ========================= */
+
+const currentServiceLimit =
+  getServiceLimit(
+    vendor?.plan_tier || "free"
+  );
+
+/* EXISTING SAVED SERVICES */
+
+let existingServicesCount = 0;
+
+const {
+  count: savedServicesCount
+} = await supabase
+  .from("vendor_services")
+  .select(
+    "*",
+    {
+      count: "exact",
+      head: true
+    }
+  )
+  .eq(
+    "vendor_id",
+    vendor.id
+  );
+
+existingServicesCount =
+  savedServicesCount || 0;
+
+/* ========================= */
+/* FETCH SAVED SERVICES */
+/* ========================= */
+
+const {
+  data: fetchedServices,
+  error: fetchedServicesError
+} = await supabase
+  .from("vendor_services")
+  .select("*")
+  .eq(
+    "vendor_id",
+    vendor.id
+  )
+  .order(
+    "created_at",
+    {
+      ascending: true
+    }
+  );
+
+if (
+  fetchedServicesError
+) {
+
+  console.error(
+    "Fetch services error:",
+    fetchedServicesError
+  );
+
+} else {
+
+  savedServices =
+    fetchedServices || [];
+
+}
+
+/* LIMIT TEXT */
+
+if (serviceLimitText) {
+
+  serviceLimitText.textContent =
+    `Your current plan allows up to ${currentServiceLimit} services.`;
+
+}
+
+/* ========================= */
+/* RENDER PENDING SERVICES */
+/* ========================= */
+
+function renderPendingServices() {
+
+  if (!pendingServicesList) {
+    return;
+  }
+
+  pendingServicesList.innerHTML =
+    "";
+
+if (!pendingServices.length) {
+
+  pendingServicesList.innerHTML =
+    "";
+
+  return;
+
+}
+
+  pendingServices.forEach(
+    (service, index) => {
+
+      const item =
+        document.createElement("div");
+
+      item.className =
+        "vd-service-pill";
+
+      item.innerHTML = `
+        <span>${service}</span>
+
+        <button
+          type="button"
+          class="vd-remove-service-btn"
+          data-index="${index}"
+        >
+          ×
+        </button>
+      `;
+
+      pendingServicesList.appendChild(
+        item
+      );
+
+    }
+  );
+
+}
+
+/* INITIAL EMPTY STATE */
+
+renderPendingServices();
+
+renderSavedServices();
+
+/* ========================= */
+/* RENDER SAVED SERVICES */
+/* ========================= */
+
+function renderSavedServices() {
+
+  if (!savedServicesList) {
+    return;
+  }
+
+  savedServicesList.innerHTML =
+    "";
+
+  if (!savedServices.length) {
+
+    savedServicesList.innerHTML = `
+      <div class="vd-empty-services">
+        No saved services yet.
+      </div>
+    `;
+
+    return;
+
+  }
+
+  savedServices.forEach(
+    service => {
+
+      const item =
+        document.createElement("div");
+
+      item.className =
+        "vd-service-pill saved";
+
+      item.innerHTML = `
+        <span>
+          ${service.service_name}
+        </span>
+
+        <button
+          type="button"
+          class="vd-delete-service-btn"
+          data-id="${service.id}"
+        >
+          ×
+        </button>
+      `;
+
+      savedServicesList.appendChild(
+        item
+      );
+
+    }
+  );
+
+}
+
+/* ========================= */
+/* DELETE SAVED SERVICE */
+/* ========================= */
+
+if (
+  savedServicesList
+) {
+
+  savedServicesList
+    .addEventListener(
+      "click",
+      async (e) => {
+
+        const deleteBtn =
+          e.target.closest(
+            ".vd-delete-service-btn"
+          );
+
+        if (!deleteBtn) {
+          return;
+        }
+
+        const serviceId =
+          deleteBtn.dataset.id;
+
+
+
+        if (!serviceId) {
+          return;
+        }
+
+        const confirmed =
+          confirm(
+            "Delete this service?"
+          );
+
+        if (!confirmed) {
+          return;
+        }
+
+        try {
+
+const {
+  error,
+  data
+} = await supabase
+  .from(
+    "vendor_services"
+  )
+  .delete()
+  .eq(
+    "id",
+    serviceId
+  )
+  .select();
+
+if (error) {
+  throw error;
+}
+
+
+
+          /* REMOVE FROM STATE */
+
+          savedServices =
+            savedServices.filter(
+              service =>
+                String(service.id) !==
+                String(serviceId)
+            );
+
+          /* UPDATE LIMIT COUNT */
+
+          existingServicesCount =
+            Math.max(
+              0,
+              existingServicesCount - 1
+            );
+
+          /* RE-RENDER */
+
+          renderSavedServices();
+
+        } catch (err) {
+
+          console.error(
+            "Delete service error:",
+            err
+          );
+
+          alert(
+            "Unable to delete service."
+          );
+
+        }
+
+      }
+    );
+
+}
+
+/* ========================= */
+/* ADD SERVICE ITEM */
+/* ========================= */
+
+if (
+  addServiceItemBtn &&
+  serviceNameInput
+) {
+
+  addServiceItemBtn
+    .addEventListener(
+      "click",
+      () => {
+
+        const serviceName =
+          serviceNameInput.value
+            .trim();
+
+        if (!serviceName) {
+
+          alert(
+            "Enter a service name."
+          );
+
+          return;
+
+        }
+
+        /* ========================= */
+/* SERVICE VALIDATION */
+/* ========================= */
+
+/* BLOCK COMMAS */
+
+if (
+  serviceName.includes(",")
+) {
+
+  alert(
+    "Add one service at a time."
+  );
+
+  return;
+
+}
+
+/* CHARACTER LIMIT */
+
+if (
+  serviceName.length > 60
+) {
+
+  alert(
+    "Service name must not exceed 60 characters."
+  );
+
+  return;
+
+}
+
+/* WORD LIMIT */
+
+const wordCount =
+  serviceName
+    .split(/\s+/)
+    .length;
+
+if (
+  wordCount > 6
+) {
+
+  alert(
+    "Service name is too long."
+  );
+
+  return;
+
+}
+
+        /* LIMIT ENFORCEMENT */
+
+        if (
+          existingServicesCount +
+          pendingServices.length >=
+          currentServiceLimit
+        ) {
+
+          alert(
+            "You have reached your current plan limit."
+          );
+
+          return;
+
+        }
+
+        /* DUPLICATE PREVENTION */
+
+        const alreadyExists =
+          pendingServices.some(
+            item =>
+              item.toLowerCase() ===
+              serviceName.toLowerCase()
+          );
+
+        if (alreadyExists) {
+
+          alert(
+            "Service already added."
+          );
+
+          return;
+
+        }
+
+        /* ADD SERVICE */
+
+        pendingServices.push(
+          serviceName
+        );
+
+        renderPendingServices();
+
+        serviceNameInput.value =
+          "";
+
+      }
+    );
+
+}
+
+/* ========================= */
+/* REMOVE SERVICE ITEM */
+/* ========================= */
+
+if (
+  pendingServicesList
+) {
+
+  pendingServicesList
+    .addEventListener(
+      "click",
+      (e) => {
+
+        const removeBtn =
+          e.target.closest(
+            ".vd-remove-service-btn"
+          );
+
+        if (!removeBtn) {
+          return;
+        }
+
+        const index =
+          Number(
+            removeBtn.dataset.index
+          );
+
+        pendingServices.splice(
+          index,
+          1
+        );
+
+        renderPendingServices();
+
+      }
+    );
+
+}
+
+/* ========================= */
+/* SAVE SERVICES */
+/* ========================= */
+
+if (
+  saveServiceBtn
+) {
+
+  saveServiceBtn
+    .addEventListener(
+      "click",
+      async () => {
+
+        if (!vendor?.id) {
+          return;
+        }
+
+        if (
+          !pendingServices.length
+        ) {
+
+          alert(
+            "Add at least one service."
+          );
+
+          return;
+
+        }
+
+        saveServiceBtn.disabled =
+          true;
+
+        saveServiceBtn.innerHTML =
+          "Saving...";
+
+        try {
+
+          const payload =
+            pendingServices.map(
+              service => ({
+
+                vendor_id:
+                  vendor.id,
+
+                service_name:
+                  service
+
+              })
+            );
+
+          const { error } =
+            await supabase
+              .from(
+                "vendor_services"
+              )
+              .insert(
+                payload
+              );
+
+          if (error) {
+            throw error;
+          }
+
+          alert(
+            "Services saved successfully."
+          );
+
+          /* RESET */
+
+          existingServicesCount +=
+            payload.length;
+
+          pendingServices = [];
+
+          renderPendingServices();
+
+          serviceNameInput.value =
+            "";
+
+        } catch (err) {
+
+          console.error(
+            "Service save error:",
+            err
+          );
+
+          alert(
+            "Unable to save services."
+          );
+
+        } finally {
+
+          saveServiceBtn.disabled =
+            false;
+
+          saveServiceBtn.innerHTML =
+            "Save Services";
+
+        }
+
+      }
+    );
+
+}
+
 
 if (sidebarUpgradeBtn) {
 

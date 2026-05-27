@@ -1003,6 +1003,17 @@ PROFILE ARCHITECTURE
   color: #000;
 }
 
+#saveProfileBtn {
+  background-color: #000;
+  color: #fff;
+  border: none;
+}
+
+#saveProfileBtn:hover {
+  background-color: #e6c200;
+  color: #000;
+}
+
 .vd-profile-status {
   padding: 0 32px 32px;
 
@@ -2006,5 +2017,154 @@ EMAIL VERIFICATION
 
     z-index: 1100;
   }
+
+}
+
+/* ========================= */
+/* SERVICES BUTTON */
+/* ========================= */
+
+.vd-service-btn {
+
+  border: none;
+  border-radius: 14px;
+
+  padding: 15px 24px;
+
+  background: #000000;
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.vd-service-btn:hover {
+
+  background: #e6c200;
+  color: #000000;
+
+}
+
+/* =========================
+SERVICE SYSTEM
+========================= */
+
+.vd-service-add-row {
+
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 18px;
+
+}
+
+.vd-service-add-row .vd-input {
+
+  flex: 1;
+
+}
+
+.vd-service-limit-text {
+
+  margin-top: 14px;
+  margin-bottom: 14px;
+
+  font-size: 13px;
+  color: #666;
+
+  padding-left: 2px;
+
+}
+
+/* =========================
+SERVICE LISTS
+========================= */
+
+.vd-pending-services,
+.vd-saved-services {
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  margin-top: 16px;
+
+}
+
+/* =========================
+SERVICE PILLS
+========================= */
+
+.vd-service-pill {
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  background: #f5f5f5;
+
+  border: 1px solid #e5e5e5;
+
+  border-radius: 999px;
+
+  padding: 10px 16px;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  min-height: 42px;
+
+}
+
+.vd-service-pill.saved {
+
+  background: #fafafa;
+
+}
+
+/* =========================
+REMOVE / DELETE BUTTONS
+========================= */
+
+.vd-remove-service-btn,
+.vd-delete-service-btn {
+
+  border: none;
+  background: transparent;
+
+  cursor: pointer;
+
+  font-size: 18px;
+  font-weight: 600;
+
+  line-height: 1;
+
+  color: #666;
+
+  padding: 0;
+
+}
+
+.vd-remove-service-btn:hover,
+.vd-delete-service-btn:hover {
+
+  color: #000;
+
+}
+
+/* =========================
+EMPTY STATE
+========================= */
+
+.vd-empty-services {
+
+  color: #777;
+  font-size: 14px;
+
+  padding-top: 10px;
 
 }
