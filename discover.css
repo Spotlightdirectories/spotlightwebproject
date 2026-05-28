@@ -188,9 +188,9 @@ body {
   display: grid;
 
   grid-template-columns:
-    repeat(3, 1fr);
+    repeat(2, 1fr);
 
-  gap: 8px;
+  gap: 12px;
 
   margin-bottom: 16px;
 }
@@ -805,7 +805,7 @@ body {
   display: grid;
 
   grid-template-columns:
-    repeat(4, 1fr);
+    repeat(2, 1fr);
 
   z-index: 200;
 }
@@ -814,6 +814,7 @@ body {
   border: none;
 
   background: transparent;
+  text-decoration:none;
 
   display: flex;
   flex-direction: column;
@@ -845,8 +846,8 @@ body {
   color: #64748b;
 }
 
-.discover-bottom-item.active i,
-.discover-bottom-item.active span {
+.discover-bottom-item i,
+.discover-bottom-item span {
   color: #000000;
 }
 

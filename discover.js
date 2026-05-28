@@ -652,31 +652,49 @@ if (resetFiltersBtn) {
 /* TRENDING SEARCHES */
 /* ========================= */
 
-const trendingSearchButtons =
-  document.querySelectorAll(
-    ".discover-trending-tags button"
-  );
+function renderTrendingSearches() {
 
-if (
-  trendingSearchButtons.length
-) {
+  if (
+    !discoverTrendingTags
+  ) {
+    return;
+  }
 
-  trendingSearchButtons.forEach(
-    button => {
+  const shuffledKeywords =
+    [...trendingKeywords]
+      .sort(
+        () =>
+          Math.random() - 0.5
+      )
+      .slice(0, 5);
+
+  discoverTrendingTags.innerHTML =
+    "";
+
+  shuffledKeywords.forEach(
+    keyword => {
+
+      const button =
+        document.createElement(
+          "button"
+        );
+
+      button.type =
+        "button";
+
+      button.textContent =
+        keyword;
 
       button.addEventListener(
         "click",
         () => {
-
-          const searchText =
-            button.textContent.trim();
 
           if (
             discoverSearchInput
           ) {
 
             discoverSearchInput.value =
-              searchText;
+              keyword;
 
           }
 
@@ -685,10 +703,82 @@ if (
         }
       );
 
+      discoverTrendingTags.appendChild(
+        button
+      );
+
     }
   );
 
 }
+
+/* ========================= */
+/* TRENDING SEARCHES LIST */
+/* ========================= */
+
+const discoverTrendingTags =
+  document.getElementById(
+    "discoverTrendingTags"
+  );
+
+const trendingKeywords = [
+
+  "Plumber Near Me",
+  "POS Agent",
+  "Dry Cleaners",
+  "Makeup Artist",
+  "Electrician",
+  "Catering Services",
+  "Generator Repair",
+  "Phone Repair",
+  "Tailor",
+  "Hair Stylist",
+
+  "Graphic Designer",
+  "Solar Installer",
+  "Laundry Service",
+  "Mechanic",
+  "Fashion Designer",
+  "Carpenter",
+  "AC Technician",
+  "Baker",
+  "Event Planner",
+  "DJ Services",
+
+  "Photographer",
+  "Barber",
+  "Interior Decorator",
+  "Vulcanizer",
+  "Painter",
+  "POP Installer",
+  "Tiles Installer",
+  "Video Editor",
+  "POS Machine Repair",
+  "Furniture Maker",
+
+  "Real Estate Agent",
+  "Cleaning Service",
+  "Web Designer",
+  "MC Services",
+  "Laptop Repair",
+  "Car Wash",
+  "Private Tutor",
+  "Home Lesson Teacher",
+  "Nail Technician",
+  "CCTV Installer",
+
+  "Security Guard",
+  "Delivery Rider",
+  "Cook",
+  "Perfumery",
+  "Shoemaker",
+  "Travel Agent",
+  "Cyber Cafe",
+  "Recharge Card Vendor",
+  "Water Supplier",
+  "Printing Service"
+
+];
 
 /* ========================= */
 /* SEARCH EXECUTION */
@@ -1509,6 +1599,8 @@ function renderRecentSearches() {
 
 }
 
+renderTrendingSearches();
+
 loadSponsoredVendors();
 
 renderRecentSearches();
@@ -1557,6 +1649,42 @@ if (discoverState) {
 }
 
 loadStates();
+
+if (discoverProfileNav) {
+
+  discoverProfileNav.addEventListener(
+    "click",
+    async () => {
+
+      try {
+
+        const {
+          data: { session }
+        } = await supabase.auth.getSession();
+
+        if (session) {
+
+          window.location.href =
+            "vendordashboard.html";
+
+          return;
+
+        }
+
+        window.location.href =
+          "login.html";
+
+      } catch {
+
+        window.location.href =
+          "login.html";
+
+      }
+
+    }
+  );
+
+}
 
 if (discoverSearchBtn) {
 
