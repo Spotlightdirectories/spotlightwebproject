@@ -15,6 +15,26 @@ if (existingLoader) {
 
 }
 
+window.addEventListener(
+  "pageshow",
+  () => {
+
+    const restoredLoader =
+      document.getElementById(
+        "discoverSearchLoading"
+      );
+
+    if (restoredLoader) {
+
+      restoredLoader.classList.remove(
+        "active"
+      );
+
+    }
+
+  }
+);
+
 const supabase =
   window.supabaseClient;
 
@@ -712,6 +732,38 @@ const persistedKeyword =
     "discoverKeyword"
   );
 
+const persistedSearchType =
+  currentUrlParams.get(
+    "type"
+  ) ||
+  sessionStorage.getItem(
+    "discoverSearchType"
+  ) ||
+  "vendor";
+
+const matchingTab =
+  document.querySelector(
+    `.discover-tab[data-type="${persistedSearchType}"]`
+  );
+
+if (matchingTab) {
+
+  discoverTabs.forEach(
+    tab => {
+
+      tab.classList.remove(
+        "active"
+      );
+
+    }
+  );
+
+  matchingTab.classList.add(
+    "active"
+  );
+
+}
+
 if (
   persistedKeyword &&
   discoverSearchInput
@@ -812,6 +864,11 @@ function executeSearch() {
    "discoverKeyword",
    searchParams.keyword
  );
+
+ sessionStorage.setItem(
+  "discoverSearchType",
+  searchParams.searchType
+);
 
  if (searchParams.keyword) {
 

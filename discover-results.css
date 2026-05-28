@@ -1043,3 +1043,16 @@ body {
   visibility:visible;
 }
 
+.discover-result-card .badge-wrap::after{
+  left:auto;
+  right:0;
+
+  transform:none;
+
+  font-size:10px;
+
+  max-width:180px;
+
+  line-height:1.3;
+}
+

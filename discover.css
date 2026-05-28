@@ -1251,8 +1251,16 @@ body {
 .discover-sponsored-card .badge-wrap::after{
   top:130%;
   bottom:auto;
+
+  left:auto;
+  right:0;
+
+  transform:none;
+
   font-size:10px;
+
   max-width:180px;
+
   line-height:1.3;
 }
 

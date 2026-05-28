@@ -1505,6 +1505,17 @@ function renderVendorResults(
   }
 
 
+  if (
+  discoverResultsEmpty
+) {
+
+  discoverResultsEmpty.classList.add(
+    "hidden"
+  );
+
+}
+
+
 
   /* BUILD HTML */
 
@@ -1714,6 +1725,17 @@ function renderServiceResults(
     return;
 
   }
+
+
+  if (
+  discoverResultsEmpty
+) {
+
+  discoverResultsEmpty.classList.add(
+    "hidden"
+  );
+
+}
 
 const resultsHtml =
     services.map(service => {
