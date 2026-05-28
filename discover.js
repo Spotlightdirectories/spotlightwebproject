@@ -2,6 +2,19 @@ document.addEventListener(
   "DOMContentLoaded",
   () => {
 
+const existingLoader =
+  document.getElementById(
+    "discoverSearchLoading"
+  );
+
+if (existingLoader) {
+
+  existingLoader.classList.remove(
+    "active"
+  );
+
+}
+
 const supabase =
   window.supabaseClient;
 
@@ -666,6 +679,11 @@ const discoverSearchInput =
     "discoverSearchInput"
   );
 
+const discoverSearchBtn =
+  document.getElementById(
+    "discoverSearchBtn"
+  );
+
 const discoverSearchLoading =
   document.getElementById(
     "discoverSearchLoading"
@@ -1196,6 +1214,8 @@ let sponsoredQuery =
   supabase
     .from("vendors")
     .select(`
+      id,
+      slug,
       name,
       category,
       subcategory,
@@ -1221,9 +1241,8 @@ let sponsoredQuery =
 if (searchKeyword) {
 
   sponsoredQuery =
-    sponsoredQuery.ilike(
-      "subcategory",
-      `%${searchKeyword}%`
+    sponsoredQuery.or(
+      `subcategory.ilike.%${searchKeyword}%,category.ilike.%${searchKeyword}%`
     );
 
 }
@@ -1315,13 +1334,20 @@ if (
 
               <span class="discover-sponsored-location">
 
-                <i class="fa-solid fa-location-dot"></i>
+               <i class="fa-solid fa-location-dot"></i>
 
-                ${vendor.lga || ""}, ${vendor.state || ""}
+               ${vendor.lga || ""}, ${vendor.state || ""}
 
               </span>
 
-            </div>
+              <button
+                class="view-profile-btn"
+                data-slug="${vendor.slug || ""}"
+             >
+               View Profile
+             </button>
+
+          </div>
           `;
 
         sponsoredContainer.appendChild(
@@ -1430,6 +1456,32 @@ loadSponsoredVendors();
 
 renderRecentSearches();
 
+document.addEventListener(
+  "click",
+  event => {
+
+    const profileButton =
+      event.target.closest(
+        ".view-profile-btn"
+      );
+
+    if (!profileButton) {
+      return;
+    }
+
+    const slug =
+      profileButton.dataset.slug;
+
+    if (!slug) {
+      return;
+    }
+
+    window.location.href =
+      `vendor-profile.html?slug=${encodeURIComponent(slug)}`;
+
+  }
+);
+
 loadCategories();
 
 if (discoverState) {
@@ -1448,6 +1500,19 @@ if (discoverState) {
 }
 
 loadStates();
+
+if (discoverSearchBtn) {
+
+  discoverSearchBtn.addEventListener(
+    "click",
+    () => {
+
+      executeSearch();
+
+    }
+  );
+
+}
 
 if (discoverSearchInput) {
 
