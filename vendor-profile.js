@@ -604,6 +604,27 @@ if (addressDetail) addressDetail.textContent = vendor.address || "";
     }
   }
 
+  const callLink = document.getElementById("callLink");
+
+if (callLink) {
+
+  const phoneNumber =
+    vendor.phone || vendor.whatsapp;
+
+  if (phoneNumber) {
+
+    callLink.href =
+      `tel:${phoneNumber}`;
+
+  } else {
+
+    callLink.style.display =
+      "none";
+
+  }
+
+}
+
     const map = document.getElementById("mapLink");
 
     if (map) {
@@ -703,6 +724,83 @@ toolbar.querySelectorAll("button").forEach(btn => {
     desc.innerHTML = vendor.description || "";
 
   }
+
+}
+
+function formatTime(time) {
+
+  if (!time) return "";
+
+  const [hour, minute] =
+    time.split(":");
+
+  const h = Number(hour);
+
+  const suffix =
+    h >= 12 ? "PM" : "AM";
+
+  const displayHour =
+    h % 12 || 12;
+
+  return `${displayHour}:${minute} ${suffix}`;
+
+}
+
+const contactInfo =
+  document.getElementById(
+    "businessContactInfo"
+  );
+
+if (contactInfo) {
+
+console.log(contactInfo);
+console.log(vendor);
+
+  contactInfo.innerHTML = `
+  
+    <div class="business-contact-row">
+
+      <i class="far fa-clock"></i>
+
+      <div>
+
+        <div class="business-hours">
+           Opens ${formatTime(vendor.open_time)}
+            •
+           Closes ${formatTime(vendor.close_time)}
+        </div>
+
+        <div class="business-days">
+          ${(vendor.business_days || "")
+            .split(",")
+            .join(" • ")}
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="business-contact-row">
+
+      <i class="fas fa-phone-alt"></i>
+
+      <span>
+        ${vendor.phone || vendor.telephone || ""}
+      </span>
+
+    </div>
+
+    <div class="business-contact-row">
+
+      <i class="far fa-envelope"></i>
+
+      <span>
+        ${vendor.email || ""}
+      </span>
+
+    </div>
+
+  `;
 
 }
 

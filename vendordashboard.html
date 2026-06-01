@@ -658,6 +658,73 @@
 
 </div>
 
+
+<!-- BUSINESS HOURS -->
+<div
+  class="vd-profile-row vd-editable-row"
+  data-edit="hours"
+>
+
+  <div class="vd-profile-row-top">
+
+    <label>Business Hours</label>
+
+    <button
+      type="button"
+      class="vd-edit-btn"
+      data-toggle="hoursEditor"
+    >
+      <i class="fa-solid fa-pen"></i>
+      Edit
+    </button>
+
+  </div>
+
+  <div class="vd-profile-value">
+
+    <span id="profileHoursText">
+      —
+    </span>
+
+  </div>
+
+  <div
+    id="hoursEditor"
+    class="vd-inline-editor"
+  >
+
+    <div class="vd-coordinates-row">
+
+      <input
+        type="time"
+        id="openTime"
+        class="vd-input"
+      >
+
+      <input
+        type="time"
+        id="closeTime"
+        class="vd-input"
+      >
+
+    </div>
+
+    <div class="vd-business-days">
+
+      <label><input type="checkbox" value="Mon" class="business-day"> Mon</label>
+      <label><input type="checkbox" value="Tue" class="business-day"> Tue</label>
+      <label><input type="checkbox" value="Wed" class="business-day"> Wed</label>
+      <label><input type="checkbox" value="Thu" class="business-day"> Thu</label>
+      <label><input type="checkbox" value="Fri" class="business-day"> Fri</label>
+      <label><input type="checkbox" value="Sat" class="business-day"> Sat</label>
+      <label><input type="checkbox" value="Sun" class="business-day"> Sun</label>
+
+    </div>
+
+  </div>
+
+</div>
+
     <!-- ADDRESS -->
     <div
       class="vd-profile-row vd-editable-row"

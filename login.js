@@ -93,7 +93,7 @@ if (vendor.plan_tier === "free") {
     // PAID PLAN
     // =====================================================
     if (vendor.subscription_status === "pending") {
-      window.location.replace("payment-status");
+      window.location.replace("payment");
       return;
     }
 

@@ -1,0 +1,16 @@
+.discover-rating-wrap{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  font-size:12px;
+  color:#666;
+}
+
+.discover-rating-wrap i{
+  color:#f4b400;
+  font-size:11px;
+}
+
+.discover-rating-wrap small{
+  color:#888;
+}

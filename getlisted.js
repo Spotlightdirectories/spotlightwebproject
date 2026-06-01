@@ -83,7 +83,7 @@ if (!localStorage.getItem("billingType")) {
   // Plan intent capture (LOCKED)
   // -----------------------------
   planButtons.forEach(btn => {
-    btn.addEventListener("click", (e) => {
+    btn.addEventListener("click", async (e) => {
 
       console.log("BUTTON CLICKED");
 
@@ -113,7 +113,20 @@ if (!localStorage.getItem("billingType")) {
       localStorage.setItem("selectedPlan", plan);
       localStorage.setItem("billingType", billing);
 
-      window.location.href = "signup";
+      const { data } =
+        await window.supabaseClient.auth.getUser();
+
+        if (data?.user) {
+
+        window.location.href =
+          "payment";
+
+       } else {
+
+        window.location.href =
+          "signup";
+
+      }
     });
   });
 });

@@ -68,53 +68,76 @@
 
   </div>
 
-  <!-- CONTENT -->
 <div class="hero-content">
 
-  <div class="hero-left">
+  <div class="vendor-info-card">
+
+    <div class="hero-left">
       <div class="logo-wrap">
 
         <img id="vendorLogo" alt="Vendor logo" />
 
-     <div id="logoPlaceholder" class="logo-placeholder">
-    112 × 112px<br>
-    Max size: 1MB<br>
-    JPG, PNG, WEBP
+        <div id="logoPlaceholder" class="logo-placeholder">
+          112 × 112px<br>
+          Max size: 1MB<br>
+          JPG, PNG, WEBP
+        </div>
+
+        <label id="logoUploadLabel" class="camera-overlay small hidden">
+          📷
+          <input type="file" id="logoInput" accept="image/*" hidden />
+        </label>
+
+        <button id="deleteLogoBtn" class="logo-delete hidden" type="button">×</button>
+
+      </div>
+    </div>
+
+    <div class="hero-text">
+
+      <div class="name-row">
+        <h1 id="vendorName"></h1>
+        <div id="vendorBadge" class="badge-skeleton"></div>
+      </div>
+
+      <p class="meta">
+        <span id="vendorCategory"></span>
+      </p>
+
+      <p class="address-line" id="vendorAddress"></p>
+
+      <div
+        id="socialLinksRow"
+        class="social-links hidden"
+      ></div>
+
+    </div>
+
   </div>
 
-      <label id="logoUploadLabel" class="camera-overlay small hidden">
-         📷
-        <input type="file" id="logoInput" accept="image/*" hidden />
-      </label>
+  <div class="quick-actions">
 
-      <button id="deleteLogoBtn" class="logo-delete hidden" type="button">×</button>
-    </div>
+    <a id="whatsappLink" class="quick-action" target="_blank">
+      <i class="fab fa-whatsapp"></i>
+      <span>WhatsApp</span>
+    </a>
+
+    <a id="callLink" class="quick-action">
+      <i class="fas fa-phone"></i>
+      <span>Call Now</span>
+    </a>
+
+    <a id="mapLink" class="quick-action" target="_blank">
+      <i class="fas fa-location-arrow"></i>
+      <span>Directions</span>
+    </a>
+
+    <button id="catalogBtn" class="quick-action" type="button">
+      <i class="fas fa-book-open"></i>
+      <span>Catalog</span>
+    </button>
+
   </div>
-
-  <div class="hero-text">
-    <div class="name-row">
-      <h1 id="vendorName"></h1>
-      <div id="vendorBadge" class="badge-skeleton"></div>
-    </div>
-    
-    <p class="meta">
-      <span id="vendorCategory"></span>
-    </p>
-
-    <p class="address-line" id="vendorAddress"></p>
-
-    <p class="contact-prompt">
-       Contact this vendor now for fast response
-    </p>
-    <div class="hero-actions">
-      <a id="whatsappLink" target="_blank">WhatsApp</a>
-      <a id="mapLink" target="_blank">View on Map</a>
-    </div>
-
-<div
-  id="socialLinksRow"
-  class="social-links hidden"
-></div>
 
 <div class="social-editor-row">
 
@@ -174,7 +197,7 @@
 
   <!-- ABOUT -->
   <section id="aboutSection" class="profile-card">
-    <h2>About</h2>
+    <h2>About the Business</h2>
 
     <div id="aboutToolbar" class="about-toolbar hidden">
       <button type="button" data-cmd="bold"><b>B</b></button>
@@ -183,6 +206,9 @@
     </div>
 
 <div id="vendorDescription" class="about-editor-view"></div>
+
+<div id="businessContactInfo"></div>
+
   </section>
 
   <!-- MEDIA (tier-based) -->
@@ -239,32 +265,7 @@
   </div>
   </section>
 
-  <!-- CONTACT -->
-  <section class="profile-card">
-  <h2>Contact & Location</h2>
-
-  <div class="contact-details">
-
-    <div class="contact-row">
-      <span class="contact-label">Phone</span>
-      <span id="vendorPhone"></span>
-    </div>
-
-    <div class="contact-row">
-      <span class="contact-label">Email</span>
-      <span id="vendorEmail"></span>
-    </div>
-
-    <div class="contact-row">
-      <span class="contact-label">Address</span>
-      <span id="vendorAddressDetail"></span>
-    </div>
-
-   </div>
-
-  </section>
-
-  <!-- BRANCHES -->
+    <!-- BRANCHES -->
 <section id="branchesSection" class="profile-card hidden">
 
   <h2>Branches</h2>

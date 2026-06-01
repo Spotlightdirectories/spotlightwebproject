@@ -33,11 +33,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const billingType = vendor?.billing_cycle || "monthly";
 
+    const selectedPlan =
+      localStorage.getItem("selectedPlan");
+
+    const effectivePlan =
+      selectedPlan &&
+      selectedPlan !== vendor.plan_tier
+        ? selectedPlan
+        : vendor.plan_tier;
+
       // Show correct plan
-    if (planSummaryEl && vendor) {
-     planSummaryEl.textContent =
-    `You selected the ${vendor.plan_tier.toUpperCase()} plan.`;
-    }
+if (planSummaryEl && vendor) {
+  planSummaryEl.textContent =
+    `You selected the ${effectivePlan.toUpperCase()} plan.`;
+}
 
   if (!vendor) {
     window.location.replace(
@@ -45,12 +54,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 );
     return;
   }
-  if (vendor.plan_tier === "free") {
-    window.location.replace(
-  "vendordashboard"
-);
-    return;
-  }
+
+const upgradingFromFree =
+  vendor.plan_tier === "free" &&
+  selectedPlan &&
+  selectedPlan !== "free";
+
+if (
+  vendor.plan_tier === "free" &&
+  !upgradingFromFree
+) {
+  window.location.replace(
+    "vendordashboard"
+  );
+  return;
+}
 
   // 🔹 If payment approved
 const paidPlans = [
@@ -60,11 +78,16 @@ const paidPlans = [
   "custom"
 ];
 
+const upgradingPlan =
+  selectedPlan &&
+  selectedPlan !== vendor.plan_tier;
+
 if (
   paidPlans.includes(
     (vendor.plan_tier || "").toLowerCase()
   ) &&
-  vendor.subscription_status === "active"
+  vendor.subscription_status === "active" &&
+  !upgradingPlan
 ) {
 
   window.location.replace(
@@ -75,11 +98,11 @@ if (
 
 }
 
-  // 🔹 If payment awaiting review
-  if (vendor.subscription_status === "pending") {
-    window.location.replace("payment-status");
-    return;
-  }
+  // // 🔹 If payment awaiting review
+  // if (vendor.subscription_status === "pending") {
+  //   window.location.replace("payment-status");
+  //   return;
+  // }
 
 if (
   vendor.subscription_status === "pending"
@@ -168,9 +191,9 @@ const { data, error } = await supabase
   .insert({
      vendor_id: vendor.id,
      auth_user_id: user.id,
-     plan: vendor.plan_tier,
+     plan: effectivePlan,
      billing_type: billingType,
-     amount: getAmountInKobo(vendor.plan_tier, billingType),
+     amount: getAmountInKobo(effectivePlan, billingType),
      payment_method: "card",
      status: "pending",
      gateway_ref: paystackReference
@@ -190,7 +213,7 @@ const { data, error } = await supabase
   const handler = PaystackPop.setup({
     key: "pk_test_3dc48990c568ef43d2b42a9571cde21b9175d699",
     email: user.email,
-    amount: getAmountInKobo(vendor.plan_tier, billingType),
+    amount: getAmountInKobo(effectivePlan, billingType),
     currency: "NGN",
     ref: paystackReference,
     metadata: {
@@ -288,30 +311,12 @@ setTimeout(() => {
   // ===============================
   // BANK TRANSFER
   // ===============================
-  payBankBtn.onclick = async () => {
-    const { data, error } = await supabase
-      .from("vendorpayments")
-      .insert({
-       vendor_id: vendor.id,
-       auth_user_id: user.id,
-       plan: vendor.plan_tier,
-       amount: getAmountInKobo(vendor.plan_tier, billingType),
-       billing_type: billingType,
-       payment_method: "bank",
-       status: "pending"
-    })
-      .select("id")
-      .maybeSingle();
+payBankBtn.onclick = async () => {
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
+  paymentActions.classList.add("hidden");
+  bankSection.classList.remove("hidden");
 
-    window.currentPaymentId = data.id;
-    paymentActions.classList.add("hidden");
-    bankSection.classList.remove("hidden");
-  };
+};
 
   console.log("ATTACHING CLICK HANDLER");
 
@@ -330,6 +335,41 @@ setTimeout(() => {
       submitReceiptBtn.textContent = "Submit Receipt";
       return;
     }
+
+    const { data: paymentData, error: paymentError } =
+  await supabase
+    .from("vendorpayments")
+    .insert({
+      vendor_id: vendor.id,
+      auth_user_id: user.id,
+      plan: effectivePlan,
+      amount: getAmountInKobo(
+        effectivePlan,
+        billingType
+      ),
+      billing_type: billingType,
+      payment_method: "bank",
+      status: "pending"
+    })
+    .select("id")
+    .maybeSingle();
+
+if (paymentError || !paymentData) {
+
+  alert(
+    paymentError?.message ||
+    "Could not create payment record."
+  );
+
+  submitReceiptBtn.disabled = false;
+  submitReceiptBtn.textContent =
+    "Submit Receipt";
+
+  return;
+}
+
+ window.currentPaymentId =
+  paymentData.id;
 
     const filePath = `bank-receipts/${window.currentPaymentId}-${file.name}`;
 

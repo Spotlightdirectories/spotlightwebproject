@@ -1794,6 +1794,71 @@ if (
   if (telephoneInput) telephoneInput.value = vendor.telephone || "";
   if (addressInput) addressInput.value = vendor.address || "";
 
+const openTimeInput =
+  document.getElementById(
+    "openTime"
+  );
+
+const closeTimeInput =
+  document.getElementById(
+    "closeTime"
+  );
+
+const profileHoursText =
+  document.getElementById(
+    "profileHoursText"
+  );
+
+if (openTimeInput) {
+  openTimeInput.value =
+    vendor.open_time || "";
+}
+
+if (closeTimeInput) {
+  closeTimeInput.value =
+    vendor.close_time || "";
+}
+
+const selectedDays =
+  (
+    vendor.business_days || ""
+  )
+    .split(",")
+    .filter(Boolean);
+
+document
+  .querySelectorAll(
+    ".business-day"
+  )
+  .forEach(cb => {
+
+    cb.checked =
+      selectedDays.includes(
+        cb.value
+      );
+
+  });
+
+if (profileHoursText) {
+
+  if (
+    vendor.open_time &&
+    vendor.close_time
+  ) {
+
+    profileHoursText.textContent =
+      `${vendor.open_time} - ${vendor.close_time}
+      (${vendor.business_days || ""})`;
+
+  } else {
+
+    profileHoursText.textContent =
+      "—";
+
+  }
+
+}
+
 /* =========================
 PROFILE DISPLAY VALUES
 ========================= */
@@ -2831,6 +2896,18 @@ const nextLongitude =
     ? parseFloat(longitudeInput.value)
     : vendor.longitude;
 
+const nextOpenTime =
+  document.getElementById("openTime")?.value || "";
+
+const nextCloseTime =
+  document.getElementById("closeTime")?.value || "";
+
+const nextBusinessDays =
+  [...document.querySelectorAll(".business-day")]
+    .filter(cb => cb.checked)
+    .map(cb => cb.value)
+    .join(",");
+
 const hasChanges =
 
   nextWhatsapp !==
@@ -2861,7 +2938,16 @@ nextLatitude !==
   vendor.latitude ||
 
 nextLongitude !==
-  vendor.longitude;
+  vendor.longitude ||
+
+nextOpenTime !==
+  (vendor.open_time || "") ||
+
+nextCloseTime !==
+  (vendor.close_time || "") ||
+
+nextBusinessDays !==
+  (vendor.business_days || "");
 
 if (!hasChanges) {
 
@@ -2941,6 +3027,18 @@ subcategory:
   lga:
   lgaSelect?.value || null,
 
+open_time:
+  document.getElementById("openTime")?.value || null,
+
+close_time:
+  document.getElementById("closeTime")?.value || null,
+
+  business_days:
+    [...document.querySelectorAll(".business-day")]
+      .filter(cb => cb.checked)
+      .map(cb => cb.value)
+      .join(","),
+
 };
 
 const updatedPayload = {
@@ -2988,6 +3086,26 @@ const { error } = await supabase
           profileAddressText.textContent =
             payload.address || "—";
         }
+
+if (profileHoursText) {
+
+  if (
+    payload.open_time &&
+    payload.close_time
+  ) {
+
+    profileHoursText.textContent =
+      `${payload.open_time} - ${payload.close_time}
+      (${payload.business_days || ""})`;
+
+  } else {
+
+    profileHoursText.textContent =
+      "—";
+
+  }
+
+}
 
         if (profileStateText) {
           profileStateText.textContent =

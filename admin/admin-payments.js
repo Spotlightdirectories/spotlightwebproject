@@ -478,7 +478,7 @@ if (updateError) {
   await supabase
     .from("vendors")
     .update({
-      subscription_status: "rejected"
+      subscription_status: "failed"
     })
     .eq("id", payment.vendor_id);
 

@@ -82,45 +82,13 @@ body {
 
 /* Content row */
 .hero-content {
-  padding: 0 32px 32px;
-  display: grid;
-  grid-template-columns: 120px minmax(0, 1fr) auto;
-  gap: 24px;
-  align-items: center;
-  position: relative;
+  padding: 0 32px 24px;
 }
 
 
 /* Logo — overlapping */
 .hero-left {
-  position: relative;
-  top: -85px; /* overlap cover */
-}
-
-.logo-wrap {
-  width: 140px;
-  height: 140px;
-  min-width: 140px;
-  min-height: 140px;
-  max-width: 140px;
-  max-height: 140px;
-  background: #c7cedd; /* fallback grey */
-  border-radius: 14px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.logo-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 12px;
-  z-index: 1;
-  display: none;
+  flex-shrink: 0;
 }
 
 .logo-placeholder {
@@ -170,14 +138,17 @@ body {
 }
 
 .hero-text {
-  min-width: 0;
-  margin-left: 6px;
+  flex:1;
+  min-width:0;
+  padding:10px 18px;
 }
+
 /* Center text */
-.hero-text h1 {
-  margin: 0 0 6px;
-  font-size: 1.6rem;
-  line-height: 1.25;
+.hero-text h1{
+  font-size:1.15rem;
+  line-height:1.2;
+  margin:0 0 8px;
+  font-weight:700;
 }
 
 .name-row {
@@ -197,17 +168,7 @@ body {
   font-size: 0.95rem;
 }
 
-/* Actions */
-.hero-actions {
-  margin-top: 8px;
-}
 
-.hero-actions a {
-  margin-right: 14px;
-  font-size: 0.9rem;
-  text-decoration: none;
-  color: #2563eb;
-}
 
 .address-line {
   margin-top: 4px;
@@ -222,31 +183,75 @@ body {
   flex-wrap:wrap;
 }
 
-.hero-actions a {
-  display: inline-block;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  text-decoration: none;
-  margin-right: 10px;
-  transition: all 0.2s ease;
+/* =====================================
+   QUICK ACTIONS
+===================================== */
+
+.quick-actions{
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  gap:60px;
+  flex-wrap:wrap;
+
+  margin-top:12px;
+  margin-bottom:0;
 }
 
-/* WhatsApp = primary */
-#whatsappLink {
-  background: #25D366;
-  color: #fff;
+.quick-action{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+
+  text-decoration:none;
+  border:none;
+  background:none;
+  cursor:pointer;
+
+  color:#374151;
 }
 
-/* Map = secondary */
-#mapLink {
-  background: #f1f1f1;
-  color: #333;
+.quick-action i{
+  width:58px;
+  height:58px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border-radius:50%;
+
+  background:#eef2ff;
+
+  font-size:20px;
 }
 
-.hero-actions a:hover {
-  transform: translateY(-2px);
-  opacity: 0.9;
+.quick-action span{
+  font-size:14px;
+  font-weight:500;
+}
+
+#whatsappLink i{
+  background:#047857;
+  color:#fff;
+}
+
+@media (max-width:768px){
+
+  .quick-actions{
+    gap:18px;
+  }
+
+  .quick-action i{
+    width:52px;
+    height:52px;
+  }
+
+  .quick-action span{
+    font-size:13px;
+  }
+
 }
 
 
@@ -254,6 +259,54 @@ body {
   font-size: 14px;
   margin-bottom: 8px;
   color: #444;
+}
+
+
+.logo-wrap{
+  width:140px;
+  min-width:140px;
+
+  border-radius:18px 0 0 18px;
+
+  overflow:hidden;
+
+  margin-top:5px;
+  margin-left:5px;
+  margin-bottom:5px;
+
+  display:flex;
+}
+
+.logo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  z-index: 1;
+  display: none;
+}
+
+
+.vendor-info-card{
+  display:flex;
+  align-items:stretch;
+
+  background:#fff;
+
+  border:none;
+
+  border-radius:18px;
+
+  overflow:hidden;
+
+  max-width:760px;
+
+  margin:-35px auto 0;
+
+  position:relative;
+  z-index:2;
+
+  box-shadow:0 10px 28px rgba(0,0,0,.08);
 }
 
 @media (max-width: 600px){
@@ -270,20 +323,21 @@ body {
 
   /* HERO CONTENT STACK */
   .hero-content{
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    margin-top: -40px; /* pulls logo into cover nicely */
+    padding:0 16px 20px;
+    margin-top:-55px;
   }
 
   /* TEXT CENTERING */
- .hero-text{
-  text-align: left;
-  width: 100%;
+.hero-text{
+  width:100%;
+  text-align:center;
+  padding:12px 16px 0;
 }
 
 .name-row{
-  justify-content: flex-start;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
 }
 
   .hero-text h1{
@@ -295,12 +349,29 @@ body {
     font-size: 0.9rem;
   }
 
-  .logo-wrap{
-  width: 65px;
-  height: 65px;
-  border-radius: 50%;
-  overflow: hidden;
-  margin: 0 auto;
+.logo-wrap{
+  width:110px;
+  height:110px;
+
+  margin:-55px auto 0;
+
+  border-radius:24px;
+
+  border:4px solid #fff;
+
+  box-shadow:0 8px 20px rgba(0,0,0,.15);
+
+  overflow:hidden;
+}
+
+.vendor-info-card{
+  display:block;
+  background:transparent;
+  box-shadow:none;
+  border:none;
+  border-radius:0;
+  margin:0;
+  overflow:visible;
 }
 
   .hero-text .meta{
@@ -313,24 +384,27 @@ body {
     display: none;
   }
 
-  #vendorCategory{
-  flex-direction:column;
-  align-items:flex-start;
-  gap:2px;
+#vendorCategory{
+  display:flex;
+  flex-direction:row;
+  justify-content:center;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:6px;
 }
 
 #vendorCategory .cat{
-  font-size:0.8rem;
+  font-size:0.9rem;
   color:#6b7280;
 }
 
 #vendorCategory .subcat{
-  font-size:0.95rem;
+  font-size:0.9rem;
   font-weight:600;
 }
 
 #vendorCategory .dot{
-  display:none;
+  display:inline;
 }
 
 .logo-delete{
@@ -353,8 +427,8 @@ body {
 }
 
 .verification-badge {
-  width: 44px;
-  height: 44px;
+  width: 30px;
+  height: 30px;
   display: block;
 }
 
@@ -380,22 +454,32 @@ body {
 
 .badge-wrap::after {
   content: attr(data-tooltip);
+
   position: absolute;
-  top: 50%;
-  left: 120%;
-  transform: translateY(-50%);
+
+  top: 42px;
+  right: 0;
+
   width: 260px;
   max-width: 80vw;
-  background: #fff;
-  color: #222;
+
+  background: #000;
+  color: #fff;
+
   padding: 12px 14px;
+
   font-size: 14px;
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  line-height: 1.4;
+
+  border-radius: 12px;
+
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease;
-  z-index: 10;
+  transition: opacity .2s ease;
+
+  z-index: 999;
 }
 
 @media (max-width: 768px) {
@@ -426,6 +510,46 @@ body {
   margin-bottom: 12px;
 }
 
+#businessContactInfo{
+  margin-top:32px;
+
+  display:flex;
+  flex-direction:column;
+  gap:22px;
+
+  padding-top:20px;
+
+  border-top:1px solid #ececec;
+}
+
+.business-contact-row{
+  display:flex;
+  align-items:flex-start;
+  gap:18px;
+}
+
+.business-contact-row i{
+  font-size:24px;
+  width:28px;
+  color:#111827;
+}
+
+.business-hours{
+  font-size:1.1rem;
+  font-weight:700;
+  color:#047857;
+}
+
+.business-days{
+  margin-top:4px;
+  color:#6b7280;
+}
+
+.business-contact-row span{
+  font-size:1.05rem;
+  color:#111827;
+}
+
 /* ===============================
    MEDIA
 ================================ */
@@ -443,7 +567,7 @@ body {
 
   .hero-left {
   position: relative;
-  top: -40px;
+  top: -0px;
 }
 
   .hero-right {
@@ -909,42 +1033,6 @@ body {
   background:#f3f4f6;
 }
 
-/* ===============================
-   CONTACT DETAILS
-================================ */
-
-.contact-details {
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  margin-top:10px;
-}
-
-.contact-row{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:10px 12px;
-  border-radius:8px;
-  background:#f9fafb;
-  border:1px solid #e5e7eb;
-  gap:10px;
-}
-
-.contact-label {
-  font-size:0.8rem;
-  color:#6b7280;
-  font-weight:500;
-}
-
-@media (max-width:600px){
-
-  .contact-details{
-    gap:8px;
-  }
-
-}
-
 /* === PRODUCT PAGE LAYOUT FIX === */
 
 .product-container {
@@ -996,19 +1084,37 @@ body {
     max-height:260px;
   }
 
-  .contact-row{
-  flex-direction:column;
-  align-items:flex-start;
-  gap:4px;
+.social-links{
+  justify-content:center;
+  gap:12px;
+  margin-top:10px;
 }
 
-.contact-label{
-  font-size:0.7rem;
+.social-links a{
+  width:32px;
+  height:32px;
 }
 
-.contact-row span:last-child{
-  font-size:0.85rem;
-  word-break:break-word;
+.social-links svg{
+  width:16px;
+  height:16px;
+}
+
+.hero-text{
+  width:100%;
+
+  text-align:center;
+
+  padding:16px;
+
+  margin-top:12px;
+
+  background:#ffffff;
+
+  border-radius:18px;
+
+  box-shadow:
+    0 10px 24px rgba(26, 25, 25, 0.12);
 }
 
 }

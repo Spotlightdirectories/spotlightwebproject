@@ -1151,6 +1151,16 @@ if (
 
 }
 
+console.log(
+  "REDIRECT URL:",
+  `${window.DISCOVER_CONFIG.SEARCH_REDIRECT_URL}?${queryParams.toString()}`
+);
+
+console.log(
+  "QUERY STRING:",
+  queryParams.toString()
+);
+
 window.location.href =
   `${window.DISCOVER_CONFIG.SEARCH_REDIRECT_URL}?${queryParams.toString()}`;
 
