@@ -263,8 +263,12 @@ body {
 
 
 .logo-wrap{
+
   width:140px;
+  height:140px;
+
   min-width:140px;
+  min-height:140px;
 
   border-radius:18px 0 0 18px;
 
@@ -275,6 +279,12 @@ body {
   margin-bottom:5px;
 
   display:flex;
+
+  align-items:center;
+  justify-content:center;
+
+  background:#f3f4f6;
+
 }
 
 .logo-wrap img {

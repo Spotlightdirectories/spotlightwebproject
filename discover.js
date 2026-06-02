@@ -1151,15 +1151,6 @@ if (
 
 }
 
-console.log(
-  "REDIRECT URL:",
-  `${window.DISCOVER_CONFIG.SEARCH_REDIRECT_URL}?${queryParams.toString()}`
-);
-
-console.log(
-  "QUERY STRING:",
-  queryParams.toString()
-);
 
 window.location.href =
   `${window.DISCOVER_CONFIG.SEARCH_REDIRECT_URL}?${queryParams.toString()}`;
@@ -1380,7 +1371,8 @@ let sponsoredQuery =
       state,
       logo_url,
       verification_status,
-      average_rating
+      average_rating,
+      reviews_count 
     `)
     .eq(
       "is_sponsored",
@@ -1473,17 +1465,37 @@ if (
 
               <div class="discover-sponsored-meta">
 
-                <h3>
-                  ${vendor.name}
+                <h3 class="discover-sponsored-title">
+
+                  <span>
+                    ${vendor.name}
+                  </span>
+
+                      ${renderBadge(vendor.verification_status)}
+
                 </h3>
 
                 <p>
                   ${vendor.subcategory || "Vendor"}
                 </p>
 
-              </div>
+                <div class="discover-sponsored-rating-wrap">
 
-              ${renderBadge(vendor.verification_status)}
+                  <i class="fa-solid fa-star"></i>
+
+                  <span>
+                    ${Number(
+                      vendor.average_rating || 0
+                    ).toFixed(1)}
+                  </span>
+
+                  <small>
+                    (${vendor.reviews_count || 0})
+                  </small>
+
+                </div>   
+
+              </div>
 
             </div>
 
@@ -1497,12 +1509,24 @@ if (
 
               </span>
 
+              <div class="discover-sponsored-actions">
+
               <button
-                class="view-profile-btn"
-                data-slug="${vendor.slug || ""}"
+                class="review-trigger-btn"
+                data-vendor-id="${vendor.id}"
+                type="button"
+              >
+                Review
+              </button>
+
+             <button
+               class="view-profile-btn"
+               data-slug="${vendor.slug || ""}"
              >
-               View Profile
+              Profile
              </button>
+
+            </div>
 
           </div>
           `;
@@ -1527,6 +1551,9 @@ if (
   }
 
 }
+
+window.loadSponsoredVendors =
+  loadSponsoredVendors;
 
 function renderRecentSearches() {
 
@@ -1614,6 +1641,34 @@ renderTrendingSearches();
 loadSponsoredVendors();
 
 renderRecentSearches();
+
+document.addEventListener(
+  "click",
+  event => {
+
+    const reviewButton =
+      event.target.closest(
+        ".review-trigger-btn"
+      );
+
+    if (!reviewButton) {
+      return;
+    }
+
+    if (
+      window.ReviewsUtils &&
+      typeof window.ReviewsUtils.openReviewModal ===
+        "function"
+    ) {
+
+      window.ReviewsUtils.openReviewModal(
+       reviewButton.dataset.vendorId
+     );
+
+    }
+
+  }
+);
 
 document.addEventListener(
   "click",
