@@ -16,9 +16,10 @@
   <meta name="description" content="Discover verified vendors near you on Spotlight." />
   <link rel="canonical" href="https://www.spotlightdirectories.com/vendor-profile" />
 
-  <link rel="stylesheet" href="theme.css">
-  <link rel="stylesheet" href="navbar.css">
-  <link rel="stylesheet" href="vendor-profile.css" />
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="navbar.css">
+<link rel="stylesheet" href="vendor-profile.css" />
+<link rel="stylesheet" href="reviews-utils.css">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
@@ -100,9 +101,18 @@
         <div id="vendorBadge" class="badge-skeleton"></div>
       </div>
 
+      <div class="meta-row">
+
       <p class="meta">
-        <span id="vendorCategory"></span>
+       <span id="vendorCategory"></span>
       </p>
+
+      <div
+        id="vendorReviewSummary"
+        class="vendor-review-summary"
+      ></div>
+
+     </div>
 
       <p class="address-line" id="vendorAddress"></p>
 
@@ -265,6 +275,49 @@
   </div>
   </section>
 
+<section
+  id="reviewsSection"
+  class="profile-card"
+>
+
+  <div class="reviews-header">
+
+    <h2>
+      Reviews
+    </h2>
+
+    <button
+      id="rateVendorBtn"
+      type="button"
+      class="rate-review-btn"
+    >
+      Rate
+    </button>
+
+  </div>
+
+  <div
+    id="reviewsSummary"
+    class="reviews-summary"
+  >
+  </div>
+
+  <div
+    id="reviewsList"
+    class="reviews-list"
+  >
+  </div>
+
+  <button
+    id="viewAllReviewsBtn"
+    type="button"
+    class="view-all-reviews-btn"
+  >
+    View all reviews
+  </button>
+
+</section>
+
     <!-- BRANCHES -->
 <section id="branchesSection" class="profile-card hidden">
 
@@ -275,13 +328,15 @@
 </section>
 
 
-  </main>
+</main>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-client.js"></script>
-  <script src="badge-utils.js"></script>
-  <script src="vendor-profile.js" defer></script>
-  <!-- <script defer src="script2.js"></script> -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="badge-utils.js"></script>
+
+<script src="reviews-utils.js"></script>
+
+<script src="vendor-profile.js" defer></script>
   
 </body>
 </html>

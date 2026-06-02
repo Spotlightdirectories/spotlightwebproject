@@ -163,6 +163,75 @@ body {
   color: #4b5563;
 }
 
+.meta-row{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  flex-wrap:wrap;
+}
+
+.vendor-review-summary{
+  display:flex;
+  align-items:center;
+  gap:6px;
+
+  font-size:0.9rem;
+  font-weight:600;
+
+  color:#374151;
+}
+
+.review-star{
+  color:#e6c200;
+}
+
+.review-rating-text{
+  color:#374151;
+}
+
+.reviews-stars{
+  color:#e6c200;
+
+  letter-spacing:2px;
+
+  margin-right:8px;
+
+  font-size:1rem;
+}
+
+.star-full{
+  color:#e6c200;
+}
+
+.star-empty{
+  color:#d1d5db;
+}
+
+.star-partial{
+  position:relative;
+
+  display:inline-block;
+
+  line-height:1;
+}
+
+.star-partial .star-empty{
+  color:#d1d5db;
+}
+
+.star-partial .star-fill{
+  position:absolute;
+
+  top:0;
+  left:0;
+
+  color:#e6c200;
+
+  overflow:hidden;
+
+  width:0;
+}
+
 .hero-text p {
   color: #4b5563;
   font-size: 0.95rem;
@@ -263,6 +332,8 @@ body {
 
 
 .logo-wrap{
+
+  position:relative;
 
   width:140px;
   height:140px;
@@ -394,6 +465,14 @@ body {
     display: none;
   }
 
+.meta-row{
+  justify-content:center;
+}
+
+.vendor-review-summary{
+  justify-content:center;
+}
+
 #vendorCategory{
   display:flex;
   flex-direction:row;
@@ -425,6 +504,8 @@ body {
   font-size: 13px;
   z-index: 10;
 }
+
+
 
 }
 
@@ -518,6 +599,75 @@ body {
 .profile-card h2 {
   font-size: 1.2rem;
   margin-bottom: 12px;
+}
+
+.reviews-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+
+  margin-bottom:16px;
+}
+
+.rate-review-btn{
+  border:none;
+
+  background:#e6c200;
+
+  color:#111827;
+
+  padding:10px 18px;
+
+  border-radius:10px;
+
+  font-weight:600;
+
+  cursor:pointer;
+}
+
+.rate-review-btn:hover{
+  background:#111827;
+
+  color:#ffffff;
+}
+
+.reviews-summary{
+  margin-bottom:20px;
+
+  font-size:1rem;
+
+  font-weight:600;
+}
+
+.reviews-list{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+
+.view-all-reviews-btn{
+  margin-top:20px;
+
+  border:none;
+
+  background:none;
+
+  color:#2563eb;
+
+  font-weight:600;
+
+  cursor:pointer;
+
+  padding:0;
+}
+
+@media (max-width:600px){
+
+  .reviews-header{
+    flex-wrap:wrap;
+  }
+
 }
 
 #businessContactInfo{
@@ -655,6 +805,7 @@ body {
   bottom: 8px;
   right: 8px;
 }
+
 .camera-overlay.hidden {
   display: none !important;
 }

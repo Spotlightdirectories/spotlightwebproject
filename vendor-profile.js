@@ -490,6 +490,181 @@ videoInput.disabled = false;
    }
   }
 
+  const reviewSummary =
+  document.getElementById(
+    "vendorReviewSummary"
+  );
+
+if (reviewSummary) {
+
+  const averageRating =
+    Number(
+      vendor.average_rating || 0
+    ).toFixed(1);
+
+  const reviewsCount =
+    Number(
+      vendor.reviews_count || 0
+    );
+
+reviewSummary.innerHTML =
+  `
+  <span class="review-star">
+    ★
+  </span>
+
+  <span class="review-rating-text">
+    ${averageRating} (${reviewsCount})
+  </span>
+  `;
+
+}
+
+const reviewsSummary =
+  document.getElementById(
+    "reviewsSummary"
+  );
+
+if (reviewsSummary) {
+
+  const averageRating =
+    Number(
+      vendor.average_rating || 0
+    );
+
+  const reviewsCount =
+    Number(
+      vendor.reviews_count || 0
+    );
+
+const fullStars =
+  Math.floor(
+    averageRating
+  );
+
+const partialStar =
+  averageRating -
+  fullStars;
+
+let starsHtml = "";
+
+for (
+  let i = 0;
+  i < 5;
+  i++
+) {
+
+  if (
+    i < fullStars
+  ) {
+
+    starsHtml +=
+      `
+      <span
+        class="star-full"
+      >
+        ★
+      </span>
+      `;
+
+  } else if (
+  i === fullStars &&
+  partialStar > 0
+) {
+
+  starsHtml +=
+    `
+    <span
+      class="star-partial"
+      data-fill="${
+        Math.round(
+          partialStar * 100
+        )
+      }"
+    >
+      <span
+        class="star-empty"
+      >
+        ★
+      </span>
+
+      <span
+        class="star-fill"
+      >
+        ★
+      </span>
+    </span>
+    `;
+
+  } else {
+
+    starsHtml +=
+      `
+      <span
+        class="star-empty"
+      >
+        ★
+      </span>
+      `;
+
+  }
+
+}
+
+reviewsSummary.innerHTML =
+  `
+  <span
+    class="reviews-stars"
+  >
+    ${starsHtml}
+  </span>
+
+  <span
+    class="review-rating-text"
+  >
+    ${averageRating.toFixed(1)}
+    (${reviewsCount} Reviews)
+  </span>
+  `;
+
+const partialStars =
+  reviewsSummary.querySelectorAll(
+    ".star-partial"
+  );
+
+partialStars.forEach(
+  star => {
+
+    const fill =
+      Math.max(
+        0,
+        Math.min(
+          100,
+          Number(
+            star.dataset.fill || 0
+         )
+       )
+     );
+
+    const fillStar =
+      star.querySelector(
+        ".star-fill"
+      );
+
+    if (
+      fillStar
+    ) {
+
+      fillStar.style.width =
+        `${fill}%`;
+
+    }
+
+  }
+);
+
+}
+
     const addressEl = document.getElementById("vendorAddress");
     if (addressEl) addressEl.textContent = vendor.address || "";
 
