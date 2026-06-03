@@ -292,8 +292,17 @@ if (
 
 }
 
-    }
-  );
+if (
+  typeof window.loadVendorProfile ===
+  "function"
+) {
+
+  await window.loadVendorProfile();
+
+}
+
+  }
+);
 
       document
         .getElementById(

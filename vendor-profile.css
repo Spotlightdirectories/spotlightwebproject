@@ -232,6 +232,99 @@ body {
   width:0;
 }
 
+.review-card{
+  background:#f3f4f6;
+
+  border-radius:12px;
+
+  padding:14px 16px;
+}
+
+.review-header{
+  display:flex;
+
+  align-items:center;
+
+  gap:12px;
+
+  margin-bottom:8px;
+}
+
+.review-avatar{
+  width:40px;
+  height:40px;
+
+  border-radius:50%;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  flex-shrink:0;
+
+  font-size:0.85rem;
+  font-weight:700;
+
+  background:#dbeafe;
+
+  color:#1e3a8a;
+}
+
+.review-meta{
+  display:flex;
+  flex-direction:column;
+
+  gap:2px;
+
+  flex:1;
+}
+
+.review-row{
+  display:flex;
+
+  justify-content:space-between;
+
+  align-items:flex-start;
+
+  gap:12px;
+
+  width:100%;
+}
+
+.reviewer-name{
+  font-size:0.95rem;
+
+  font-weight:600;
+
+  color:#111827;
+}
+
+.review-date{
+  font-size:0.75rem;
+
+  color:#6b7280;
+}
+
+.review-text{
+  font-size:0.95rem;
+
+  line-height:1.5;
+
+  color:#374151;
+}
+
+.no-reviews-message{
+  text-align:center;
+
+  padding:20px;
+
+  color:#6b7280;
+
+  font-size:0.95rem;
+
+  line-height:1.6;
+}
+
 .hero-text p {
   color: #4b5563;
   font-size: 0.95rem;

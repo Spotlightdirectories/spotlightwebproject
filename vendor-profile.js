@@ -665,6 +665,48 @@ partialStars.forEach(
 
 }
 
+const rateVendorBtn =
+  document.getElementById(
+    "rateVendorBtn"
+  );
+
+if (
+  rateVendorBtn &&
+  window.ReviewsUtils
+) {
+
+  rateVendorBtn.addEventListener(
+    "click",
+    () => {
+
+      window.ReviewsUtils
+        .openReviewModal(
+          vendor.id
+        );
+
+    }
+  );
+
+}
+
+const reviewsList =
+  document.getElementById(
+    "reviewsList"
+  );
+
+if (
+  reviewsList
+) {
+
+  reviewsList.innerHTML =
+    "";
+
+  loadRecentReviews(
+    vendor.id
+  );
+
+}
+
     const addressEl = document.getElementById("vendorAddress");
     if (addressEl) addressEl.textContent = vendor.address || "";
 
@@ -1580,6 +1622,201 @@ del.addEventListener("click", async () => {
 
 }
 
+async function loadRecentReviews(
+  vendorId
+) {
+
+  const {
+    data: reviews,
+    error
+  } = await supabase
+    .from(
+      "vendor_reviews"
+    )
+    .select(
+      "reviewer_name, review_text, created_at"
+    )
+    .eq(
+      "vendor_id",
+      vendorId
+    )
+    .order(
+      "created_at",
+      {
+        ascending: false
+      }
+    )
+    .limit(3);
+
+  console.log(
+    "Recent Reviews:",
+    reviews
+  );
+
+  console.log(
+    "Review Error:",
+    error
+  );
+
+  const reviewsList =
+  document.getElementById(
+    "reviewsList"
+  );
+
+console.log(
+  "Reviews List Element:",
+  reviewsList
+);
+
+if (
+  reviewsList
+) {
+
+  reviewsList.innerHTML =
+    "";
+
+  if (
+    !reviews ||
+    reviews.length === 0
+  ) {
+
+    reviewsList.innerHTML =
+      `
+      <div class="no-reviews-message">
+        No reviews yet.<br>
+        Be the first to leave a review.
+      </div>
+      `;
+
+    return;
+
+  }
+
+  const now =
+    new Date();
+
+  reviews.forEach(
+
+    review => {
+
+  const initials =
+  (review.reviewer_name || "")
+    .split(" ")
+    .map(
+      part =>
+        part.charAt(0)
+    )
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
+
+  const reviewerName =
+  review.reviewer_name?.trim()
+  || "Anonymous Reviewer";
+
+  const reviewDate =
+  new Date(
+    review.created_at
+  );
+
+const diffDays =
+  Math.floor(
+    (
+      now -
+      reviewDate
+    ) /
+    (
+      1000 *
+      60 *
+      60 *
+      24
+    )
+  );
+
+let relativeDate =
+  "";
+
+if (
+  diffDays <= 0
+) {
+
+  relativeDate =
+    "Today";
+
+} else if (
+  diffDays < 7
+) {
+
+  relativeDate =
+    `${diffDays} day${
+      diffDays > 1
+        ? "s"
+        : ""
+    } ago`;
+
+} else {
+
+  const weeks =
+    Math.min(
+      3,
+      Math.floor(
+        diffDays / 7
+      )
+    );
+
+  relativeDate =
+    `${weeks} week${
+      weeks > 1
+        ? "s"
+        : ""
+    } ago`;
+
+}
+
+reviewsList.insertAdjacentHTML(
+  "beforeend",
+  `
+  <div class="review-card">
+
+    <div class="review-header">
+
+  <div class="review-avatar">
+    ${initials}
+  </div>
+
+<div class="review-meta">
+
+  <div class="review-row">
+
+    <div class="reviewer-name">
+      ${reviewerName}
+    </div>
+
+    <div class="review-date">
+      ${relativeDate}
+    </div>
+
+  </div>
+
+</div>
+
+</div>
+
+<div class="review-text">
+  ${review.review_text || ""}
+</div>
+
+  </div>
+  `
+);
+
+    }
+  );
+
+}
+
+}
+
 loadSocialLinks();
 
 loadBranches();
@@ -2027,6 +2264,9 @@ function getSafePlanTier(plan) {
 
   return plan;
 }
+
+window.loadVendorProfile =
+  loadVendorProfile;
 
 loadVendorProfile();
 });
