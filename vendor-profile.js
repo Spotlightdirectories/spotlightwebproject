@@ -13,6 +13,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const currentUser = session?.user || null;
 
+  let showAllReviews =
+  false;
+
   // ===============================
   // PLAN CAPABILITIES
   // ===============================
@@ -507,6 +510,22 @@ if (reviewSummary) {
       vendor.reviews_count || 0
     );
 
+  const viewAllReviewsBtn =
+  document.getElementById(
+    "viewAllReviewsBtn"
+  );
+
+if (
+  viewAllReviewsBtn
+) {
+
+  viewAllReviewsBtn.style.display =
+    reviewsCount > 3
+      ? "block"
+      : "none";
+
+}
+
 reviewSummary.innerHTML =
   `
   <span class="review-star">
@@ -686,6 +705,39 @@ if (
 
     }
   );
+
+}
+
+const viewAllReviewsBtn =
+  document.getElementById(
+    "viewAllReviewsBtn"
+  );
+
+if (
+  viewAllReviewsBtn
+) {
+
+  viewAllReviewsBtn.textContent =
+    showAllReviews
+      ? "Show Less"
+      : "View all reviews";
+
+  viewAllReviewsBtn.onclick =
+    async () => {
+
+      showAllReviews =
+        !showAllReviews;
+
+      viewAllReviewsBtn.textContent =
+        showAllReviews
+          ? "Show Less"
+          : "View all reviews";
+
+      await loadRecentReviews(
+        vendor.id
+      );
+
+    };
 
 }
 
@@ -1622,14 +1674,13 @@ del.addEventListener("click", async () => {
 
 }
 
+
 async function loadRecentReviews(
   vendorId
 ) {
 
-  const {
-    data: reviews,
-    error
-  } = await supabase
+const query =
+  supabase
     .from(
       "vendor_reviews"
     )
@@ -1645,8 +1696,32 @@ async function loadRecentReviews(
       {
         ascending: false
       }
-    )
-    .limit(3);
+    );
+
+if (
+  !showAllReviews
+) {
+
+  query.limit(
+    3
+  );
+
+}
+
+const {
+  data: reviews,
+  error
+} = await query;
+
+console.log(
+  "showAllReviews:",
+  showAllReviews
+);
+
+console.log(
+  "Review Count:",
+  reviews?.length
+);
 
   console.log(
     "Recent Reviews:",
