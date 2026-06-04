@@ -746,6 +746,11 @@ const reviewsList =
     "reviewsList"
   );
 
+const similarBusinessesList =
+  document.getElementById(
+    "similarBusinessesList"
+  );
+
 if (
   reviewsList
 ) {
@@ -755,6 +760,23 @@ if (
 
   loadRecentReviews(
     vendor.id
+  );
+
+}
+
+if (
+  similarBusinessesList
+) {
+
+  similarBusinessesList.innerHTML =
+    `
+    <div class="similar-business-placeholder">
+      Similar businesses will appear here.
+    </div>
+    `;
+
+  loadSimilarBusinesses(
+    vendor
   );
 
 }
@@ -1889,6 +1911,263 @@ reviewsList.insertAdjacentHTML(
   );
 
 }
+
+}
+
+async function loadSimilarBusinesses(
+  vendor
+) {
+
+  console.log(
+    "Loading Similar Businesses:",
+    vendor.category
+  );
+
+  const {
+    data: businesses,
+    error
+  } = await supabase
+    .from(
+      "vendors"
+    )
+    .select(
+      `
+      id,
+      slug,
+      name,
+      logo_url,
+      category,
+      average_rating,
+      reviews_count,
+      verification_status,
+      is_sponsored
+      `
+    )
+    .eq(
+      "category",
+      vendor.category
+    )
+    .eq(
+      "account_status",
+      "active"
+    )
+    .neq(
+      "id",
+      vendor.id
+    );
+
+  console.log(
+    "Similar Businesses:",
+    businesses
+  );
+
+  console.log(
+    "Similar Businesses Error:",
+    error
+  );
+
+  if (
+  error ||
+  !businesses
+) {
+
+  return;
+
+}
+
+businesses.sort(
+  (
+    a,
+    b
+  ) => {
+
+    const getRank =
+      vendor => {
+
+        if (
+          vendor.is_sponsored
+        ) {
+          return 1;
+        }
+
+        if (
+          vendor.verification_status ===
+          "blue"
+        ) {
+          return 2;
+        }
+
+        if (
+          vendor.verification_status ===
+          "gray"
+        ) {
+          return 3;
+        }
+
+        return 4;
+
+      };
+
+    const rankA =
+      getRank(a);
+
+    const rankB =
+      getRank(b);
+
+    if (
+      rankA !== rankB
+    ) {
+
+      return (
+        rankA -
+        rankB
+      );
+
+    }
+
+    if (
+      Number(
+        b.average_rating || 0
+      ) !==
+      Number(
+        a.average_rating || 0
+      )
+    ) {
+
+      return (
+        Number(
+          b.average_rating || 0
+        ) -
+        Number(
+          a.average_rating || 0
+        )
+      );
+
+    }
+
+    return (
+      Number(
+        b.reviews_count || 0
+      ) -
+      Number(
+        a.reviews_count || 0
+      )
+    );
+
+  }
+);
+
+console.log(
+  "Sorted Businesses:",
+  businesses
+);
+
+const similarBusinessesList =
+  document.getElementById(
+    "similarBusinessesList"
+  );
+
+if (
+  !similarBusinessesList
+) {
+
+  return;
+
+}
+
+similarBusinessesList.innerHTML =
+  "";
+
+businesses
+  .slice(0, 6)
+  .forEach(
+    business => {
+
+      const isVerified =
+  business.verification_status === "blue" ||
+  business.verification_status === "gray";
+
+const badgeHtml =
+  isVerified
+    ? `
+      <span
+        class="badge-wrap"
+      >
+        <img
+          src="${
+            business.verification_status === "gray"
+              ? "images/graybadge.png"
+              : "images/bluebadge.png"
+          }"
+          alt="Verification Badge"
+          class="verification-badge"
+        >
+      </span>
+      `
+    : "";
+
+      const stars =
+        Number(
+          business.average_rating || 0
+        ).toFixed(1);
+
+      similarBusinessesList
+        .insertAdjacentHTML(
+          "beforeend",
+          `
+          <div class="similar-business-card">
+
+            <a
+              href="vendor-profile.html?slug=${business.slug || business.id}"
+              class="similar-business-link"
+            >
+
+              <div class="similar-business-top">
+
+                <img
+                  src="${
+                    business.logo_url ||
+                    "images/default-vendor-logo.webp"
+                  }"
+                  class="similar-business-logo"
+                  alt="${business.name}"
+                >
+
+<div class="similar-business-info">
+
+  <div class="similar-business-name-row">
+
+    <div class="similar-business-name">
+      ${business.name}
+    </div>
+
+    ${badgeHtml}
+
+  </div>
+
+<div class="similar-business-rating">
+
+  <span class="similar-business-star">
+    ★
+  </span>
+
+  ${stars}
+  (${business.reviews_count || 0} Reviews)
+
+</div>
+
+</div>
+
+              </div>
+
+            </a>
+
+          </div>
+          `
+        );
+
+    }
+  );
 
 }
 
