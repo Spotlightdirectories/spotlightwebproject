@@ -83,6 +83,80 @@ if (!vendor) {
 }
 
 /* ===============================
+BUSINESS TYPE VISIBILITY
+=============================== */
+
+const productsSidebarBtn =
+  document.getElementById(
+    "productsSidebarBtn"
+  );
+
+const servicesSidebarBtn =
+  document.getElementById(
+    "servicesSidebarBtn"
+  );
+
+const productsSection =
+  document.getElementById(
+    "products"
+  );
+
+const servicesSection =
+  document.getElementById(
+    "services"
+  );
+
+if (
+  vendor?.business_type === "product"
+) {
+
+  servicesSidebarBtn?.classList.add(
+    "hidden"
+  );
+
+  servicesSection?.classList.add(
+    "hidden"
+  );
+
+}
+
+else if (
+  vendor?.business_type === "service"
+) {
+
+  productsSidebarBtn?.classList.add(
+    "hidden"
+  );
+
+  productsSection?.classList.add(
+    "hidden"
+  );
+
+}
+
+else if (
+  vendor?.business_type === "hybrid"
+) {
+
+  productsSidebarBtn?.classList.remove(
+    "hidden"
+  );
+
+  servicesSidebarBtn?.classList.remove(
+    "hidden"
+  );
+
+  productsSection?.classList.remove(
+    "hidden"
+  );
+
+  servicesSection?.classList.remove(
+    "hidden"
+  );
+
+}
+
+/* ===============================
 UPGRADE BUTTON ROUTING
 =============================== */
 

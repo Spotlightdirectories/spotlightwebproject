@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
+
+<title>
+  Select Business Type
+</title>
+
+<link
+  rel="stylesheet"
+  href="business-type.css"
+>
+
+</head>
+
+<body>
+
+<main class="bt-page">
+
+  <div class="bt-card">
+
+    <h1>
+      Select Your Business Type
+    </h1>
+
+    <p>
+      This choice determines how your dashboard is configured.
+    </p>
+
+    <label class="bt-option">
+
+      <input
+        type="radio"
+        name="businessType"
+        value="product"
+      >
+
+      <div>
+
+        <strong>
+          Product Business
+        </strong>
+
+        <span>
+          Sell physical products.
+        </span>
+
+      </div>
+
+    </label>
+
+    <label class="bt-option">
+
+      <input
+        type="radio"
+        name="businessType"
+        value="service"
+      >
+
+      <div>
+
+        <strong>
+          Service Business
+        </strong>
+
+        <span>
+          Provide professional or business services.
+        </span>
+
+      </div>
+
+    </label>
+
+    <label class="bt-option">
+
+      <input
+        type="radio"
+        name="businessType"
+        value="hybrid"
+      >
+
+      <div>
+
+        <strong>
+          Hybrid Business
+        </strong>
+
+        <span>
+          Sell products and provide services.
+        </span>
+
+      </div>
+
+    </label>
+
+    <button
+      id="businessTypeContinueBtn"
+      type="button"
+    >
+      Continue
+    </button>
+
+  </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="supabase-client.js"></script>
+
+<script
+  type="module"
+  src="business-type.js"
+></script>
+
+</body>
+</html>

@@ -2047,6 +2047,20 @@ async function loadSimilarBusinesses(
       "account_status",
       "active"
     )
+
+    .eq(
+  "onboarding_completed",
+  true
+)
+.eq(
+  "public_listing_accepted",
+  true
+)
+.eq(
+  "subscription_status",
+  "active"
+)
+
     .neq(
       "id",
       vendor.id

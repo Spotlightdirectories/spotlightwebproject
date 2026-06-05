@@ -1,0 +1,211 @@
+/* =========================
+PAGE
+========================= */
+
+body {
+
+  margin: 0;
+
+  font-family:
+    Inter,
+    sans-serif;
+
+  background: #f5f7fb;
+
+  min-height: 100vh;
+
+}
+
+/* =========================
+LAYOUT
+========================= */
+
+.bt-page {
+
+  min-height: 100vh;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 24px;
+
+}
+
+/* =========================
+CARD
+========================= */
+
+.bt-card {
+
+  width: 100%;
+  max-width: 520px;
+
+  background: #ffffff;
+
+  border-radius: 16px;
+
+  padding: 32px;
+
+  box-shadow:
+    0 8px 24px
+    rgba(
+      0,
+      0,
+      0,
+      0.08
+    );
+
+}
+
+.bt-card h1 {
+
+  margin: 0 0 12px;
+
+  font-size: 28px;
+
+  font-weight: 700;
+
+  color: #111827;
+
+}
+
+.bt-card p {
+
+  margin: 0 0 24px;
+
+  color: #6b7280;
+
+  line-height: 1.5;
+
+}
+
+/* =========================
+OPTIONS
+========================= */
+
+.bt-option {
+
+  display: flex;
+
+  gap: 14px;
+
+  align-items: flex-start;
+
+  padding: 16px;
+
+  margin-bottom: 12px;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 12px;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
+
+}
+
+.bt-option:hover {
+
+  border-color: #2563eb;
+
+}
+
+.bt-option input {
+
+  margin-top: 4px;
+
+}
+
+.bt-option strong {
+
+  display: block;
+
+  margin-bottom: 4px;
+
+  font-size: 15px;
+
+  color: #111827;
+
+}
+
+.bt-option span {
+
+  display: block;
+
+  color: #6b7280;
+
+  font-size: 14px;
+
+  line-height: 1.4;
+
+}
+
+/* =========================
+BUTTON
+========================= */
+
+#businessTypeContinueBtn {
+
+  width: 100%;
+
+  border: none;
+
+  border-radius: 10px;
+
+  padding: 14px;
+
+  margin-top: 20px;
+
+  background: #000000;
+
+  color: #ffffff;
+
+  font-size: 15px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+}
+
+#businessTypeContinueBtn:hover {
+
+  background: #e6c200;
+  color: #000000;
+  opacity: 0.95;
+
+}
+
+#businessTypeContinueBtn:disabled {
+
+  opacity: 0.6;
+
+  cursor: not-allowed;
+
+}
+
+/* =========================
+MOBILE
+========================= */
+
+@media (
+  max-width: 640px
+) {
+
+  .bt-card {
+
+    padding: 24px;
+
+  }
+
+  .bt-card h1 {
+
+    font-size: 24px;
+
+  }
+
+}

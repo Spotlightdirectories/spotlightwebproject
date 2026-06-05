@@ -994,6 +994,7 @@ query =
       id,
       vendor_id,
       service_name,
+      short_description,
       vendors (
         id,
         name,
@@ -1012,7 +1013,8 @@ query =
         reviews_count,
         account_status,
         onboarding_completed,
-        public_listing_accepted
+        public_listing_accepted,
+        subscription_status
       )
     `);
 
@@ -1021,6 +1023,30 @@ query =
     "vendors",
     "is",
     null
+  );
+
+query =
+  query.eq(
+    "vendors.account_status",
+    "active"
+  );
+
+query =
+  query.eq(
+    "vendors.onboarding_completed",
+    true
+  );
+
+query =
+  query.eq(
+    "vendors.public_listing_accepted",
+    true
+  );
+
+query =
+  query.eq(
+    "vendors.subscription_status",
+    "active"
   );
 
 } else {
@@ -1072,9 +1098,8 @@ if (keyword) {
   ) {
 
   query =
-  query.ilike(
-    "service_name",
-    `%${keyword}%`
+    query.or(
+      `service_name.ilike.%${keyword}%,short_description.ilike.%${keyword}%`
   );
 
   } else {
@@ -1768,6 +1793,21 @@ const vendor =
 
       const reviewsCount =
         vendor.reviews_count || 0;
+      
+      const serviceDescription =
+
+        service.short_description
+          ? (
+             service.short_description
+               .length > 80
+
+               ? service.short_description
+                   .slice(0, 80) + "..."
+
+               : service.short_description
+            )
+
+         : "";
 
       return `
 
@@ -1806,7 +1846,7 @@ const vendor =
 
             </div>
 
-                        <div class="discover-vendor-heading">
+              <div class="discover-vendor-heading">
 
               <p class="discover-service-vendor">
 
@@ -1853,6 +1893,16 @@ ${
                 </small>
 
               </div>
+
+             ${
+              serviceDescription
+                ? `
+                  <p class="discover-service-description">
+                    ${serviceDescription}
+                  </p>
+               `
+               : ""
+             }
 
             </div>
 

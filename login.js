@@ -77,16 +77,29 @@ if (vendor.account_status === "closed") {
   return;
 }
 
-    // =====================================================
-    // FREE PLAN
-    // =====================================================
+// =====================================================
+// FREE PLAN
+// =====================================================
 if (vendor.plan_tier === "free") {
+
+  if (
+    !vendor.business_type
+  ) {
+
+    window.location.replace(
+      "business-type"
+    );
+
+    return;
+
+  }
 
   window.location.replace(
     "vendordashboard"
   );
 
   return;
+
 }
 
     // =====================================================
@@ -107,11 +120,24 @@ if (
   "active"
 ) {
 
+  if (
+    !vendor.business_type
+  ) {
+
+    window.location.replace(
+      "business-type"
+    );
+
+    return;
+
+  }
+
   window.location.replace(
     "vendordashboard"
   );
 
   return;
+
 }
 
 /* ===============================
