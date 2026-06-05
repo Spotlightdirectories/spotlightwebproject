@@ -1105,6 +1105,21 @@ console.log(vendor);
       mediaSection.classList.remove("hidden");
     }
 
+  const productsHeading =
+  document.getElementById(
+    "productsHeading"
+  );
+
+const servicesWrap =
+  document.getElementById(
+    "servicesWrap"
+  );
+
+const servicesList =
+  document.getElementById(
+    "servicesList"
+  );
+
     const mediaHint = document.querySelector(".media-hint");
 
     if (mediaHint && !isOwner) {
@@ -1133,6 +1148,12 @@ async function loadGallery() {
   const imageList = images || [];
   grid.innerHTML = "";
 
+  const publicProducts = imageList.filter(item =>
+  item &&
+  item.title &&
+  item.title.trim()
+);
+
 const totalItems = isOwner
   ? (
       imageList.length <
@@ -1144,6 +1165,16 @@ const totalItems = isOwner
       imageList.length,
       effectiveGalleryLimit
     );
+
+  if (!isOwner && productsHeading) {
+
+  if (publicProducts.length > 0) {
+    productsHeading.classList.remove("hidden");
+  } else {
+    productsHeading.classList.add("hidden");
+  }
+
+}
 
   for (let i = 0; i < totalItems; i++) {
 
@@ -1505,6 +1536,71 @@ grid.appendChild(slot);
 
 loadGallery();
 
+async function loadServices() {
+
+  if (!servicesWrap || !servicesList) return;
+
+  servicesList.innerHTML = "";
+
+  const { data: services } = await supabase
+    .from("vendor_services")
+    .select("*")
+    .eq("vendor_id", vendor.id);
+
+  const serviceList = services || [];
+
+  if (serviceList.length === 0) {
+
+    servicesWrap.classList.add("hidden");
+
+    return;
+
+  }
+
+  servicesWrap.classList.remove("hidden");
+
+serviceList.forEach(service => {
+
+  const serviceName =
+    (service.service_name || "").trim();
+
+  if (!serviceName) return;
+
+  const card =
+    document.createElement("div");
+
+  card.className =
+    "service-card";
+
+const name =
+  document.createElement("div");
+
+name.className =
+  "service-name";
+
+name.textContent =
+  serviceName;
+
+card.appendChild(name);
+
+const description =
+  document.createElement("div");
+
+description.className =
+  "service-description";
+
+description.textContent =
+  (service.short_description || "").trim();
+
+card.appendChild(description);
+
+servicesList.appendChild(card);
+
+});
+
+}
+
+loadServices();
 
 async function loadVideo() {
 

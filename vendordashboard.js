@@ -154,6 +154,11 @@ const serviceNameInput =
     "serviceName"
   );
 
+const serviceDescriptionInput =
+  document.getElementById(
+    "serviceDescription"
+  );
+
 const pendingServicesList =
   document.getElementById(
     "pendingServicesList"
@@ -284,7 +289,9 @@ if (!pendingServices.length) {
         "vd-service-pill";
 
       item.innerHTML = `
-        <span>${service}</span>
+        <span>
+          ${service.service_name}
+        </span>
 
         <button
           type="button"
@@ -344,19 +351,42 @@ function renderSavedServices() {
       item.className =
         "vd-service-pill saved";
 
-      item.innerHTML = `
-        <span>
-          ${service.service_name}
-        </span>
+item.innerHTML = `
 
-        <button
-          type="button"
-          class="vd-delete-service-btn"
-          data-id="${service.id}"
-        >
-          ×
-        </button>
-      `;
+  <div class="vd-service-content">
+
+    <div class="vd-service-name">
+      ${service.service_name}
+    </div>
+
+    <div class="vd-service-description">
+      ${
+       (service.short_description || "")
+         .length > 160
+           ? service.short_description.slice(0, 160) + "..."
+           : (service.short_description || "")
+     }
+    </div>
+
+  </div>
+
+  <button
+    type="button"
+    class="vd-edit-service-btn"
+    data-id="${service.id}"
+  >
+    Edit
+  </button>
+
+  <button
+    type="button"
+    class="vd-delete-service-btn"
+    data-id="${service.id}"
+  >
+    ×
+  </button>
+
+`;
 
       savedServicesList.appendChild(
         item
@@ -366,6 +396,8 @@ function renderSavedServices() {
   );
 
 }
+
+let editingServiceId = null;
 
 /* ========================= */
 /* DELETE SAVED SERVICE */
@@ -379,6 +411,65 @@ if (
     .addEventListener(
       "click",
       async (e) => {
+
+        const editBtn =
+  e.target.closest(
+    ".vd-edit-service-btn"
+  );
+
+if (editBtn) {
+
+  const serviceId =
+    editBtn.dataset.id;
+
+  const service =
+    savedServices.find(
+      item =>
+        String(item.id) ===
+        String(serviceId)
+    );
+
+  if (!service) {
+    return;
+  }
+
+  editingServiceId =
+    service.id;
+
+  if (
+  addServiceItemBtn
+) {
+
+  addServiceItemBtn.disabled =
+    true;
+
+  addServiceItemBtn.textContent =
+    "Editing...";
+
+}
+
+  serviceNameInput.value =
+    service.service_name || "";
+
+  if (
+    serviceDescriptionInput
+  ) {
+
+    serviceDescriptionInput.value =
+      service.short_description || "";
+
+  }
+
+  if (saveServiceBtn) {
+
+    saveServiceBtn.textContent =
+      "Update Service";
+
+  }
+
+  return;
+
+}
 
         const deleteBtn =
           e.target.closest(
@@ -486,6 +577,23 @@ if (
           serviceNameInput.value
             .trim();
 
+        const serviceDescription =
+          serviceDescriptionInput
+            ?.value
+            .trim() || "";
+
+        if (
+          serviceDescription.length > 160
+        ) {
+
+          alert(
+            "Service description must not exceed 160 characters including spaces."
+         );
+
+         return;
+
+        }
+
         if (!serviceName) {
 
           alert(
@@ -584,14 +692,31 @@ if (
 
         /* ADD SERVICE */
 
-        pendingServices.push(
-          serviceName
-        );
+        pendingServices.push({
+
+          service_name:
+            serviceName,
+
+          short_description:
+            serviceDescriptionInput
+              ?.value
+              .trim() || ""
+
+        });
 
         renderPendingServices();
 
         serviceNameInput.value =
           "";
+
+        if (
+          serviceDescriptionInput
+        ) {
+
+          serviceDescriptionInput.value =
+            "";
+
+          }
 
       }
     );
@@ -655,7 +780,8 @@ if (
         }
 
         if (
-          !pendingServices.length
+           !editingServiceId &&
+           !pendingServices.length
         ) {
 
           alert(
@@ -674,6 +800,95 @@ if (
 
         try {
 
+        if (
+  editingServiceId
+) {
+
+  const serviceName =
+    serviceNameInput.value
+      .trim();
+
+  const serviceDescription =
+    serviceDescriptionInput
+      ?.value
+      .trim() || "";
+
+  const { error } =
+    await supabase
+      .from(
+        "vendor_services"
+      )
+      .update({
+
+        service_name:
+          serviceName,
+
+        short_description:
+          serviceDescription
+
+      })
+      .eq(
+        "id",
+        editingServiceId
+      );
+
+  if (error) {
+    throw error;
+  }
+
+  const target =
+    savedServices.find(
+      item =>
+        String(item.id) ===
+        String(editingServiceId)
+    );
+
+  if (target) {
+
+    target.service_name =
+      serviceName;
+
+    target.short_description =
+      serviceDescription;
+
+  }
+
+  editingServiceId =
+    null;
+
+  if (
+  addServiceItemBtn
+) {
+
+  addServiceItemBtn.disabled =
+    false;
+
+  addServiceItemBtn.textContent =
+    "Add";
+
+}
+
+  serviceNameInput.value =
+    "";
+
+  if (
+    serviceDescriptionInput
+  ) {
+
+    serviceDescriptionInput.value =
+      "";
+
+  }
+
+  saveServiceBtn.innerHTML =
+    "Save Services";
+
+  renderSavedServices();
+
+  return;
+
+}
+
           const payload =
             pendingServices.map(
               service => ({
@@ -682,10 +897,13 @@ if (
                   vendor.id,
 
                 service_name:
-                  service
+                  service.service_name,
+
+                short_description:
+                  service.short_description
 
               })
-            );
+          );
 
           const { error } =
             await supabase
@@ -716,11 +934,20 @@ if (
           serviceNameInput.value =
             "";
 
+          if (
+            serviceDescriptionInput
+         ) {
+
+            serviceDescriptionInput.value =
+              "";
+
+            }
+
         } catch (err) {
 
           console.error(
-            "Service save error:",
-            err
+             "Service save error:",
+             JSON.stringify(err, null, 2)
           );
 
           alert(
