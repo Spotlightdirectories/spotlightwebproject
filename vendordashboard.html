@@ -421,11 +421,162 @@
   class="vd-section"
 >
 
-  <div class="vd-card">
+  <div class="vd-card vd-profile-card">
 
-    <h2>
-      Products
-    </h2>
+    <div class="vd-profile-header">
+
+      <div>
+
+        <h3>
+          Product Catalogue
+        </h3>
+
+        <p class="vd-profile-subtext">
+
+          Add and manage the products
+          your business sells.
+
+        </p>
+
+      </div>
+
+      <button
+        id="addProductBtn"
+        class="vd-service-btn"
+        type="button"
+      >
+
+        <i class="fa-solid fa-plus"></i>
+
+        Add Product
+
+      </button>
+
+    </div>
+
+    <div
+      id="productFormWrap"
+      class="vd-inline-editor"
+    >
+
+      <div class="vd-service-add-row">
+
+        <input
+          type="text"
+          id="productName"
+          class="vd-input"
+          placeholder="Enter product name"
+        >
+
+      </div>
+
+      <div class="vd-service-description-row">
+
+        <textarea
+          id="productDescription"
+          class="vd-textarea"
+          rows="3"
+          placeholder="Enter short product description"
+        ></textarea>
+
+      </div>
+
+      <div class="vd-service-add-row">
+
+        <input
+          type="number"
+          id="productPrice"
+          class="vd-input"
+          placeholder="Enter fixed selling price"
+        >
+
+      </div>
+
+      <div class="vd-service-description-row">
+
+        <label for="primaryProductImage">
+
+          Primary Product Image
+
+        </label>
+
+        <input
+          type="file"
+          id="primaryProductImage"
+          accept="image/*"
+        >
+
+      </div>
+
+      <div class="vd-service-description-row">
+
+        <label for="secondaryProductImage">
+
+          Secondary Product Image
+
+        </label>
+
+        <input
+          type="file"
+          id="secondaryProductImage"
+          accept="image/*"
+        >
+
+      </div>
+
+      <div class="vd-service-description-row">
+
+        <textarea
+          id="productKeyDetails"
+          class="vd-textarea"
+          rows="5"
+          placeholder="Material: Leather&#10;Colour: Black&#10;Size: 42"
+        ></textarea>
+
+      </div>
+
+      <div class="vd-service-add-actions">
+
+        <button
+          id="addProductItemBtn"
+          class="vd-service-btn"
+          type="button"
+        >
+          Add
+        </button>
+
+      </div>
+
+      <p
+        id="productLimitText"
+        class="vd-service-limit-text"
+      ></p>
+
+      <div
+        id="pendingProductsList"
+        class="vd-pending-services"
+      ></div>
+
+      <div
+        id="savedProductsList"
+        class="vd-saved-services"
+      ></div>
+
+      <div class="vd-profile-actions">
+
+        <button
+          id="saveProductBtn"
+          class="vd-service-btn"
+          type="button"
+        >
+
+          Save Products
+
+        </button>
+
+      </div>
+
+    </div>
 
   </div>
 

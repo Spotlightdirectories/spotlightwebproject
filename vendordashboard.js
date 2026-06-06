@@ -174,6 +174,39 @@ const upgradeUrl =
   "getlisted.html";
 
 /* ========================= */
+/* PRODUCTS UI */
+/* ========================= */
+
+const addProductBtn =
+  document.getElementById(
+    "addProductBtn"
+  );
+
+const productFormWrap =
+  document.getElementById(
+    "productFormWrap"
+  );
+
+if (
+  addProductBtn &&
+  productFormWrap
+) {
+
+  addProductBtn
+    .addEventListener(
+      "click",
+      () => {
+
+        productFormWrap
+          .classList
+          .toggle("active");
+
+      }
+    );
+
+}
+
+/* ========================= */
 /* SERVICES UI */
 /* ========================= */
 
@@ -215,6 +248,14 @@ let pendingServices = [];
 let savedServices = [];
 
 /* ========================= */
+/* PRODUCTS STATE */
+/* ========================= */
+
+let pendingProducts = [];
+
+let savedProducts = [];
+
+/* ========================= */
 /* SERVICE ELEMENTS */
 /* ========================= */
 
@@ -254,7 +295,964 @@ const saveServiceBtn =
   );
 
 /* ========================= */
-/* CURRENT LIMIT */
+/* PRODUCT ELEMENTS */
+/* ========================= */
+
+const addProductItemBtn =
+  document.getElementById(
+    "addProductItemBtn"
+  );
+
+const productNameInput =
+  document.getElementById(
+    "productName"
+  );
+
+const productDescriptionInput =
+  document.getElementById(
+    "productDescription"
+  );
+
+const productPriceInput =
+  document.getElementById(
+    "productPrice"
+  );
+
+const primaryProductImageInput =
+  document.getElementById(
+    "primaryProductImage"
+  );
+
+const secondaryProductImageInput =
+  document.getElementById(
+    "secondaryProductImage"
+  );
+
+const productKeyDetailsInput =
+  document.getElementById(
+    "productKeyDetails"
+  );
+
+const pendingProductsList =
+  document.getElementById(
+    "pendingProductsList"
+  );
+
+const savedProductsList =
+  document.getElementById(
+    "savedProductsList"
+  );
+
+const productLimitText =
+  document.getElementById(
+    "productLimitText"
+  );
+
+const saveProductBtn =
+  document.getElementById(
+    "saveProductBtn"
+  );
+
+let primaryProductImageUrl =
+  "";
+
+let secondaryProductImageUrl =
+  "";
+
+/* ========================= */
+/* PRIMARY PRODUCT IMAGE */
+/* ========================= */
+
+if (
+  primaryProductImageInput
+) {
+
+  primaryProductImageInput
+    .addEventListener(
+      "change",
+      async (e) => {
+
+        const file =
+          e.target.files[0];
+
+        if (!file) {
+          return;
+        }
+
+        const allowedTypes = [
+          "image/jpeg",
+          "image/png",
+          "image/webp"
+        ];
+
+        if (
+          !allowedTypes.includes(
+            file.type
+          )
+        ) {
+
+          alert(
+            "Only JPG, PNG or WEBP images allowed."
+          );
+
+          primaryProductImageInput.value =
+            "";
+
+          return;
+
+        }
+
+        const filePath =
+          `${vendor.id}/products/${Date.now()}-${file.name}`;
+
+        const {
+          error: uploadError
+        } = await supabase.storage
+          .from(
+            "vendor-gallery"
+          )
+          .upload(
+            filePath,
+            file
+          );
+
+if (
+  uploadError
+) {
+
+  console.error(
+    "PRIMARY IMAGE UPLOAD ERROR:",
+    uploadError
+  );
+
+  alert(
+    "Primary image upload failed."
+  );
+
+  return;
+
+}
+
+        const {
+          data
+        } = supabase.storage
+          .from(
+            "vendor-gallery"
+          )
+          .getPublicUrl(
+            filePath
+          );
+
+        primaryProductImageUrl =
+          data.publicUrl;
+
+      }
+    );
+
+}
+
+/* ========================= */
+/* SECONDARY PRODUCT IMAGE */
+/* ========================= */
+
+if (
+  secondaryProductImageInput
+) {
+
+  secondaryProductImageInput
+    .addEventListener(
+      "change",
+      async (e) => {
+
+        const file =
+          e.target.files[0];
+
+        if (!file) {
+          return;
+        }
+
+        const allowedTypes = [
+          "image/jpeg",
+          "image/png",
+          "image/webp"
+        ];
+
+        if (
+          !allowedTypes.includes(
+            file.type
+          )
+        ) {
+
+          alert(
+            "Only JPG, PNG or WEBP images allowed."
+          );
+
+          secondaryProductImageInput.value =
+            "";
+
+          return;
+
+        }
+
+        const filePath =
+          `${vendor.id}/products/${Date.now()}-${file.name}`;
+
+        const {
+          error: uploadError
+        } = await supabase.storage
+          .from(
+            "vendor-gallery"
+          )
+          .upload(
+            filePath,
+            file
+          );
+
+        if (
+          uploadError
+        ) {
+
+          alert(
+            "Secondary image upload failed."
+          );
+
+          return;
+
+        }
+
+        const {
+          data
+        } = supabase.storage
+          .from(
+            "vendor-gallery"
+          )
+          .getPublicUrl(
+            filePath
+          );
+
+        secondaryProductImageUrl =
+          data.publicUrl;
+
+      }
+    );
+
+}
+
+/* ===============================
+PRODUCT LIMITS
+=============================== */
+
+const PRODUCT_LIMITS = {
+
+  trial: 3,
+
+  free: 1,
+
+  standard: 6,
+
+  enterprise: 12,
+
+  elite: 24,
+
+  custom: Infinity
+
+};
+
+/* ===============================
+GET PRODUCT LIMIT
+=============================== */
+
+function getProductLimit(
+  planTier
+) {
+
+  return (
+    PRODUCT_LIMITS[
+      planTier
+    ] || 1
+  );
+
+}
+
+const currentProductLimit =
+  getProductLimit(
+    vendor?.plan_tier || "free"
+  );
+
+if (productLimitText) {
+
+  productLimitText.textContent =
+    `Your current plan allows up to ${currentProductLimit} products.`;
+
+}
+
+/* EXISTING SAVED PRODUCTS */
+
+let existingProductsCount = 0;
+
+const {
+  count: savedProductsCount
+} = await supabase
+  .from("vendor_products")
+  .select(
+    "*",
+    {
+      count: "exact",
+      head: true
+    }
+  )
+  .eq(
+    "vendor_id",
+    vendor.id
+  );
+
+existingProductsCount =
+  savedProductsCount || 0;
+
+/* ========================= */
+/* FETCH SAVED PRODUCTS */
+/* ========================= */
+console.log(
+  "FETCH VENDOR ID:",
+  vendor.id
+);
+
+const {
+  data: fetchedProducts,
+  error: fetchedProductsError
+} = await supabase
+  .from("vendor_products")
+  .select("*")
+  .eq(
+    "vendor_id",
+    vendor.id
+  )
+  .order(
+    "display_order",
+    {
+      ascending: true
+    }
+  );
+
+if (
+  fetchedProductsError
+) {
+
+  console.error(
+    "Fetch products error:",
+    fetchedProductsError
+  );
+
+} else {
+
+  savedProducts =
+    fetchedProducts || [];
+
+console.log(
+  "FETCHED PRODUCTS:",
+  fetchedProducts
+);
+
+console.log(
+  "SAVED PRODUCTS:",
+  savedProducts
+);
+
+renderSavedProducts();
+
+}
+
+/* ========================= */
+/* RENDER PENDING PRODUCTS */
+/* ========================= */
+
+function renderPendingProducts() {
+
+  if (!pendingProductsList) {
+    return;
+  }
+
+  pendingProductsList.innerHTML =
+    "";
+
+  if (!pendingProducts.length) {
+
+    pendingProductsList.innerHTML =
+      "";
+
+    return;
+
+  }
+
+  pendingProducts.forEach(
+    (product, index) => {
+
+      const item =
+        document.createElement("div");
+
+      item.className =
+        "vd-service-pill";
+
+      item.innerHTML = `
+        <span>
+          ${product.product_name}
+        </span>
+
+        <button
+          type="button"
+          class="vd-remove-product-btn"
+          data-index="${index}"
+        >
+          ×
+        </button>
+      `;
+
+      pendingProductsList.appendChild(
+        item
+      );
+
+    }
+  );
+
+}
+
+/* INITIAL EMPTY STATE */
+
+renderPendingProducts();
+
+/* ========================= */
+/* RENDER SAVED PRODUCTS */
+/* ========================= */
+
+function renderSavedProducts() {
+
+  if (!savedProductsList) {
+    return;
+  }
+
+  savedProductsList.innerHTML =
+    "";
+
+  if (!savedProducts.length) {
+
+    savedProductsList.innerHTML = `
+      <div class="vd-empty-services">
+        No saved products yet.
+      </div>
+    `;
+
+    return;
+
+  }
+
+  savedProducts.forEach(
+    product => {
+
+      const item =
+        document.createElement("div");
+
+      item.className =
+        "vd-service-pill saved";
+
+      item.innerHTML = `
+
+        <img
+          class="vd-product-thumb"
+          src="${product.primary_image_url}"
+          alt="${product.product_name}"
+        >
+
+        <div class="vd-service-content">
+
+          <div class="vd-service-name">
+            ${product.product_name}
+          </div>
+
+          <div class="vd-service-description">
+            ${
+              (product.short_description || "")
+                .length > 160
+                  ? product.short_description.slice(0, 160) + "..."
+                  : (product.short_description || "")
+            }
+          </div>
+
+          <div class="vd-product-price">
+            ₦${Number(product.price).toLocaleString()}
+          </div>
+
+        </div>
+
+        <button
+          type="button"
+          class="vd-edit-product-btn"
+          data-id="${product.id}"
+        >
+          Edit
+        </button>
+
+        <button
+          type="button"
+          class="vd-delete-product-btn"
+          data-id="${product.id}"
+        >
+          ×
+        </button>
+
+      `;
+
+      savedProductsList.appendChild(
+        item
+      );
+
+    }
+  );
+
+}
+
+renderSavedProducts();
+
+let editingProductId =
+  null;
+
+/* ========================= */
+/* DELETE / EDIT PRODUCT */
+/* ========================= */
+
+if (
+  savedProductsList
+) {
+
+  savedProductsList
+    .addEventListener(
+      "click",
+      async (e) => {
+
+        const editBtn =
+          e.target.closest(
+            ".vd-edit-product-btn"
+          );
+
+        if (editBtn) {
+
+          const productId =
+            editBtn.dataset.id;
+
+          const product =
+            savedProducts.find(
+              item =>
+                String(item.id) ===
+                String(productId)
+            );
+
+          if (!product) {
+            return;
+          }
+
+          editingProductId =
+            product.id;
+
+          productNameInput.value =
+            product.product_name || "";
+
+          productDescriptionInput.value =
+            product.short_description || "";
+
+          productPriceInput.value =
+            product.price || "";
+
+          productKeyDetailsInput.value =
+            product.key_details || "";
+
+          saveProductBtn.textContent =
+            "Update Product";
+          
+          if (
+              addProductItemBtn
+           ) {
+
+              addProductItemBtn.disabled =
+                true;
+
+              addProductItemBtn.textContent =
+                "Editing...";
+
+             }
+
+             primaryProductImageUrl =
+               product.primary_image_url || "";
+
+             secondaryProductImageUrl =
+               product.secondary_image_url || "";
+
+          return;
+
+        }
+
+        const deleteBtn =
+          e.target.closest(
+            ".vd-delete-product-btn"
+          );
+
+        if (!deleteBtn) {
+          return;
+        }
+
+        const productId =
+          deleteBtn.dataset.id;
+
+        if (!productId) {
+          return;
+        }
+
+        const confirmed =
+          confirm(
+            "Delete this product?"
+          );
+
+        if (!confirmed) {
+          return;
+        }
+
+      }
+    );
+
+}
+
+/* ========================= */
+/* ADD PRODUCT */
+/* ========================= */
+
+if (
+  addProductItemBtn
+) {
+
+  addProductItemBtn
+    .addEventListener(
+      "click",
+      () => {
+
+        const productName =
+          productNameInput.value.trim();
+
+        const shortDescription =
+          productDescriptionInput.value.trim();
+
+        const productPrice =
+          productPriceInput.value.trim();
+
+        const keyDetails =
+          productKeyDetailsInput.value.trim();
+
+if (
+  !productName ||
+  !shortDescription ||
+  !productPrice
+) {
+
+  alert(
+    "Product name, description and price are required."
+  );
+
+  return;
+
+}
+
+if (
+  !primaryProductImageUrl
+) {
+
+  alert(
+    "Primary product image is required."
+  );
+
+  return;
+
+}
+
+        if (
+          (
+            existingProductsCount +
+            pendingProducts.length
+          ) >= currentProductLimit
+        ) {
+
+          alert(
+            `Your plan allows only ${currentProductLimit} products.`
+          );
+
+          return;
+
+        }
+
+pendingProducts.push({
+
+  product_name:
+    productName,
+
+  short_description:
+    shortDescription,
+
+  price:
+    Number(
+      productPrice
+    ),
+
+  primary_image_url:
+    primaryProductImageUrl,
+
+  secondary_image_url:
+    secondaryProductImageUrl || null,
+
+  key_details:
+    keyDetails
+
+});
+
+        renderPendingProducts();
+
+        productNameInput.value =
+          "";
+
+        productDescriptionInput.value =
+          "";
+
+        productPriceInput.value =
+          "";
+
+        productKeyDetailsInput.value =
+          "";
+
+      }
+    );
+
+}
+
+/* ========================= */
+/* SAVE PRODUCTS */
+/* ========================= */
+
+if (
+  saveProductBtn
+) {
+
+  saveProductBtn
+    .addEventListener(
+      "click",
+      async () => {
+
+if (
+  !pendingProducts.length &&
+  !editingProductId
+) {
+
+  alert(
+    "No products to save."
+  );
+
+  return;
+
+}
+
+saveProductBtn.disabled =
+   true;
+
+ try {
+
+const productsToInsert =
+  pendingProducts.map(
+    (
+      product,
+      index
+    ) => ({
+
+      vendor_id:
+        vendor.id,
+
+      product_name:
+        product.product_name,
+
+      short_description:
+        product.short_description,
+
+      price:
+        product.price,
+
+      primary_image_url:
+        product.primary_image_url,
+
+      secondary_image_url:
+        product.secondary_image_url,
+
+      key_details:
+        product.key_details,
+
+      display_order:
+        savedProducts.length +
+        index + 1
+
+    })
+  );
+
+// INSERT THIS BLOCK HERE
+console.log(
+  "PRODUCTS TO INSERT:",
+  JSON.stringify(
+    productsToInsert,
+    null,
+    2
+  )
+);
+
+console.log(
+  "AUTH USER:",
+  (await supabase.auth.getUser()).data.user
+);
+
+console.log(
+  "VENDOR:",
+  vendor
+);
+
+console.log(
+  "VENDOR ID:",
+  vendor?.id
+);
+
+console.log(
+  "PRODUCTS TO INSERT:",
+  productsToInsert
+);
+
+const {
+  error
+} = await supabase
+  .from("vendor_products")
+  .insert(productsToInsert);
+
+if (error) {
+  throw error;
+}
+
+/* REFRESH SAVED PRODUCTS */
+
+const {
+  data: fetchedProducts,
+  error: fetchedProductsError
+} = await supabase
+  .from("vendor_products")
+  .select("*")
+  .eq(
+    "vendor_id",
+    vendor.id
+  )
+  .order(
+    "created_at",
+    {
+      ascending: true
+    }
+  );
+
+if (
+  fetchedProductsError
+) {
+  throw fetchedProductsError;
+}
+
+savedProducts =
+  fetchedProducts || [];
+
+existingProductsCount =
+  savedProducts.length;
+
+renderSavedProducts();
+
+          pendingProducts = [];
+
+          primaryProductImageUrl =
+            "";
+
+          secondaryProductImageUrl =
+            "";
+
+          if (
+             primaryProductImageInput
+          ) {
+
+             primaryProductImageInput.value =
+               "";
+
+          }
+
+          if (
+             secondaryProductImageInput
+          ) {
+
+            secondaryProductImageInput.value =
+              "";
+
+          }
+
+          renderPendingProducts();
+
+          renderSavedProducts();
+
+          alert(
+            "Products saved successfully."
+          );
+
+        } catch (err) {
+
+console.error(
+  "SAVE PRODUCT ERROR:",
+  err
+);
+
+console.log(
+  "TYPE:",
+  typeof err
+);
+
+console.log(
+  "MESSAGE:",
+  err?.message
+);
+
+console.log(
+  "CODE:",
+  err?.code
+);
+
+console.log(
+  "DETAILS:",
+  err?.details
+);
+
+console.log(
+  "HINT:",
+  err?.hint
+);
+
+console.dir(err);
+
+          alert(
+            "Unable to save products."
+          );
+
+        } finally {
+
+          saveProductBtn.disabled =
+            false;
+
+        }
+
+      }
+    );
+
+}
+
+/* ========================= */
+/* SERVICE CURRENT LIMIT */
 /* ========================= */
 
 const currentServiceLimit =
@@ -486,7 +1484,7 @@ if (
       "click",
       async (e) => {
 
-        const editBtn =
+const editBtn =
   e.target.closest(
     ".vd-edit-service-btn"
   );
@@ -627,6 +1625,20 @@ if (error) {
           );
 
         }
+
+      }
+    );
+
+}
+
+if (
+  savedProductsList
+) {
+
+  savedProductsList
+    .addEventListener(
+      "click",
+      async (e) => {
 
       }
     );
@@ -1019,10 +2031,30 @@ if (
 
         } catch (err) {
 
-          console.error(
-             "Service save error:",
-             JSON.stringify(err, null, 2)
-          );
+console.error(
+  "SAVE PRODUCT ERROR:",
+  err
+);
+
+console.log(
+  "MESSAGE:",
+  err.message
+);
+
+console.log(
+  "DETAILS:",
+  err.details
+);
+
+console.log(
+  "HINT:",
+  err.hint
+);
+
+console.log(
+  "CODE:",
+  err.code
+);
 
           alert(
             "Unable to save services."
