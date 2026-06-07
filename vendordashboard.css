@@ -1863,6 +1863,35 @@ EMAIL VERIFICATION
     justify-content: space-between;
   }
 
+  .vd-user-info {
+
+  flex: 1;
+
+  text-align: right;
+
+  overflow: hidden;
+
+}
+
+.vd-user-info span,
+.vd-user-info small {
+
+  display: block;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+}
+
+.vd-profile-menu {
+
+  flex-shrink: 0;
+
+}
+
   /* OVERVIEW */
 
   .vd-overview-layout {
@@ -2387,6 +2416,18 @@ EMPTY STATE
 
 }
 
+.vd-current-product-image {
+
+  margin-top: 6px;
+
+  font-size: 12px;
+
+  color: #64748b;
+
+  word-break: break-word;
+
+}
+
 @media (
   max-width: 640px
 ) {
@@ -2407,16 +2448,28 @@ EMPTY STATE
 
   }
 
-  .vd-product-image-btn {
+.vd-product-image-btn {
 
-    width: 100%;
+  display: flex;
 
-  }
+  width: 100%;
 
-  .vd-product-image-name {
+  max-width: 100%;
 
-    width: 100%;
+  box-sizing: border-box;
 
-  }
+  justify-content: center;
+
+}
+
+.vd-product-image-name {
+
+  width: 100%;
+
+  max-width: 100%;
+
+  box-sizing: border-box;
+
+}
 
 }

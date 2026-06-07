@@ -7,7 +7,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 const supabase = window.supabaseClient;
 
-
 /* ===============================
 SERVICE LIMITS
 =============================== */
@@ -431,6 +430,25 @@ if (
           return;
         }
 
+        const MAX_IMAGE_SIZE =
+          2 * 1024 * 1024;
+  
+       if (
+         file.size >
+         MAX_IMAGE_SIZE
+       ) {
+
+         alert(
+           "Image size must not exceed 2 MB."
+        );
+
+        primaryProductImageInput.value =
+          "";
+
+        return;
+
+      }
+
         const allowedTypes = [
           "image/jpeg",
           "image/png",
@@ -454,19 +472,63 @@ if (
 
         }
 
-        const filePath =
-          `${vendor.id}/products/${Date.now()}-${file.name}`;
+        const image =
+          new Image();
 
-        const {
-          error: uploadError
-        } = await supabase.storage
-          .from(
-            "vendor-gallery"
-          )
-          .upload(
-            filePath,
+        image.src =
+          URL.createObjectURL(
             file
-          );
+         );
+
+        await new Promise(
+          resolve => {
+
+            image.onload =
+              resolve;
+
+         }
+       );
+
+       if (
+
+          image.width < 800 ||
+
+          image.height < 800
+
+       ) {
+
+         alert(
+           "Image resolution must be at least 800 × 800 pixels."
+       );
+
+       primaryProductImageInput.value =
+         "";
+
+       URL.revokeObjectURL(
+         image.src
+      );
+
+      return;
+
+      }
+
+      URL.revokeObjectURL(
+        image.src
+     );
+
+const filePath =
+  `${vendor.id}/products/${Date.now()}-${file.name}`;
+
+const {
+  error: uploadError
+} = await supabase.storage
+  .from(
+    "vendor-gallery"
+  )
+  .upload(
+    filePath,
+    file
+  );
 
 if (
   uploadError
@@ -485,21 +547,21 @@ if (
 
 }
 
-        const {
-          data
-        } = supabase.storage
-          .from(
-            "vendor-gallery"
-          )
-          .getPublicUrl(
-            filePath
-          );
+const {
+  data
+} = supabase.storage
+  .from(
+    "vendor-gallery"
+  )
+  .getPublicUrl(
+    filePath
+  );
 
-        primaryProductImageUrl =
-          data.publicUrl;
+primaryProductImageUrl =
+  data.publicUrl;
 
-      }
-    );
+  }
+);
 
 }
 
@@ -521,6 +583,25 @@ if (
 
         if (!file) {
           return;
+        }
+
+        const MAX_IMAGE_SIZE =
+          2 * 1024 * 1024;
+
+        if (
+          file.size >
+          MAX_IMAGE_SIZE
+        ) {
+
+          alert(
+            "Image size must not exceed 2 MB."
+          );
+
+          secondaryProductImageInput.value =
+            "";
+
+          return;
+
         }
 
         const allowedTypes = [
@@ -546,6 +627,50 @@ if (
 
         }
 
+        const image =
+          new Image();
+
+        image.src =
+          URL.createObjectURL(
+            file
+          );
+
+        await new Promise(
+          resolve => {
+
+            image.onload =
+              resolve;
+
+          }
+        );
+
+        if (
+
+          image.width < 800 ||
+
+          image.height < 800
+
+        ) {
+
+          alert(
+            "Image resolution must be at least 800 × 800 pixels."
+          );
+
+          secondaryProductImageInput.value =
+            "";
+
+          URL.revokeObjectURL(
+            image.src
+          );
+
+          return;
+
+        }
+
+        URL.revokeObjectURL(
+          image.src
+        );
+
         const filePath =
           `${vendor.id}/products/${Date.now()}-${file.name}`;
 
@@ -563,6 +688,11 @@ if (
         if (
           uploadError
         ) {
+
+          console.error(
+            "SECONDARY IMAGE UPLOAD ERROR:",
+            uploadError
+          );
 
           alert(
             "Secondary image upload failed."
@@ -1023,6 +1153,46 @@ if (
           secondaryProductImageUrl =
             product.secondary_image_url || "";
 
+          const currentPrimaryImageName =
+  document.getElementById(
+    "currentPrimaryImageName"
+  );
+
+const currentSecondaryImageName =
+  document.getElementById(
+    "currentSecondaryImageName"
+  );
+
+if (
+  currentPrimaryImageName
+) {
+
+  currentPrimaryImageName.textContent =
+    primaryProductImageUrl
+      ? `Current: ${
+          primaryProductImageUrl
+            .split("/")
+            .pop()
+        }`
+      : "";
+
+}
+
+if (
+  currentSecondaryImageName
+) {
+
+  currentSecondaryImageName.textContent =
+    secondaryProductImageUrl
+      ? `Current: ${
+          secondaryProductImageUrl
+            .split("/")
+            .pop()
+        }`
+      : "";
+
+}
+
           saveProductBtn.textContent =
             "Update Product";
 
@@ -1049,6 +1219,74 @@ const confirmed =
 
 if (!confirmed) {
   return;
+}
+
+const product =
+  savedProducts.find(
+    item =>
+      String(item.id) ===
+      String(productId)
+  );
+
+const storagePaths =
+  [];
+
+if (
+  product?.primary_image_url
+) {
+
+  storagePaths.push(
+    product.primary_image_url
+      .split(
+        "/vendor-gallery/"
+      )[1]
+  );
+
+}
+
+if (
+  product?.secondary_image_url
+) {
+
+  storagePaths.push(
+    product.secondary_image_url
+      .split(
+        "/vendor-gallery/"
+      )[1]
+  );
+
+}
+
+if (
+  storagePaths.length
+) {
+
+console.log(
+  storagePaths
+);
+
+  const {
+    error:
+      storageError
+  } = await supabase.storage
+    .from(
+      "vendor-gallery"
+    )
+    .remove(
+      storagePaths
+    );
+
+  
+  if (
+    storageError
+  ) {
+
+    console.error(
+      storageError
+    );
+
+  }
+
 }
 
 const {
@@ -1082,9 +1320,6 @@ existingProductsCount =
 
 renderSavedProducts();
 
-alert(
-  "Product deleted successfully."
-);
 
       }
     );
@@ -1233,6 +1468,14 @@ if (
 
             secondaryProductImageUrl =
               "";
+
+            document.getElementById(
+              "currentPrimaryImageName"
+            ).textContent = "";
+
+            document.getElementById(
+              "currentSecondaryImageName"
+            ).textContent = "";
 
             renderSavedProducts();
 
