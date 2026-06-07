@@ -2294,3 +2294,129 @@ EMPTY STATE
   padding-top: 10px;
 
 }
+
+/* ========================= */
+/* PRODUCT IMAGE PICKERS */
+/* ========================= */
+
+.vd-product-image-row {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  margin-bottom: 12px;
+
+  flex-wrap: wrap;
+
+}
+
+.vd-product-image-label {
+
+  min-width: 170px;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  color: #374151;
+
+}
+
+.vd-product-image-row input[type="file"] {
+
+  position: absolute;
+
+  left: -9999px;
+
+  width: 1px;
+
+  height: 1px;
+
+  opacity: 0;
+
+}
+
+.vd-product-image-btn {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-height: 40px;
+
+  padding: 8px 14px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background: #e6c200;
+
+  color: #000;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+}
+
+.vd-product-image-btn:hover {
+
+  opacity: .9;
+
+}
+
+.vd-product-image-name {
+
+  flex: 1;
+
+  min-width: 0;
+
+  font-size: 13px;
+
+  color: #6b7280;
+
+  word-break: break-word;
+
+}
+
+@media (
+  max-width: 640px
+) {
+
+  .vd-product-image-row {
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 8px;
+
+  }
+
+  .vd-product-image-label {
+
+    min-width: auto;
+
+  }
+
+  .vd-product-image-btn {
+
+    width: 100%;
+
+  }
+
+  .vd-product-image-name {
+
+    width: 100%;
+
+  }
+
+}

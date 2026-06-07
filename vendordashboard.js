@@ -328,6 +328,58 @@ const secondaryProductImageInput =
     "secondaryProductImage"
   );
 
+/* ========================= */
+/* PRODUCT IMAGE FILE LABELS */
+/* ========================= */
+
+if (
+  primaryProductImageInput
+) {
+
+  primaryProductImageInput
+    .addEventListener(
+      "change",
+      () => {
+
+        const label =
+          document.getElementById(
+            "primaryProductImageName"
+          );
+
+        label.textContent =
+          primaryProductImageInput.files.length
+            ? primaryProductImageInput.files[0].name
+            : "No file chosen";
+
+      }
+    );
+
+}
+
+if (
+  secondaryProductImageInput
+) {
+
+  secondaryProductImageInput
+    .addEventListener(
+      "change",
+      () => {
+
+        const label =
+          document.getElementById(
+            "secondaryProductImageName"
+          );
+
+        label.textContent =
+          secondaryProductImageInput.files.length
+            ? secondaryProductImageInput.files[0].name
+            : "No file chosen";
+
+      }
+    );
+
+}
+
 const productKeyDetailsInput =
   document.getElementById(
     "productKeyDetails"
@@ -612,10 +664,6 @@ existingProductsCount =
 /* ========================= */
 /* FETCH SAVED PRODUCTS */
 /* ========================= */
-console.log(
-  "FETCH VENDOR ID:",
-  vendor.id
-);
 
 const {
   data: fetchedProducts,
@@ -647,16 +695,6 @@ if (
 
   savedProducts =
     fetchedProducts || [];
-
-console.log(
-  "FETCHED PRODUCTS:",
-  fetchedProducts
-);
-
-console.log(
-  "SAVED PRODUCTS:",
-  savedProducts
-);
 
 renderSavedProducts();
 
@@ -816,110 +854,6 @@ let editingProductId =
   null;
 
 /* ========================= */
-/* DELETE / EDIT PRODUCT */
-/* ========================= */
-
-if (
-  savedProductsList
-) {
-
-  savedProductsList
-    .addEventListener(
-      "click",
-      async (e) => {
-
-        const editBtn =
-          e.target.closest(
-            ".vd-edit-product-btn"
-          );
-
-        if (editBtn) {
-
-          const productId =
-            editBtn.dataset.id;
-
-          const product =
-            savedProducts.find(
-              item =>
-                String(item.id) ===
-                String(productId)
-            );
-
-          if (!product) {
-            return;
-          }
-
-          editingProductId =
-            product.id;
-
-          productNameInput.value =
-            product.product_name || "";
-
-          productDescriptionInput.value =
-            product.short_description || "";
-
-          productPriceInput.value =
-            product.price || "";
-
-          productKeyDetailsInput.value =
-            product.key_details || "";
-
-          saveProductBtn.textContent =
-            "Update Product";
-          
-          if (
-              addProductItemBtn
-           ) {
-
-              addProductItemBtn.disabled =
-                true;
-
-              addProductItemBtn.textContent =
-                "Editing...";
-
-             }
-
-             primaryProductImageUrl =
-               product.primary_image_url || "";
-
-             secondaryProductImageUrl =
-               product.secondary_image_url || "";
-
-          return;
-
-        }
-
-        const deleteBtn =
-          e.target.closest(
-            ".vd-delete-product-btn"
-          );
-
-        if (!deleteBtn) {
-          return;
-        }
-
-        const productId =
-          deleteBtn.dataset.id;
-
-        if (!productId) {
-          return;
-        }
-
-        const confirmed =
-          confirm(
-            "Delete this product?"
-          );
-
-        if (!confirmed) {
-          return;
-        }
-
-      }
-    );
-
-}
-
-/* ========================= */
 /* ADD PRODUCT */
 /* ========================= */
 
@@ -1029,6 +963,135 @@ pendingProducts.push({
 }
 
 /* ========================= */
+/* PRODUCT EDIT / DELETE */
+/* ========================= */
+
+if (
+  savedProductsList
+) {
+
+  savedProductsList
+    .addEventListener(
+      "click",
+      async (e) => {
+
+        const editBtn =
+          e.target.closest(
+            ".vd-edit-product-btn"
+          );
+
+        if (editBtn) {
+
+          const productId =
+            editBtn.dataset.id;
+
+          const product =
+            savedProducts.find(
+              item =>
+                String(item.id) ===
+                String(productId)
+            );
+
+          if (!product) {
+            return;
+          }
+
+          editingProductId =
+            product.id;
+
+          addProductItemBtn.disabled =
+            true;
+
+          addProductItemBtn.textContent =
+            "Editing...";
+
+          productNameInput.value =
+            product.product_name || "";
+
+          productDescriptionInput.value =
+            product.short_description || "";
+
+          productPriceInput.value =
+            product.price || "";
+
+          productKeyDetailsInput.value =
+            product.key_details || "";
+
+          primaryProductImageUrl =
+            product.primary_image_url || "";
+
+          secondaryProductImageUrl =
+            product.secondary_image_url || "";
+
+          saveProductBtn.textContent =
+            "Update Product";
+
+          return;
+
+        }
+
+        const deleteBtn =
+          e.target.closest(
+            ".vd-delete-product-btn"
+          );
+
+        if (!deleteBtn) {
+          return;
+        }
+
+const productId =
+  deleteBtn.dataset.id;
+
+const confirmed =
+  confirm(
+    "Delete this product?"
+  );
+
+if (!confirmed) {
+  return;
+}
+
+const {
+  error
+} = await supabase
+  .from(
+    "vendor_products"
+  )
+  .delete()
+  .eq(
+    "id",
+    productId
+  );
+
+if (error) {
+  throw error;
+}
+
+savedProducts =
+  savedProducts.filter(
+    product =>
+      String(product.id) !==
+      String(productId)
+  );
+
+existingProductsCount =
+  Math.max(
+    0,
+    existingProductsCount - 1
+  );
+
+renderSavedProducts();
+
+alert(
+  "Product deleted successfully."
+);
+
+      }
+    );
+
+}
+
+/* ========================= */
 /* SAVE PRODUCTS */
 /* ========================= */
 
@@ -1041,133 +1104,206 @@ if (
       "click",
       async () => {
 
-if (
-  !pendingProducts.length &&
-  !editingProductId
-) {
+        if (!vendor?.id) {
+          return;
+        }
 
-  alert(
-    "No products to save."
-  );
+        if (
+          !editingProductId &&
+          !pendingProducts.length
+        ) {
 
-  return;
+          alert(
+            "No products to save."
+          );
 
-}
+          return;
 
-saveProductBtn.disabled =
-   true;
+        }
 
- try {
+        saveProductBtn.disabled =
+          true;
 
-const productsToInsert =
-  pendingProducts.map(
-    (
-      product,
-      index
-    ) => ({
+        saveProductBtn.innerHTML =
+          editingProductId
+            ? "Updating..."
+            : "Saving...";
 
-      vendor_id:
-        vendor.id,
+        try {
 
-      product_name:
-        product.product_name,
+          if (
+            editingProductId
+          ) {
 
-      short_description:
-        product.short_description,
-
-      price:
-        product.price,
-
-      primary_image_url:
-        product.primary_image_url,
-
-      secondary_image_url:
-        product.secondary_image_url,
-
-      key_details:
-        product.key_details,
-
-      display_order:
-        savedProducts.length +
-        index + 1
-
-    })
-  );
-
-// INSERT THIS BLOCK HERE
-console.log(
-  "PRODUCTS TO INSERT:",
-  JSON.stringify(
-    productsToInsert,
-    null,
-    2
-  )
-);
-
-console.log(
-  "AUTH USER:",
-  (await supabase.auth.getUser()).data.user
-);
-
-console.log(
-  "VENDOR:",
-  vendor
-);
-
-console.log(
-  "VENDOR ID:",
-  vendor?.id
-);
-
-console.log(
-  "PRODUCTS TO INSERT:",
-  productsToInsert
-);
-
-const {
+ const {
+  data,
   error
 } = await supabase
   .from("vendor_products")
-  .insert(productsToInsert);
+  .update({
 
-if (error) {
-  throw error;
-}
+    product_name:
+      productNameInput.value.trim(),
 
-/* REFRESH SAVED PRODUCTS */
+    short_description:
+      productDescriptionInput.value.trim(),
 
-const {
-  data: fetchedProducts,
-  error: fetchedProductsError
-} = await supabase
-  .from("vendor_products")
-  .select("*")
+    price:
+      Number(
+        productPriceInput.value
+      ),
+
+    key_details:
+      productKeyDetailsInput.value.trim(),
+
+    primary_image_url:
+      primaryProductImageUrl,
+
+    secondary_image_url:
+      secondaryProductImageUrl
+
+  })
   .eq(
-    "vendor_id",
-    vendor.id
+    "id",
+    editingProductId
   )
-  .order(
-    "created_at",
-    {
-      ascending: true
-    }
-  );
+  .select();
 
-if (
-  fetchedProductsError
-) {
-  throw fetchedProductsError;
-}
+            if (error) {
+              throw error;
+            }
 
-savedProducts =
-  fetchedProducts || [];
+            const target =
+              savedProducts.find(
+                item =>
+                  String(item.id) ===
+                  String(editingProductId)
+              );
 
-existingProductsCount =
-  savedProducts.length;
+            if (target) {
 
-renderSavedProducts();
+              target.product_name =
+                productNameInput.value.trim();
+
+              target.short_description =
+                productDescriptionInput.value.trim();
+
+              target.price =
+                Number(
+                  productPriceInput.value
+                );
+
+              target.key_details =
+                productKeyDetailsInput.value.trim();
+
+              target.primary_image_url =
+                primaryProductImageUrl;
+
+              target.secondary_image_url =
+                secondaryProductImageUrl;
+
+            }
+
+            editingProductId =
+              null;
+
+            addProductItemBtn.disabled =
+              false;
+
+            addProductItemBtn.textContent =
+              "Add";
+
+            saveProductBtn.innerHTML =
+              "Save Products";
+
+            productNameInput.value =
+              "";
+
+            productDescriptionInput.value =
+              "";
+
+            productPriceInput.value =
+              "";
+
+            productKeyDetailsInput.value =
+              "";
+
+            primaryProductImageUrl =
+              "";
+
+            secondaryProductImageUrl =
+              "";
+
+            renderSavedProducts();
+
+            alert(
+              "Product updated successfully."
+           );
+
+            return;
+
+          }
+
+          const payload =
+            pendingProducts.map(
+              product => ({
+
+                vendor_id:
+                  vendor.id,
+
+                product_name:
+                  product.product_name,
+
+                short_description:
+                  product.short_description,
+
+                price:
+                  product.price,
+
+                primary_image_url:
+                  product.primary_image_url,
+
+                secondary_image_url:
+                  product.secondary_image_url,
+
+                key_details:
+                  product.key_details
+
+              })
+            );
+
+          const {
+            error
+          } = await supabase
+            .from(
+              "vendor_products"
+            )
+            .insert(
+              payload
+            );
+
+          if (error) {
+            throw error;
+          }
+
+          existingProductsCount +=
+            payload.length;
 
           pendingProducts = [];
+
+          renderPendingProducts();
+
+          productNameInput.value =
+            "";
+
+          productDescriptionInput.value =
+            "";
+
+          productPriceInput.value =
+            "";
+
+          productKeyDetailsInput.value =
+            "";
 
           primaryProductImageUrl =
             "";
@@ -1175,65 +1311,16 @@ renderSavedProducts();
           secondaryProductImageUrl =
             "";
 
-          if (
-             primaryProductImageInput
-          ) {
-
-             primaryProductImageInput.value =
-               "";
-
-          }
-
-          if (
-             secondaryProductImageInput
-          ) {
-
-            secondaryProductImageInput.value =
-              "";
-
-          }
-
-          renderPendingProducts();
-
-          renderSavedProducts();
-
           alert(
             "Products saved successfully."
           );
 
         } catch (err) {
 
-console.error(
-  "SAVE PRODUCT ERROR:",
-  err
-);
-
-console.log(
-  "TYPE:",
-  typeof err
-);
-
-console.log(
-  "MESSAGE:",
-  err?.message
-);
-
-console.log(
-  "CODE:",
-  err?.code
-);
-
-console.log(
-  "DETAILS:",
-  err?.details
-);
-
-console.log(
-  "HINT:",
-  err?.hint
-);
-
-console.dir(err);
+          console.error(
+            "Save product error:",
+            err
+          );
 
           alert(
             "Unable to save products."
@@ -1243,6 +1330,9 @@ console.dir(err);
 
           saveProductBtn.disabled =
             false;
+
+          saveProductBtn.innerHTML =
+            "Save Products";
 
         }
 
@@ -1971,6 +2061,10 @@ if (
 
   renderSavedServices();
 
+  alert(
+  "Service updated successfully."
+);
+
   return;
 
 }
@@ -2031,30 +2125,11 @@ if (
 
         } catch (err) {
 
-console.error(
-  "SAVE PRODUCT ERROR:",
-  err
-);
+        console.error(
+          "SAVE PRODUCT ERROR:",
+             err
+         );
 
-console.log(
-  "MESSAGE:",
-  err.message
-);
-
-console.log(
-  "DETAILS:",
-  err.details
-);
-
-console.log(
-  "HINT:",
-  err.hint
-);
-
-console.log(
-  "CODE:",
-  err.code
-);
 
           alert(
             "Unable to save services."
