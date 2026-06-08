@@ -327,6 +327,11 @@ const secondaryProductImageInput =
     "secondaryProductImage"
   );
 
+const tertiaryProductImageInput =
+  document.getElementById(
+    "tertiaryProductImage"
+  );
+
 /* ========================= */
 /* PRODUCT IMAGE FILE LABELS */
 /* ========================= */
@@ -379,6 +384,30 @@ if (
 
 }
 
+if (
+  tertiaryProductImageInput
+) {
+
+  tertiaryProductImageInput
+    .addEventListener(
+      "change",
+      () => {
+
+        const label =
+          document.getElementById(
+            "tertiaryProductImageName"
+          );
+
+        label.textContent =
+          tertiaryProductImageInput.files.length
+            ? tertiaryProductImageInput.files[0].name
+            : "No file chosen";
+
+      }
+    );
+
+}
+
 const productKeyDetailsInput =
   document.getElementById(
     "productKeyDetails"
@@ -408,6 +437,9 @@ let primaryProductImageUrl =
   "";
 
 let secondaryProductImageUrl =
+  "";
+
+let tertiaryProductImageUrl =
   "";
 
 /* ========================= */
@@ -689,11 +721,6 @@ if (
           uploadError
         ) {
 
-          console.error(
-            "SECONDARY IMAGE UPLOAD ERROR:",
-            uploadError
-          );
-
           alert(
             "Secondary image upload failed."
           );
@@ -713,6 +740,156 @@ if (
           );
 
         secondaryProductImageUrl =
+          data.publicUrl;
+
+      }
+    );
+
+}
+
+/* ========================= */
+/* TERTIARY PRODUCT IMAGE */
+/* ========================= */
+
+if (
+  tertiaryProductImageInput
+) {
+
+  tertiaryProductImageInput
+    .addEventListener(
+      "change",
+      async (e) => {
+
+        const file =
+          e.target.files[0];
+
+        if (!file) {
+          return;
+        }
+
+        const MAX_IMAGE_SIZE =
+          2 * 1024 * 1024;
+
+        if (
+          file.size >
+          MAX_IMAGE_SIZE
+        ) {
+
+          alert(
+            "Image size must not exceed 2 MB."
+          );
+
+          tertiaryProductImageInput.value =
+            "";
+
+          return;
+
+        }
+
+        const allowedTypes = [
+          "image/jpeg",
+          "image/png",
+          "image/webp"
+        ];
+
+        if (
+          !allowedTypes.includes(
+            file.type
+          )
+        ) {
+
+          alert(
+            "Only JPG, PNG or WEBP images allowed."
+          );
+
+          tertiaryProductImageInput.value =
+            "";
+
+          return;
+
+        }
+
+        const image =
+          new Image();
+
+        image.src =
+          URL.createObjectURL(
+            file
+          );
+
+        await new Promise(
+          resolve => {
+
+            image.onload =
+              resolve;
+
+          }
+        );
+
+        if (
+
+          image.width < 800 ||
+
+          image.height < 800
+
+        ) {
+
+          alert(
+            "Image resolution must be at least 800 × 800 pixels."
+          );
+
+          tertiaryProductImageInput.value =
+            "";
+
+          URL.revokeObjectURL(
+            image.src
+          );
+
+          return;
+
+        }
+
+        URL.revokeObjectURL(
+          image.src
+        );
+
+        const filePath =
+          `${vendor.id}/products/${Date.now()}-${file.name}`;
+
+        const {
+          error: uploadError
+        } = await supabase.storage
+          .from(
+            "vendor-gallery"
+          )
+          .upload(
+            filePath,
+            file
+          );
+
+        if (
+          uploadError
+        ) {
+
+          alert(
+            "Third image upload failed."
+          );
+
+          return;
+
+        }
+
+        const {
+          data
+        } = supabase.storage
+          .from(
+            "vendor-gallery"
+          )
+          .getPublicUrl(
+            filePath
+          );
+
+        tertiaryProductImageUrl =
           data.publicUrl;
 
       }
@@ -1068,6 +1245,9 @@ pendingProducts.push({
   secondary_image_url:
     secondaryProductImageUrl || null,
 
+  tertiary_image_url:
+    tertiaryProductImageUrl || null,
+
   key_details:
     keyDetails
 
@@ -1153,15 +1333,23 @@ if (
           secondaryProductImageUrl =
             product.secondary_image_url || "";
 
-          const currentPrimaryImageName =
-  document.getElementById(
-    "currentPrimaryImageName"
-  );
+          tertiaryProductImageUrl =
+            product.tertiary_image_url || "";
 
-const currentSecondaryImageName =
-  document.getElementById(
-    "currentSecondaryImageName"
-  );
+          const currentPrimaryImageName =
+            document.getElementById(
+              "currentPrimaryImageName"
+        );
+
+         const currentSecondaryImageName =
+           document.getElementById(
+             "currentSecondaryImageName"
+       );
+
+         const currentTertiaryImageName =
+           document.getElementById(
+             "currentTertiaryImageName"
+      );
 
 if (
   currentPrimaryImageName
@@ -1186,6 +1374,21 @@ if (
     secondaryProductImageUrl
       ? `Current: ${
           secondaryProductImageUrl
+            .split("/")
+            .pop()
+        }`
+      : "";
+
+}
+
+if (
+  currentTertiaryImageName
+) {
+
+  currentTertiaryImageName.textContent =
+    tertiaryProductImageUrl
+      ? `Current: ${
+          tertiaryProductImageUrl
             .split("/")
             .pop()
         }`
@@ -1235,12 +1438,21 @@ if (
   product?.primary_image_url
 ) {
 
-  storagePaths.push(
-    product.primary_image_url
+  const primaryPath =
+    new URL(
+      product.primary_image_url
+    ).pathname
       .split(
-        "/vendor-gallery/"
-      )[1]
-  );
+        "/object/public/vendor-gallery/"
+      )[1];
+
+  if (primaryPath) {
+    storagePaths.push(
+      decodeURIComponent(
+        primaryPath
+      )
+    );
+  }
 
 }
 
@@ -1248,12 +1460,47 @@ if (
   product?.secondary_image_url
 ) {
 
-  storagePaths.push(
-    product.secondary_image_url
+  const secondaryPath =
+    new URL(
+      product.secondary_image_url
+    ).pathname
       .split(
-        "/vendor-gallery/"
-      )[1]
-  );
+        "/object/public/vendor-gallery/"
+      )[1];
+
+  if (secondaryPath) {
+
+    storagePaths.push(
+      decodeURIComponent(
+        secondaryPath
+      )
+    );
+
+  }
+
+}
+
+if (
+  product?.tertiary_image_url
+) {
+
+  const tertiaryPath =
+    new URL(
+      product.tertiary_image_url
+    ).pathname
+      .split(
+        "/object/public/vendor-gallery/"
+      )[1];
+
+  if (tertiaryPath) {
+
+    storagePaths.push(
+      decodeURIComponent(
+        tertiaryPath
+      )
+    );
+
+  }
 
 }
 
@@ -1261,22 +1508,18 @@ if (
   storagePaths.length
 ) {
 
-console.log(
-  storagePaths
-);
+const {
+  data: storageData,
+  error: storageError
+} = await supabase.storage
+  .from(
+    "vendor-gallery"
+  )
+  .remove(
+    storagePaths
+  );
 
-  const {
-    error:
-      storageError
-  } = await supabase.storage
-    .from(
-      "vendor-gallery"
-    )
-    .remove(
-      storagePaths
-    );
 
-  
   if (
     storageError
   ) {
@@ -1395,8 +1638,10 @@ if (
       primaryProductImageUrl,
 
     secondary_image_url:
-      secondaryProductImageUrl
+      secondaryProductImageUrl,
 
+    tertiary_image_url:
+      tertiaryProductImageUrl
   })
   .eq(
     "id",
@@ -1437,6 +1682,9 @@ if (
               target.secondary_image_url =
                 secondaryProductImageUrl;
 
+              target.tertiary_image_url =
+                tertiaryProductImageUrl;
+
             }
 
             editingProductId =
@@ -1469,12 +1717,19 @@ if (
             secondaryProductImageUrl =
               "";
 
+            tertiaryProductImageUrl =
+              "";
+
             document.getElementById(
               "currentPrimaryImageName"
             ).textContent = "";
 
             document.getElementById(
               "currentSecondaryImageName"
+            ).textContent = "";
+
+            document.getElementById(
+              "currentTertiaryImageName"
             ).textContent = "";
 
             renderSavedProducts();
@@ -1487,33 +1742,36 @@ if (
 
           }
 
-          const payload =
-            pendingProducts.map(
-              product => ({
+const payload =
+  pendingProducts.map(
+    product => ({
 
-                vendor_id:
-                  vendor.id,
+      vendor_id:
+        vendor.id,
 
-                product_name:
-                  product.product_name,
+      product_name:
+        product.product_name,
 
-                short_description:
-                  product.short_description,
+      short_description:
+        product.short_description,
 
-                price:
-                  product.price,
+      price:
+        product.price,
 
-                primary_image_url:
-                  product.primary_image_url,
+      primary_image_url:
+        product.primary_image_url,
 
-                secondary_image_url:
-                  product.secondary_image_url,
+      secondary_image_url:
+        product.secondary_image_url,
 
-                key_details:
-                  product.key_details
+      tertiary_image_url:
+        product.tertiary_image_url,
 
-              })
-            );
+      key_details:
+        product.key_details
+
+    })
+  );
 
           const {
             error
@@ -1536,27 +1794,54 @@ if (
 
           renderPendingProducts();
 
-          productNameInput.value =
-            "";
+productNameInput.value =
+  "";
 
-          productDescriptionInput.value =
-            "";
+productDescriptionInput.value =
+  "";
 
-          productPriceInput.value =
-            "";
+productPriceInput.value =
+  "";
 
-          productKeyDetailsInput.value =
-            "";
+productKeyDetailsInput.value =
+  "";
 
-          primaryProductImageUrl =
-            "";
+primaryProductImageInput.value =
+  "";
 
-          secondaryProductImageUrl =
-            "";
+secondaryProductImageInput.value =
+  "";
 
-          alert(
-            "Products saved successfully."
-          );
+tertiaryProductImageInput.value =
+  "";
+
+document.getElementById(
+  "primaryProductImageName"
+).textContent =
+  "No file chosen";
+
+document.getElementById(
+  "secondaryProductImageName"
+).textContent =
+  "No file chosen";
+
+document.getElementById(
+  "tertiaryProductImageName"
+).textContent =
+  "No file chosen";
+
+primaryProductImageUrl =
+  "";
+
+secondaryProductImageUrl =
+  "";
+
+tertiaryProductImageUrl =
+  "";
+
+alert(
+  "Products saved successfully."
+);
 
         } catch (err) {
 

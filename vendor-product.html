@@ -44,39 +44,126 @@
 
 
 <main class="product-page">
- <a id="backToVendor" class="back-link">← Back to Vendor</a>
+ <a id="backToVendor" class="back-link">← Back to profile</a>
 
   <div class="product-container">
 
   <div class="product-media">
 
-     <div class="product-image-wrap">
-       <img id="productImage" alt="Product image">
-     </div>
+<div class="product-image-wrap">
 
-     <div id="productKeyDetails" class="product-key-details hidden">
-      <h3>Key Details</h3>
-      <ul id="keyDetailsList"></ul>
-     </div>
+  <img
+    id="productImage"
+    alt="Product image"
+  >
 
-   </div>
+</div>
 
-    <div class="product-info">
+<div
+  id="productThumbnails"
+  class="product-thumbnails"
+>
 
-      <h1 id="productTitle"></h1>
+  <img
+    id="secondaryProductImage"
+    class="thumbnail-image hidden"
+    alt="Secondary product image"
+  >
 
-      <p id="productPrice" class="product-price"></p>
+  <img
+    id="tertiaryProductImage"
+    class="thumbnail-image hidden"
+    alt="Third product image"
+  >
 
-      <div class="product-actions">
-       <a id="contactVendorBtn" target="_blank">Chat Vendor on WhatsApp</a>
-      </div>
+</div>
 
-      <p id="productDescription" class="product-description"></p>
-    </div>
+</div>
 
-    </div>
+<div class="product-info">
+
+  <h1 id="productTitle"></h1>
+
+  <p
+    id="productPrice"
+    class="product-price"
+  ></p>
+
+  <div
+    id="productKeyDetails"
+    class="product-key-details hidden"
+  >
+
+    <h3>
+      Key Details
+    </h3>
+
+    <ul
+      id="keyDetailsList"
+    ></ul>
 
   </div>
+
+  <p
+    id="productDescription"
+    class="product-description"
+  ></p>
+
+<div
+  class="product-actions"
+>
+
+<a
+  id="contactVendorBtn"
+  class="action-btn whatsapp-btn"
+  target="_blank"
+>
+
+  <span class="btn-inner">
+
+    <i class="fab fa-whatsapp"></i>
+
+    <span>Chat Vendor</span>
+
+  </span>
+
+</a>
+
+<a
+  id="callVendorBtn"
+  class="action-btn call-btn"
+>
+
+  <span class="btn-inner">
+
+    <i class="fas fa-phone"></i>
+
+    <span>Call Vendor</span>
+
+  </span>
+
+</a>
+
+</div>
+
+</div>
+
+    </div>
+
+</div>
+
+<section class="more-products">
+
+  <h2>
+    More Products From This Vendor
+  </h2>
+
+  <div
+    id="moreProductsGrid"
+    class="more-products-grid"
+  ></div>
+
+</section>
 
 </main>
 

@@ -1126,415 +1126,6 @@ const servicesList =
       mediaHint.style.display = "none";
     }
 
-// -------------------------------
-// LOAD GALLERY
-// -------------------------------
-async function loadGallery() {
-
-  const grid = document.getElementById("galleryGrid");
-  if (!grid) return;
-
-  grid.innerHTML = "<div class='gallery-loading'>Loading...</div>";
-
-  const limit = effectiveGalleryLimit;
-
-  const { data: images } = await supabase
-    .from("vendor_media")
-    .select("*")
-    .eq("vendor_id", vendor.id)
-    .eq("media_type", "image")
-    .order("display_order", { ascending: true });
-
-  const imageList = images || [];
-  grid.innerHTML = "";
-
-  const publicProducts = imageList.filter(item =>
-  item &&
-  item.title &&
-  item.title.trim()
-);
-
-const totalItems = isOwner
-  ? (
-      imageList.length <
-      effectiveGalleryLimit
-    )
-      ? effectiveGalleryLimit
-      : imageList.length
-  : Math.min(
-      imageList.length,
-      effectiveGalleryLimit
-    );
-
-  if (!isOwner && productsHeading) {
-
-  if (publicProducts.length > 0) {
-    productsHeading.classList.remove("hidden");
-  } else {
-    productsHeading.classList.add("hidden");
-  }
-
-}
-
-  for (let i = 0; i < totalItems; i++) {
-
-    const slot = document.createElement("div");
-    slot.className = "gallery-item";
-
-    if (!isOwner) {
-      slot.addEventListener("click", () => {
-        if (!imageList[i]) return;
-        window.location.href = `vendor-product.html?media_id=${imageList[i].id}`;
-      });
-    }
-
-   if (imageList[i]) {
-
-  const data = imageList[i];
-
-  // SKIP EMPTY ITEMS FOR PUBLIC
-  if (!isOwner && (!data.title || !data.title.trim())) {
-    continue;
-  }
-
-      const wrapper = document.createElement("div");
-      wrapper.className = "gallery-content";
-
-const img = document.createElement("img");
-
-// LAZY LOAD
-img.loading = "lazy";
-
-// SET SRC
-img.src = data.file_url;
-
-// ERROR FALLBACK
-img.onerror = function () {
-  this.onerror = null;
-  this.src = "images/placeholder.png";
-};
-
-      /* ---------- TITLE ---------- */
-      const title = document.createElement("input");
-        title.className = "gallery-title";
-        title.value = data.title || "";
-        if (!isOwner && !data.title) {
-        wrapper.style.display = "none";
-      }
-
-        if (isOwner) {
-        title.placeholder = "Product or service name";
-        } else {
-        title.readOnly = true;
-
-        if (!data.title) {
-        title.style.display = "none";
-        }
-       }
-
-      /* ---------- KEY DETAILS ---------- */
-      const rawKeyDetails = data.key_details || "";
-
-      const keyDetailsInput = document.createElement("textarea");
-      keyDetailsInput.className = "gallery-key-details";
-      keyDetailsInput.value = rawKeyDetails;
-      keyDetailsInput.placeholder = "Key Details (each on a new line)";
-
-      const keyDetailsPreview = document.createElement("div");
-      keyDetailsPreview.className = "gallery-key-preview";
-
-      const lines = rawKeyDetails
-        .split("\n")
-        .map(l => l.trim())
-        .filter(Boolean)
-        .slice(0, 2)
-        .map(line => line.length > 22 ? line.slice(0, 22) + "..." : line);
-
-      keyDetailsPreview.innerHTML = lines.map(l => `• ${l}`).join("<br>");
-
-      /* ---------- DESCRIPTION ---------- */
-      const desc = document.createElement("textarea");
-      desc.className = "gallery-desc";
-      desc.value = data.description || "";
-      desc.placeholder = "Product description";
-
-      if (!isOwner) desc.style.display = "none";
-
-      /* ---------- PRICE ---------- */
-      const price = document.createElement("input");
-      price.className = "gallery-price";
-      price.type = "text";
-
-      price.addEventListener("input", () => {
-      price.value = price.value.replace(/[^\d.]/g, "");
-     });
-
-      price.value = data.price
-        ? "₦ " + Number(data.price).toLocaleString("en-NG", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          })
-        : "";
-
-      if (!isOwner) price.readOnly = true;
-
-      /* ---------- SAVE (DEBOUNCE) ---------- */
-      let saveTimer;
-
- function saveMeta() {
-
-  clearTimeout(saveTimer);
-
-  if (saveStatus) {
-    saveStatus.textContent = "Saving...";
-  }
-
-  saveTimer = setTimeout(async () => {
-
-  const cleanTitle = title.value.trim();
-
-if (!cleanTitle) {
-  if (saveStatus) saveStatus.textContent = "Title required";
-
-  // PREVENT EMPTY DISPLAY
-  title.style.border = "1px solid red";
-
-  return;
-} else {
-  title.style.border = "";
-}
-
-    let priceValue = price.value.replace(/[^\d.]/g, "");
-    priceValue = priceValue ? parseFloat(priceValue) : null;
-
-    const rawLines = keyDetailsInput.value.split("\n");
-
-    const cleanedKeyDetails = rawLines
-      .map(l => l.trim())
-      .filter(l => l.length > 0)
-      .slice(0, 2)
-      .join("\n");
-
-    const { error } = await supabase
-      .from("vendor_media")
-      .update({
-        title: cleanTitle,
-        description: desc.value.trim(),
-        key_details: cleanedKeyDetails,
-        price: priceValue
-      })
-      .eq("id", data.id);
-
-    if (error) {
-      if (saveStatus) saveStatus.textContent = "Failed";
-      return;
-    }
-
-    if (saveStatus) saveStatus.textContent = "Saved";
-
-    setTimeout(() => {
-      if (saveStatus) saveStatus.textContent = "";
-    }, 1200);
-
-  }, 600);
-
-}
-
-      if (isOwner) {
-        title.addEventListener("input", saveMeta);
-        desc.addEventListener("input", saveMeta);
-        price.addEventListener("input", saveMeta);
-        keyDetailsInput.addEventListener("input", saveMeta);
-      }
-
-      /* ---------- META ---------- */
-  const meta = document.createElement("div");
-  meta.className = "gallery-meta";
-
-  const saveStatus = document.createElement("div");
-  saveStatus.className = "save-status";
-  meta.appendChild(saveStatus);
-     
-  if (isOwner) {
-
-  const keyLabel = document.createElement("div");
-  keyLabel.textContent = "Key Details";
-  keyLabel.className = "field-label";
-
-  const priceLabel = document.createElement("div");
-  priceLabel.textContent = "Price";
-  priceLabel.className = "field-label";
-
-  meta.appendChild(keyLabel);
-  meta.appendChild(keyDetailsInput);
-
-  meta.appendChild(desc);
-
-  meta.appendChild(priceLabel);
-  meta.appendChild(price);
-
-} else {
-
-  meta.appendChild(keyDetailsPreview);
-  meta.appendChild(price);
-
-}
-wrapper.appendChild(title);
-wrapper.appendChild(img);
-
-// ===== REORDER CONTROLS (OWNER ONLY) =====
-if (isOwner) {
-
-  const controls = document.createElement("div");
-  controls.className = "gallery-controls";
-
-  const upBtn = document.createElement("button");
-  upBtn.textContent = "↑";
-
-  const downBtn = document.createElement("button");
-  downBtn.textContent = "↓";
-
-  upBtn.onclick = async () => {
-
-    if (i === 0) return;
-
-    const prev = imageList[i - 1];
-
-    await supabase
-      .from("vendor_media")
-      .update({ display_order: prev.display_order })
-      .eq("id", data.id);
-
-    await supabase
-      .from("vendor_media")
-      .update({ display_order: data.display_order })
-      .eq("id", prev.id);
-
-    await loadGallery();
-  };
-
-  downBtn.onclick = async () => {
-
-    if (i === imageList.length - 1) return;
-
-    const next = imageList[i + 1];
-
-    await supabase
-      .from("vendor_media")
-      .update({ display_order: next.display_order })
-      .eq("id", data.id);
-
-    await supabase
-      .from("vendor_media")
-      .update({ display_order: data.display_order })
-      .eq("id", next.id);
-
-    await loadGallery();
-  };
-
-  controls.appendChild(upBtn);
-  controls.appendChild(downBtn);
-
-  wrapper.appendChild(controls);
-}
-
-// ===== ADD DELETE BUTTON (OWNER ONLY) =====
-if (isOwner) {
-
-  const delBtn = document.createElement("button");
-  delBtn.className = "gallery-delete";
-  delBtn.textContent = "×";
-
-delBtn.addEventListener("click", async () => {
-
-  delBtn.disabled = true;
-
-  const confirmDelete = confirm("Delete this image?");
-  if (!confirmDelete) {
-    delBtn.disabled = false;
-    return;
-  }
-
-  // DELETE FROM DATABASE FIRST
-const { data: deleted, error: dbError } = await supabase
-  .from("vendor_media")
-  .delete()
-  .eq("id", data.id)
-  .select();
-
-console.log("DELETE RESULT:", deleted, dbError);
-
-if (dbError) {
-  alert("DB ERROR");
-  return;
-}
-
-if (!deleted || deleted.length === 0) {
-  alert("NOT DELETED (RLS BLOCK)");
-  return;
-}
-
-  // RELOAD UI IMMEDIATELY
-  await loadGallery();
-  delBtn.disabled = false;
-
-});
-
-  wrapper.appendChild(delBtn);
-}
-
-wrapper.appendChild(meta);
-
-slot.appendChild(wrapper);
-
-    } else if (isOwner) {
-
-      const wrapper = document.createElement("div");
-      wrapper.className = "gallery-content";
-
-const placeholder =
-  document.createElement("button");
-
-placeholder.type = "button";
-
-placeholder.className =
-  "gallery-add-card";
-
-placeholder.innerHTML = `
-  <span class="gallery-add-plus">
-    +
-  </span>
-
-  <span class="gallery-add-text">
-    Add New
-  </span>
-
-  <span class="gallery-add-note">
-    1200×1200px • Max 750KB
-  </span>
-`;
-
-placeholder.addEventListener(
-  "click",
-  () => {
-
-    galleryInput.click();
-
-  }
-);
-
-      wrapper.appendChild(placeholder);
-      slot.appendChild(wrapper);
-
-    }
-
-grid.appendChild(slot);
-
-  }
-
-}
-
-loadGallery();
 
 async function loadServices() {
 
@@ -1599,6 +1190,162 @@ servicesList.appendChild(card);
 });
 
 }
+
+// -------------------------------
+// LOAD PRODUCTS
+// -------------------------------
+async function loadProducts() {
+
+  const grid =
+    document.getElementById(
+      "galleryGrid"
+    );
+
+  if (!grid) return;
+
+  grid.innerHTML = "";
+
+  const {
+    data: products,
+    error
+  } = await supabase
+
+    .from("vendor_products")
+
+    .select("*")
+
+    .eq(
+      "vendor_id",
+      vendor.id
+    )
+
+    .order(
+      "display_order",
+      {
+        ascending: true
+      }
+    );
+
+  if (
+    error ||
+    !products ||
+    products.length === 0
+  ) {
+
+    return;
+
+  }
+
+  const heading =
+    document.getElementById(
+      "productsHeading"
+    );
+
+  if (heading) {
+
+    heading.classList.remove(
+      "hidden"
+    );
+
+  }
+
+  products.forEach(
+    product => {
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+      card.className =
+        "product-card";
+
+      card.onclick =
+        () => {
+
+          window.location.href =
+            `vendor-product.html?product_id=${product.id}`;
+
+        };
+
+      const image =
+        document.createElement(
+          "img"
+        );
+
+      image.className =
+        "product-card-image";
+
+      image.loading =
+        "lazy";
+
+      image.src =
+        product.primary_image_url ||
+        "images/placeholder.png";
+
+      image.onerror =
+        function () {
+
+          this.onerror =
+            null;
+
+          this.src =
+            "images/placeholder.png";
+
+        };
+
+      card.appendChild(
+        image
+      );
+
+      const name =
+        document.createElement(
+          "div"
+        );
+
+      name.className =
+        "product-card-name";
+
+      name.textContent =
+        product.product_name || "";
+
+      card.appendChild(
+        name
+      );
+
+      const price =
+        document.createElement(
+          "div"
+        );
+
+      price.className =
+        "product-card-price";
+
+      price.textContent =
+        product.price
+          ? "₦ " +
+            Number(
+              product.price
+            ).toLocaleString(
+              "en-NG"
+            )
+          : "";
+
+      card.appendChild(
+        price
+      );
+
+      grid.appendChild(
+        card
+      );
+
+    }
+
+  );
+
+}
+
+loadProducts();
 
 loadServices();
 
