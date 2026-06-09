@@ -984,70 +984,141 @@ async function fetchPublicVendors() {
 let query;
 
 if (
+  searchType === "product"
+) {
+
+  query =
+    supabase
+      .from("vendor_products")
+      .select(`
+        id,
+        vendor_id,
+        product_name,
+        short_description,
+        price,
+        primary_image_url,
+        secondary_image_url,
+        tertiary_image_url,
+        key_details,
+        vendors (
+          id,
+          name,
+          slug,
+          category,
+          subcategory,
+          address,
+          state,
+          lga,
+          logo_url,
+          cover_url,
+          latitude,
+          longitude,
+          verification_status,
+          average_rating,
+          reviews_count,
+          account_status,
+          onboarding_completed,
+          public_listing_accepted,
+          subscription_status
+        )
+      `);
+
+  query =
+    query.not(
+      "vendors",
+      "is",
+      null
+    );
+
+  query =
+    query.eq(
+      "vendors.account_status",
+      "active"
+    );
+
+  query =
+    query.eq(
+      "vendors.onboarding_completed",
+      true
+    );
+
+  query =
+    query.eq(
+      "vendors.public_listing_accepted",
+      true
+    );
+
+  query =
+    query.eq(
+      "vendors.subscription_status",
+      "active"
+    );
+
+} else if (
   searchType === "service"
 ) {
 
-query =
-  supabase
-    .from("vendor_services")
-    .select(`
-      id,
-      vendor_id,
-      service_name,
-      short_description,
-      vendors (
+  query =
+    supabase
+      .from("vendor_services")
+      .select(`
         id,
-        name,
-        slug,
-        category,
-        subcategory,
-        address,
-        state,
-        lga,
-        logo_url,
-        cover_url,
-        latitude,
-        longitude,
-        verification_status,
-        average_rating,
-        reviews_count,
-        account_status,
-        onboarding_completed,
-        public_listing_accepted,
-        subscription_status
-      )
-    `);
+        vendor_id,
+        service_name,
+        short_description,
+        vendors (
+          id,
+          name,
+          slug,
+          category,
+          subcategory,
+          address,
+          state,
+          lga,
+          logo_url,
+          cover_url,
+          latitude,
+          longitude,
+          verification_status,
+          average_rating,
+          reviews_count,
+          account_status,
+          onboarding_completed,
+          public_listing_accepted,
+          subscription_status
+        )
+      `);
 
-query =
-  query.not(
-    "vendors",
-    "is",
-    null
-  );
+  query =
+    query.not(
+      "vendors",
+      "is",
+      null
+    );
 
-query =
-  query.eq(
-    "vendors.account_status",
-    "active"
-  );
+  query =
+    query.eq(
+      "vendors.account_status",
+      "active"
+    );
 
-query =
-  query.eq(
-    "vendors.onboarding_completed",
-    true
-  );
+  query =
+    query.eq(
+      "vendors.onboarding_completed",
+      true
+    );
 
-query =
-  query.eq(
-    "vendors.public_listing_accepted",
-    true
-  );
+  query =
+    query.eq(
+      "vendors.public_listing_accepted",
+      true
+    );
 
-query =
-  query.eq(
-    "vendors.subscription_status",
-    "active"
-  );
+  query =
+    query.eq(
+      "vendors.subscription_status",
+      "active"
+    );
 
 } else {
 
@@ -1089,18 +1160,27 @@ query =
 
 }
 
-    /* KEYWORD */
+/* KEYWORD */
 
 if (keyword) {
 
   if (
+    searchType === "product"
+  ) {
+
+    query =
+      query.or(
+        `product_name.ilike.%${keyword}%,short_description.ilike.%${keyword}%,key_details.ilike.%${keyword}%`
+      );
+
+  } else if (
     searchType === "service"
   ) {
 
-  query =
-    query.or(
-      `service_name.ilike.%${keyword}%,short_description.ilike.%${keyword}%`
-  );
+    query =
+      query.or(
+        `service_name.ilike.%${keyword}%,short_description.ilike.%${keyword}%`
+      );
 
   } else {
 
@@ -1357,6 +1437,35 @@ console.error(
 /* RENDER RESULTS */
 
 if (
+  searchType === "all"
+) {
+
+  renderUnifiedResults({
+
+    products:
+      filteredData.products || [],
+
+    services:
+      filteredData.services || [],
+
+    vendors:
+      filteredData.vendors || []
+
+  });
+
+}
+
+else if (
+  searchType === "product"
+) {
+
+  renderProductResults(
+    filteredData || []
+  );
+
+}
+
+else if (
   searchType === "service"
 ) {
 
@@ -1364,7 +1473,9 @@ if (
     filteredData || []
   );
 
-} else {
+}
+
+else {
 
   renderVendorResults(
     filteredData || []

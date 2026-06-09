@@ -47,28 +47,33 @@ const supabase =
         ".discover-tab"
       );
 
-    discoverTabs.forEach(tab => {
+discoverTabs.forEach(tab => {
 
-      tab.addEventListener(
-        "click",
-        () => {
+  tab.addEventListener(
+    "click",
+    () => {
 
-          discoverTabs.forEach(btn => {
+      discoverTabs.forEach(btn => {
 
-            btn.classList.remove(
-              "active"
-            );
+        btn.classList.remove(
+          "active"
+        );
 
-          });
+      });
 
-          tab.classList.add(
-            "active"
-          );
-
-        }
+      tab.classList.add(
+        "active"
       );
 
-    });
+      sessionStorage.setItem(
+        "discoverSearchType",
+        tab.dataset.type
+      );
+
+    }
+  );
+
+});
 
     /* ========================= */
     /* FILTER DRAWER */
@@ -829,7 +834,7 @@ const persistedSearchType =
   sessionStorage.getItem(
     "discoverSearchType"
   ) ||
-  "vendor";
+  "all";
 
 const matchingTab =
   document.querySelector(
@@ -874,7 +879,7 @@ function getActiveSearchType() {
     );
 
   if (!activeTab) {
-    return "vendor";
+    return "all";
   }
 
   return activeTab.dataset.type;

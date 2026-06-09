@@ -16,7 +16,7 @@
   <!-- SEO -->
   <meta
     name="description"
-    content="Search vendors, products and services near you on Spotlight."
+    content="Search products, categories or services near you on Spotlight."
   />
 
   <!-- FAVICONS -->
@@ -107,7 +107,7 @@
     type="text"
     id="discoverSearchInput"
     class="discover-search-input"
-    placeholder="Search vendors, categories or services"
+    placeholder="Search products, services, vendors or categories"
     autocomplete="off"
   >
 
@@ -130,25 +130,41 @@
 
       <!-- SEARCH TYPE -->
 
-      <div class="discover-search-tabs">
+<div class="discover-search-tabs">
 
-        <button
-          type="button"
-          class="discover-tab active"
-          data-type="vendor"
-        >
-          Vendor
-        </button>
+  <button
+    type="button"
+    class="discover-tab active"
+    data-type="all"
+  >
+    All
+  </button>
 
-        <button
-          type="button"
-          class="discover-tab"
-          data-type="service"
-        >
-          Service
-        </button>
+  <button
+    type="button"
+    class="discover-tab"
+    data-type="product"
+  >
+    Product
+  </button>
 
-      </div>
+  <button
+    type="button"
+    class="discover-tab"
+    data-type="service"
+  >
+    Service
+  </button>
+
+  <button
+    type="button"
+    class="discover-tab"
+    data-type="vendor"
+  >
+    Vendor
+  </button>
+
+</div>
 
       <!-- QUICK FILTERS -->
 
