@@ -319,12 +319,24 @@ body {
 
   align-items: center;
 
-  gap: 10px;
+  justify-content: flex-start;
+
+  gap: 16px;
 
   padding:
     16px
     16px
     0;
+
+  overflow-x: auto;
+
+  scrollbar-width: none;
+
+}
+
+.discover-results2-filter-section::-webkit-scrollbar {
+
+  display: none;
 
 }
 
@@ -336,9 +348,7 @@ body {
 
   gap: 6px;
 
-  flex: 1;
-
-  min-width: 0;
+  flex-shrink: 0;
 
 }
 
@@ -434,8 +444,6 @@ body {
   font-size: 11px;
 
   font-weight: 700;
-
-  margin-left: auto;
 
   white-space: nowrap;
 
@@ -818,6 +826,366 @@ body {
   .discover-results2-bottom-nav {
 
     max-width: 900px;
+
+  }
+
+}
+
+/* ========================= */
+/* VENDOR CARD */
+/* ========================= */
+
+.discover-results2-vendor-card{
+
+  display:flex;
+
+  align-items:flex-start;
+
+  gap:14px;
+
+  min-height:120px;
+
+  background:#fff;
+
+  border:1px solid #e5e7eb;
+
+  border-radius:18px;
+
+  padding:16px;
+
+}
+
+.discover-results2-vendor-card:hover{
+
+  transform:translateY(-2px);
+
+  box-shadow:
+    0 6px 18px rgba(0,0,0,.06);
+
+}
+
+.discover-results2-vendor-left{
+
+  flex-shrink:0;
+
+}
+
+.discover-results2-vendor-logo{
+
+  width:64px;
+
+  height:64px;
+
+  border-radius:14px;
+
+  object-fit:cover;
+
+}
+
+.discover-results2-vendor-center{
+
+  flex:1;
+
+  min-width:0;
+
+}
+
+.discover-results2-vendor-title-row{
+
+  display:flex;
+
+  align-items:center;
+
+  margin-bottom:2px;
+
+}
+
+.discover-results2-vendor-heading{
+
+  display:flex;
+
+  align-items:center;
+
+  gap:6px;
+
+  flex-wrap:wrap;
+
+}
+
+.discover-results2-vendor-heading h3{
+
+  margin:0;
+
+  font-size:15px;
+
+  font-weight:700;
+
+  line-height:1.15;
+
+  display:-webkit-box;
+
+  -webkit-line-clamp:2;
+
+  -webkit-box-orient:vertical;
+
+  overflow:hidden;
+
+}
+
+.discover-results2-badge{
+
+  width:18px;
+
+  height:18px;
+
+  object-fit:contain;
+
+}
+
+.discover-results2-rating-wrap{
+
+  display:flex;
+
+  align-items:center;
+
+  gap:4px;
+
+  font-size:12px;
+
+  color:#666;
+
+}
+
+.discover-results2-rating-wrap i{
+
+  color:#f4b400;
+
+  font-size:11px;
+
+}
+
+.discover-results2-rating-wrap small{
+
+  color:#888;
+
+}
+
+.discover-results2-address{
+
+  margin:2px 0;
+
+  font-size:13px;
+
+  color:#64748b;
+
+}
+
+.discover-results2-category{
+
+  display:block;
+
+  font-size:12px;
+  margin-top:1px;
+
+  font-weight:600;
+
+  color:#475569;
+
+}
+
+.discover-results2-actions{
+
+  display:flex;
+
+  gap:8px;
+
+  margin-top:8px;
+
+}
+
+.discover-results2-review-btn{
+
+  border:none;
+
+  background:#111;
+
+  color:#fff;
+
+  height:30px;
+
+  padding:0 14px;
+
+  border-radius:8px;
+
+  font-size:11px;
+
+  font-weight:700;
+
+  cursor:pointer;
+
+}
+
+.discover-results2-review-btn:hover{
+
+  background:#f4b400;
+
+  color:#000;
+
+}
+
+.discover-results2-profile-btn{
+
+  border:none;
+
+  background:#f4b400;
+
+  color:#000;
+
+  height:30px;
+
+  padding:0 14px;
+
+  border-radius:8px;
+
+  font-size:11px;
+
+  font-weight:700;
+
+  cursor:pointer;
+
+}
+
+.discover-results2-profile-btn:hover{
+
+  background:#000;
+
+  color:#fff;
+
+}
+
+.discover-results2-badge-wrap{
+
+  display:inline-flex;
+
+  align-items:center;
+
+}
+
+.discover-results2-review-btn,
+.discover-results2-profile-btn{
+
+  width:104px;
+
+  height:32px;
+
+  padding:0;
+
+  border-radius:8px;
+
+  font-size:11px;
+
+  font-weight:700;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+}
+
+/* ========================= */
+/* MOBILE RESIZE */
+/* ========================= */
+
+@media (max-width:768px){
+
+  .discover-results2-actions{
+
+    display:flex;
+
+    gap:8px;
+
+    margin-top:6px;
+
+  }
+
+  .discover-results2-review-btn,
+
+  .discover-results2-profile-btn{
+
+    width:80px;
+
+    height:26px;
+
+    padding:0;
+
+    font-size:10px;
+
+    border-radius:6px;
+
+    flex:none;
+
+  }
+
+}
+
+/* ========================= */
+/* VENDORS CONTAINER */
+/* ========================= */
+
+.discover-results2-vendors-list{
+
+  display:grid;
+
+  grid-template-columns:
+    repeat(3,1fr);
+
+  gap:24px;
+
+  width:100%;
+
+}
+
+/* Prevent cards stretching */
+
+.discover-results2-vendor-card{
+
+  width:100%;
+
+  margin-bottom:0;
+
+}
+
+.discover-results2-page{
+
+  width:100%;
+
+  max-width:1400px;
+
+  margin:0 auto;
+
+  min-height:100vh;
+
+  background:#ffffff;
+
+  position:relative;
+
+  padding-bottom:100px;
+
+}
+
+/* ========================= */
+/* MOBILE RESIZE */
+/* ========================= */
+
+@media (max-width:768px){
+
+  .discover-results2-vendors-list{
+
+    grid-template-columns:1fr;
+
+    gap:14px;
 
   }
 
