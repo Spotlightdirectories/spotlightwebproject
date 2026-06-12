@@ -301,6 +301,18 @@ if (
 
 }
 
+if (
+
+  typeof window.refreshDiscoverResults ===
+
+  "function"
+
+) {
+
+  await window.refreshDiscoverResults();
+
+}
+
   }
 );
 

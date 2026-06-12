@@ -47,9 +47,18 @@ const discoverResultsState = {
   longitude:
     Number(
       searchParams.get("lng")
-    ) || null
+    ) || null,
 
-};
+    showAllProducts:
+      false,
+
+    showAllServices:
+      false,
+    
+    showAllVendors:
+      false
+
+ };
 
 document.addEventListener(
   "DOMContentLoaded",
@@ -65,12 +74,26 @@ function initializeDiscoverResultsPage() {
   activateSearchTab();
 
   initializeSearchButton();
+  
+  initializeVerifiedToggle();
+
+  initializeSeeAllButtons();
 
   updateSearchSummary(
     0
   );
 
+  if (
+
+  discoverResultsState.keyword
+
+    .trim() !== ""
+
+) {
+
   performMarketplaceSearch();
+
+}
 
 }
 
@@ -81,18 +104,46 @@ function initializeDiscoverResultsPage() {
 function populateSearchInput() {
 
   const searchInput =
+
     document.getElementById(
+
       "discoverResultsSearchInput"
+
     );
 
-  if (!searchInput) {
+  if (
+
+    !searchInput
+
+  ) {
 
     return;
 
   }
 
   searchInput.value =
+
     discoverResultsState.keyword;
+
+  const verifiedToggle =
+
+    document.getElementById(
+
+      "discoverResultsVerifiedToggle"
+
+    );
+
+  if (
+
+    verifiedToggle
+
+  ) {
+
+    verifiedToggle.checked =
+
+      discoverResultsState.verified || false;
+
+  }
 
 }
 
@@ -226,6 +277,22 @@ function initializeSearchButton() {
       const keyword =
         searchInput.value.trim();
 
+      if (
+
+        keyword === ""
+
+     ) {
+
+       alert(
+
+         "Please enter a keyword."
+
+      );
+
+       return;
+
+     }
+
       const params =
         new URLSearchParams();
 
@@ -331,6 +398,150 @@ function initializeSearchButton() {
 }
 
 // ======================================
+// VERIFIED TOGGLE
+// ======================================
+
+function initializeVerifiedToggle() {
+
+  const toggle =
+
+    document.getElementById(
+
+      "discoverResultsVerifiedToggle"
+
+    );
+
+  if (
+
+    !toggle
+
+  ) {
+
+    return;
+
+  }
+
+  toggle.addEventListener(
+
+    "change",
+
+    function() {
+
+      discoverResultsState.verified =
+
+        toggle.checked;
+
+    }
+
+  );
+
+}
+
+// ======================================
+// INITIALIZE SEE ALL BUTTONS
+// ======================================
+
+function initializeSeeAllButtons() {
+
+  const productsBtn =
+
+    document.getElementById(
+
+      "discoverResultsProductsMoreBtn"
+
+    );
+
+  if (
+
+    productsBtn
+
+  ) {
+
+    productsBtn.addEventListener(
+
+      "click",
+
+      function() {
+
+        discoverResultsState.showAllProducts =
+
+          !discoverResultsState.showAllProducts;
+
+        performMarketplaceSearch();
+
+     }
+
+  );
+
+  }
+
+const servicesBtn =
+
+    document.getElementById(
+
+      "discoverResultsServicesMoreBtn"
+
+    );
+
+  if (
+
+    servicesBtn
+
+  ) {
+
+    servicesBtn.addEventListener(
+
+      "click",
+
+      function() {
+
+        discoverResultsState.showAllServices =
+
+          !discoverResultsState.showAllServices;
+
+        performMarketplaceSearch();
+
+      }
+
+    );
+
+  }
+
+  const vendorsBtn =
+
+    document.getElementById(
+
+      "discoverResultsVendorsMoreBtn"
+
+    );
+
+  if (
+
+    vendorsBtn
+
+  ) {
+
+    vendorsBtn.addEventListener(
+
+      "click",
+
+      function() {
+
+        discoverResultsState.showAllVendors =
+
+          !discoverResultsState.showAllVendors;
+
+        performMarketplaceSearch();
+
+      }
+
+    );
+
+  }
+
+}
+
+// ======================================
 // SEARCH SUMMARY
 // ======================================
 
@@ -413,16 +624,6 @@ async function performMarketplaceSearch() {
 
     };
 
-    updateSearchSummary(
-
-      products.length +
-
-      services.length +
-
-      vendors.length
-
-    );
-
 const classifiedResults =
 
   classifyMarketplaceResults(
@@ -435,33 +636,189 @@ const sponsoredFeed =
     classifiedResults
   );
 
-applySearchTypeVisibility(
-  classifiedResults
+const displayResults =
+
+  applyVerifiedFilter(
+
+    classifiedResults
+
+ );
+
+updateSearchSummary(
+
+  displayResults.products.length +
+
+  displayResults.services.length +
+
+  displayResults.vendors.length
+
+);
+
+  applySearchTypeVisibility(
+
+  displayResults
+
 );
 
 // renderSponsoredFeed(
-//   sponsoredFeed
+//   buildSponsoredFeed(
+//     displayResults
+//   )
 // );
 
 renderProductCards(
-  classifiedResults.products
+
+  displayResults.products
+
+);
+
+renderServiceCards(
+
+  displayResults.services
+
 );
 
 renderVendorCards(
-  classifiedResults.vendors
+
+  displayResults.vendors
+
 );
 
 hideLoading();
 
-}
+  }
 
   catch (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
 
     hideLoading();
 
   }
+
+}
+
+window.refreshDiscoverResults =
+
+  performMarketplaceSearch;
+
+// ======================================
+// VERIFIED FILTER
+// ======================================
+
+function applyVerifiedFilter(
+  results
+) {
+
+  const verifiedToggle =
+
+    document.getElementById(
+
+      "discoverResultsVerifiedToggle"
+
+    );
+
+  if (
+
+    !verifiedToggle ||
+
+    !verifiedToggle.checked
+
+  ) {
+
+    return results;
+
+  }
+
+  return {
+
+    sponsoredProducts:
+
+      results.sponsoredProducts.filter(
+
+        item =>
+
+          item.vendorVerification === "blue"
+
+          ||
+
+          item.vendorVerification === "gray"
+
+      ),
+
+    sponsoredServices:
+
+      results.sponsoredServices.filter(
+
+        item =>
+
+          item.vendorVerification === "blue"
+
+          ||
+
+          item.vendorVerification === "gray"
+
+      ),
+
+    sponsoredVendors:
+
+      results.sponsoredVendors.filter(
+
+        item =>
+
+          item.verificationStatus === "blue"
+
+          ||
+
+          item.verificationStatus === "gray"
+
+      ),
+
+    products:
+
+      results.products.filter(
+
+        item =>
+
+          item.vendorVerification === "blue"
+
+          ||
+
+          item.vendorVerification === "gray"
+
+      ),
+
+    services:
+
+      results.services.filter(
+
+        item =>
+
+          item.vendorVerification === "blue"
+
+          ||
+
+          item.vendorVerification === "gray"
+
+      ),
+
+    vendors:
+
+      results.vendors.filter(
+
+        item =>
+
+          item.verificationStatus === "blue"
+
+          ||
+
+          item.verificationStatus === "gray"
+
+      )
+
+  };
 
 }
 
@@ -566,7 +923,7 @@ function renderVendorCards(
 
   }
 
-  container.innerHTML = "";
+container.innerHTML = "";
 
   if (
 
@@ -578,11 +935,43 @@ function renderVendorCards(
 
   }
 
+  const visibleVendors =
+
+    discoverResultsState.showAllVendors
+
+      ? vendors
+
+      : vendors.slice(0, 6);
+
+  const moreButton =
+
+    document.getElementById(
+
+      "discoverResultsVendorsMoreBtn"
+
+    );
+
+if (
+
+  moreButton
+
+) {
+
+  moreButton.textContent =
+
+    discoverResultsState.showAllVendors
+
+      ? "Show Less"
+
+      : "See All";
+
+}
+
   const resultsHtml =
 
-    vendors.map(
+    visibleVendors.map(
 
-      vendor => {
+        vendor => {
 
         const verificationStatus =
 
@@ -619,7 +1008,7 @@ function renderVendorCards(
         const reviewsCount =
 
           vendor.reviews || 0;
-
+        
         return `
 
 <article
@@ -759,7 +1148,645 @@ Leave Review
 
 class="discover-results2-profile-btn"
 
-data-slug="${vendor.slug}"
+data-slug="${vendor.slug || ""}"
+
+>
+
+View Profile
+
+</button>
+
+</div>
+
+</div>
+
+</article>
+
+`;
+
+      }
+
+    ).join("");
+
+container.innerHTML =
+
+  resultsHtml;
+
+/* ========================= */
+/* VENDOR CARD ACTIONS */
+/* ========================= */
+
+container
+
+  .querySelectorAll(
+
+    ".discover-results2-profile-btn, .discover-results2-review-btn"
+
+  )
+
+  .forEach(
+
+    function(button){
+
+      button.addEventListener(
+
+        "click",
+
+        function(event){
+
+          event.preventDefault();
+
+          event.stopPropagation();
+
+          /* VIEW PROFILE */
+
+          if (
+
+            button.classList.contains(
+
+              "discover-results2-profile-btn"
+
+            )
+
+          ) {
+
+            const slug =
+
+              button.dataset.slug;
+
+            if (
+
+              slug
+
+            ) {
+
+              window.location.href =
+
+                "vendor-profile.html?slug=" +
+
+                encodeURIComponent(
+
+                  slug
+
+                );
+
+            }
+
+            return;
+
+          }
+
+          /* LEAVE REVIEW */
+
+          if (
+
+            button.classList.contains(
+
+              "discover-results2-review-btn"
+
+            )
+
+          ) {
+
+            const vendorId =
+
+              button.dataset.vendorId;
+
+            if (
+
+              vendorId &&
+
+              window.ReviewsUtils &&
+
+              typeof window.ReviewsUtils.openReviewModal ===
+
+              "function"
+
+            ) {
+
+              window.ReviewsUtils.openReviewModal(
+
+                vendorId
+
+              );
+
+            }
+
+          }
+
+        }
+
+      );
+
+    }
+
+  );
+
+}
+
+
+// ======================================
+// RENDER PRODUCTS
+// ======================================
+
+function renderProductCards(
+  products
+) {
+
+  const container =
+    document.getElementById(
+      "discoverResultsProductsGrid"
+    );
+
+  if (!container) {
+
+    return;
+
+  }
+
+  container.innerHTML = "";
+
+  if (
+
+  discoverResultsState.showAllProducts
+
+) {
+
+  container.classList.add(
+
+    "show-all"
+
+  );
+
+}
+
+else {
+
+  container.classList.remove(
+
+    "show-all"
+
+  );
+
+}
+
+  if (
+
+    products.length === 0
+
+  ) {
+
+    return;
+
+  }
+
+const moreButton =
+
+  document.getElementById(
+
+    "discoverResultsProductsMoreBtn"
+
+  );
+
+if (
+
+  moreButton
+
+) {
+
+  moreButton.textContent =
+
+    discoverResultsState.showAllProducts
+
+      ? "Show Less"
+
+      : "See All";
+
+}
+
+const visibleProducts =
+
+  discoverResultsState.showAllProducts
+
+    ? products
+
+    : products.slice(0, 9);
+
+visibleProducts.forEach(
+
+  function(product) {
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+      card.className =
+        "discover-results2-product-card";
+
+      card.innerHTML =
+
+`
+
+<img
+src="${product.image}"
+class="discover-results2-product-image"
+alt="${product.productName}"
+>
+
+<h3 class="discover-results2-product-title">
+${product.productName}
+</h3>
+
+<p class="discover-results2-product-price">
+₦${Number(product.price || 0).toLocaleString()}
+</p>
+
+<div class="discover-results2-product-vendor">
+
+<span>
+By ${product.vendorName}
+</span>
+
+${
+product.vendorVerification === "blue"
+? `<img src="images/bluebadge.png" class="discover-results2-product-badge">`
+: product.vendorVerification === "gray"
+? `<img src="images/graybadge.png" class="discover-results2-product-badge">`
+: ""
+}
+
+</div>
+
+<div class="discover-results2-product-rating">
+
+<i class="fa-solid fa-star"></i>
+
+<span>
+${Number(product.vendorRating || 0).toFixed(1)}
+</span>
+
+<small>
+(${product.vendorReviews || 0})
+</small>
+
+</div>
+
+${
+product.sponsored
+? `<p class="discover-results2-product-sponsored">Sponsored</p>`
+: ""
+}
+
+`;
+
+      card.addEventListener(
+
+        "click",
+
+        function() {
+
+          if (!product.slug) {
+
+            return;
+
+          }
+
+          window.location.href =
+            "vendor-product.html?slug=" +
+            encodeURIComponent(product.slug);
+
+        }
+
+      );
+
+      container.appendChild(
+        card
+      );
+
+    }
+
+  );
+
+}
+
+// ======================================
+// RENDER SERVICES
+// ======================================
+
+function renderServiceCards(
+  services
+) {
+
+  const container =
+
+    document.getElementById(
+      "discoverResultsServicesList"
+    );
+
+  if (!container) {
+
+    return;
+
+  }
+
+container.innerHTML = "";
+
+  if (!services.length) {
+
+    return;
+
+  }
+
+  if (
+
+    discoverResultsState.showAllServices
+
+  ) {
+
+    container.classList.add(
+
+      "show-all"
+
+    );
+
+  }
+
+  else {
+
+    container.classList.remove(
+
+      "show-all"
+
+    );
+
+  }
+
+  const visibleServices =
+
+    discoverResultsState.showAllServices
+
+      ? services
+
+      : services.slice(0, 9);
+
+  const moreButton =
+
+    document.getElementById(
+
+      "discoverResultsServicesMoreBtn"
+
+    );
+
+if (
+
+  moreButton
+
+) {
+
+  moreButton.textContent =
+
+    discoverResultsState.showAllServices
+
+      ? "Show Less"
+
+      : "See All";
+
+}
+
+  const resultsHtml =
+
+    visibleServices.map(
+
+      service => {
+
+        const verificationStatus =
+
+          service.vendorVerification ||
+
+          "none";
+
+        const isVerified =
+
+          verificationStatus !== "none";
+
+        const vendorLogo =
+
+          service.vendorLogo &&
+
+          service.vendorLogo.trim() !== ""
+
+            ? service.vendorLogo
+
+            : "images/default-vendor-logo.webp";
+
+        const averageRating =
+
+          Number(
+
+            service.vendorRating || 0
+
+          ).toFixed(1);
+
+        const reviewsCount =
+
+          service.vendorReviews || 0;
+
+        const serviceDescription =
+
+          service.description
+
+            ? (
+
+                service.description.length > 60
+
+                  ? service.description.slice(
+
+                      0,
+
+                      80
+
+                    ) + "..."
+
+                  : service.description
+
+              )
+
+            : "";
+
+        return `
+
+<article
+
+class="discover-results2-service-card"
+
+data-slug="${service.vendorSlug}"
+
+data-vendor-id="${service.vendorId}"
+
+>
+
+<div class="discover-results2-vendor-left">
+
+<img
+
+src="${vendorLogo}"
+
+class="discover-results2-vendor-logo"
+
+onerror="
+this.onerror=null;
+this.src='images/default-vendor-logo.webp';
+"
+
+>
+
+</div>
+
+<div class="discover-results2-vendor-center">
+
+<div class="discover-results2-vendor-title-row">
+
+<div class="discover-results2-vendor-heading">
+
+<h3>
+
+${service.serviceName}
+
+</h3>
+
+</div>
+
+</div>
+
+<div class="discover-results2-vendor-heading">
+
+<p class="discover-results2-service-vendor">
+
+By:
+
+${service.vendorName}
+
+</p>
+
+${
+isVerified
+
+?
+
+`
+
+<span
+class="discover-results2-badge-wrap"
+>
+
+<img
+
+src="${
+verificationStatus === "gray"
+
+?
+
+"images/graybadge.png"
+
+:
+
+"images/bluebadge.png"
+
+}"
+
+class="discover-results2-badge"
+
+>
+
+</span>
+
+`
+
+:
+
+""
+
+}
+
+<div class="discover-results2-rating-wrap">
+
+<i class="fa-solid fa-star"></i>
+
+<span>
+
+${averageRating}
+
+</span>
+
+<small>
+
+(${reviewsCount})
+
+</small>
+
+</div>
+
+${
+serviceDescription
+
+?
+
+`
+
+<p class="discover-results2-service-description">
+
+${serviceDescription}
+
+</p>
+
+`
+
+:
+
+""
+
+}
+
+</div>
+
+<p class="discover-results2-address">
+
+${service.vendorLga || ""}
+
+${service.vendorState ? `, ${service.vendorState}` : ""}
+
+</p>
+
+<span class="discover-results2-category">
+
+${service.vendorSubcategory ||
+
+service.vendorCategory ||
+
+"Service"}
+
+</span>
+
+<div class="discover-results2-actions">
+
+<button
+
+class="discover-results2-review-btn"
+
+data-vendor-id="${service.vendorId}"
+
+>
+
+Leave Review
+
+</button>
+
+<button
+
+class="discover-results2-profile-btn"
+
+data-slug="${service.vendorSlug}"
 
 >
 
@@ -783,94 +1810,106 @@ View Profile
 
     resultsHtml;
 
-}
+  /* ========================= */
+/* SERVICE CARD ACTIONS */
+/* ========================= */
 
+container
 
-// ======================================
-// RENDER PRODUCTS
-// ======================================
+  .querySelectorAll(
 
-function renderProductCards(
-  products
-) {
+    ".discover-results2-profile-btn, .discover-results2-review-btn"
 
-  const container =
+  )
 
-    document.getElementById(
-      "discoverResultsProductsGrid"
-    );
+  .forEach(
 
-  if (!container) {
+    function(button){
 
-    return;
-
-  }
-
-  container.innerHTML = "";
-
-  if (
-
-    products.length === 0
-
-  ) {
-
-    return;
-
-  }
-
-  products.forEach(
-
-    function(product) {
-
-      const card =
-
-        document.createElement(
-          "div"
-        );
-
-      card.className =
-
-        "discover-results2-product-card";
-
-      card.innerHTML =
-
-      `
-
-      <img
-        src="${product.image}"
-        class="discover-results2-product-image"
-      >
-
-      <h3>
-
-        ${product.productName}
-
-      </h3>
-
-      <p>
-
-        ${product.vendorName}
-
-      </p>
-
-      `;
-
-      card.addEventListener(
+      button.addEventListener(
 
         "click",
 
-        function() {
+        function(event){
 
-          /*
-             Screen 3
-          */
+          event.preventDefault();
+
+          event.stopPropagation();
+
+          /* VIEW PROFILE */
+
+          if (
+
+            button.classList.contains(
+
+              "discover-results2-profile-btn"
+
+            )
+
+          ) {
+
+            const slug =
+
+              button.dataset.slug;
+
+            if (
+
+              slug
+
+            ) {
+
+              window.location.href =
+
+                "vendor-profile.html?slug=" +
+
+                encodeURIComponent(
+
+                  slug
+
+                );
+
+            }
+
+            return;
+
+          }
+
+          /* LEAVE REVIEW */
+
+          if (
+
+            button.classList.contains(
+
+              "discover-results2-review-btn"
+
+            )
+
+          ) {
+
+            const vendorId =
+
+              button.dataset.vendorId;
+
+            if (
+
+              vendorId &&
+
+              window.ReviewsUtils
+
+            ) {
+
+              window.ReviewsUtils.openReviewModal(
+
+                vendorId
+
+              );
+
+            }
+
+          }
 
         }
 
-      );
-
-      container.appendChild(
-        card
       );
 
     }
@@ -1186,6 +2225,7 @@ async function searchProducts() {
           verification_status,
           is_sponsored,
           average_rating,
+          reviews_count,
           account_status
         )
       `);
@@ -1367,6 +2407,9 @@ function normalizeProductResults(
         id:
           product.id,
 
+        slug:
+          product.slug || "",
+
         vendorId:
           product.vendor_id,
 
@@ -1409,6 +2452,12 @@ function normalizeProductResults(
         vendorRating:
           Number(
             product.vendors.average_rating
+          ) || 0,
+
+        vendorReviews:
+
+          Number(
+            product.vendors.reviews_count
           ) || 0,
 
         vendorVerification:
@@ -1456,17 +2505,20 @@ async function searchServices() {
 
       .select(`
         *,
-        vendors (
-          id,
-          name,
-          category,
-          subcategory,
-          state,
-          lga,
-          verification_status,
-          is_sponsored,
-          average_rating,
-          account_status
+         vendors (
+           id,
+           name,
+           slug,
+           logo_url,
+           category,
+           subcategory,
+           state,
+           lga,
+           verification_status,
+           is_sponsored,
+           average_rating,
+           reviews_count,
+           account_status
         )
       `);
 
@@ -1680,6 +2732,9 @@ function normalizeServiceResults(
           Number(
             service.vendors.average_rating
           ) || 0,
+        vendorReviews:
+
+        service.vendors.reviews_count || 0,
 
         vendorVerification:
 
@@ -1783,3 +2838,6 @@ function buildSponsoredFeed(
   ];
 
 }
+
+
+
