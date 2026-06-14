@@ -12,13 +12,33 @@ const productSlug =
     "slug"
   );
 
+console.log(
+  "Product Slug:",
+  productSlug
+);
+
 if (!productSlug)
   return;
 
 const { data, error } = await supabase
   .from("vendor_products")
-  .select(`*, vendors(whatsapp, telephone, slug)`)
-  .eq("slug", productSlug)
+  .select(`
+    *,
+    vendors(
+      whatsapp,
+      telephone,
+      slug,
+      name,
+      verification_status,
+      average_rating,
+      reviews_count,
+      is_sponsored
+    )
+  `)
+  .eq(
+    "slug",
+    productSlug
+  )
   .single();
 
   console.log(
@@ -202,6 +222,65 @@ if (descEl) {
     });
   }
 
+const vendorMeta =
+
+  document.getElementById(
+
+    "productVendorMeta"
+
+  );
+
+if (
+
+  vendorMeta
+
+) {
+
+  vendorMeta.innerHTML =
+
+`
+
+<div class="discover-results2-product-vendor">
+
+<span>
+
+By ${data.vendors?.name || ""}
+
+</span>
+
+${
+data.vendors?.verification_status === "blue"
+? `<img src="images/bluebadge.png" class="discover-results2-product-badge">`
+: data.vendors?.verification_status === "gray"
+? `<img src="images/graybadge.png" class="discover-results2-product-badge">`
+: ""
+}
+
+</div>
+
+<div class="discover-results2-product-rating">
+
+<i class="fa-solid fa-star"></i>
+
+<span>
+
+${Number(data.vendors?.average_rating || 0).toFixed(1)}
+
+</span>
+
+<small>
+
+(${data.vendors?.reviews_count || 0})
+
+</small>
+
+</div>
+
+${
+data.vendors?.is_sponsored
+? `<p class="discover-results2-product-sponsored">Sponsored</p>`: ""}`;
+}
+
 if (contactBtn) {
 
   const whatsapp =
@@ -264,89 +343,225 @@ if (
   data.vendor_id
 ) {
 
-  const {
-    data: moreProducts
-  } = await supabase
-    .from(
-      "vendor_products"
+const {
+  data: moreProducts,
+  error: moreProductsError
+} = await supabase
+  .from(
+    "vendor_products"
+  )
+  .select(`
+    slug,
+    product_name,
+    price,
+    primary_image_url,
+    vendor_id,
+    vendors(
+      name,
+      verification_status,
+      average_rating,
+      reviews_count,
+      is_sponsored
     )
-    .select(
-      "*"
-    )
-    .eq(
-      "vendor_id",
-      data.vendor_id
-    )
-    .neq(
-      "id",
-      data.id
-    )
-    .order(
-      "display_order",
-      {
-        ascending:true
-      }
-    );
+  `)
+  .eq(
+    "vendor_id",
+    data.vendor_id
+  )
+  .neq(
+    "id",
+    data.id
+  )
+  .order(
+    "display_order",
+    {
+      ascending:true
+    }
+  );
+
+console.log(
+  "More Products:",
+  moreProducts
+);
+
+console.log(
+  "More Products Error:",
+  moreProductsError
+);
+
+console.log(
+  "First Product:",
+  moreProducts[0]
+);
+
+console.log(
+  "Vendor Object:",
+  moreProducts[0]?.vendors
+);
 
   if (
     moreProducts?.length
   ) {
 
-    moreProducts.forEach(
-      product => {
+moreProducts.forEach(product => {
 
-        const card =
-          document.createElement(
-            "div"
+  const badge =
+    product.vendors?.verification_status === "blue"
+      ? `<img src="images/bluebadge.png" alt="Verified" class="discover-results2-product-badge">`
+      : product.vendors?.verification_status === "gray"
+      ? `<img src="images/graybadge.png" alt="Verified" class="discover-results2-product-badge">`
+      : "";
+
+  const sponsored =
+    product.vendors?.is_sponsored
+      ? `<p class="discover-results2-product-sponsored">Sponsored</p>`
+      : "";
+
+  const card =
+    document.createElement("div");
+
+  card.className =
+    "discover-results2-product-card";
+
+  card.innerHTML = `
+
+<img
+src="${product.primary_image_url || "images/placeholder.png"}"
+class="discover-results2-product-image"
+alt="${product.product_name}"
+>
+
+<div>
+
+<h3 class="discover-results2-product-title">
+
+${product.product_name}
+
+</h3>
+
+<p class="discover-results2-product-price">
+
+₦${Number(product.price || 0).toLocaleString()}
+
+</p>
+
+<div class="discover-results2-product-vendor">
+
+<span>
+
+By ${product.vendors?.name || ""}
+
+</span>
+
+${
+product.vendors?.verification_status === "blue"
+? `<img src="images/bluebadge.png" class="discover-results2-product-badge">`
+: product.vendors?.verification_status === "gray"
+? `<img src="images/graybadge.png" class="discover-results2-product-badge">`
+: ""
+}
+
+</div>
+
+<div class="discover-results2-product-rating">
+
+<i class="fa-solid fa-star"></i>
+
+<span>${Number(product.vendors?.average_rating || 0).toFixed(1)}</span>
+
+<small>(${product.vendors?.reviews_count || 0})</small>
+
+</div>
+
+${sponsored}
+
+</div>
+
+`;
+
+  card.onclick = () => {
+
+    location.href =
+      `vendor-product.html?slug=${product.slug}`;
+
+  };
+
+  moreProductsGrid.appendChild(card);
+
+});
+
+  }
+
+}
+
+const shareBtn =
+  document.getElementById(
+    "shareProductBtn"
+  );
+
+if (shareBtn) {
+
+  shareBtn.onclick =
+    async () => {
+
+      const shareData = {
+
+        title:
+          data.product_name,
+
+        text:
+          `Check out ${data.product_name} on Spotlight Directories.`,
+
+        url:
+          window.location.href
+
+      };
+
+      if (
+        navigator.share
+      ) {
+
+        try {
+
+          await navigator.share(
+            shareData
           );
 
-        card.className =
-          "more-product-card";
+        } catch (err) {}
 
-        card.innerHTML = `
+      } else {
 
-          <img
-            src="${product.primary_image_url}"
-            alt="${product.product_name}"
-          >
+        await navigator.clipboard.writeText(
+          window.location.href
+        );
 
-          <div class="more-product-info">
-
-            <div class="more-product-name">
-
-              ${product.product_name}
-
-            </div>
-
-            <div class="more-product-price">
-
-              ₦${Number(
-                product.price
-              ).toLocaleString()}
-
-            </div>
-
-          </div>
-
-        `;
-
-        card.onclick =
-          () => {
-
-            location.href =
-               location.href =
-                 `vendor-product.html?slug=${product.slug}`;
-
-          };
-
-        moreProductsGrid.appendChild(
-          card
+        alert(
+          "Product link copied to clipboard."
         );
 
       }
-    );
 
-  }
+    };
+
+}
+
+/* ========================= */
+/* MOBILE BUTTON LABELS */
+/* ========================= */
+
+if (window.innerWidth <= 768) {
+
+  document.querySelector(
+    "#contactVendorBtn .btn-inner span:last-child"
+  ).textContent = "Chat";
+
+  document.querySelector(
+    "#callVendorBtn .btn-inner span:last-child"
+  ).textContent = "Call";
+
+  document.querySelector(
+    "#shareProductBtn .btn-inner span:last-child"
+  ).textContent = "Share";
 
 }
 
