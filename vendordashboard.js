@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", async () => {
 
 
-  // ===============================
+// ===============================
 // AUTH + FETCH VENDOR
 // ===============================
 
@@ -2396,17 +2396,32 @@ if (
 
         /* ADD SERVICE */
 
-        pendingServices.push({
+pendingServices.push({
 
-          service_name:
-            serviceName,
+  service_name:
+    serviceName,
 
-          short_description:
-            serviceDescriptionInput
-              ?.value
-              .trim() || ""
+  short_description:
+    serviceDescriptionInput
+      ?.value
+      .trim() || "",
 
-        });
+  starting_price:
+    document.getElementById(
+      "serviceStartingPrice"
+    )?.value || null,
+
+  representative_image_file:
+    document.getElementById(
+      "servicePrimaryImage"
+    )?.files?.[0] || null,
+
+  secondary_image_file:
+    document.getElementById(
+      "serviceSecondaryImage"
+    )?.files?.[0] || null
+
+});
 
         renderPendingServices();
 
@@ -2419,6 +2434,17 @@ if (
 
           serviceDescriptionInput.value =
             "";
+          document.getElementById(
+            "serviceStartingPrice"
+          ).value = "";
+
+          document.getElementById(
+            "servicePrimaryImage"
+          ).value = "";
+
+          document.getElementById(
+            "serviceSecondaryImage"
+          ).value = "";
 
           }
 
