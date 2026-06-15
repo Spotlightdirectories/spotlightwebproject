@@ -1258,90 +1258,87 @@ async function loadProducts() {
         );
 
       card.className =
-        "product-card";
+        "discover-results2-product-card";
 
       card.onclick =
         () => {
 
-          window.location.href =
-            `vendor-product.html?product_id=${product.id}`;
+  window.location.href =
+    `vendor-product.html?slug=${product.slug}`;
 
-        };
+ };
 
-      const image =
-        document.createElement(
-          "img"
-        );
+card.innerHTML = `
 
-      image.className =
-        "product-card-image";
+<img
+src="${product.primary_image_url || "images/placeholder.png"}"
+class="discover-results2-product-image"
+alt="${product.product_name}"
+>
 
-      image.loading =
-        "lazy";
+<h3 class="discover-results2-product-title">
 
-      image.src =
-        product.primary_image_url ||
-        "images/placeholder.png";
+${product.product_name}
 
-      image.onerror =
-        function () {
+</h3>
 
-          this.onerror =
-            null;
+<p class="discover-results2-product-price">
 
-          this.src =
-            "images/placeholder.png";
+₦${Number(product.price || 0).toLocaleString()}
 
-        };
+</p>
 
-      card.appendChild(
-        image
-      );
+<div class="discover-results2-product-vendor">
 
-      const name =
-        document.createElement(
-          "div"
-        );
+<span>
 
-      name.className =
-        "product-card-name";
+By ${vendor.name || ""}
 
-      name.textContent =
-        product.product_name || "";
+</span>
 
-      card.appendChild(
-        name
-      );
+${
+vendor.verification_status === "blue"
+? `<img src="images/bluebadge.png" class="discover-results2-product-badge">`
+: vendor.verification_status === "gray"
+? `<img src="images/graybadge.png" class="discover-results2-product-badge">`
+: ""
+}
 
-      const price =
-        document.createElement(
-          "div"
-        );
+</div>
 
-      price.className =
-        "product-card-price";
+<div class="discover-results2-product-rating">
 
-      price.textContent =
-        product.price
-          ? "₦ " +
-            Number(
-              product.price
-            ).toLocaleString(
-              "en-NG"
-            )
-          : "";
+<i class="fa-solid fa-star"></i>
 
-      card.appendChild(
-        price
-      );
+<span>
 
-      grid.appendChild(
-        card
-      );
+${Number(vendor.average_rating || 0).toFixed(1)}
 
-    }
+</span>
 
-  );
+<small>
+
+(${vendor.reviews_count || 0})
+
+</small>
+
+</div>
+
+${
+vendor.is_sponsored
+? `<p class="discover-results2-product-sponsored">Sponsored</p>`
+: ""
+}
+
+`;
+
+grid.appendChild(
+  card
+);
+
+}
+
+);
 
 }
 

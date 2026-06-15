@@ -545,24 +545,4 @@ if (shareBtn) {
 
 }
 
-/* ========================= */
-/* MOBILE BUTTON LABELS */
-/* ========================= */
-
-if (window.innerWidth <= 768) {
-
-  document.querySelector(
-    "#contactVendorBtn .btn-inner span:last-child"
-  ).textContent = "Chat";
-
-  document.querySelector(
-    "#callVendorBtn .btn-inner span:last-child"
-  ).textContent = "Call";
-
-  document.querySelector(
-    "#shareProductBtn .btn-inner span:last-child"
-  ).textContent = "Share";
-
-}
-
 });
