@@ -293,6 +293,27 @@ const saveServiceBtn =
     "saveServiceBtn"
   );
 
+  const serviceStartingPriceInput =
+  document.getElementById(
+    "serviceStartingPrice"
+  );
+
+const servicePrimaryImageInput =
+  document.getElementById(
+    "servicePrimaryImage"
+  );
+
+const serviceSecondaryImageInput =
+  document.getElementById(
+    "serviceSecondaryImage"
+  );
+
+let representativeServiceImageUrl =
+  "";
+
+let secondaryServiceImageUrl =
+  "";
+
 /* ========================= */
 /* PRODUCT ELEMENTS */
 /* ========================= */
@@ -598,6 +619,161 @@ primaryProductImageUrl =
 }
 
 /* ========================= */
+/* PRIMARY SERVICE IMAGE */
+/* ========================= */
+
+if (
+  servicePrimaryImageInput
+) {
+
+  servicePrimaryImageInput
+    .addEventListener(
+      "change",
+      async (e) => {
+
+        const file =
+          e.target.files[0];
+
+        if (!file) {
+          return;
+        }
+
+        const MAX_IMAGE_SIZE =
+          2 * 1024 * 1024;
+  
+       if (
+         file.size >
+         MAX_IMAGE_SIZE
+       ) {
+
+         alert(
+           "Image size must not exceed 2 MB."
+        );
+
+        servicePrimaryImageInput.value =
+          "";
+
+        return;
+
+      }
+
+        const allowedTypes = [
+          "image/jpeg",
+          "image/png",
+          "image/webp"
+        ];
+
+        if (
+          !allowedTypes.includes(
+            file.type
+          )
+        ) {
+
+          alert(
+            "Only JPG, PNG or WEBP images allowed."
+          );
+
+          servicePrimaryImageInput.value =
+            "";
+
+          return;
+
+        }
+
+        const image =
+          new Image();
+
+        image.src =
+          URL.createObjectURL(
+            file
+         );
+
+        await new Promise(
+          resolve => {
+
+            image.onload =
+              resolve;
+
+         }
+       );
+
+       if (
+
+          image.width < 800 ||
+
+          image.height < 800
+
+       ) {
+
+         alert(
+           "Image resolution must be at least 800 × 800 pixels."
+       );
+
+       servicePrimaryImageInput.value =
+         "";
+
+       URL.revokeObjectURL(
+         image.src
+      );
+
+      return;
+
+      }
+
+      URL.revokeObjectURL(
+        image.src
+     );
+
+const filePath =
+  `${vendor.id}/services/${Date.now()}-${file.name}`;
+
+const {
+  error: uploadError
+} = await supabase.storage
+  .from(
+    "vendor-gallery"
+  )
+  .upload(
+    filePath,
+    file
+  );
+
+if (
+  uploadError
+) {
+
+  console.error(
+    "SERVICE IMAGE UPLOAD ERROR:",
+    uploadError
+  );
+
+  alert(
+    "Representative image upload failed."
+  );
+
+  return;
+
+}
+
+const {
+  data
+} = supabase.storage
+  .from(
+    "vendor-gallery"
+  )
+  .getPublicUrl(
+    filePath
+  );
+
+representativeServiceImageUrl =
+  data.publicUrl;
+
+  }
+);
+
+}
+
+/* ========================= */
 /* SECONDARY PRODUCT IMAGE */
 /* ========================= */
 
@@ -746,6 +922,157 @@ if (
     );
 
 }
+
+/* ========================= */
+/* SECONDARY SERVICE IMAGE */
+/* ========================= */
+
+if (
+  serviceSecondaryImageInput
+) {
+
+  serviceSecondaryImageInput
+    .addEventListener(
+      "change",
+      async (e) => {
+
+        const file =
+          e.target.files[0];
+
+        if (!file) {
+          return;
+        }
+
+        const MAX_IMAGE_SIZE =
+          2 * 1024 * 1024;
+
+        if (
+          file.size >
+          MAX_IMAGE_SIZE
+        ) {
+
+          alert(
+            "Image size must not exceed 2 MB."
+          );
+
+          serviceSecondaryImageInput.value =
+            "";
+
+          return;
+
+        }
+
+        const allowedTypes = [
+          "image/jpeg",
+          "image/png",
+          "image/webp"
+        ];
+
+        if (
+          !allowedTypes.includes(
+            file.type
+          )
+        ) {
+
+          alert(
+            "Only JPG, PNG or WEBP images allowed."
+          );
+
+          serviceSecondaryImageInput.value =
+            "";
+
+          return;
+
+        }
+
+        const image =
+          new Image();
+
+        image.src =
+          URL.createObjectURL(
+            file
+          );
+
+        await new Promise(
+          resolve => {
+
+            image.onload =
+              resolve;
+
+          }
+        );
+
+        if (
+
+          image.width < 800 ||
+
+          image.height < 800
+
+        ) {
+
+          alert(
+            "Image resolution must be at least 800 × 800 pixels."
+          );
+
+          serviceSecondaryImageInput.value =
+            "";
+
+          URL.revokeObjectURL(
+            image.src
+          );
+
+          return;
+
+        }
+
+        URL.revokeObjectURL(
+          image.src
+        );
+
+        const filePath =
+          `${vendor.id}/services/${Date.now()}-${file.name}`;
+
+        const {
+          error: uploadError
+        } = await supabase.storage
+          .from(
+            "vendor-gallery"
+          )
+          .upload(
+            filePath,
+            file
+          );
+
+        if (
+          uploadError
+        ) {
+
+          alert(
+            "Additional image upload failed."
+          );
+
+          return;
+
+        }
+
+        const {
+          data
+        } = supabase.storage
+          .from(
+            "vendor-gallery"
+          )
+          .getPublicUrl(
+            filePath
+          );
+
+        secondaryServiceImageUrl =
+          data.publicUrl;
+
+      }
+    );
+
+}
+
 
 /* ========================= */
 /* TERTIARY PRODUCT IMAGE */
@@ -2192,6 +2519,55 @@ if (editBtn) {
 
   }
 
+serviceStartingPriceInput.value =
+  service.starting_price || "";
+
+representativeServiceImageUrl =
+  service.representative_image_url || "";
+
+secondaryServiceImageUrl =
+  service.secondary_image_url || "";
+
+const currentRepresentativeImageName =
+  document.getElementById(
+    "currentRepresentativeImageName"
+  );
+
+const currentAdditionalImageName =
+  document.getElementById(
+    "currentAdditionalImageName"
+  );
+
+if (
+  currentRepresentativeImageName
+) {
+
+  currentRepresentativeImageName.textContent =
+    representativeServiceImageUrl
+      ? `Current: ${
+          representativeServiceImageUrl
+            .split("/")
+            .pop()
+        }`
+      : "";
+
+}
+
+if (
+  currentAdditionalImageName
+) {
+
+  currentAdditionalImageName.textContent =
+    secondaryServiceImageUrl
+      ? `Current: ${
+          secondaryServiceImageUrl
+            .split("/")
+            .pop()
+        }`
+      : "";
+
+}
+
   if (saveServiceBtn) {
 
     saveServiceBtn.textContent =
@@ -2453,15 +2829,11 @@ pendingServices.push({
       "serviceStartingPrice"
     )?.value || null,
 
-  representative_image_file:
-    document.getElementById(
-      "servicePrimaryImage"
-    )?.files?.[0] || null,
+  representative_image_url:
+    representativeServiceImageUrl,
 
-  secondary_image_file:
-    document.getElementById(
-      "serviceSecondaryImage"
-    )?.files?.[0] || null
+  secondary_image_url:
+    secondaryServiceImageUrl
 
 });
 
@@ -2480,13 +2852,17 @@ pendingServices.push({
             "serviceStartingPrice"
           ).value = "";
 
-          document.getElementById(
-            "servicePrimaryImage"
-          ).value = "";
+          servicePrimaryImageInput.value =
+            "";
 
-          document.getElementById(
-            "serviceSecondaryImage"
-          ).value = "";
+          serviceSecondaryImageInput.value =
+            "";
+
+          representativeServiceImageUrl =
+            "";
+
+          secondaryServiceImageUrl =
+            "";
 
           }
 
@@ -2672,23 +3048,48 @@ if (
                 vendor_id:
                   vendor.id,
 
+                vendor_name:
+                  vendor.name,
+
                 service_name:
                   service.service_name,
 
                 short_description:
-                  service.short_description
+                  service.short_description,
+
+                starting_price:
+                  service.starting_price,
+
+                representative_image_url:
+                  service.representative_image_url,
+
+                secondary_image_url:
+                  service.secondary_image_url
 
               })
           );
 
-          const { error } =
-            await supabase
-              .from(
-                "vendor_services"
-              )
-              .insert(
-                payload
-              );
+const {
+  data,
+  error
+} = await supabase
+  .from(
+    "vendor_services"
+  )
+  .insert(
+    payload
+  )
+  .select();
+
+console.log(
+  "SERVICE INSERT DATA:",
+  data
+);
+
+console.log(
+  "SERVICE INSERT ERROR:",
+  error
+);
 
           if (error) {
             throw error;
@@ -2717,14 +3118,29 @@ if (
             serviceDescriptionInput.value =
               "";
 
+            serviceStartingPriceInput.value =
+              "";
+
+            servicePrimaryImageInput.value =
+              "";
+
+            serviceSecondaryImageInput.value =
+              "";
+
+            representativeServiceImageUrl =
+              "";
+
+            secondaryServiceImageUrl =
+              "";
+
             }
 
         } catch (err) {
 
-        console.error(
-          "SAVE PRODUCT ERROR:",
-             err
-         );
+console.log(err);
+console.log(err.message);
+console.log(err.details);
+console.log(err.hint);
 
 
           alert(
