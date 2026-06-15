@@ -29,6 +29,7 @@ const { data, error } = await supabase
       telephone,
       slug,
       name,
+      subcategory,
       verification_status,
       average_rating,
       reviews_count,
@@ -542,6 +543,191 @@ if (shareBtn) {
       }
 
     };
+
+}
+
+/* ========================= */
+/* SIMILAR PRODUCTS */
+/* ========================= */
+
+const similarProductsGrid =
+  document.getElementById(
+    "similarProductsGrid"
+  );
+
+if (
+  similarProductsGrid &&
+  data.vendor_id
+) {
+
+  const {
+    data: similarProducts,
+    error: similarProductsError
+  } = await supabase
+    .from("vendor_products")
+    .select(`
+      slug,
+      product_name,
+      price,
+      primary_image_url,
+      vendor_id,
+      vendors(
+        name,
+        subcategory,
+        category,
+        verification_status,
+        average_rating,
+        reviews_count,
+        is_sponsored
+      )
+    `);
+
+  console.log(
+    "Similar Products:",
+    similarProducts
+  );
+
+  console.log(
+  "Similar Products Error:",
+  similarProductsError
+);
+
+console.log(
+  "First Similar Product:",
+  similarProducts?.[0]
+);
+
+console.log(
+  "First Vendor Object:",
+  similarProducts?.[0]?.vendors
+);
+
+let filteredProducts =
+  similarProducts.filter(
+    product =>
+
+      product.vendor_id !== data.vendor_id &&
+
+      product.slug !== data.slug &&
+
+      product.vendors?.subcategory ===
+      data.vendors?.subcategory
+
+  );
+
+/* Fallback to Category */
+
+if (
+  filteredProducts.length === 0
+) {
+
+  filteredProducts =
+    similarProducts.filter(
+      product =>
+
+        product.vendor_id !== data.vendor_id &&
+
+        product.slug !== data.slug &&
+
+        product.vendors?.category ===
+        data.vendors?.category
+
+    );
+
+}
+
+console.log(
+  "Filtered Products:",
+  filteredProducts
+);
+
+if (filteredProducts.length) {
+
+  filteredProducts.forEach(product => {
+
+    const card =
+      document.createElement("div");
+
+    card.className =
+      "discover-results2-product-card";
+
+    card.innerHTML = `
+
+<img
+src="${product.primary_image_url || "images/placeholder.png"}"
+class="discover-results2-product-image"
+alt="${product.product_name}"
+>
+
+<h3 class="discover-results2-product-title">
+
+${product.product_name}
+
+</h3>
+
+<p class="discover-results2-product-price">
+
+₦${Number(product.price || 0).toLocaleString()}
+
+</p>
+
+<div class="discover-results2-product-vendor">
+
+<span>
+
+By ${product.vendors?.name || ""}
+
+</span>
+
+${
+product.vendors?.verification_status === "blue"
+? `<img src="images/bluebadge.png" class="discover-results2-product-badge">`
+: product.vendors?.verification_status === "gray"
+? `<img src="images/graybadge.png" class="discover-results2-product-badge">`
+: ""
+}
+
+</div>
+
+<div class="discover-results2-product-rating">
+
+<i class="fa-solid fa-star"></i>
+
+<span>
+
+${Number(product.vendors?.average_rating || 0).toFixed(1)}
+
+</span>
+
+<small>
+
+(${product.vendors?.reviews_count || 0})
+
+</small>
+
+</div>
+
+${
+product.vendors?.is_sponsored
+? `<p class="discover-results2-product-sponsored">Sponsored</p>`
+: ""
+}
+
+`;
+
+    card.onclick =
+      () => {
+
+        location.href =
+          `vendor-product.html?slug=${product.slug}`;
+
+      };
+
+    similarProductsGrid.appendChild(card);
+
+  });
+
+}
 
 }
 
