@@ -1978,19 +1978,61 @@ if (!pendingServices.length) {
       item.className =
         "vd-service-pill";
 
-      item.innerHTML = `
-        <span>
-          ${service.service_name}
-        </span>
+item.innerHTML = `
 
-        <button
-          type="button"
-          class="vd-remove-service-btn"
-          data-index="${index}"
-        >
-          ×
-        </button>
-      `;
+<div class="vd-service-content">
+
+<div class="vd-service-name">
+
+${service.service_name}
+
+</div>
+
+${
+service.short_description
+? `<div class="vd-service-description">
+${service.short_description}
+</div>`
+: ""
+}
+
+${
+service.starting_price
+? `<div class="vd-service-price">
+From ₦${Number(service.starting_price).toLocaleString()}
+</div>`
+: ""
+}
+
+<div class="vd-service-assets">
+
+${
+service.representative_image_file
+? "📷 Representative Image"
+: ""
+}
+
+${
+service.secondary_image_file
+? " 📷 Additional Image"
+: ""
+}
+
+</div>
+
+</div>
+
+<button
+type="button"
+class="vd-remove-service-btn"
+data-index="${index}"
+>
+
+×
+
+</button>
+
+`;
 
       pendingServicesList.appendChild(
         item
