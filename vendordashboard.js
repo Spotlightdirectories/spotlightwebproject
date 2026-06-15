@@ -483,6 +483,11 @@ if (
           return;
         }
 
+        document.getElementById(
+          "primaryProductImageName"
+        ).textContent =
+          "Uploading...";
+
         const MAX_IMAGE_SIZE =
           2 * 1024 * 1024;
   
@@ -592,6 +597,11 @@ if (
     uploadError
   );
 
+document.getElementById(
+  "primaryProductImageName"
+).textContent =
+  "";
+
   alert(
     "Primary image upload failed."
   );
@@ -612,6 +622,11 @@ const {
 
 primaryProductImageUrl =
   data.publicUrl;
+
+document.getElementById(
+  "primaryProductImageName"
+).textContent =
+  file.name;
 
   }
 );
@@ -637,6 +652,11 @@ if (
         if (!file) {
           return;
         }
+
+        document.getElementById(
+          "servicePrimaryImageName"
+        ).textContent =
+          "Uploading...";
 
         const MAX_IMAGE_SIZE =
           2 * 1024 * 1024;
@@ -742,6 +762,11 @@ if (
   uploadError
 ) {
 
+  document.getElementById(
+    "servicePrimaryImageName"
+  ).textContent =
+    "";
+
   console.error(
     "SERVICE IMAGE UPLOAD ERROR:",
     uploadError
@@ -797,6 +822,11 @@ if (
         if (!file) {
           return;
         }
+
+        document.getElementById(
+          "secondaryProductImageName"
+        ).textContent =
+          "Uploading...";
 
         const MAX_IMAGE_SIZE =
           2 * 1024 * 1024;
@@ -902,6 +932,11 @@ if (
           uploadError
         ) {
 
+          document.getElementById(
+            "secondaryProductImageName"
+          ).textContent =
+            "";
+
           alert(
             "Secondary image upload failed."
           );
@@ -922,6 +957,11 @@ if (
 
         secondaryProductImageUrl =
           data.publicUrl;
+
+        document.getElementById(
+          "secondaryProductImageName"
+        ).textContent =
+          file.name;
 
       }
     );
@@ -947,6 +987,11 @@ if (
         if (!file) {
           return;
         }
+
+        document.getElementById(
+          "serviceSecondaryImageName"
+        ).textContent =
+          "Uploading...";
 
         const MAX_IMAGE_SIZE =
           2 * 1024 * 1024;
@@ -1048,17 +1093,22 @@ if (
             file
           );
 
-        if (
-          uploadError
-        ) {
+         if (
+           uploadError
+          ) {
 
-          alert(
-            "Additional image upload failed."
-          );
+           document.getElementById(
+             "serviceSecondaryImageName"
+           ).textContent =
+             "";
 
-          return;
+           alert(
+             "Additional image upload failed."
+           );
 
-        }
+           return;
+
+           }
 
         const {
           data
@@ -1103,6 +1153,11 @@ if (
         if (!file) {
           return;
         }
+
+        document.getElementById(
+          "tertiaryProductImageName"
+        ).textContent =
+          "Uploading...";
 
         const MAX_IMAGE_SIZE =
           2 * 1024 * 1024;
@@ -1208,6 +1263,11 @@ if (
           uploadError
         ) {
 
+          document.getElementById(
+            "tertiaryProductImageName"
+          ).textContent =
+            "";
+
           alert(
             "Third image upload failed."
           );
@@ -1228,6 +1288,11 @@ if (
 
         tertiaryProductImageUrl =
           data.publicUrl;
+
+        document.getElementById(
+          "tertiaryProductImageName"
+        ).textContent =
+          file.name;
 
       }
     );
