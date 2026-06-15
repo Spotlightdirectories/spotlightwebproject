@@ -756,12 +756,17 @@
 
 <!-- REPRESENTATIVE IMAGE -->
 
-<div class="vd-service-image-row">
+<div class="vd-product-image-row">
 
-  <label>
+  <div class="vd-product-image-label">
+    Representative Image
+  </div>
 
-    Representative Image (optional)
-
+  <label
+    for="servicePrimaryImage"
+    class="vd-product-image-btn"
+  >
+    Choose Image
   </label>
 
   <input
@@ -770,18 +775,37 @@
     accept="image/*"
   >
 
-  <div id="currentRepresentativeImageName"></div>
+  <span
+    id="servicePrimaryImageName"
+    class="vd-product-image-name"
+  >
+    No file chosen
+  </span>
+
+  <div
+    id="currentRepresentativeImageName"
+    class="vd-current-product-image"
+  ></div>
 
 </div>
 
+<p class="vd-product-image-hint">
+  Accepted: JPG, JPEG, PNG, WEBP • Max: 2 MB • Minimum: 800 × 800 px
+</p>
+
 <!-- ADDITIONAL IMAGE -->
 
-<div class="vd-service-image-row">
+<div class="vd-product-image-row">
 
-  <label>
+  <div class="vd-product-image-label">
+    Additional Image
+  </div>
 
-    Additional Image (optional)
-
+  <label
+    for="serviceSecondaryImage"
+    class="vd-product-image-btn"
+  >
+    Choose Image
   </label>
 
   <input
@@ -790,9 +814,23 @@
     accept="image/*"
   >
 
-  <div id="currentAdditionalImageName"></div>
+  <span
+    id="serviceSecondaryImageName"
+    class="vd-product-image-name"
+  >
+    No file chosen
+  </span>
+
+  <div
+    id="currentAdditionalImageName"
+    class="vd-current-product-image"
+  ></div>
 
 </div>
+
+<p class="vd-product-image-hint">
+  Accepted: JPG, JPEG, PNG, WEBP • Max: 2 MB • Minimum: 800 × 800 px
+</p>
 
 <div class="vd-service-add-actions">
 

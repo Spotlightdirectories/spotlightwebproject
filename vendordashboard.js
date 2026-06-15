@@ -768,6 +768,11 @@ const {
 representativeServiceImageUrl =
   data.publicUrl;
 
+document.getElementById(
+  "servicePrimaryImageName"
+).textContent =
+  file.name;
+
   }
 );
 
@@ -1067,6 +1072,11 @@ if (
 
         secondaryServiceImageUrl =
           data.publicUrl;
+
+      document.getElementById(
+        "serviceSecondaryImageName"
+      ).textContent =
+        file.name;
 
       }
     );
@@ -2265,6 +2275,11 @@ if (
 
 }
 
+console.log(
+  "Saved Services:",
+  savedServices
+);
+
 /* LIMIT TEXT */
 
 if (serviceLimitText) {
@@ -2334,13 +2349,13 @@ From ₦${Number(service.starting_price).toLocaleString()}
 <div class="vd-service-assets">
 
 ${
-service.representative_image_file
+service.representative_image_url
 ? "📷 Representative Image"
 : ""
 }
 
 ${
-service.secondary_image_file
+service.secondary_image_url
 ? " 📷 Additional Image"
 : ""
 }
@@ -2488,6 +2503,9 @@ if (editBtn) {
         String(serviceId)
     );
 
+  console.log(service);
+    
+
   if (!service) {
     return;
   }
@@ -2528,6 +2546,7 @@ representativeServiceImageUrl =
 secondaryServiceImageUrl =
   service.secondary_image_url || "";
 
+  
 const currentRepresentativeImageName =
   document.getElementById(
     "currentRepresentativeImageName"
@@ -2552,6 +2571,7 @@ if (
       : "";
 
 }
+
 
 if (
   currentAdditionalImageName
