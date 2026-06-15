@@ -2387,7 +2387,16 @@ if (!pendingServices.length) {
 
 item.innerHTML = `
 
-<div class="vd-service-content">
+  <img
+    class="vd-service-image"
+    src="${
+      service.representative_image_url ||
+      "images/placeholder.png"
+    }"
+    alt="${service.service_name}"
+  >
+
+  <div class="vd-service-content">
 
 <div class="vd-service-name">
 
@@ -2492,6 +2501,15 @@ function renderSavedServices() {
 
 item.innerHTML = `
 
+  <img
+    class="vd-service-image"
+    src="${
+      service.representative_image_url ||
+      "images/placeholder.png"
+    }"
+    alt="${service.service_name}"
+  >
+
   <div class="vd-service-content">
 
     <div class="vd-service-name">
@@ -2500,11 +2518,34 @@ item.innerHTML = `
 
     <div class="vd-service-description">
       ${
-       (service.short_description || "")
-         .length > 160
-           ? service.short_description.slice(0, 160) + "..."
-           : (service.short_description || "")
-     }
+        (service.short_description || "").length > 160
+          ? service.short_description.slice(0, 160) + "..."
+          : (service.short_description || "")
+      }
+    </div>
+
+    ${
+      service.starting_price
+        ? `<div class="vd-service-price">
+            From ₦${Number(service.starting_price).toLocaleString()}
+           </div>`
+        : ""
+    }
+
+    <div class="vd-service-assets">
+
+      ${
+        service.representative_image_url
+          ? "📷 Representative Image"
+          : ""
+      }
+
+      ${
+        service.secondary_image_url
+          ? " 📷 Additional Image"
+          : ""
+      }
+
     </div>
 
   </div>

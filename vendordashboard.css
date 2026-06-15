@@ -2202,6 +2202,20 @@ SERVICE PILLS
 
 }
 
+.vd-service-image {
+
+  width: 72px;
+
+  height: 72px;
+
+  object-fit: cover;
+
+  border-radius: 8px;
+
+  flex-shrink: 0;
+
+}
+
 /* =========================
 REMOVE / DELETE BUTTONS
 ========================= */
