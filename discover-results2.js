@@ -596,6 +596,26 @@ async function performMarketplaceSearch() {
     const services =
       await searchServices();
 
+    services.forEach(
+      function(service) {
+
+    if (
+      !vendors.find(
+        vendor =>
+          vendor.id ===
+          service.vendor_id
+      )
+    ) {
+
+      vendors.push(
+        service.vendors
+      );
+
+    }
+
+  }
+);
+
     const marketplaceResults = {
 
       sponsoredVendors: [],
@@ -1620,7 +1640,7 @@ if (
 
 class="discover-results2-service-card"
 
-data-slug="${service.vendorSlug}"
+data-slug="${service.slug}"
 
 data-vendor-id="${service.vendorId}"
 
@@ -1810,7 +1830,7 @@ View Profile
 
     resultsHtml;
 
-  /* ========================= */
+/* ========================= */
 /* SERVICE CARD ACTIONS */
 /* ========================= */
 
@@ -1915,6 +1935,62 @@ container
     }
 
   );
+
+container
+
+  .querySelectorAll(
+
+    ".discover-results2-service-card"
+
+  )
+
+  .forEach(
+
+    function(card){
+
+      card.addEventListener(
+
+        "click",
+
+        function(){
+
+const slug =
+
+  card.dataset.slug;
+
+console.log(
+  "Service slug:",
+  slug
+);
+
+if (!slug) {
+
+  alert(
+    "No service slug found."
+  );
+
+  return;
+
+}
+
+          window.location.href =
+
+            "vendor-service.html?slug=" +
+
+            encodeURIComponent(
+
+              slug
+
+            );
+
+        }
+
+      );
+
+    }
+
+  );
+
 
 }
 
@@ -2699,10 +2775,22 @@ function normalizeServiceResults(
 
     function (service) {
 
+      console.log(
+  "SERVICE:",
+  service.service_name,
+  "SLUG:",
+  service.slug
+);
+
       return {
 
         id:
           service.id,
+        slug:
+        service.slug || "",
+      
+        rawSlug:
+          service.slug,
 
         vendorId:
           service.vendor_id,

@@ -3179,6 +3179,19 @@ if (
 
                 service_name:
                   service.service_name,
+                
+                slug:
+                  service.service_name
+                    .toLowerCase()
+                    .trim()
+                    .replace(
+                      /[^a-z0-9\s-]/g,
+                      ""
+                    )
+                    .replace(
+                      /\s+/g,
+                      "-"
+                    ),
 
                 short_description:
                   service.short_description,
