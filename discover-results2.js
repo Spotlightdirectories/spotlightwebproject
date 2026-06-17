@@ -2927,5 +2927,119 @@ function buildSponsoredFeed(
 
 }
 
+/* ========================= */
+/* SERVICES CAROUSEL ARROWS */
+/* ========================= */
+
+const servicesPrevBtn =
+  document.getElementById(
+    "discoverResultsServicesPrevBtn"
+  );
+
+const servicesNextBtn =
+  document.getElementById(
+    "discoverResultsServicesNextBtn"
+  );
+
+const servicesList =
+  document.getElementById(
+    "discoverResultsServicesList"
+  );
+
+if (
+  servicesPrevBtn &&
+  servicesNextBtn &&
+  servicesList
+) {
+
+  servicesPrevBtn.addEventListener(
+    "click",
+    function () {
+
+      servicesList.scrollBy({
+
+        left: -380,
+
+        behavior: "smooth"
+
+      });
+
+    }
+  );
+
+  servicesNextBtn.addEventListener(
+    "click",
+    function () {
+
+      servicesList.scrollBy({
+
+        left: 380,
+
+        behavior: "smooth"
+
+      });
+
+    }
+  );
+
+}
+
+/* ========================= */
+/* PRODUCTS CAROUSEL ARROWS */
+/* ========================= */
+
+const productsPrevBtn =
+  document.getElementById(
+    "discoverResultsProductsPrevBtn"
+  );
+
+const productsNextBtn =
+  document.getElementById(
+    "discoverResultsProductsNextBtn"
+  );
+
+const productsGrid =
+  document.getElementById(
+    "discoverResultsProductsGrid"
+  );
+
+if (
+  productsPrevBtn &&
+  productsNextBtn &&
+  productsGrid
+) {
+
+  productsPrevBtn.addEventListener(
+    "click",
+    function () {
+
+      productsGrid.scrollBy({
+
+        left: -180,
+
+        behavior: "smooth"
+
+      });
+
+    }
+  );
+
+  productsNextBtn.addEventListener(
+    "click",
+    function () {
+
+      productsGrid.scrollBy({
+
+        left: 180,
+
+        behavior: "smooth"
+
+      });
+
+    }
+  );
+
+}
+
 
 

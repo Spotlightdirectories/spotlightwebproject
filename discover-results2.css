@@ -781,6 +781,87 @@ input:checked
 
 }
 
+.discover-results2-services-carousel{
+
+  position:relative;
+
+  display:flex;
+
+  align-items:center;
+
+}
+
+.discover-results2-products-carousel{
+
+  position:relative;
+
+  display:flex;
+
+  align-items:center;
+
+}
+
+.discover-results2-carousel-arrow{
+
+  position:absolute;
+
+  top:50%;
+
+  transform:translateY(-50%);
+
+  width:40px;
+
+  height:40px;
+
+  border:none;
+
+  border-radius:50%;
+
+  background:#ffffff;
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,.15);
+
+  cursor:pointer;
+
+  display:none;
+
+  z-index:20;
+
+}
+
+.discover-results2-carousel-arrow.prev{
+
+  left:4px;
+
+}
+
+.discover-results2-carousel-arrow.next{
+
+  right:4px;
+
+}
+
+.discover-results2-carousel-arrow:hover{
+
+  background:#f4b400;
+
+}
+
+@media (min-width:769px){
+
+  .discover-results2-carousel-arrow{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+  }
+
+}
+
 .discover-results2-services-list.show-all {
 
   display: grid;
@@ -1083,16 +1164,23 @@ input:checked
   border-radius:18px;
 
   padding:16px;
-
-}
-
-.discover-results2-service-card{
-
+  cursor:pointer;
+  transition:.2s;
   flex:0 0 360px;
+
 
 }
 
 .discover-results2-vendor-card:hover{
+
+  transform:translateY(-2px);
+
+  box-shadow:
+    0 6px 18px rgba(0,0,0,.06);
+
+}
+
+.discover-results2-service-card:hover{
 
   transform:translateY(-2px);
 
