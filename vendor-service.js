@@ -476,15 +476,17 @@ const {
   error: moreProductsError
 } = await supabase
   .from(
-    "vendor_products"
+    "vendor_services"
   )
   .select(`
     slug,
-    product_name,
-    price,
-    primary_image_url,
+    service_name,
+    short_description,
+    starting_price,
+    representative_image_url,
     vendor_id,
     vendors(
+      slug,
       name,
       verification_status,
       average_rating,
@@ -497,14 +499,8 @@ const {
     data.vendor_id
   )
   .neq(
-    "id",
-    data.id
-  )
-  .order(
-    "display_order",
-    {
-      ascending:true
-    }
+    "slug",
+    data.slug
   );
 
 console.log(
@@ -553,23 +549,36 @@ moreProducts.forEach(product => {
 
   card.innerHTML = `
 
-<img
-src="${product.primary_image_url || "images/placeholder.png"}"
+${
+product.representative_image_url
+?
+
+`<img
+src="${product.representative_image_url}"
 class="discover-results2-product-image"
-alt="${product.product_name}"
->
+alt="${product.service_name}"
+>`
+
+: ""
+
+}
 
 <div>
 
 <h3 class="discover-results2-product-title">
 
-${product.product_name}
+${product.service_name}
 
 </h3>
 
 <p class="discover-results2-product-price">
 
-₦${Number(product.price || 0).toLocaleString()}
+Starting From
+<span>
+
+₦${Number(product.starting_price || 0).toLocaleString()}
+
+</span>
 
 </p>
 
@@ -607,12 +616,9 @@ ${sponsored}
 
 `;
 
-  card.onclick = () => {
-
-    location.href =
-      `vendor-product.html?slug=${product.slug}`;
-
-  };
+card.onclick = () => {
+  location.href = `vendor-service.html?slug=${product.slug}`;
+};
 
   moreProductsGrid.appendChild(card);
 
@@ -772,31 +778,49 @@ if (filteredProducts.length) {
 
   filteredProducts.forEach(product => {
 
-    const card =
-      document.createElement("div");
+const card =
+  document.createElement("div");
 
-    card.className =
-      "discover-results2-product-card";
+card.className =
+  "discover-results2-service-card";
 
-    card.innerHTML = `
+card.innerHTML = `
 
-<img
-src="${product.primary_image_url || "images/placeholder.png"}"
+${product.representative_image_url ?
+
+`<img
+src="${product.representative_image_url}"
 class="discover-results2-product-image"
-alt="${product.product_name}"
->
+alt="${product.service_name}"
+>` : ""}
+
+<div class="more-service-info">
 
 <h3 class="discover-results2-product-title">
 
-${product.product_name}
+${product.service_name}
 
 </h3>
 
-<p class="discover-results2-product-price">
+${
+product.starting_price ?
 
-₦${Number(product.price || 0).toLocaleString()}
+`<p class="discover-results2-product-price">
 
-</p>
+Starting From
+<span>
+
+₦${Number(
+product.starting_price
+).toLocaleString()}
+
+</span>
+
+</p>`
+
+: ""
+
+}
 
 <div class="discover-results2-product-vendor">
 
@@ -808,10 +832,15 @@ By ${product.vendors?.name || ""}
 
 ${
 product.vendors?.verification_status === "blue"
+
 ? `<img src="images/bluebadge.png" class="discover-results2-product-badge">`
+
 : product.vendors?.verification_status === "gray"
+
 ? `<img src="images/graybadge.png" class="discover-results2-product-badge">`
+
 : ""
+
 }
 
 </div>
@@ -822,7 +851,9 @@ product.vendors?.verification_status === "blue"
 
 <span>
 
-${Number(product.vendors?.average_rating || 0).toFixed(1)}
+${Number(
+product.vendors?.average_rating || 0
+).toFixed(1)}
 
 </span>
 
@@ -835,10 +866,31 @@ ${Number(product.vendors?.average_rating || 0).toFixed(1)}
 </div>
 
 ${
-product.vendors?.is_sponsored
-? `<p class="discover-results2-product-sponsored">Sponsored</p>`
-: ""
+product.short_description
+
+?
+
+`<p class="discover-results2-service-description">
+
+${
+product.short_description.length > 80
+
+? product.short_description.slice(
+0,
+80
+) + "..."
+
+: product.short_description
+
 }
+
+</p>`
+
+: ""
+
+}
+
+</div>
 
 `;
 
@@ -846,7 +898,7 @@ product.vendors?.is_sponsored
       () => {
 
         location.href =
-          `vendor-product.html?slug=${product.slug}`;
+          `vendor-service.html?slug=${product.slug}`;
 
       };
 
