@@ -231,28 +231,27 @@ if (priceEl) {
 const rawDescription =
   data.short_description || "";
 
-console.log(
-  JSON.stringify(rawDescription)
-);
+const hasRepresentativeImage =
+  !!data.representative_image_url;
 
 if (descEl) {
 
-  descEl.style.whiteSpace =
-    "pre-line";
+  const lines =
+    rawDescription
+      .split("\n")
+      .map(
+        line => line.trim()
+      )
+      .filter(Boolean);
 
-  const hasRepresentativeImage =
-    !!data.representative_image_url;
+  if (!lines.length) {
 
-  if (
-    hasRepresentativeImage &&
-    rawDescription.length > 280
-  ) {
+    descEl.innerHTML = "";
 
-    const shortText =
-      rawDescription.substring(
-        0,
-        280
-      );
+  } else {
+
+    const intro =
+      lines.shift();
 
     let expanded =
       false;
@@ -260,48 +259,76 @@ if (descEl) {
     const renderDescription =
       () => {
 
-        descEl.textContent =
-          expanded
-            ? rawDescription
-            : shortText + "...";
+        let html =
+          `<p>${intro}</p>`;
 
-        const toggle =
-          document.createElement(
-            "a"
+        const displayLines =
+          hasRepresentativeImage &&
+          !expanded
+            ? lines.slice(0,2)
+            : lines;
+
+        if (
+          displayLines.length
+        ) {
+
+          html += "<ul>";
+
+          displayLines.forEach(
+            line => {
+
+              html +=
+                `<li>${line}</li>`;
+
+            }
           );
 
-        toggle.href =
-          "#";
+          html += "</ul>";
 
-        toggle.textContent =
-          expanded
-            ? " Read Less"
-            : " Read More";
+        }
 
-        toggle.onclick =
-          function(e){
+        descEl.innerHTML =
+          html;
 
-            e.preventDefault();
+        if (
+          hasRepresentativeImage &&
+          lines.length > 2
+        ) {
 
-            expanded =
-              !expanded;
+          const toggle =
+            document.createElement(
+              "a"
+            );
 
-            renderDescription();
+          toggle.href =
+            "#";
 
-          };
+          toggle.textContent =
+            expanded
+              ? " Read Less"
+              : " Read More";
 
-        descEl.appendChild(
-          toggle
-        );
+          toggle.onclick =
+            function(e){
+
+              e.preventDefault();
+
+              expanded =
+                !expanded;
+
+              renderDescription();
+
+            };
+
+          descEl.appendChild(
+            toggle
+          );
+
+        }
 
       };
 
     renderDescription();
-
-  } else {
-
-    descEl.textContent =
-      rawDescription;
 
   }
 
