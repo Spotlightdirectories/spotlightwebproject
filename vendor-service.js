@@ -29,6 +29,7 @@ const { data, error } = await supabase
       telephone,
       slug,
       name,
+      category,
       subcategory,
       verification_status,
       average_rating,
@@ -694,16 +695,17 @@ if (
   data.vendor_id
 ) {
 
-  const {
-    data: similarProducts,
-    error: similarProductsError
-  } = await supabase
-    .from("vendor_products")
-    .select(`
+const {
+  data: similarProducts,
+  error: similarProductsError
+} = await supabase
+  .from("vendor_services")
+  .select(`
       slug,
-      product_name,
-      price,
-      primary_image_url,
+      service_name,
+      short_description,
+      starting_price,
+      representative_image_url,
       vendor_id,
       vendors(
         name,
@@ -716,18 +718,18 @@ if (
       )
     `);
 
-  console.log(
-    "Similar Products:",
-    similarProducts
-  );
+console.log(
+  "Similar Services:",
+  similarProducts
+);
 
-  console.log(
-  "Similar Products Error:",
+console.log(
+  "Similar Services Error:",
   similarProductsError
 );
 
 console.log(
-  "First Similar Product:",
+  "First Similar Service:",
   similarProducts?.[0]
 );
 
@@ -735,6 +737,30 @@ console.log(
   "First Vendor Object:",
   similarProducts?.[0]?.vendors
 );
+
+console.log(
+  "Current Subcategory:",
+  data.vendors?.subcategory
+);
+
+console.log(
+  "Current Category:",
+  data.vendors?.category
+);
+
+similarProducts.forEach(product => {
+
+  console.log(
+
+    product.service_name,
+
+    product.vendors?.subcategory,
+
+    product.vendors?.category
+
+  );
+
+});
 
 let filteredProducts =
   similarProducts.filter(
@@ -768,6 +794,14 @@ if (
 
     );
 
+console.log(
+  JSON.stringify(
+    data.vendors,
+    null,
+    2
+  )
+);
+
 }
 
 console.log(
@@ -798,11 +832,26 @@ alt="${product.service_name}"
 
 <div class="more-service-info">
 
-<h3 class="discover-results2-product-title">
+${
+product.representative_image_url
+
+?
+
+`<h3 class="discover-results2-product-title">
 
 ${product.service_name}
 
-</h3>
+</h3>`
+
+:
+
+`<h3 class="discover-results2-product-title no-image-title">
+
+${product.service_name}
+
+</h3>`
+
+}
 
 ${
 product.starting_price ?
@@ -867,30 +916,6 @@ product.vendors?.average_rating || 0
 
 </div>
 
-${
-product.short_description
-
-?
-
-`<p class="discover-results2-service-description">
-
-${
-product.short_description.length > 80
-
-? product.short_description.slice(
-0,
-80
-) + "..."
-
-: product.short_description
-
-}
-
-</p>`
-
-: ""
-
-}
 
 </div>
 
