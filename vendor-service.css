@@ -524,11 +524,11 @@ overflow:hidden;
 
 .more-product-info .discover-results2-product-vendor span{
 
-overflow:hidden;
+display:inline;
 
-text-overflow:ellipsis;
+white-space:normal;
 
-white-space:nowrap;
+word-break:break-word;
 
 }
 
@@ -750,17 +750,19 @@ color:#111;
 
 .discover-results2-product-vendor{
 
-  display:flex;
+display:inline-flex;
 
-  align-items:center;
+align-items:center;
 
-  gap:4px;
+gap:4px;
 
-  margin:6px 12px 0;
+margin:6px 12px 0;
 
-  font-size:12px;
+font-size:12px;
 
-  color:#475569;
+color:#475569;
+
+flex-wrap:wrap;
 
 }
 
@@ -960,6 +962,20 @@ content:"Call";
 
 #shareProductBtn .btn-inner::after{
 content:"Share";
+}
+
+.discover-results2-product-vendor{
+
+font-size:11px;
+
+}
+
+.discover-results2-product-badge{
+
+margin-left:2px;
+
+flex-shrink:0;
+
 }
 
 }
