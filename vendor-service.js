@@ -541,11 +541,12 @@ moreProducts.forEach(product => {
       ? `<p class="discover-results2-product-sponsored">Sponsored</p>`
       : "";
 
-  const card =
-    document.createElement("div");
+const card = document.createElement("div");
 
-  card.className =
-    "discover-results2-product-card";
+card.className =
+  product.representative_image_url
+    ? "discover-results2-service-card"
+    : "discover-results2-service-card no-image";
 
   card.innerHTML = `
 
@@ -778,11 +779,12 @@ if (filteredProducts.length) {
 
   filteredProducts.forEach(product => {
 
-const card =
-  document.createElement("div");
+const card = document.createElement("div");
 
 card.className =
-  "discover-results2-service-card";
+  product.representative_image_url
+    ? "discover-results2-service-card"
+    : "discover-results2-service-card no-image";
 
 card.innerHTML = `
 
