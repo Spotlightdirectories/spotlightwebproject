@@ -56,19 +56,24 @@ border-radius:10px;
 }
 
 .product-info h1 {
-  margin:0 0 10px;
-  font-size:1.6rem;
-  font-weight:700;
+  margin:0 0 12px;
+  font-size:2rem;
+  line-height:1.25;
+  font-weight:800;
   color:#111;
 }
 
-.product-price {
-  font-size: 2.2rem;
-  font-weight: 900;
-  color: #009245;
-  margin: 12px 0 10px;
+.product-price{
+margin:0 0 16px;
+font-size:1.45rem;
+font-weight:700;
+letter-spacing:0;
+color:#1f2937;
+}
 
-  letter-spacing: -0.5px;
+.product-price span{
+color:#009245 !important;
+font-weight:800;
 }
 
 .product-vendor-meta{
@@ -830,7 +835,6 @@ content:"Share";
 .share-btn{
 
 background:#e6c200;
-
 color:#000;
 
 }

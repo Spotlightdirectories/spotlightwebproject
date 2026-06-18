@@ -48,6 +48,16 @@ const { data, error } = await supabase
 );
 
 console.log(
+  "Representative Image:",
+  data.representative_image_url
+);
+
+console.log(
+  "Additional Image:",
+  data.secondary_image_url
+);
+
+console.log(
   "Error:",
   error
 );
@@ -83,26 +93,56 @@ const secondaryImageEl =
     "secondaryProductImage"
   );
 
-const tertiaryImageEl =
-  document.getElementById(
-    "tertiaryProductImage"
-  );
-
 if (imageEl) {
 
-  imageEl.src =
-    data.primary_image_url ||
-    "images/placeholder.png";
+  /* Representative Image */
 
-  imageEl.onerror =
-    function () {
+  if (data.representative_image_url) {
 
-      this.onerror = null;
+     imageEl.src =
+           data.representative_image_url;
 
-      this.src =
-        "images/placeholder.png";
+    imageEl.onerror =
+      function () {
 
-    };
+        this.style.display =
+          "none";
+
+      };
+
+  }
+
+  /* No Representative Image but Additional Image exists */
+
+  else if (
+    data.secondary_image_url
+  ) {
+
+    imageEl.src =
+      data.secondary_image_url;
+
+    imageEl.onerror =
+      function () {
+
+        this.style.display =
+          "none";
+
+      };
+
+  }
+
+  /* No images uploaded */
+
+/* No Representative Image or Additional Image */
+
+else {
+
+  imageEl.closest(
+    ".product-media"
+  ).style.display =
+    "none";
+
+}
 
 }
 
@@ -110,6 +150,8 @@ if (
   secondaryImageEl &&
   data.secondary_image_url
 ) {
+
+  /* Additional Image */
 
   secondaryImageEl.src =
     data.secondary_image_url;
@@ -136,92 +178,130 @@ if (
   secondaryImageEl
 ) {
 
-  secondaryImageEl.remove();
+  /* No Additional Image */
+
+  secondaryImageEl.style.display =
+    "none";
 
 }
 
-if (
-  tertiaryImageEl &&
-  data.tertiary_image_url
-) {
-
-  tertiaryImageEl.src =
-    data.tertiary_image_url;
-
-  tertiaryImageEl.classList.remove(
-    "hidden"
-  );
-
-  tertiaryImageEl.onclick =
-    () => {
-
-      const current =
-        imageEl.src;
-
-      imageEl.src =
-        tertiaryImageEl.src;
-
-      tertiaryImageEl.src =
-        current;
-
-    };
-
-} else if (
-  tertiaryImageEl
-) {
-
-  tertiaryImageEl.remove();
-
-}
+/* ========================= */
+/* SERVICE TITLE */
+/* ========================= */
 
 if (titleEl) {
 
   titleEl.textContent =
-    data.product_name || "";
+    data.service_name || "";
 
 }
+
+/* ========================= */
+/* STARTING PRICE */
+/* ========================= */
+
+if (priceEl) {
+
+  if (data.starting_price) {
+
+    priceEl.innerHTML =
+      `Starting From <span>₦${Number(
+        data.starting_price
+      ).toLocaleString(
+        "en-NG",
+        {
+          minimumFractionDigits:2,
+          maximumFractionDigits:2
+        }
+      )}</span>`;
+
+  } else {
+
+    priceEl.style.display =
+      "none";
+
+  }
+
+}
+
+/* ========================= */
+/* SERVICE DESCRIPTION */
+/* ========================= */
 
 const rawDescription =
   data.short_description || "";
 
-const rawKeyDetails =
-  data.key_details || "";
-
-const keyDetailsContainer = document.getElementById("productKeyDetails");
-const keyDetailsList = document.getElementById("keyDetailsList");
-
-/* Render Key Details */
-if (rawKeyDetails && keyDetailsContainer && keyDetailsList) {
-
-  const lines = rawKeyDetails
-    .split("\n")
-    .map(l => l.trim())
-    .filter(Boolean);
-
-  if (lines.length > 0) {
-    keyDetailsContainer.classList.remove("hidden");
-
-    keyDetailsList.innerHTML = "";
-
-    lines.forEach(item => {
-      const li = document.createElement("li");
-      li.textContent = item;
-      keyDetailsList.appendChild(li);
-    });
-  }
-}
-
-/* Render Description (independent) */
 if (descEl) {
-  descEl.textContent = rawDescription;
-}
 
-  if (priceEl && data.price) {
-    priceEl.textContent = "₦ " + Number(data.price).toLocaleString("en-NG", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+  descEl.style.whiteSpace =
+    "pre-line";
+
+  const hasRepresentativeImage =
+    !!data.representative_image_url;
+
+  if (
+    hasRepresentativeImage &&
+    rawDescription.length > 280
+  ) {
+
+    const shortText =
+      rawDescription.substring(
+        0,
+        280
+      );
+
+    let expanded =
+      false;
+
+    const renderDescription =
+      () => {
+
+        descEl.textContent =
+          expanded
+            ? rawDescription
+            : shortText + "...";
+
+        const toggle =
+          document.createElement(
+            "a"
+          );
+
+        toggle.href =
+          "#";
+
+        toggle.textContent =
+          expanded
+            ? " Read Less"
+            : " Read More";
+
+        toggle.onclick =
+          function(e){
+
+            e.preventDefault();
+
+            expanded =
+              !expanded;
+
+            renderDescription();
+
+          };
+
+        descEl.appendChild(
+          toggle
+        );
+
+      };
+
+    renderDescription();
+
+  } else {
+
+    descEl.textContent =
+      rawDescription;
+
   }
+
+}
 
 const vendorMeta =
 
