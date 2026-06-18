@@ -234,6 +234,22 @@ const rawDescription =
 const hasRepresentativeImage =
   !!data.representative_image_url;
 
+const productContainer =
+  document.querySelector(
+    ".product-container"
+  );
+
+if (
+  productContainer &&
+  !hasRepresentativeImage
+) {
+
+  productContainer.classList.add(
+    "no-image"
+  );
+
+}
+
 if (descEl) {
 
   const lines =
