@@ -3101,25 +3101,49 @@ if (
       ?.value
       .trim() || "";
 
-  const { error } =
-    await supabase
-      .from(
-        "vendor_services"
-      )
-      .update({
+const { error } =
+  await supabase
+    .from(
+      "vendor_services"
+    )
+    .update({
 
-        service_name:
-          serviceName,
+      service_name:
+        serviceName,
 
-        short_description:
-          serviceDescription
+      slug:
+        serviceName
+          .toLowerCase()
+          .trim()
+          .replace(
+            /[^a-z0-9\s-]/g,
+            ""
+          )
+           .replace(
+             /\s+/g,
+             "-"
+         ),
 
-      })
-      .eq(
-        "id",
-        editingServiceId
-      );
 
+      short_description:
+        serviceDescription,
+
+      starting_price:
+        Number(
+          serviceStartingPriceInput.value
+        ) || null,
+
+      representative_image_url:
+        representativeServiceImageUrl,
+
+      secondary_image_url:
+        secondaryServiceImageUrl
+
+    })
+    .eq(
+      "id",
+      editingServiceId
+    );
   if (error) {
     throw error;
   }

@@ -44,6 +44,16 @@ const { data, error } = await supabase
   .single();
 
   console.log(
+  "Service Query Error:",
+  error
+);
+
+console.log(
+  "Service Query Data:",
+  data
+);
+
+  console.log(
   "Service:",
   data
 );
@@ -921,13 +931,19 @@ product.vendors?.average_rating || 0
 
 `;
 
-    card.onclick =
-      () => {
+card.onclick =
+  () => {
 
-        location.href =
-          `vendor-service.html?slug=${product.slug}`;
+    console.log(
+      "Clicked:",
+      product.service_name,
+      product.slug
+    );
 
-      };
+    location.href =
+      `vendor-service.html?slug=${product.slug}`;
+
+  };
 
     similarProductsGrid.appendChild(card);
 
