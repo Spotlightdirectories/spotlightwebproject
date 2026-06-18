@@ -136,9 +136,10 @@ color:#e6b800;
 
 }
 
-.product-description {
+.product-description{
   font-size: 0.95rem;
-  line-height: 1.6;
+  white-space:pre-line;
+  line-height:1.8;
   color: #4b5563;
   margin-top: 16px;
 }

@@ -2518,8 +2518,8 @@ item.innerHTML = `
 
     <div class="vd-service-description">
       ${
-        (service.short_description || "").length > 160
-          ? service.short_description.slice(0, 160) + "..."
+        (service.short_description || "").length > 280
+          ? service.short_description.slice(0, 280) + "..."
           : (service.short_description || "")
       }
     </div>
@@ -2825,22 +2825,34 @@ if (
           serviceNameInput.value
             .trim();
 
-        const serviceDescription =
-          serviceDescriptionInput
-            ?.value
-            .trim() || "";
+const serviceDescription =
+  serviceDescriptionInput
+    ?.value
+    .trim() || "";
 
-        if (
-          serviceDescription.length > 160
-        ) {
+if (
+  serviceDescription.length < 280
+) {
 
-          alert(
-            "Service description must not exceed 160 characters including spaces."
-         );
+  alert(
+    "Service description must contain at least 280 characters including spaces."
+  );
 
-         return;
+  return;
 
-        }
+}
+
+if (
+  serviceDescription.length > 500
+) {
+
+  alert(
+    "Service description must not exceed 500 characters including spaces."
+  );
+
+  return;
+
+}
 
         if (!serviceName) {
 
@@ -2852,7 +2864,7 @@ if (
 
         }
 
-        /* ========================= */
+/* ========================= */
 /* SERVICE VALIDATION */
 /* ========================= */
 
@@ -2938,7 +2950,9 @@ if (
 
         }
 
-        /* ADD SERVICE */
+
+
+/* ADD SERVICE */
 
 pendingServices.push({
 

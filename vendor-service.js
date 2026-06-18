@@ -231,6 +231,10 @@ if (priceEl) {
 const rawDescription =
   data.short_description || "";
 
+console.log(
+  JSON.stringify(rawDescription)
+);
+
 if (descEl) {
 
   descEl.style.whiteSpace =
