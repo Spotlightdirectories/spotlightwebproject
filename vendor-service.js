@@ -538,6 +538,46 @@ console.log(
   moreProducts[0]?.vendors
 );
 
+const moreServicesSection =
+
+  document.querySelector(
+    ".more-products"
+  );
+
+if (
+
+  !moreProducts?.length
+
+) {
+
+  if (
+
+    moreServicesSection
+
+  ) {
+
+    moreServicesSection.style.display =
+      "none";
+
+  }
+
+}
+
+else {
+
+  if (
+
+    moreServicesSection
+
+  ) {
+
+    moreServicesSection.style.display =
+      "";
+
+  }
+
+}
+
   if (
     moreProducts?.length
   ) {
@@ -822,6 +862,46 @@ console.log(
   "Filtered Products:",
   filteredProducts
 );
+
+const similarServicesSection =
+
+  document.querySelector(
+    ".similar-products"
+  );
+
+if (
+
+  filteredProducts.length === 0
+
+) {
+
+  if (
+
+    similarServicesSection
+
+  ) {
+
+    similarServicesSection.style.display =
+      "none";
+
+  }
+
+}
+
+else {
+
+  if (
+
+    similarServicesSection
+
+  ) {
+
+    similarServicesSection.style.display =
+      "";
+
+  }
+
+}
 
 if (filteredProducts.length) {
 

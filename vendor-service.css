@@ -655,6 +655,17 @@ width:100%;
 text-align:center;
 }
 
+.discover-results2-service-card.no-image
+.discover-results2-product-sponsored{
+
+align-self:center;
+
+text-align:center;
+
+margin:0 auto;
+
+}
+
 /* ========================= */
 /* MORE PRODUCTS RESPONSIVE */
 /* ========================= */
@@ -780,7 +791,7 @@ color:#111;
 .discover-results2-product-price{
   margin:0 12px;
   color: #111;
-  font-size:16px;
+  font-size:15px;
   font-weight:700;
 }
 

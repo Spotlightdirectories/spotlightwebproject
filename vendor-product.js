@@ -400,6 +400,45 @@ console.log(
   moreProducts[0]?.vendors
 );
 
+const moreProductsSection =
+
+  document.querySelector(
+    ".more-products"
+  );
+
+if (
+
+  !moreProducts?.length
+
+) {
+
+  if (
+
+    moreProductsSection
+
+  ) {
+
+    moreProductsSection.style.display =
+      "none";
+
+  }
+
+}
+else {
+
+  if (
+
+    moreProductsSection
+
+  ) {
+
+    moreProductsSection.style.display =
+      "";
+
+  }
+
+}
+
   if (
     moreProducts?.length
   ) {
@@ -640,6 +679,45 @@ console.log(
   "Filtered Products:",
   filteredProducts
 );
+
+const similarProductsSection =
+
+  document.querySelector(
+    ".similar-products"
+  );
+
+if (
+
+  filteredProducts.length === 0
+
+) {
+
+  if (
+
+    similarProductsSection
+
+  ) {
+
+    similarProductsSection.style.display =
+      "none";
+
+  }
+
+}
+else {
+
+  if (
+
+    similarProductsSection
+
+  ) {
+
+    similarProductsSection.style.display =
+      "";
+
+  }
+
+}
 
 if (filteredProducts.length) {
 

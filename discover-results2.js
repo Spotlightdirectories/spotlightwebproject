@@ -587,34 +587,105 @@ async function performMarketplaceSearch() {
 
   try {
 
-    const vendors =
-      await searchVendors();
+let vendors = [];
 
-    const products =
-      await searchProducts();
+let products = [];
 
-    const services =
-      await searchServices();
+let services = [];
 
-    services.forEach(
-      function(service) {
+if (
 
-    if (
-      !vendors.find(
-        vendor =>
-          vendor.id ===
-          service.vendor_id
-      )
-    ) {
+  discoverResultsState.searchType ===
 
-      vendors.push(
-        service.vendors
-      );
+  "all"
+
+) {
+
+  vendors =
+
+    await searchVendors();
+
+  products =
+
+    await searchProducts();
+
+  services =
+
+    await searchServices();
+
+  services.forEach(
+
+    function(service){
+
+      if (
+
+        !vendors.find(
+
+          vendor =>
+
+            vendor.id ===
+
+            service.vendor_id
+
+        )
+
+      ) {
+
+        vendors.push(
+
+          service.vendors
+
+        );
+
+      }
 
     }
 
-  }
-);
+  );
+
+}
+
+else if (
+
+  discoverResultsState.searchType ===
+
+  "product"
+
+) {
+
+  products =
+
+    await searchProducts();
+
+}
+
+else if (
+
+  discoverResultsState.searchType ===
+
+  "service"
+
+) {
+
+  services =
+
+    await searchServices();
+
+}
+
+else if (
+
+  discoverResultsState.searchType ===
+
+  "vendor"
+
+) {
+
+  vendors =
+
+    await searchVendors();
+
+}
 
     const marketplaceResults = {
 
@@ -912,7 +983,7 @@ function applySearchTypeVisibility(
     default:
 
       sponsoredSection.style.display =
-        "block";
+        "none";
 
       productsSection.style.display =
         "block";
@@ -945,15 +1016,35 @@ function renderVendorCards(
 
 container.innerHTML = "";
 
-  if (
+const section =
 
-    vendors.length === 0
+  document.getElementById(
+    "discoverResultsVendorsSection"
+  );
 
-  ) {
+if (
 
-    return;
+  vendors.length === 0
+
+) {
+
+  if (section) {
+
+    section.style.display =
+      "none";
 
   }
+
+  return;
+
+}
+
+if (section) {
+
+  section.style.display =
+    "";
+
+}
 
   const visibleVendors =
 
@@ -1324,9 +1415,15 @@ function renderProductCards(
 
   }
 
-  container.innerHTML = "";
+container.innerHTML = "";
 
-  if (
+const section =
+
+  document.getElementById(
+    "discoverResultsProductsSection"
+  );
+
+if (
 
   discoverResultsState.showAllProducts
 
@@ -1350,15 +1447,29 @@ else {
 
 }
 
-  if (
+if (
 
-    products.length === 0
+  products.length === 0
 
-  ) {
+) {
 
-    return;
+  if (section) {
+
+    section.style.display =
+      "none";
 
   }
+
+  return;
+
+}
+
+if (section) {
+
+  section.style.display =
+    "";
+
+}
 
 const moreButton =
 
@@ -1512,11 +1623,31 @@ function renderServiceCards(
 
 container.innerHTML = "";
 
-  if (!services.length) {
+const section =
 
-    return;
+  document.getElementById(
+    "discoverResultsServicesSection"
+  );
+
+if (!services.length) {
+
+  if (section) {
+
+    section.style.display =
+      "none";
 
   }
+
+  return;
+
+}
+
+if (section) {
+
+  section.style.display =
+    "";
+
+}
 
   if (
 
