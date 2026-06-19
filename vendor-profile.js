@@ -932,6 +932,33 @@ if (callLink) {
      map.style.pointerEvents = "auto";
     }
 
+const catalogBtn =
+
+  document.getElementById(
+    "catalogBtn"
+  );
+
+if (catalogBtn) {
+
+  catalogBtn.onclick =
+    function () {
+
+      document
+        .getElementById(
+          "mediaSection"
+        )
+        ?.scrollIntoView({
+
+          behavior: "smooth",
+
+          block: "start"
+
+        });
+
+    };
+
+}    
+
 
     // -------------------------------
     // ABOUT
@@ -1133,10 +1160,27 @@ async function loadServices() {
 
   servicesList.innerHTML = "";
 
-  const { data: services } = await supabase
-    .from("vendor_services")
-    .select("*")
-    .eq("vendor_id", vendor.id);
+const { data: services } = await supabase
+  .from("vendor_services")
+  .select(`
+    *,
+    vendors(
+      slug,
+      name,
+      category,
+      subcategory,
+      state,
+      lga,
+      verification_status,
+      average_rating,
+      reviews_count,
+      is_sponsored
+    )
+  `)
+  .eq(
+    "vendor_id",
+    vendor.id
+  );
 
   const serviceList = services || [];
 
@@ -1157,35 +1201,135 @@ serviceList.forEach(service => {
 
   if (!serviceName) return;
 
-  const card =
-    document.createElement("div");
+  const averageRating =
+    Number(
+      service.vendors?.average_rating || 0
+    ).toFixed(1);
+
+  const reviewsCount =
+    service.vendors?.reviews_count || 0;
+
+  const verificationBadge =
+
+    service.vendors?.verification_status === "blue"
+
+      ? `<img
+          src="images/bluebadge.png"
+          class="discover-results2-badge"
+        >`
+
+      : service.vendors?.verification_status === "gray"
+
+      ? `<img
+          src="images/graybadge.png"
+          class="discover-results2-badge"
+        >`
+
+      : "";
+
+      const card =
+    document.createElement("article");
 
   card.className =
-    "service-card";
+      "vendor-profile-service-card";
 
-const name =
-  document.createElement("div");
+ card.innerHTML = `
 
-name.className =
-  "service-name";
+<div class="vendor-profile-service-content">
+<h3>
 
-name.textContent =
-  serviceName;
+${service.service_name}
 
-card.appendChild(name);
+</h3>
 
-const description =
-  document.createElement("div");
+<div class="discover-results2-vendor-heading">
 
-description.className =
-  "service-description";
+<p class="discover-results2-service-vendor">
 
-description.textContent =
-  (service.short_description || "").trim();
+By: ${service.vendors?.name || ""}
 
-card.appendChild(description);
+</p>
 
-servicesList.appendChild(card);
+<span class="discover-results2-badge-wrap">
+
+${verificationBadge}
+
+</span>
+
+</div>
+
+<div class="discover-results2-rating-wrap">
+</div>
+
+<div class="discover-results2-rating-wrap">
+
+<i class="fa-solid fa-star"></i>
+
+<span>
+
+${averageRating}
+
+</span>
+
+<small>
+
+(${reviewsCount})
+
+</small>
+
+</div>
+
+<p class="vendor-profile-service-price">
+
+Starting From
+
+<span>
+
+₦${Number(
+service.starting_price || 0
+).toLocaleString()}
+
+</span>
+
+</p>
+
+<p class="discover-results2-address">
+
+${service.vendors?.lga || ""}
+
+${service.vendors?.state ? `, ${service.vendors.state}` : ""}
+
+</p>
+
+<span class="discover-results2-category">
+
+${service.vendors?.subcategory ||
+
+service.vendors?.category ||
+
+"Service"}
+
+</span>
+
+</div>
+
+`;
+
+  card.onclick = () => {
+
+    window.location.href =
+
+      "vendor-service.html?slug=" +
+
+      encodeURIComponent(
+
+        service.slug
+
+      );
+
+  };
+
+  servicesList.appendChild(card);
 
 });
 
