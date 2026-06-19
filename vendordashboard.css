@@ -57,6 +57,16 @@ body {
   border-radius: 10px;
 }
 
+.vd-logo-link{
+
+display:inline-block;
+
+text-decoration:none;
+
+color:inherit;
+
+}
+
 .vd-logo-text {
 
   font-size: 28px;

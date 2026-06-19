@@ -259,6 +259,10 @@ if (
     "no-image"
   );
 
+console.log(
+  productContainer.className
+);
+
 }
 
 if (descEl) {
