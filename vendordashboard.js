@@ -6025,4 +6025,34 @@ if (
 
 }
 
+/* =========================
+BUSINESS INSIGHTS
+========================= */
+
+const businessInsightsSidebarBtn =
+
+document.getElementById(
+
+"businessInsightsSidebarBtn"
+
+);
+
+if (
+
+businessInsightsSidebarBtn
+
+){
+
+businessInsightsSidebarBtn.onclick =
+
+function(){
+
+window.location.href =
+
+"insight.html";
+
+};
+
+}
+
 });

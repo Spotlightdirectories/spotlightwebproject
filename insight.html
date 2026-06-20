@@ -1,171 +1,231 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
-
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0"
->
-
-<title>
-
-Business Insights
-
-</title>
-
-<link
-rel="stylesheet"
-href="theme.css"
->
-
-<link
-rel="stylesheet"
-href="insight.css"
->
-
-<link
-rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
->
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Insights</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="insight.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
-
 <body>
 
-<main class="insight-page">
+<div class="page">
 
-<header class="insight-header">
-
-<button
-id="backToDashboardBtn"
-class="back-dashboard-btn"
-type="button"
+  <!-- Header -->
+  <header class="header">
+    <button
+      id="backToDashboardBtn"
+      class="back-dashboard-btn"
+      type="button"
 >
+     ← Dashboard
+    </button>
+    <div>
+      <h1>Business Insights</h1>
+      <p>Track your performance, leads and discover opportunities to grow your business.</p>
+    </div>
+    <div class="header-actions">
 
-<i class="fa-solid fa-arrow-left"></i>
+    <button class="date-pill" id="dateRange">
+       Loading...
 
-<span>
+    </button>
 
-Back to Dashboard
+    </div>
+  </header>
 
-</span>
+  <!-- Row 1: Health Score + Marketplace Performance -->
+  <div class="grid grid-2-1">
+    <section class="card">
+      <div class="card-head">
+        <h2>Business Health Score</h2>
+        <span class="info-dot" title="Composite score of profile completeness, activity and reviews">ⓘ</span>
+      </div>
+      <div class="health-score">
+        <svg class="gauge" viewBox="0 0 200 110" id="gaugeSvg">
+          <path class="gauge-track" d="M10,100 A90,90 0 0 1 190,100"></path>
+          <path class="gauge-fill" id="gaugeFill" d="M10,100 A90,90 0 0 1 190,100"></path>
+        </svg>
+        <div class="gauge-center">
+          <div class="gauge-value" id="healthValue">84</div>
+          <div class="gauge-max">/100</div>
+        </div>
+      </div>
+      <div class="health-label">Good Visibility</div>
+      <div class="stars" id="starRow"></div>
+      <div class="health-delta">▲ 12% from last month</div>
+      <button id="healthDetailsBtn" class="health-details-btn" type="button">View Score Breakdown →</button>
+    </section>
 
-</button>
+    <section class="card">
+<div class="card-head">
+  <h2>Marketplace Performance</h2>
+  <select class="period-select" id="perfPeriod">
+    <option>Today</option>
+    <option>This Week</option>
+    <option selected>This Month</option>
+    <option>This Quarter</option>
+    <option>This Year</option>
+  </select>
+</div>
+      <div class="grid-3" id="perfStats"></div>
+      <div class="chart-wrap">
+        <svg class="line-chart" viewBox="0 0 600 180" id="perfLineChart" preserveAspectRatio="none"></svg>
+        <div class="chart-x-axis" id="perfXAxis"></div>
+      </div>
+    </section>
+  </div>
 
-<h1>
+  <!-- Row 2: Lead Generation -->
+  <section class="card">
+    <div class="card-head">
+      <h2>Lead Generation</h2>
+<select class="period-select" id="leadPeriod">
+  <option>Today</option>
+  <option>This Week</option>
+  <option selected>This Month</option>
+  <option>This Quarter</option>
+  <option>This Year</option>
+</select>
+    </div>
+    <div class="grid-4" id="leadGrid"></div>
+  </section>
 
-Business Insights
+  <!-- Row 3: Sponsorship + Catalog -->
+  <div class="grid grid-1-1">
+    <section class="sponsor-card">
+     <div class="sponsor-header"><h2>Sponsorship</h2><span id="sponsorStateBadge" class="badge-active">Active</span></div>
+      <div class="sponsor-summary">
+      <div class="sponsor-plan">Silver Sponsor</div>
+      <div class="sponsor-status-text">Your business is currently being promoted across Spotlight.</div>
+      </div>
+      <div class="sponsor-days-row">
+        <span class="days-num" id="sponsorDays">14</span>
+        <span class="days-lbl">Days Remaining</span>
+      </div>
+      <div class="sponsor-grid">
+        <div class="sponsor-stat">
+          <span class="s-lbl">Clicks</span>
+          <span class="s-val" id="sponsorClicks">1,894</span>
+          <span class="s-trend up">▲ 27%</span>
+        </div>
+        <div class="sponsor-stat">
+          <span class="s-lbl">Leads Generated</span>
+          <span class="s-val" id="sponsorLeads">96</span>
+          <span class="s-trend up">▲ 23%</span>
+        </div>
+      </div>
+      <div class="sponsor-foot">
+        <span>Expiry Date</span>
+        <span id="sponsorExpiry">Oct 24, 2024</span>
+      </div>
+      <button id="sponsorActionBtn" class="manage-sub-btn">Manage Sponsorship</button>
+    </section>
 
-</h1>
+    <section class="card">
+      <div class="card-head"><h2>Catalog Performance</h2></div>
 
-<p>
+      <div class="catalog-lists">
+        <div class="catalog-list">
+          <div class="list-head">Top Products</div>
+          <div id="topProducts"></div>
+          <a id="viewAllProductsLink" class="view-all-link" href="#">View All Products →</a>
+        </div>
+        <div class="catalog-list">
+          <div class="list-head">Top Services</div>
+          <div id="topServices"></div>
+          <a id="viewAllServicesLink" class="view-all-link" href="#">View All Services →</a>
+        </div>
+      </div>
+    </section>
+  </div>
 
-Track your marketplace performance and grow your business.
+  <!-- Row 4: Marketplace Ranking + Audience -->
+  <div class="grid grid-1-1">
+    <section class="card">
+      <div class="card-head">
+        <h2>Marketplace Ranking</h2>
+        <span class="info-dot" title="Your position among similar businesses in your category">ⓘ</span>
+      </div>
+      <div class="rank-cols">
+        <div class="rank-col">
+          <div class="rank-tag">You are</div>
+          <div class="rank-number">#18</div>
+          <div class="rank-sub">in Accountant category</div>
+        </div>
+        <div class="rank-col">
+          <div class="rank-tag">With Sponsorship</div>
+          <div class="rank-number rank-number-green">Top 5</div>
+          <div class="rank-sub">in this category</div>
+        </div>
+      </div>
+      <div class="rank-slider">
+        <div class="rank-slider-track"></div>
+        <div class="rank-slider-fill" id="rankSliderFill"></div>
+        <div class="rank-slider-dot" id="rankSliderDot">#18</div>
+        <div class="rank-slider-labels">
+          <span>#50</span>
+          <span>Top 5</span>
+        </div>
+      </div>
+      <p class="rank-note">You're doing great! Sponsor your business to reach Top 5.</p>
+      <button class="how-it-works-btn">View How It Works</button>
+    </section>
 
-</p>
+    <section class="card">
+      <div class="card-head">
+        <h2>Audience</h2>
+        <a class="view-all-link" href="#">View by LGA →</a>
+      </div>
+      <div id="audienceList"></div>
+    </section>
+  </div>
 
-</header>
+  <!-- Row 5: Search Keywords + Growth Coach -->
+  <div class="grid grid-1-1">
+    <section class="card">
+      <div class="card-head"><h2>Search Keywords</h2></div>
+      <p class="section-cap">Keywords people used to find your business</p>
+      <div id="keywordList"></div>
+      <a class="view-all-link" href="#">View All Keywords →</a>
+    </section>
 
-<div class="insight-grid">
-
-<!-- BUSINESS HEALTH -->
-
-<section
-class="insight-card"
->
-
-<h2>
-
-Business Health Score
-
-</h2>
-
-<div class="health-score">
-
-84
+    <section class="card">
+      <div class="card-head">
+        <h2>Growth Coach</h2>
+        <span class="info-dot" title="Personalized actions to improve visibility">ⓘ</span>
+      </div>
+      <p class="section-cap">Complete these actions to get more visibility and leads.</p>
+      <div id="coachList"></div>
+      <div class="coach-progress-row">
+        <span id="coachProgressLabel">2 / 4 Completed</span>
+      </div>
+      <div class="coach-progress-track">
+        <div class="coach-progress-fill" id="coachProgressFill"></div>
+      </div>
+    </section>
+  </div>
 
 </div>
 
-<p>
-
-★★★★☆
-
-</p>
-
-<span>
-
-Good Visibility
-
-</span>
-
-<small>
-
-+12% from last month
-
-</small>
-
-</section>
-
-<!-- MARKETPLACE PERFORMANCE -->
-
-<section
-class="insight-card"
->
-
-<h2>
-
-Marketplace Performance
-
-</h2>
-
-<div class="dummy-stat">
-
-Today
-
-<strong>
-
-312
-
-</strong>
-
-</div>
-
-<div class="dummy-stat">
-
-This Week
-
-<strong>
-
-2140
-
-</strong>
-
-</div>
-
-<div class="dummy-stat">
-
-This Month
-
-<strong>
-
-8930
-
-</strong>
-
-</div>
-
-</section>
-
+<div id="healthModal" class="health-modal">
+  <div class="health-modal-content">
+    <div class="health-modal-head">
+      <h3>Business Health Score</h3>
+      <button id="closeHealthModal">&times;</button>
+    </div>
+    <div class="health-modal-score">84 / 100</div>
+    <div class="health-modal-item"><span>Profile Completeness</span><strong>20/20</strong></div>
+    <div class="health-modal-item"><span>Verification</span><strong>20/20</strong></div>
+    <div class="health-modal-item"><span>Reviews</span><strong>18/20</strong></div>
+    <div class="health-modal-item"><span>Catalog</span><strong>16/20</strong></div>
+    <div class="health-modal-item"><span>Sponsorship</span><strong>10/20</strong></div>
+    <p class="health-modal-note">Sponsor your business to improve your visibility score.</p>
+  </div>
 </div>
 
 <script src="insight.js"></script>
-
-</main>
-
 </body>
-
 </html>
