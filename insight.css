@@ -636,20 +636,25 @@ transition:width .35s ease;
   border-radius:8px;
   padding:8px 12px;
   white-space:nowrap;
+  
 }
 .coach-action.secondary{
   background:#fff;
   color:var(--ink);
   border:1px solid var(--line);
 }
+
 .coach-progress-row{
-  display:flex;
-  justify-content:flex-end;
-  font-size:12px;
-  font-weight:700;
-  color:var(--ink-soft);
-  margin:14px 0 6px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-top:18px;
+margin-bottom:8px;
+gap:16px;
+font-size:13px;
+font-weight:600;
 }
+
 .coach-progress-track{
   height:7px;
   background:#F1F1EF;
@@ -767,4 +772,20 @@ text-align:right;
 font-size:12px;
 font-weight:600;
 color:#666;
+}
+
+.kw-metrics{
+display:inline-flex;
+gap:20px;
+font-weight:600;
+}
+
+.coach-score-tip{
+margin:14px 0 18px;
+padding:10px 14px;
+background:#FFF8D9;
+border-radius:10px;
+font-size:13px;
+font-weight:600;
+color:#8A6A00;
 }

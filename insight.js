@@ -332,7 +332,10 @@ $("keywordList").innerHTML=keywords.map((k,i)=>`
 <div class="kw-row">
 <div class="kw-top">
 <span>${k.term}</span>
-<span>${fmt(k.searches)} (${k.pct}%)</span>
+<span class="kw-metrics">
+<span>${fmt(k.searches)}</span>
+<span>${k.pct}%</span>
+</span>
 </div>
 <div class="kw-bar-track">
 <div class="kw-bar-fill" id="kwBar${i}"></div>
@@ -361,7 +364,8 @@ $('coachList').innerHTML = coachItems.map(c => `
 `).join('');
 
 const completed = coachItems.filter(c=>c.done).length;
-$('coachProgressLabel').textContent = `${completed} / ${coachItems.length} Completed`;
+$("coachProgressLabel").textContent=
+Math.round(completed/coachItems.length*100)+"%";
 $('coachProgressFill').style.width = (completed / coachItems.length * 100) + '%';
 
 /* ============================
