@@ -262,6 +262,10 @@ const topProducts = [
   { name:'Laptop Bag', views:2304 },
   { name:'Executive Office Chair', views:1842 },
   { name:'Leather Laptop Bag', views:1256 },
+  { name:'Laptop Shield', views:304 },
+  { name:'Executive Office Table', views:842 },
+  { name:'Leather Bag', views:156 },
+
 ];
 const topServices = [
   { name:'Financial Modelling', views:1752 },
@@ -280,8 +284,8 @@ function renderRankList(id, items){
 renderRankList("topProducts",topProducts.slice(0,5));
 renderRankList("topServices",topServices.slice(0,5));
 
-if(topProducts.length<=5)$("viewAllProductsLink").style.display="none";
-if(topServices.length<=5)$("viewAllServicesLink").style.display="none";
+if($("viewAllProductsLink")&&topProducts.length<=5)$("viewAllProductsLink").style.display="none";
+if($("viewAllServicesLink")&&topServices.length<=5)$("viewAllServicesLink").style.display="none";
 
 // ---------- Marketplace Ranking slider ----------
 (function renderRankSlider(){
@@ -380,3 +384,12 @@ const healthDetailsBtn=$("healthDetailsBtn"),healthModal=$("healthModal"),closeH
 if(healthDetailsBtn)healthDetailsBtn.onclick=()=>healthModal.classList.add("show");
 if(closeHealthModal)closeHealthModal.onclick=()=>healthModal.classList.remove("show");
 if(healthModal)healthModal.onclick=e=>{if(e.target===healthModal)healthModal.classList.remove("show");};
+
+document.addEventListener("DOMContentLoaded",()=>{
+const rankingModal=$("rankingCategoryModal"),openBtn=$("changeRankingCategoryBtn"),closeBtn=$("closeRankingCategoryModal"),applyBtn=$("applyRankingCategoryBtn");
+
+if(openBtn)openBtn.onclick=()=>rankingModal.classList.add("show");
+if(closeBtn)closeBtn.onclick=()=>rankingModal.classList.remove("show");
+if(applyBtn)applyBtn.onclick=()=>rankingModal.classList.remove("show");
+if(rankingModal)rankingModal.onclick=e=>{if(e.target===rankingModal)rankingModal.classList.remove("show");};
+});

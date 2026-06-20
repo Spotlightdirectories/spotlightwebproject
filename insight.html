@@ -149,18 +149,13 @@
         <h2>Marketplace Ranking</h2>
         <span class="info-dot" title="Your position among similar businesses in your category">ⓘ</span>
       </div>
-      <div class="rank-cols">
-        <div class="rank-col">
-          <div class="rank-tag">You are</div>
-          <div class="rank-number">#18</div>
-          <div class="rank-sub">in Accountant category</div>
-        </div>
-        <div class="rank-col">
-          <div class="rank-tag">With Sponsorship</div>
-          <div class="rank-number rank-number-green">Top 5</div>
-          <div class="rank-sub">in this category</div>
-        </div>
-      </div>
+
+<div class="rank-summary">
+<div class="rank-current">#18 <span>of 243 Accountants in Abuja</span></div>
+<div class="rank-change">▲ Up 4 places this month</div>
+<div class="rank-sponsored">Estimated Rank with Sponsorship: <strong>Top 5</strong></div>
+</div>
+
       <div class="rank-slider">
         <div class="rank-slider-track"></div>
         <div class="rank-slider-fill" id="rankSliderFill"></div>
@@ -171,7 +166,10 @@
         </div>
       </div>
       <p class="rank-note">You're doing great! Sponsor your business to reach Top 5.</p>
-      <button class="how-it-works-btn">View How It Works</button>
+      <div class="rank-actions">
+<button class="how-it-works-btn">Ranking Factors</button>
+<button id="changeRankingCategoryBtn" class="how-it-works-btn secondary-btn">Change Category</button>
+</div>
     </section>
 
     <section class="card">
@@ -227,5 +225,33 @@
 </div>
 
 <script src="insight.js"></script>
+
+<div id="rankingCategoryModal" class="health-modal">
+<div class="health-modal-content">
+<button id="closeRankingCategoryModal" class="close-health-modal">&times;</button>
+
+<h2>Select Ranking Category</h2>
+
+<label>Category</label>
+<select id="rankingCategorySelect" class="period-select">
+<option>Accountant</option>
+<option>Fashion</option>
+<option>Food</option>
+<option>Beauty</option>
+<option>Technology</option>
+</select>
+
+<label style="margin-top:16px;display:block;">Subcategory</label>
+<select id="rankingSubcategorySelect" class="period-select">
+<option>Audit</option>
+<option>Tax</option>
+<option>Consulting</option>
+</select>
+
+<button id="applyRankingCategoryBtn" class="manage-sub-btn" style="margin-top:20px;">Apply</button>
+
+</div>
+</div>
+
 </body>
 </html>
