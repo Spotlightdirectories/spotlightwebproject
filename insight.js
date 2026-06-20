@@ -10,10 +10,17 @@ GLOBAL PERIOD
 let insightPeriod="This Month";
 
 function syncPeriod(period){
-  insightPeriod=period;
-  document.querySelectorAll(".period-select").forEach(s=>s.value=period);
-  updateDateRange();
-  renderMarketplaceStats();
+
+insightPeriod=period;
+
+document.querySelectorAll(".period-select").forEach(s=>s.value=period);
+
+updateDateRange();
+
+renderMarketplaceStats();
+
+renderLineChart();
+
 }
 
 /* ===========================
@@ -152,54 +159,60 @@ function renderMarketplaceStats(){
 
 renderMarketplaceStats();
 
-const perfSeries = [3200,3800,3500,4600,4200,5100,5900,5400,6300,6900,7400,7100,7800,8200,8930];
-let perfDates=[];
+function getMarketplaceChart(){
 
-function getPerfDates(){
-  switch(insightPeriod){
-    case "Today":return["12AM","6AM","12PM","6PM","Now"];
-    case "This Week":return["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-    case "This Quarter":return["Apr","May","Jun"];
-    case "This Year":return["Jan","Mar","May","Jul","Sep","Nov"];
-    default:return["Week 1","Week 2","Week 3","Week 4"];
-  }
+switch(insightPeriod){
+
+case "Today":
+return{
+labels:["6am","9am","12pm","3pm","6pm","9pm"],
+values:[120,210,320,280,430,520]
+};
+
+case "This Week":
+return{
+labels:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+values:[820,940,860,1120,1260,1180,1420]
+};
+
+case "This Quarter":
+return{
+labels:["Apr","May","Jun"],
+values:[14200,18400,23600]
+};
+
+case "This Year":
+return{
+labels:["Q1","Q2","Q3","Q4"],
+values:[35200,48600,63400,81200]
+};
+
+default:
+
+return{
+labels:["Week 1","Week 2","Week 3","Week 4"],
+values:[2140,4260,6390,8930]
+};
+
 }
 
-(function renderLineChart(){
+}
+
+function renderLineChart(){
   const svg = $('perfLineChart');
+  svg.innerHTML="";
   const W = 600, H = 160, padTop = 10, padBottom = 10;
-  const max = Math.max(...perfSeries);
-  const min = 0;
+  const chart=getMarketplaceChart();
+  const perfSeries=chart.values;
 
-  const defs = svgEl('defs', {});
-  const grad = svgEl('linearGradient', { id:'areaGradient', x1:'0%', y1:'0%', x2:'0%', y2:'100%' });
-  grad.appendChild(svgEl('stop', { offset:'0%', 'stop-color':'#E6B800', 'stop-opacity':'0.5' }));
-  grad.appendChild(svgEl('stop', { offset:'100%', 'stop-color':'#E6B800', 'stop-opacity':'0' }));
-  defs.appendChild(grad);
-  svg.appendChild(defs);
+  const perfDates=chart.labels;
 
-  // gridlines
-  [0,1,2,3,4].forEach(i=>{
-    const y = padTop + (H - padTop - padBottom) * (i/4);
-    svg.appendChild(svgEl('line', { x1:0, x2:W, y1:y, y2:y, class:'chart-grid-line' }));
-  });
+$("perfXAxis").innerHTML=
+perfDates.map(d=>`<span>${d}</span>`).join("");
 
-  const points = perfSeries.map((v,i)=>{
-    const x = (i/(perfSeries.length-1)) * W;
-    const y = padTop + (H - padTop - padBottom) * (1 - (v-min)/(max-min));
-    return [x,y];
-  });
+}
 
-  const linePath = points.map((p,i)=> (i===0?'M':'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
-  const areaPath = linePath + ` L${W},${H} L0,${H} Z`;
-
-  svg.appendChild(svgEl('path', { d:areaPath, class:'chart-area' }));
-  svg.appendChild(svgEl('path', { d:linePath, class:'chart-line' }));
-
-  perfDates=getPerfDates();
-$('perfXAxis').innerHTML=perfDates.map(d=>`<span>${d}</span>`).join("");
-
-})();
+renderLineChart();
 
 // ---------- Lead Generation ----------
 function getLeadChannels(){
