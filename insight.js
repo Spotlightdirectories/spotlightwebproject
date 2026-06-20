@@ -16,11 +16,13 @@ insightPeriod=period;
 document.querySelectorAll(".period-select").forEach(s=>s.value=period);
 
 updateDateRange();
-
 renderMarketplaceStats();
-
 renderLineChart();
-
+renderLeadGeneration();
+renderAudience();
+renderKeywords();
+renderCatalog();
+renderRanking();
 }
 
 /* ===========================
@@ -199,16 +201,115 @@ values:[2140,4260,6390,8930]
 }
 
 function renderLineChart(){
-  const svg = $('perfLineChart');
-  svg.innerHTML="";
-  const W = 600, H = 160, padTop = 10, padBottom = 10;
-  const chart=getMarketplaceChart();
-  const perfSeries=chart.values;
 
-  const perfDates=chart.labels;
+const svg=$("perfLineChart");
+
+if(!svg)return;
+
+svg.innerHTML="";
+
+const chart=getMarketplaceChart();
+
+const labels=chart.labels;
+const values=chart.values;
+
+const W=600;
+const H=160;
+const PAD=20;
+
+const max=Math.max(...values);
+
+const defs=svgEl("defs",{});
+
+const grad=svgEl("linearGradient",{
+id:"areaGradient",
+x1:"0%",
+y1:"0%",
+x2:"0%",
+y2:"100%"
+});
+
+grad.appendChild(
+svgEl("stop",{
+offset:"0%",
+"stop-color":"#E6B800",
+"stop-opacity":"0.35"
+})
+);
+
+grad.appendChild(
+svgEl("stop",{
+offset:"100%",
+"stop-color":"#E6B800",
+"stop-opacity":"0"
+})
+);
+
+defs.appendChild(grad);
+
+svg.appendChild(defs);
+
+for(let i=0;i<5;i++){
+
+const y=
+PAD+
+((H-PAD*2)/4)*i;
+
+svg.appendChild(
+svgEl("line",{
+x1:0,
+y1:y,
+x2:W,
+y2:y,
+class:"chart-grid-line"
+})
+);
+
+}
+
+const points=values.map((v,i)=>{
+
+const x=
+PAD+
+((W-PAD*2)/(values.length-1))*i;
+
+const y=
+H-PAD-
+((v/max)*(H-PAD*2));
+
+return [x,y];
+
+});
+
+const linePath=
+points.map((p,i)=>
+`${i===0?"M":"L"}${p[0]},${p[1]}`
+).join(" ");
+
+const areaPath=
+linePath+
+` L ${points[points.length-1][0]} ${H-PAD}
+L ${points[0][0]} ${H-PAD}
+Z`;
+
+svg.appendChild(
+svgEl("path",{
+d:areaPath,
+fill:"url(#areaGradient)"
+})
+);
+
+svg.appendChild(
+svgEl("path",{
+d:linePath,
+class:"chart-line"
+})
+);
 
 $("perfXAxis").innerHTML=
-perfDates.map(d=>`<span>${d}</span>`).join("");
+labels.map(
+l=>`<span>${l}</span>`
+).join("");
 
 }
 
@@ -271,20 +372,130 @@ function renderLeadGeneration(){
 renderLeadGeneration();
 
 // ---------- Catalog Performance ----------
-const topProducts = [
-  { name:'Laptop Bag', views:2304 },
-  { name:'Executive Office Chair', views:1842 },
-  { name:'Leather Laptop Bag', views:1256 },
-  { name:'Laptop Shield', views:304 },
-  { name:'Executive Office Table', views:842 },
-  { name:'Leather Bag', views:156 },
+function getCatalogData(){
 
-];
-const topServices = [
-  { name:'Financial Modelling', views:1752 },
-  { name:'Audit & Assurance', views:842 },
-  { name:'Tax Advisory', views:615 },
-];
+switch(insightPeriod){
+
+case "Today":
+return{
+products:[
+{name:"Laptop Bag",views:34},
+{name:"Executive Office Chair",views:27},
+{name:"Leather Laptop Bag",views:18},
+{name:"Executive Office Table",views:12},
+{name:"Laptop Shield",views:8}
+],
+services:[
+{name:"Audit & Assurance",views:21},
+{name:"Financial Modelling",views:17},
+{name:"Tax Advisory",views:9}
+]
+};
+
+case "This Week":
+return{
+products:[
+{name:"Laptop Bag",views:284},
+{name:"Executive Office Chair",views:236},
+{name:"Leather Laptop Bag",views:194},
+{name:"Executive Office Table",views:122},
+{name:"Laptop Shield",views:84}
+],
+services:[
+{name:"Financial Modelling",views:175},
+{name:"Audit & Assurance",views:142},
+{name:"Tax Advisory",views:95}
+]
+};
+
+case "This Quarter":
+return{
+products:[
+{name:"Laptop Bag",views:6412},
+{name:"Executive Office Chair",views:5328},
+{name:"Leather Laptop Bag",views:4210},
+{name:"Executive Office Table",views:3102},
+{name:"Laptop Shield",views:2140}
+],
+services:[
+{name:"Financial Modelling",views:3721},
+{name:"Audit & Assurance",views:2842},
+{name:"Tax Advisory",views:1518}
+]
+};
+
+case "This Year":
+return{
+products:[
+{name:"Laptop Bag",views:28410},
+{name:"Executive Office Chair",views:24180},
+{name:"Leather Laptop Bag",views:19842},
+{name:"Executive Office Table",views:14225},
+{name:"Laptop Shield",views:10842}
+],
+services:[
+{name:"Financial Modelling",views:9172},
+{name:"Audit & Assurance",views:6840},
+{name:"Tax Advisory",views:4128}
+]
+};
+
+default:
+return{
+products:[
+{name:"Laptop Bag",views:2304},
+{name:"Executive Office Chair",views:1842},
+{name:"Leather Laptop Bag",views:1256},
+{name:"Laptop Shield",views:304},
+{name:"Executive Office Table",views:842}
+],
+services:[
+{name:"Financial Modelling",views:1752},
+{name:"Audit & Assurance",views:842},
+{name:"Tax Advisory",views:615}
+]
+};
+
+}
+
+}
+
+function renderCatalog(){
+
+const catalog=getCatalogData();
+
+renderRankList(
+"topProducts",
+catalog.products.slice(0,5)
+);
+
+renderRankList(
+"topServices",
+catalog.services.slice(0,5)
+);
+
+if(
+$("viewAllProductsLink") &&
+catalog.products.length<=5
+){
+$("viewAllProductsLink").style.display="none";
+}
+
+if(
+$("viewAllServicesLink") &&
+catalog.services.length<=5
+){
+$("viewAllServicesLink").style.display="none";
+}
+
+}
+
+renderCatalog();
+
+
+// ---------- Marketplace Ranking ----------
+
+
 function renderRankList(id, items){
   $(id).innerHTML = items.map((it,i)=>`
     <div class="rank-row">
@@ -294,34 +505,207 @@ function renderRankList(id, items){
     </div>
   `).join('');
 }
-renderRankList("topProducts",topProducts.slice(0,5));
-renderRankList("topServices",topServices.slice(0,5));
 
-if($("viewAllProductsLink")&&topProducts.length<=5)$("viewAllProductsLink").style.display="none";
-if($("viewAllServicesLink")&&topServices.length<=5)$("viewAllServicesLink").style.display="none";
+function getRankingData(){
 
-// ---------- Marketplace Ranking slider ----------
+switch(insightPeriod){
+
+case "Today":
+return{
+current:22,
+sponsored:8,
+category:"Accountant / Audit"
+};
+
+case "This Week":
+return{
+current:20,
+sponsored:6,
+category:"Accountant / Audit"
+};
+
+case "This Quarter":
+return{
+current:14,
+sponsored:4,
+category:"Accountant / Audit"
+};
+
+case "This Year":
+return{
+current:9,
+sponsored:3,
+category:"Accountant / Audit"
+};
+
+default:
+return{
+current:18,
+sponsored:5,
+category:"Accountant / Audit"
+};
+
+}
+
+}
+
+function renderRanking(){
+
+const r=getRankingData();
+
+const numbers=
+document.querySelectorAll(".rank-number");
+
+if(numbers.length>=2){
+
+numbers[0].textContent=`#${r.current}`;
+
+numbers[1].textContent=
+r.sponsored<=5
+?`Top ${r.sponsored}`
+:`#${r.sponsored}`;
+
+}
+
+const subs=
+document.querySelectorAll(".rank-sub");
+
+if(subs.length){
+
+subs[0].textContent=r.category;
+
+}
+
+const currentLabel=
+document.querySelector(".rank-current-label");
+
+if(currentLabel){
+
+currentLabel.textContent=`#${r.current}`;
+
+}
+
+const rightLabel=
+document.querySelector(".rank-right-label");
+
+if(rightLabel){
+
+rightLabel.textContent=`🏆 Top ${r.sponsored}`;
+
+}
+
+const dot=$("rankCurrentDot");
+
+if(dot){
+
+const maxRank=50;
+
+const pct=
+Math.min(
+100,
+(r.current/maxRank)*100
+);
+
+dot.style.left=`${pct}%`;
+
+}
+
+}
 
 
 // ---------- Audience ----------
-const totalAudience=8930;
+function getAudienceData(){
 
-const audience=[
+switch(insightPeriod){
+
+case "Today":
+return{
+total:312,
+rows:[
+{city:"Abuja",pct:35,cls:"dot-red"},
+{city:"Lagos",pct:25,cls:"dot-blue"},
+{city:"Port Harcourt",pct:15,cls:"dot-green"},
+{city:"Ibadan",pct:10,cls:"dot-gold"},
+{city:"Kano",pct:5,cls:"dot-purple"},
+{city:"Others",pct:10,cls:"dot-gray"}
+]
+};
+
+case "This Week":
+return{
+total:2140,
+rows:[
+{city:"Abuja",pct:42,cls:"dot-red"},
+{city:"Lagos",pct:21,cls:"dot-blue"},
+{city:"Port Harcourt",pct:13,cls:"dot-green"},
+{city:"Ibadan",pct:9,cls:"dot-gold"},
+{city:"Kano",pct:4,cls:"dot-purple"},
+{city:"Others",pct:11,cls:"dot-gray"}
+]
+};
+
+case "This Quarter":
+return{
+total:24650,
+rows:[
+{city:"Abuja",pct:40,cls:"dot-red"},
+{city:"Lagos",pct:24,cls:"dot-blue"},
+{city:"Port Harcourt",pct:14,cls:"dot-green"},
+{city:"Ibadan",pct:8,cls:"dot-gold"},
+{city:"Kano",pct:5,cls:"dot-purple"},
+{city:"Others",pct:9,cls:"dot-gray"}
+]
+};
+
+case "This Year":
+return{
+total:108420,
+rows:[
+{city:"Abuja",pct:38,cls:"dot-red"},
+{city:"Lagos",pct:27,cls:"dot-blue"},
+{city:"Port Harcourt",pct:15,cls:"dot-green"},
+{city:"Ibadan",pct:8,cls:"dot-gold"},
+{city:"Kano",pct:4,cls:"dot-purple"},
+{city:"Others",pct:8,cls:"dot-gray"}
+]
+};
+
+default:
+return{
+total:8930,
+rows:[
 {city:"Abuja",pct:45,cls:"dot-red"},
 {city:"Lagos",pct:18,cls:"dot-blue"},
 {city:"Port Harcourt",pct:12,cls:"dot-green"},
 {city:"Ibadan",pct:8,cls:"dot-gold"},
 {city:"Kano",pct:5,cls:"dot-purple"},
 {city:"Others",pct:12,cls:"dot-gray"}
-];
+]
+};
 
-audience.forEach(a=>a.count=Math.round(totalAudience*a.pct/100));
+}
+
+}
+
+function renderAudience(){
+
+const data=getAudienceData();
 
 const audienceList=$("audienceList");
 
+const totalEl=document.querySelector(".audience-total");
+
+if(totalEl){
+totalEl.textContent=fmt(data.total);
+}
+
+data.rows.forEach(
+a=>a.count=Math.round(data.total*a.pct/100)
+);
+
 if(audienceList){
 
-audienceList.innerHTML=audience.map(a=>`
+audienceList.innerHTML=data.rows.map(a=>`
 <div class="audience-row">
 <span class="audience-dot ${a.cls}"></span>
 <span class="audience-city">${a.city}</span>
@@ -332,14 +716,65 @@ audienceList.innerHTML=audience.map(a=>`
 
 }
 
+}
+
 // ---------- Search Keywords ----------
-const keywords=[
+function getKeywordData(){
+
+switch(insightPeriod){
+
+case "Today":
+return[
+{term:"Audit",searches:18,pct:32},
+{term:"Financial Modelling",searches:14,pct:25},
+{term:"Business Plan",searches:10,pct:18},
+{term:"Tax Advisory",searches:8,pct:14},
+{term:"Startup Valuation",searches:6,pct:11}
+];
+
+case "This Week":
+return[
+{term:"Financial Modelling",searches:82,pct:35},
+{term:"Audit",searches:58,pct:25},
+{term:"Business Plan",searches:42,pct:18},
+{term:"Tax Advisory",searches:31,pct:13},
+{term:"Startup Valuation",searches:20,pct:9}
+];
+
+case "This Quarter":
+return[
+{term:"Financial Modelling",searches:842,pct:42},
+{term:"Business Plan",searches:521,pct:26},
+{term:"Audit",searches:334,pct:17},
+{term:"Tax Advisory",searches:203,pct:10},
+{term:"Startup Valuation",searches:102,pct:5}
+];
+
+case "This Year":
+return[
+{term:"Financial Modelling",searches:3621,pct:39},
+{term:"Business Plan",searches:2482,pct:27},
+{term:"Audit",searches:1710,pct:18},
+{term:"Tax Advisory",searches:942,pct:10},
+{term:"Startup Valuation",searches:521,pct:6}
+];
+
+default:
+return[
 {term:"Financial Modelling",searches:312,pct:45},
 {term:"Business Plan",searches:194,pct:28},
 {term:"Audit",searches:125,pct:18},
 {term:"Tax Advisory",searches:63,pct:9},
 {term:"Startup Valuation",searches:21,pct:3}
 ];
+
+}
+
+}
+
+function renderKeywords(){
+
+const keywords=getKeywordData();
 
 $("keywordList").innerHTML=keywords.map((k,i)=>`
 <div class="kw-row">
@@ -356,7 +791,11 @@ $("keywordList").innerHTML=keywords.map((k,i)=>`
 </div>
 `).join("");
 
-keywords.forEach((k,i) => { $('kwBar'+i).style.width = k.pct + '%'; });
+keywords.forEach((k,i)=>{
+$("kwBar"+i).style.width=k.pct+"%";
+});
+
+}
 
 // ---------- Growth Coach ----------
 const coachItems = [
