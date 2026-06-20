@@ -288,44 +288,58 @@ if($("viewAllProductsLink")&&topProducts.length<=5)$("viewAllProductsLink").styl
 if($("viewAllServicesLink")&&topServices.length<=5)$("viewAllServicesLink").style.display="none";
 
 // ---------- Marketplace Ranking slider ----------
-(function renderRankSlider(){
-  // scale: #50 (worst, left) -> Top 5 (best, right). Current rank #18 of 50.
-  const worst = 50, best = 5, current = 18;
-  const pct = (worst - current) / (worst - best) * 100;
-  $('rankSliderDot').style.left = pct + '%';
-})();
+
 
 // ---------- Audience ----------
-const audience = [
-  { city:'Abuja', pct:45, cls:'dot-red' },
-  { city:'Lagos', pct:18, cls:'dot-blue' },
-  { city:'Port Harcourt', pct:12, cls:'dot-green' },
-  { city:'Ibadan', pct:8, cls:'dot-gold' },
-  { city:'Kano', pct:5, cls:'dot-purple' },
-  { city:'Others', pct:12, cls:'dot-gray' },
+const totalAudience=8930;
+
+const audience=[
+{city:"Abuja",pct:45,cls:"dot-red"},
+{city:"Lagos",pct:18,cls:"dot-blue"},
+{city:"Port Harcourt",pct:12,cls:"dot-green"},
+{city:"Ibadan",pct:8,cls:"dot-gold"},
+{city:"Kano",pct:5,cls:"dot-purple"},
+{city:"Others",pct:12,cls:"dot-gray"}
 ];
-$('audienceList').innerHTML = audience.map(a => `
-  <div class="audience-row">
-    <span class="audience-dot ${a.cls}"></span>
-    <span class="audience-city">${a.city}</span>
-    <span class="audience-pct">${a.pct}%</span>
-  </div>
-`).join('');
+
+audience.forEach(a=>a.count=Math.round(totalAudience*a.pct/100));
+
+const audienceList=$("audienceList");
+
+if(audienceList){
+
+audienceList.innerHTML=audience.map(a=>`
+<div class="audience-row">
+<span class="audience-dot ${a.cls}"></span>
+<span class="audience-city">${a.city}</span>
+<span class="audience-count">${fmt(a.count)}</span>
+<span class="audience-pct">${a.pct}%</span>
+</div>
+`).join("");
+
+}
 
 // ---------- Search Keywords ----------
-const keywords = [
-  { term:'Financial Modelling', pct:45 },
-  { term:'Business Plan', pct:28 },
-  { term:'Audit', pct:18 },
-  { term:'Tax Advisory', pct:9 },
-  { term:'Startup Valuation', pct:3 },
+const keywords=[
+{term:"Financial Modelling",searches:312,pct:45},
+{term:"Business Plan",searches:194,pct:28},
+{term:"Audit",searches:125,pct:18},
+{term:"Tax Advisory",searches:63,pct:9},
+{term:"Startup Valuation",searches:21,pct:3}
 ];
-$('keywordList').innerHTML = keywords.map((k,i) => `
-  <div class="kw-row">
-    <div class="kw-top"><span>${k.term}</span><span>${k.pct}%</span></div>
-    <div class="kw-bar-track"><div class="kw-bar-fill" id="kwBar${i}"></div></div>
-  </div>
-`).join('');
+
+$("keywordList").innerHTML=keywords.map((k,i)=>`
+<div class="kw-row">
+<div class="kw-top">
+<span>${k.term}</span>
+<span>${fmt(k.searches)} (${k.pct}%)</span>
+</div>
+<div class="kw-bar-track">
+<div class="kw-bar-fill" id="kwBar${i}"></div>
+</div>
+</div>
+`).join("");
+
 keywords.forEach((k,i) => { $('kwBar'+i).style.width = k.pct + '%'; });
 
 // ---------- Growth Coach ----------
