@@ -863,18 +863,79 @@ if(closeHealthModal)closeHealthModal.onclick=()=>healthModal.classList.remove("s
 if(healthModal)healthModal.onclick=e=>{if(e.target===healthModal)healthModal.classList.remove("show");};
 
 document.addEventListener("DOMContentLoaded",()=>{
-const rankingModal=$("rankingCategoryModal"),openBtn=$("changeRankingCategoryBtn"),closeBtn=$("closeRankingCategoryModal"),applyBtn=$("applyRankingCategoryBtn");
-
-if(openBtn)openBtn.onclick=()=>rankingModal.classList.add("show");
-if(closeBtn)closeBtn.onclick=()=>rankingModal.classList.remove("show");
-if(rankingModal)rankingModal.onclick=e=>{if(e.target===rankingModal)rankingModal.classList.remove("show");};
-});
-
-document.addEventListener("DOMContentLoaded",()=>{
 
 const rankingFactorsBtn=$("rankingFactorsBtn");
 const rankingFactorsModal=$("rankingFactorsModal");
 const closeRankingFactorsModal=$("closeRankingFactorsModal");
+const rankingModal=$("rankingCategoryModal");
+const changeRankingCategoryBtn=$("changeRankingCategoryBtn");
+const closeRankingCategoryModal=$("closeRankingCategoryModal");
+const rankingCategorySelect=$("rankingCategorySelect");
+const rankingSubcategorySelect=$("rankingSubcategorySelect");
+
+rankingCategorySelect.onchange=()=>{
+
+console.log(
+"Category Changed:",
+rankingCategorySelect.value
+);
+
+const subs=
+rankingCategoryMap[
+rankingCategorySelect.value
+] || [];
+
+rankingSubcategorySelect.innerHTML=
+subs.map(
+sub=>
+`<option value="${sub}">${sub}</option>`
+).join("");
+
+console.log(
+"Loaded:",
+subs
+);
+
+console.log(
+"Selected:",
+rankingSubcategorySelect.value
+);
+
+};
+
+if(changeRankingCategoryBtn){
+
+changeRankingCategoryBtn.onclick=()=>{
+
+rankingModal.classList.add("show");
+
+};
+
+}
+
+if(closeRankingCategoryModal){
+
+closeRankingCategoryModal.onclick=()=>{
+
+rankingModal.classList.remove("show");
+
+};
+
+}
+
+if(rankingModal){
+
+rankingModal.onclick=e=>{
+
+if(e.target===rankingModal){
+
+rankingModal.classList.remove("show");
+
+}
+
+};
+
+}
 
 if(rankingFactorsBtn){
 
@@ -975,4 +1036,5 @@ const rankingCategoryMap={
 ]
 
 };
+
 
