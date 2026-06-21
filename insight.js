@@ -976,23 +976,3 @@ const rankingCategoryMap={
 
 };
 
-const rankingCategorySelect=$("rankingCategorySelect");
-const rankingSubcategorySelect=$("rankingSubcategorySelect");
-
-if(rankingCategorySelect && rankingSubcategorySelect){
-
-rankingCategorySelect.onchange=()=>{
-
-const subs=
-rankingCategoryMap[
-rankingCategorySelect.value
-] || [];
-
-rankingSubcategorySelect.innerHTML=
-subs.map(sub=>
-`<option>${sub}</option>`
-).join("");
-
-};
-
-}
