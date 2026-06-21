@@ -181,7 +181,7 @@
 </div>
       <p class="rank-note">You're doing great! Sponsor your business to reach Top 5.</p>
       <div class="rank-actions">
-<button class="how-it-works-btn">Ranking Factors</button>
+<button id="rankingFactorsBtn" class="how-it-works-btn">Ranking Factors</button>
 <button id="changeRankingCategoryBtn" class="how-it-works-btn secondary-btn">Change Category</button>
 </div>
     </section>
@@ -260,23 +260,107 @@ Complete the remaining tasks to increase your Business Health Score.
 
 <label>Category</label>
 <select id="rankingCategorySelect" class="period-select">
-<option>Accountant</option>
-<option>Fashion</option>
-<option>Food</option>
-<option>Beauty</option>
-<option>Technology</option>
+
+<option value="Professional Services" selected>
+Professional Services
+</option>
+
+<option value="Fashion & Tailoring">
+Fashion & Tailoring
+</option>
+
+<option value="Local Food & Canteens">
+Local Food & Canteens
+</option>
+
+<option value="Digital & Tech Services">
+Digital & Tech Services
+</option>
+
+<option value="Home Services">
+Home Services
+</option>
+
 </select>
 
 <label style="margin-top:16px;display:block;">Subcategory</label>
-<select id="rankingSubcategorySelect" class="period-select">
-<option>Audit</option>
-<option>Tax</option>
-<option>Consulting</option>
-</select>
+<option value="Accountant/Auditor" selected>
+Accountant/Auditor
+</option>
+
+<option value="Web Designer">
+Web Designer
+</option>
+
+<option value="Tax Consultant">
+Tax Consultant
+</option>
+
+<option value="Lawyer">
+Lawyer
+</option>
+
+<option value="Architect">
+Architect
+</option>
 
 <button id="applyRankingCategoryBtn" class="manage-sub-btn" style="margin-top:20px;">Apply</button>
 
 </div>
+</div>
+
+<div id="rankingFactorsModal" class="health-modal">
+
+<div class="health-modal-content">
+
+<div class="health-modal-head">
+
+<h3>Marketplace Ranking Factors</h3>
+
+<button id="closeRankingFactorsModal">&times;</button>
+
+</div>
+
+<div class="health-modal-item">
+<span>Profile Completeness</span>
+<strong>20/20</strong>
+</div>
+
+<div class="health-modal-item">
+<span>Verification Status</span>
+<strong>20/20</strong>
+</div>
+
+<div class="health-modal-item">
+<span>Reviews & Ratings</span>
+<strong>16/20</strong>
+</div>
+
+<div class="health-modal-item">
+<span>Catalog Quality</span>
+<strong>15/20</strong>
+</div>
+
+<div class="health-modal-item">
+<span>Engagement</span>
+<strong>12/20</strong>
+</div>
+
+<div class="health-modal-item">
+<span>Sponsorship</span>
+<strong>10/20</strong>
+</div>
+
+<div class="health-modal-score">
+93 / 100
+</div>
+
+<p class="health-modal-note">
+Complete Growth Coach recommendations to improve your ranking.
+</p>
+
+</div>
+
 </div>
 
 </body>

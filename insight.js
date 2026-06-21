@@ -506,6 +506,9 @@ function renderRankList(id, items){
   `).join('');
 }
 
+let selectedRankingCategory="Professional Services";
+let selectedRankingSubcategory="Accountant";
+
 function getRankingData(){
 
 switch(insightPeriod){
@@ -514,35 +517,35 @@ case "Today":
 return{
 current:22,
 sponsored:8,
-category:"Accountant / Audit"
+category:`${selectedRankingCategory} / ${selectedRankingSubcategory}`
 };
 
 case "This Week":
 return{
 current:20,
 sponsored:6,
-category:"Accountant / Audit"
+category:`${selectedRankingCategory} / ${selectedRankingSubcategory}`
 };
 
 case "This Quarter":
 return{
 current:14,
 sponsored:4,
-category:"Accountant / Audit"
+category:`${selectedRankingCategory} / ${selectedRankingSubcategory}`
 };
 
 case "This Year":
 return{
 current:9,
 sponsored:3,
-category:"Accountant / Audit"
+category:`${selectedRankingCategory} / ${selectedRankingSubcategory}`
 };
 
 default:
 return{
 current:18,
 sponsored:5,
-category:"Accountant / Audit"
+category:`${selectedRankingCategory} / ${selectedRankingSubcategory}`
 };
 
 }
@@ -550,6 +553,10 @@ category:"Accountant / Audit"
 }
 
 function renderRanking(){
+
+console.log("renderRanking fired");
+console.log(selectedRankingCategory);
+console.log(selectedRankingSubcategory);
 
 const r=getRankingData();
 
@@ -860,6 +867,132 @@ const rankingModal=$("rankingCategoryModal"),openBtn=$("changeRankingCategoryBtn
 
 if(openBtn)openBtn.onclick=()=>rankingModal.classList.add("show");
 if(closeBtn)closeBtn.onclick=()=>rankingModal.classList.remove("show");
-if(applyBtn)applyBtn.onclick=()=>rankingModal.classList.remove("show");
 if(rankingModal)rankingModal.onclick=e=>{if(e.target===rankingModal)rankingModal.classList.remove("show");};
 });
+
+document.addEventListener("DOMContentLoaded",()=>{
+
+const rankingFactorsBtn=$("rankingFactorsBtn");
+const rankingFactorsModal=$("rankingFactorsModal");
+const closeRankingFactorsModal=$("closeRankingFactorsModal");
+
+if(rankingFactorsBtn){
+
+rankingFactorsBtn.onclick=()=>{
+
+rankingFactorsModal.classList.add("show");
+
+};
+
+}
+
+if(closeRankingFactorsModal){
+
+closeRankingFactorsModal.onclick=()=>{
+
+rankingFactorsModal.classList.remove("show");
+
+};
+
+}
+
+if(rankingFactorsModal){
+
+rankingFactorsModal.onclick=e=>{
+
+if(e.target===rankingFactorsModal){
+
+rankingFactorsModal.classList.remove("show");
+
+}
+
+};
+
+}
+
+const applyRankingCategoryBtn=$("applyRankingCategoryBtn");
+
+if(applyRankingCategoryBtn){
+
+applyRankingCategoryBtn.onclick=()=>{
+
+console.log("Apply clicked");
+
+selectedRankingCategory=
+$("rankingCategorySelect").value;
+
+selectedRankingSubcategory=
+$("rankingSubcategorySelect").value;
+
+console.log(selectedRankingCategory);
+console.log(selectedRankingSubcategory);
+
+renderRanking();
+
+$("rankingCategoryModal").classList.remove("show");
+
+};
+
+}
+
+});
+
+const rankingCategoryMap={
+
+"Professional Services":[
+"Accountant/Auditor",
+"Tax Consultant",
+"Lawyer",
+"Architect"
+],
+
+"Fashion & Tailoring":[
+"Fashion Designer",
+"Tailor",
+"Makeup Artist",
+"Barber"
+],
+
+"Local Food & Canteens":[
+"Restaurant",
+"Caterer",
+"Bakery",
+"Food Vendor"
+],
+
+"Digital & Tech Services":[
+"Web Designer",
+"Graphic Designer",
+"Software Developer",
+"Digital Marketer"
+],
+
+"Home Services":[
+"Plumber",
+"Electrician",
+"Painter",
+"Cleaner"
+]
+
+};
+
+const rankingCategorySelect=$("rankingCategorySelect");
+const rankingSubcategorySelect=$("rankingSubcategorySelect");
+
+if(rankingCategorySelect && rankingSubcategorySelect){
+
+rankingCategorySelect.onchange=()=>{
+
+const subs=
+rankingCategoryMap[
+rankingCategorySelect.value
+] || [];
+
+rankingSubcategorySelect.innerHTML=
+subs.map(sub=>
+`<option>${sub}</option>`
+).join("");
+
+};
+
+}
