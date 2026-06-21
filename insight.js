@@ -850,21 +850,94 @@ actionLabel:'Sponsor Now'
 
 ];
 
-$('coachList').innerHTML = coachItems.map(c => `
+$('coachList').innerHTML = coachItems.map((c,index) => `
   <div class="coach-item">
     <div class="coach-status ${c.done?'done':'todo'}">${c.done?'✓':'○'}</div>
     <div class="coach-body">
       <div class="coach-title">${c.title}</div>
       ${c.impact ? `<div class="coach-impact ${c.impact}">${c.impact==='high'?'High Impact':'Recommended'}</div>` : ''}
     </div>
-    ${c.actionLabel ? `<button class="coach-action">${c.actionLabel}</button>` : ''}
+    ${c.actionLabel ? `<button class="coach-action" data-index="${index}">${c.actionLabel}</button>` : ''}
+
+    <div
+     class="coach-details"
+     id="coachDetails${index}"
+     style="display:none;">
+    </div>
+
   </div>
 `).join('');
 
-const completed = coachItems.filter(c=>c.done).length;
-$("coachProgressLabel").textContent=
-Math.round(completed/coachItems.length*100)+"%";
-$('coachProgressFill').style.width = (completed / coachItems.length * 100) + '%';
+const growthScore =
+coachItems.reduce(
+(total,item)=>total+item.score,
+0
+);
+
+$("coachProgressLabel").textContent =
+growthScore + "%";
+
+$("coachProgressFill").style.width =
+growthScore + "%";
+
+const coachBreakdownToggle =
+$("coachBreakdownToggle");
+
+const coachBreakdown =
+$("coachBreakdown");
+
+if(coachBreakdownToggle){
+
+coachBreakdownToggle.onclick=()=>{
+
+const isHidden =
+coachBreakdown.style.display==="none";
+
+coachBreakdown.style.display =
+isHidden ? "block" : "none";
+
+coachBreakdownToggle.textContent =
+isHidden
+? "Breakdown ▲"
+: "Breakdown ▼";
+
+};
+
+}
+
+$("coachBreakdown").innerHTML=`
+
+<div class="coach-breakdown-row">
+<span>Profile Completion</span>
+<span>${coachItems[0].score}/${coachItems[0].maxScore}</span>
+</div>
+
+<div class="coach-breakdown-row">
+<span>Verification</span>
+<span>${coachItems[1].score}/${coachItems[1].maxScore}</span>
+</div>
+
+<div class="coach-breakdown-row">
+<span>Products & Services</span>
+<span>${coachItems[2].score}/${coachItems[2].maxScore}</span>
+</div>
+
+<div class="coach-breakdown-row">
+<span>Reviews</span>
+<span>${coachItems[3].score}/${coachItems[3].maxScore}</span>
+</div>
+
+<div class="coach-breakdown-row">
+<span>Sponsorship</span>
+<span>${coachItems[4].score}/${coachItems[4].maxScore}</span>
+</div>
+
+<div class="coach-breakdown-total">
+<span>Growth Score</span>
+<span>${growthScore}/100</span>
+</div>
+
+`;
 
 /* ============================
    BACK TO DASHBOARD

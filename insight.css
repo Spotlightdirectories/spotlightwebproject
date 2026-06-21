@@ -637,17 +637,23 @@ transition:width .35s ease;
 }
 .coach-impact.high{color:var(--gold-dark);}
 .coach-impact.recommended{color:var(--blue);}
+
 .coach-action{
-  font-size:11.5px;
-  font-weight:700;
+  font-size:10px;
+  font-weight:600;
   color:#fff;
   background:var(--ink);
   border:none;
-  border-radius:8px;
-  padding:8px 12px;
+  border-radius:6px;
+  padding:5px 8px;
   white-space:nowrap;
-  
 }
+
+.coach-action:hover {
+  background:#e6c200;
+  color: black;
+}
+
 .coach-action.secondary{
   background:#fff;
   color:var(--ink);
@@ -675,6 +681,27 @@ font-weight:600;
   height:100%;
   background:var(--green);
   border-radius:6px;
+}
+
+.coach-breakdown-row{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:6px 0;
+font-size:13px;
+color:var(--ink-soft);
+}
+
+.coach-breakdown-total{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-top:8px;
+padding-top:8px;
+border-top:1px solid var(--line);
+font-weight:700;
+font-size:13px;
+color:var(--ink);
 }
 
 /* Responsive */
