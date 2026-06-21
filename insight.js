@@ -801,6 +801,41 @@ $("kwBar"+i).style.width=k.pct+"%";
 }
 
 // ---------- Growth Coach ----------
+const growthCoachData={
+
+profile:{
+description:true,
+logo:true,
+coverImage:true,
+businessVideo:false,
+contactInformation:true,
+businessHours:true,
+socialLinks:false
+},
+
+verification:{
+emailVerified:true,
+businessVerified:true
+},
+
+catalog:{
+current:4,
+required:6
+},
+
+reviews:{
+current:4,
+required:10
+},
+
+sponsorship:{
+business:false,
+products:false,
+services:false
+}
+
+};
+// ---------- Growth Coach ----------
 const coachItems = [
 
 {
