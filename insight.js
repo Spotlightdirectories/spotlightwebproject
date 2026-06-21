@@ -939,6 +939,42 @@ $("coachBreakdown").innerHTML=`
 
 `;
 
+document
+.querySelectorAll(".coach-action")
+.forEach(btn=>{
+
+btn.onclick=()=>{
+
+const index =
+btn.dataset.index;
+
+if(index!=="0") return;
+
+const details =
+$("coachDetails0");
+
+const isHidden =
+details.style.display==="none";
+
+details.style.display =
+isHidden ? "block" : "none";
+
+details.innerHTML=`
+
+<div>✓ Description</div>
+<div>✓ Logo</div>
+<div>✓ Cover Image</div>
+<div>✗ Business Video</div>
+<div>✓ Contact Information</div>
+<div>✓ Business Hours</div>
+<div>✗ Social Links</div>
+
+`;
+
+};
+
+});
+
 /* ============================
    BACK TO DASHBOARD
 ============================ */
