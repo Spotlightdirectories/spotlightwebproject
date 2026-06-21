@@ -554,10 +554,6 @@ category:`${selectedRankingCategory} / ${selectedRankingSubcategory}`
 
 function renderRanking(){
 
-console.log("renderRanking fired");
-console.log(selectedRankingCategory);
-console.log(selectedRankingSubcategory);
-
 const r=getRankingData();
 
 const numbers=
@@ -806,11 +802,54 @@ $("kwBar"+i).style.width=k.pct+"%";
 
 // ---------- Growth Coach ----------
 const coachItems = [
-  { title:'Upload Business Video', done:true, impact:'', action:'', actionLabel:'' },
-  { title:'Complete CAC Verification', done:true, impact:'', action:'', actionLabel:'' },
-  { title:'Get 3 More Reviews', done:false, impact:'recommended', actionLabel:'Request Reviews' },
-  { title:'Sponsor Your Business', done:false, impact:'high', actionLabel:'Sponsor Now' },
+
+{
+title:'Complete Profile',
+done:false,
+score:14,
+maxScore:20,
+impact:'recommended',
+actionLabel:'See Details'
+},
+
+{
+title:'Complete Business Verification',
+done:true,
+score:20,
+maxScore:20,
+impact:'high',
+actionLabel:'See Details'
+},
+
+{
+title:'Add & Complete Products / Services',
+done:false,
+score:12,
+maxScore:20,
+impact:'high',
+actionLabel:'See Details'
+},
+
+{
+title:'Get More Reviews',
+done:false,
+score:8,
+maxScore:20,
+impact:'recommended',
+actionLabel:'See Details'
+},
+
+{
+title:'Sponsor Business / Products / Services',
+done:false,
+score:0,
+maxScore:20,
+impact:'high',
+actionLabel:'Sponsor Now'
+}
+
 ];
+
 $('coachList').innerHTML = coachItems.map(c => `
   <div class="coach-item">
     <div class="coach-status ${c.done?'done':'todo'}">${c.done?'✓':'○'}</div>
@@ -818,7 +857,7 @@ $('coachList').innerHTML = coachItems.map(c => `
       <div class="coach-title">${c.title}</div>
       ${c.impact ? `<div class="coach-impact ${c.impact}">${c.impact==='high'?'High Impact':'Recommended'}</div>` : ''}
     </div>
-    ${c.done ? '' : `<button class="coach-action ${c.impact==='recommended'?'secondary':''}">${c.actionLabel}</button>`}
+    ${c.actionLabel ? `<button class="coach-action">${c.actionLabel}</button>` : ''}
   </div>
 `).join('');
 
@@ -875,11 +914,6 @@ const rankingSubcategorySelect=$("rankingSubcategorySelect");
 
 rankingCategorySelect.onchange=()=>{
 
-console.log(
-"Category Changed:",
-rankingCategorySelect.value
-);
-
 const subs=
 rankingCategoryMap[
 rankingCategorySelect.value
@@ -890,16 +924,6 @@ subs.map(
 sub=>
 `<option value="${sub}">${sub}</option>`
 ).join("");
-
-console.log(
-"Loaded:",
-subs
-);
-
-console.log(
-"Selected:",
-rankingSubcategorySelect.value
-);
 
 };
 
@@ -976,8 +1000,6 @@ const applyRankingCategoryBtn=$("applyRankingCategoryBtn");
 if(applyRankingCategoryBtn){
 
 applyRankingCategoryBtn.onclick=()=>{
-
-console.log("Apply clicked");
 
 selectedRankingCategory=
 $("rankingCategorySelect").value;
