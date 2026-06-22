@@ -784,7 +784,12 @@ return[
 
 function renderKeywords(){
 
-const keywords=getKeywordData();
+const allKeywords=getKeywordData();
+
+const keywords=
+showAllKeywords
+? allKeywords
+: allKeywords.slice(0,5);
 
 $("keywordList").innerHTML=keywords.map((k,i)=>`
 <div class="kw-row">
@@ -804,6 +809,29 @@ $("keywordList").innerHTML=keywords.map((k,i)=>`
 keywords.forEach((k,i)=>{
 $("kwBar"+i).style.width=k.pct+"%";
 });
+
+const toggleLink=
+$("toggleKeywordsLink");
+
+if(toggleLink){
+
+toggleLink.textContent=
+showAllKeywords
+? "View Less Keywords ↑"
+: "View All Keywords →";
+
+toggleLink.onclick=(e)=>{
+
+e.preventDefault();
+
+showAllKeywords=
+!showAllKeywords;
+
+renderKeywords();
+
+};
+
+}
 
 }
 
