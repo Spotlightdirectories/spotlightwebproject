@@ -9,6 +9,8 @@ GLOBAL PERIOD
 
 let insightPeriod="This Month";
 
+let showAllKeywords=false;
+
 function syncPeriod(period){
 
 insightPeriod=period;
@@ -768,7 +770,12 @@ return[
 {term:"Business Plan",searches:194,pct:28},
 {term:"Audit",searches:125,pct:18},
 {term:"Tax Advisory",searches:63,pct:9},
-{term:"Startup Valuation",searches:21,pct:3}
+{term:"Startup Valuation",searches:21,pct:3},
+{term:"Bookkeeping",searches:19,pct:3},
+{term:"Payroll Services",searches:17,pct:2},
+{term:"Financial Reporting",searches:15,pct:2},
+{term:"Internal Controls",searches:12,pct:2},
+{term:"Due Diligence",searches:10,pct:1}
 ];
 
 }
@@ -864,9 +871,18 @@ targetThisMonth:10
 },
 
 sponsorship:{
+score:10,
+maxScore:20,
+businessType:"hybrid",
+
 business:false,
-products:false,
-services:false
+
+products:true,
+services:false,
+
+businessSponsoredText:"No",
+productsSponsoredText:"Yes",
+servicesSponsoredText:"No"
 }
 
 };
@@ -912,10 +928,11 @@ actionLabel:'See Details'
 {
 title:'Sponsor Business / Products / Services',
 done:false,
-score:0,
+score:10,
 maxScore:20,
 impact:'high',
-actionLabel:'Sponsor Now'
+actionLabel:'See Details',
+secondaryAction:'Sponsor Now'
 }
 
 ];
@@ -933,7 +950,24 @@ $('coachList').innerHTML = coachItems.map((c,index) => `
     ${c.impact ? `<div class="coach-impact ${c.impact}">${c.impact==='high'?'High Impact':'Recommended'}</div>` : ''}
   </div>
 
-  ${c.actionLabel ? `<button class="coach-action" data-index="${index}">${c.actionLabel}</button>` : ''}
+  ${c.secondaryAction
+? `
+<div class="coach-action-group">
+<button class="coach-action" data-index="${index}">
+${c.actionLabel}
+</button>
+
+<button
+class="coach-action sponsor-action"
+data-action="sponsor">
+${c.secondaryAction}
+</button>
+</div>
+`
+: c.actionLabel
+? `<button class="coach-action" data-index="${index}">${c.actionLabel}</button>`
+: ''
+}
 
 </div>
 
@@ -1187,6 +1221,52 @@ Current Score: ${growthCoachData.reviews.score}/${growthCoachData.reviews.maxSco
 <div>
 ${growthCoachData.reviews.targetThisMonth-growthCoachData.reviews.thisMonth}
 more reviews required
+</div>
+
+`;
+
+}
+
+else if(index==="4"){
+
+const details =
+$("coachDetails4");
+
+const isHidden =
+details.style.display==="none";
+
+details.style.display =
+isHidden ? "block" : "none";
+
+btn.textContent =
+isHidden
+? "Hide Details"
+: "See Details";
+
+details.innerHTML=`
+
+<div class="coach-detail-score">
+Current Score: ${growthCoachData.sponsorship.score}/${growthCoachData.sponsorship.maxScore}
+</div>
+
+<div>
+Business Type:
+${growthCoachData.sponsorship.businessType.charAt(0).toUpperCase() + growthCoachData.sponsorship.businessType.slice(1)}
+</div>
+
+<div>
+Business Sponsored:
+${growthCoachData.sponsorship.businessSponsoredText}
+</div>
+
+<div>
+Products Sponsored:
+${growthCoachData.sponsorship.productsSponsoredText}
+</div>
+
+<div>
+Services Sponsored:
+${growthCoachData.sponsorship.servicesSponsoredText}
 </div>
 
 `;
