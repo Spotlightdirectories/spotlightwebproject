@@ -83,13 +83,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       vendor = data;
     }
 
-    if (!vendor) {
-      console.error("❌ Vendor not found");
-      return;
-    }
+if (!vendor) {
+  console.error("❌ Vendor not found");
+  return;
+}
 
-    renderVendorProfile(vendor);
-  }
+const isOwner =
+  currentUser &&
+  vendor.auth_user_id === currentUser.id;
+
+if (!isOwner) {
+
+  await supabase
+    .from("analytics_events")
+    .insert({
+      vendor_id: vendor.id,
+      event_type: "profile_view"
+    });
+
+}
+
+renderVendorProfile(vendor);
+
+}
 
   // ===============================
   // RENDER PROFILE
@@ -885,27 +901,70 @@ const addressDetail = document.getElementById("vendorAddressDetail");
 if (addressDetail) addressDetail.textContent = vendor.address || "";
 
 
-    const whatsapp = document.getElementById("whatsappLink");
-    if (whatsapp) {
-    if (vendor.whatsapp) {
-      whatsapp.href = `https://wa.me/${vendor.whatsapp}`;
-      whatsapp.style.display = "inline-block";
-    } else {
-      whatsapp.style.display = "none";
-    }
+const whatsapp = document.getElementById("whatsappLink");
+
+if (whatsapp) {
+
+  if (vendor.whatsapp) {
+
+    whatsapp.href =
+      `https://wa.me/${vendor.whatsapp}`;
+
+    whatsapp.style.display =
+      "inline-block";
+
+    whatsapp.addEventListener(
+      "click",
+      async () => {
+
+        await supabase
+          .from("analytics_events")
+          .insert({
+            vendor_id: vendor.id,
+            event_type: "whatsapp_click"
+          });
+
+      }
+    );
+
+  } else {
+
+    whatsapp.style.display =
+      "none";
+
   }
 
-  const callLink = document.getElementById("callLink");
+}
+
+const callLink =
+  document.getElementById(
+    "callLink"
+  );
 
 if (callLink) {
 
   const phoneNumber =
-    vendor.phone || vendor.whatsapp;
+    vendor.phone ||
+    vendor.whatsapp;
 
   if (phoneNumber) {
 
     callLink.href =
       `tel:${phoneNumber}`;
+
+    callLink.addEventListener(
+      "click",
+      async () => {
+
+        await supabase
+          .from("analytics_events")
+          .insert({
+            vendor_id: vendor.id,
+            event_type: "phone_click"
+          });
+
+      }
+    );
 
   } else {
 
@@ -916,21 +975,52 @@ if (callLink) {
 
 }
 
-    const map = document.getElementById("mapLink");
+const map =
+  document.getElementById(
+    "mapLink"
+  );
 
-    if (map) {
-     if (vendor.latitude && vendor.longitude) {
-    // Preferred: coordinates
-       map.href = `https://www.google.com/maps/search/?api=1&query=${vendor.latitude},${vendor.longitude}`;
-     } else if (vendor.address) {
-    // Fallback: address (same as public profile)
-       map.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vendor.address)}`;
-     } else {
-       map.href = "#";
-    }
+if (map) {
 
-     map.style.pointerEvents = "auto";
+  if (
+    vendor.latitude &&
+    vendor.longitude
+  ) {
+
+    map.href =
+      `https://www.google.com/maps/search/?api=1&query=${vendor.latitude},${vendor.longitude}`;
+
+  } else if (
+    vendor.address
+  ) {
+
+    map.href =
+      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vendor.address)}`;
+
+  } else {
+
+    map.href = "#";
+
+  }
+
+  map.addEventListener(
+    "click",
+    async () => {
+
+      await supabase
+        .from("analytics_events")
+        .insert({
+          vendor_id: vendor.id,
+          event_type: "direction_click"
+        });
+
     }
+  );
+
+  map.style.pointerEvents =
+    "auto";
+
+}
 
 const catalogBtn =
 
@@ -941,7 +1031,14 @@ const catalogBtn =
 if (catalogBtn) {
 
   catalogBtn.onclick =
-    function () {
+    async function () {
+
+      await supabase
+        .from("analytics_events")
+        .insert({
+          vendor_id: vendor.id,
+          event_type: "catalog_visit"
+        });
 
       document
         .getElementById(
@@ -957,7 +1054,7 @@ if (catalogBtn) {
 
     };
 
-}    
+} 
 
 
     // -------------------------------
@@ -1642,6 +1739,20 @@ loadVideo();
   a.href = link.url;
   a.target = "_blank";
   a.innerHTML = iconMap[link.platform];
+
+  a.addEventListener(
+  "click",
+  async () => {
+
+    await supabase
+      .from("analytics_events")
+      .insert({
+        vendor_id: vendor.id,
+        event_type: "external_visit"
+      });
+
+  }
+);
 
   wrapper.appendChild(a);
 

@@ -78,6 +78,14 @@ console.log(
     return;
   }
 
+await supabase
+  .from("analytics_events")
+  .insert({
+    vendor_id: data.vendor_id,
+    service_id: data.id,
+    event_type: "service_view"
+  });
+
   const imageEl = document.getElementById("productImage");
   const titleEl = document.getElementById("productTitle");
   const priceEl = document.getElementById("productPrice");

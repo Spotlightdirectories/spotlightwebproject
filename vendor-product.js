@@ -57,6 +57,31 @@ console.log(
     return;
   }
 
+try {
+
+  const result =
+    await supabase
+      .from("analytics_events")
+      .insert({
+        vendor_id: data.vendor_id,
+        product_id: data.id,
+        event_type: "product_view"
+      });
+
+  console.log(
+    "PRODUCT ANALYTICS RESULT:",
+    result
+  );
+
+} catch(err) {
+
+  console.error(
+    "PRODUCT ANALYTICS CATCH:",
+    err
+  );
+
+}
+
   const imageEl = document.getElementById("productImage");
   const titleEl = document.getElementById("productTitle");
   const priceEl = document.getElementById("productPrice");

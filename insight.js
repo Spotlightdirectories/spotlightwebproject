@@ -1497,5 +1497,3 @@ const rankingCategoryMap={
 ]
 
 };
-
-

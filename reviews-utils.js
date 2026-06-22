@@ -261,6 +261,18 @@ document
           }
         ]);
 
+      await reviewsSupabase
+  .from(
+    "analytics_events"
+  )
+  .insert({
+    vendor_id:
+      vendorId,
+
+    event_type:
+      "review_submitted"
+  });
+
       if (error) {
 
         console.error(
