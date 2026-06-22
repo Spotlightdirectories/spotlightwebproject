@@ -623,6 +623,7 @@ transition:width .35s ease;
   font-size:13px;
   flex-shrink:0;
 }
+
 .coach-status.done{background:var(--green-bg);color:var(--green);}
 .coach-status.todo{background:#F1F1EF;color:var(--ink-soft);}
 .coach-body{flex:1;min-width:0;}
@@ -658,6 +659,20 @@ transition:width .35s ease;
   background:#fff;
   color:var(--ink);
   border:1px solid var(--line);
+}
+
+.coach-details{
+  padding:8px 0 12px 38px;
+  font-size:13px;
+  line-height:1.8;
+  color:var(--ink-soft);
+}
+
+.coach-detail-score{
+  font-size:12px;
+  font-weight:700;
+  color:var(--ink);
+  margin-bottom:6px;
 }
 
 .coach-progress-row{

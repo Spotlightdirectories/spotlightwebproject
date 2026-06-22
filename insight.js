@@ -800,6 +800,31 @@ $("kwBar"+i).style.width=k.pct+"%";
 
 }
 
+
+const growthCoachTargets={
+
+free:{
+listings:1,
+reviews:20
+},
+
+standard:{
+listings:6,
+reviews:50
+},
+
+enterprise:{
+listings:12,
+reviews:100
+},
+
+elite:{
+listings:24,
+reviews:200
+}
+
+};
+
 // ---------- Growth Coach ----------
 const growthCoachData={
 
@@ -814,18 +839,28 @@ socialLinks:false
 },
 
 verification:{
+score:20,
+maxScore:20,
 emailVerified:true,
 businessVerified:true
 },
 
 catalog:{
+score:12,
+maxScore:20,
+plan:"standard",
+businessType:"hybrid",
+products:3,
+services:1,
 current:4,
-required:6
+required:growthCoachTargets.standard.listings
 },
 
 reviews:{
-current:4,
-required:10
+score:8,
+maxScore:20,
+thisMonth:4,
+targetThisMonth:10
 },
 
 sponsorship:{
@@ -886,21 +921,30 @@ actionLabel:'Sponsor Now'
 ];
 
 $('coachList').innerHTML = coachItems.map((c,index) => `
-  <div class="coach-item">
-    <div class="coach-status ${c.done?'done':'todo'}">${c.done?'✓':'○'}</div>
-    <div class="coach-body">
-      <div class="coach-title">${c.title}</div>
-      ${c.impact ? `<div class="coach-impact ${c.impact}">${c.impact==='high'?'High Impact':'Recommended'}</div>` : ''}
-    </div>
-    ${c.actionLabel ? `<button class="coach-action" data-index="${index}">${c.actionLabel}</button>` : ''}
+  
+<div class="coach-item-wrap">
 
-    <div
-     class="coach-details"
-     id="coachDetails${index}"
-     style="display:none;">
-    </div>
+<div class="coach-item">
 
+  <div class="coach-status ${c.done?'done':'todo'}">${c.done?'✓':'○'}</div>
+
+  <div class="coach-body">
+    <div class="coach-title">${c.title}</div>
+    ${c.impact ? `<div class="coach-impact ${c.impact}">${c.impact==='high'?'High Impact':'Recommended'}</div>` : ''}
   </div>
+
+  ${c.actionLabel ? `<button class="coach-action" data-index="${index}">${c.actionLabel}</button>` : ''}
+
+</div>
+
+<div
+class="coach-details"
+id="coachDetails${index}"
+style="display:none;">
+</div>
+
+</div>
+
 `).join('');
 
 const growthScore =
@@ -983,7 +1027,7 @@ btn.onclick=()=>{
 const index =
 btn.dataset.index;
 
-if(index!=="0") return;
+if(index==="0"){
 
 const details =
 $("coachDetails0");
@@ -994,17 +1038,160 @@ details.style.display==="none";
 details.style.display =
 isHidden ? "block" : "none";
 
+btn.textContent =
+isHidden
+? "Hide Details"
+: "See Details";
+
 details.innerHTML=`
 
-<div>✓ Description</div>
-<div>✓ Logo</div>
-<div>✓ Cover Image</div>
-<div>✗ Business Video</div>
-<div>✓ Contact Information</div>
-<div>✓ Business Hours</div>
-<div>✗ Social Links</div>
+<div class="coach-detail-score">
+Current Score: ${coachItems[0].score}/${coachItems[0].maxScore}
+</div>
+
+<div>${growthCoachData.profile.description?"✓":"✗"} Description</div>
+
+<div>${growthCoachData.profile.logo?"✓":"✗"} Logo</div>
+
+<div>${growthCoachData.profile.coverImage?"✓":"✗"} Cover Image</div>
+
+<div>${growthCoachData.profile.businessVideo?"✓":"✗"} Business Video</div>
+
+<div>${growthCoachData.profile.contactInformation?"✓":"✗"} Contact Information</div>
+
+<div>${growthCoachData.profile.businessHours?"✓":"✗"} Business Hours</div>
+
+<div>${growthCoachData.profile.socialLinks?"✓":"✗"} Social Links</div>
 
 `;
+
+}
+
+else if(index==="1"){
+
+const details =
+$("coachDetails1");
+
+const isHidden =
+details.style.display==="none";
+
+details.style.display =
+isHidden ? "block" : "none";
+
+btn.textContent =
+isHidden
+? "Hide Details"
+: "See Details";
+
+details.innerHTML=`
+
+<div class="coach-detail-score">
+Current Score: ${growthCoachData.verification.score}/${growthCoachData.verification.maxScore}
+</div>
+
+<div>${growthCoachData.verification.emailVerified?"✓":"✗"} Email Verified</div>
+
+<div>${growthCoachData.verification.businessVerified?"✓":"✗"} Business Verified</div>
+
+`;
+
+}
+
+else if(index==="2"){
+
+const details =
+$("coachDetails2");
+
+const isHidden =
+details.style.display==="none";
+
+details.style.display =
+isHidden ? "block" : "none";
+
+btn.textContent =
+isHidden
+? "Hide Details"
+: "See Details";
+
+details.innerHTML=`
+
+<div class="coach-detail-score">
+Current Score: ${growthCoachData.catalog.score}/${growthCoachData.catalog.maxScore}
+</div>
+
+<div>
+Current Plan:
+${growthCoachData.catalog.plan.charAt(0).toUpperCase() + growthCoachData.catalog.plan.slice(1)}
+</div>
+
+<div>
+Business Type:
+${growthCoachData.catalog.businessType.charAt(0).toUpperCase() + growthCoachData.catalog.businessType.slice(1)}
+</div>
+
+<div>
+Products:
+${growthCoachData.catalog.products}
+</div>
+
+<div>
+Services:
+${growthCoachData.catalog.services}
+</div>
+
+<div>
+Current Listings:
+${growthCoachData.catalog.current}
+</div>
+
+<div>
+Required Listings:
+${growthCoachData.catalog.required}
+</div>
+
+<div>
+${growthCoachData.catalog.required-growthCoachData.catalog.current}
+more listing(s) required
+</div>
+
+`;
+
+}
+
+else if(index==="3"){
+
+const details =
+$("coachDetails3");
+
+const isHidden =
+details.style.display==="none";
+
+details.style.display =
+isHidden ? "block" : "none";
+
+btn.textContent =
+isHidden
+? "Hide Details"
+: "See Details";
+
+details.innerHTML=`
+
+<div class="coach-detail-score">
+Current Score: ${growthCoachData.reviews.score}/${growthCoachData.reviews.maxScore}
+</div>
+
+<div>This Month: ${growthCoachData.reviews.thisMonth}</div>
+
+<div>Target This Month: ${growthCoachData.reviews.targetThisMonth}</div>
+
+<div>
+${growthCoachData.reviews.targetThisMonth-growthCoachData.reviews.thisMonth}
+more reviews required
+</div>
+
+`;
+
+}
 
 };
 
