@@ -50,11 +50,150 @@ async function loadCurrentVendor() {
   currentVendorId =
     vendor?.id || null;
 
+  console.log(
+  "Current Vendor ID:",
+  currentVendorId
+);
+
+}
+
+async function getProfileViewsCount() {
+
+  const {
+    count,
+    error
+  } = await insightSupabase
+    .from(
+      "analytics_events"
+    )
+    .select(
+      "*",
+      {
+        count: "exact",
+        head: true
+      }
+    )
+    .eq(
+      "vendor_id",
+      currentVendorId
+    )
+ .eq(
+  "event_type",
+  "profile_view"
+);
+
+console.log(
+  "Current Period:",
+  insightPeriod
+);
+  console.log(
+    "Profile Views:",
+    count
+  );
+
+  console.log(
+    "Profile Views Error:",
+    error
+  );
+
+  return count || 0;
+
+}
+
+async function getSearchImpressionsCount() {
+
+  const {
+    count,
+    error
+  } = await insightSupabase
+    .from("analytics_events")
+    .select(
+      "*",
+      {
+        count: "exact",
+        head: true
+      }
+    )
+    .eq(
+      "vendor_id",
+      currentVendorId
+    )
+    .eq(
+      "event_type",
+      "search_impression"
+    );
+
+  console.log(
+    "Search Impressions:",
+    count
+  );
+
+  console.log(
+    "Search Impressions Error:",
+    error
+  );
+
+  return count || 0;
+
 }
 
 /* ===========================
 GLOBAL PERIOD
 =========================== */
+
+function getPeriodRanges(){
+
+  const now = new Date();
+  let currentStart = new Date();
+  let previousStart = new Date();
+  let previousEnd = new Date();
+
+  switch(insightPeriod){
+
+    case "Today":
+      currentStart = new Date(now.getFullYear(),now.getMonth(),now.getDate());
+      previousStart = new Date(currentStart);
+      previousStart.setDate(previousStart.getDate()-1);
+      previousEnd = new Date(currentStart);
+      break;
+
+    case "This Week":
+      currentStart = new Date(now);
+      currentStart.setDate(now.getDate()-6);
+      previousEnd = new Date(currentStart);
+      previousStart = new Date(currentStart);
+      previousStart.setDate(previousStart.getDate()-7);
+      break;
+
+    case "This Month":
+      currentStart = new Date(now.getFullYear(),now.getMonth(),1);
+      previousStart = new Date(now.getFullYear(),now.getMonth()-1,1);
+      previousEnd = new Date(currentStart);
+      break;
+
+    case "This Quarter":
+      const quarter = Math.floor(now.getMonth()/3);
+      currentStart = new Date(now.getFullYear(),quarter*3,1);
+      previousStart = new Date(now.getFullYear(),(quarter*3)-3,1);
+      previousEnd = new Date(currentStart);
+      break;
+
+    case "This Year":
+      currentStart = new Date(now.getFullYear(),0,1);
+      previousStart = new Date(now.getFullYear()-1,0,1);
+      previousEnd = new Date(currentStart);
+      break;
+
+  }
+
+  return {
+    currentStart,
+    currentEnd: now,
+    previousStart,
+    previousEnd
+  };
+
+}
 
 let insightPeriod="This Month";
 
@@ -128,11 +267,11 @@ document.addEventListener(
 
       });
 
-    await loadCurrentVendor();
+await loadCurrentVendor();
 
-    syncPeriod(
-      "This Month"
-    );
+syncPeriod(
+  "This Month"
+);
 
   }
 );
