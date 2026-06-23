@@ -732,8 +732,72 @@ const displayResults =
   applyVerifiedFilter(
 
     classifiedResults
-
  );
+
+const searchImpressions = [];
+
+displayResults.vendors.forEach(
+  vendor => {
+
+    searchImpressions.push({
+      vendor_id: vendor.id,
+      event_type: "search_impression",
+      search_keyword:
+        discoverResultsState.keyword,
+      visitor_id:
+        window.visitorId
+    });
+
+  }
+);
+
+displayResults.products.forEach(
+  product => {
+
+    searchImpressions.push({
+      vendor_id: product.vendorId,
+      product_id: product.id,
+      event_type: "search_impression",
+      search_keyword:
+        discoverResultsState.keyword,
+      visitor_id:
+        window.visitorId
+    });
+
+  }
+);
+
+displayResults.services.forEach(
+  service => {
+
+    searchImpressions.push({
+      vendor_id: service.vendorId,
+      service_id: service.id,
+      event_type: "search_impression",
+      search_keyword:
+        discoverResultsState.keyword,
+      visitor_id:
+        window.visitorId
+    });
+
+  }
+);
+
+if (
+  searchImpressions.length
+) {
+
+  const result =
+
+    await window.supabaseClient
+
+      .from("analytics_events")
+
+      .insert(
+        searchImpressions
+      );
+
+}
 
 updateSearchSummary(
 

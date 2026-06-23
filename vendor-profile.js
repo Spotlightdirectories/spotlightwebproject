@@ -1073,8 +1073,12 @@ const result =
       vendor_id: vendor.id,
       event_type: "catalog_visit",
       visitor_id: window.visitorId
-    })
-    .select();
+    });
+
+console.log(
+  "CATALOG RESULT",
+  result
+);
 
 console.log(
   "CATALOG RESULT",
@@ -1784,7 +1788,8 @@ loadVideo();
       .from("analytics_events")
       .insert({
         vendor_id: vendor.id,
-        event_type: "external_visit"
+        event_type: "external_visit",
+        visitor_id: window.visitorId
       });
 
   }
