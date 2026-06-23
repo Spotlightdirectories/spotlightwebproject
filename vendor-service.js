@@ -83,7 +83,8 @@ await supabase
   .insert({
     vendor_id: data.vendor_id,
     service_id: data.id,
-    event_type: "service_view"
+    event_type: "service_view",
+    visitor_id: window.visitorId
   });
 
   const imageEl = document.getElementById("productImage");

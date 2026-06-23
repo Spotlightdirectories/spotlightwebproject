@@ -1,5 +1,10 @@
 document.addEventListener("DOMContentLoaded", async () => {
 
+  console.log(
+  "Profile Visitor ID:",
+  window.visitorId
+);
+
   console.log("✅ vendor-profile.js loaded");
 
   const supabase = window.supabaseClient;
@@ -94,12 +99,29 @@ const isOwner =
 
 if (!isOwner) {
 
+console.log(
+  "PROFILE VIEW PAYLOAD",
+  {
+    vendor_id: vendor.id,
+    event_type: "profile_view",
+    visitor_id: window.visitorId
+  }
+);
+
+const result =
   await supabase
     .from("analytics_events")
     .insert({
       vendor_id: vendor.id,
-      event_type: "profile_view"
-    });
+      event_type: "profile_view",
+      visitor_id: window.visitorId
+    })
+    .select();
+
+console.log(
+  "PROFILE VIEW RESULT",
+  result
+);
 
 }
 
@@ -917,12 +939,13 @@ if (whatsapp) {
       "click",
       async () => {
 
-        await supabase
-          .from("analytics_events")
-          .insert({
-            vendor_id: vendor.id,
-            event_type: "whatsapp_click"
-          });
+await supabase
+  .from("analytics_events")
+  .insert({
+    vendor_id: vendor.id,
+    event_type: "whatsapp_click",
+    visitor_id: window.visitorId
+  });
 
       }
     );
@@ -960,7 +983,8 @@ if (callLink) {
           .from("analytics_events")
           .insert({
             vendor_id: vendor.id,
-            event_type: "phone_click"
+            event_type: "phone_click",
+            visitor_id: window.visitorId
           });
 
       }
@@ -1011,7 +1035,8 @@ if (map) {
         .from("analytics_events")
         .insert({
           vendor_id: vendor.id,
-          event_type: "direction_click"
+          event_type: "direction_click",
+          visitor_id: window.visitorId
         });
 
     }
@@ -1030,26 +1055,37 @@ const catalogBtn =
 
 if (catalogBtn) {
 
-  catalogBtn.onclick =
-    async function () {
+  catalogBtn.onclick = async function () {
 
-      await supabase
-        .from("analytics_events")
-        .insert({
-          vendor_id: vendor.id,
-          event_type: "catalog_visit"
-        });
+console.log(
+  "CATALOG PAYLOAD",
+  {
+    vendor_id: vendor.id,
+    event_type: "catalog_visit",
+    visitor_id: window.visitorId
+  }
+);
+
+const result =
+  await supabase
+    .from("analytics_events")
+    .insert({
+      vendor_id: vendor.id,
+      event_type: "catalog_visit",
+      visitor_id: window.visitorId
+    })
+    .select();
+
+console.log(
+  "CATALOG RESULT",
+  result
+);
 
       document
-        .getElementById(
-          "mediaSection"
-        )
+        .getElementById("mediaSection")
         ?.scrollIntoView({
-
           behavior: "smooth",
-
           block: "start"
-
         });
 
     };

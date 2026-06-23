@@ -3,6 +3,55 @@ const fmt = n => n.toLocaleString();
 const $ = id => document.getElementById(id);
 const NS = 'http://www.w3.org/2000/svg';
 
+const insightSupabase =
+  window.supabaseClient;
+
+const visitorId =
+  window.visitorId;
+
+console.log(
+  "Insight Visitor ID:",
+  visitorId
+);
+
+console.log(
+  "Insight Supabase:",
+  insightSupabase
+);
+
+let currentVendorId = null;
+
+async function loadCurrentVendor() {
+
+  const {
+    data: { user }
+  } = await insightSupabase
+    .auth
+    .getUser();
+
+  if (!user) return;
+
+  const {
+    data: vendor,
+    error
+  } = await insightSupabase
+    .from(
+      "vendors"
+    )
+    .select(
+      "id,name,plan_tier"
+    )
+    .eq(
+      "auth_user_id",
+      user.id
+    )
+    .single();
+
+  currentVendorId =
+    vendor?.id || null;
+
+}
+
 /* ===========================
 GLOBAL PERIOD
 =========================== */
@@ -60,12 +109,33 @@ function updateDateRange(){
   $("dateRange").textContent=`${start.toLocaleDateString("en-US",options)} – ${today.toLocaleDateString("en-US",options)}`;
 }
 
-document.addEventListener("DOMContentLoaded",()=>{
-  document.querySelectorAll(".period-select").forEach(select=>{
-    select.addEventListener("change",e=>syncPeriod(e.target.value));
-  });
-  syncPeriod("This Month");
-});
+document.addEventListener(
+  "DOMContentLoaded",
+  async () => {
+
+    document
+      .querySelectorAll(
+        ".period-select"
+      )
+      .forEach(select => {
+
+        select.addEventListener(
+          "change",
+          e => syncPeriod(
+            e.target.value
+          )
+        );
+
+      });
+
+    await loadCurrentVendor();
+
+    syncPeriod(
+      "This Month"
+    );
+
+  }
+);
 
 function svgEl(tag, attrs){
   const el = document.createElementNS(NS, tag);
@@ -318,57 +388,190 @@ l=>`<span>${l}</span>`
 renderLineChart();
 
 // ---------- Lead Generation ----------
-function getLeadChannels(){
-  switch(insightPeriod){
+async function getLeadChannels(){
+
+  if (!currentVendorId) {
+
+    return [];
+
+  }
+
+  let startDate =
+    new Date();
+
+  switch (insightPeriod) {
+
     case "Today":
-      return[
-        {label:"WhatsApp Chats",icon:"fa-brands fa-whatsapp",cls:"lead-icon-whatsapp",value:24,growth:6,up:true},
-        {label:"Phone Calls",icon:"fa-solid fa-phone",cls:"lead-icon-phone",value:3,growth:2,up:true},
-        {label:"Directions",icon:"fa-solid fa-location-dot",cls:"lead-icon-direction",value:4,growth:1,up:true},
-        {label:"External Visits",icon:"fa-solid fa-arrow-up-right-from-square",cls:"lead-icon-external",value:6,growth:3,up:true}
-      ];
+
+      startDate.setHours(
+        0,0,0,0
+      );
+
+      break;
 
     case "This Week":
-      return[
-        {label:"WhatsApp Chats",icon:"fa-brands fa-whatsapp",cls:"lead-icon-whatsapp",value:124,growth:18,up:true},
-        {label:"Phone Calls",icon:"fa-solid fa-phone",cls:"lead-icon-phone",value:14,growth:7,up:true},
-        {label:"Directions",icon:"fa-solid fa-location-dot",cls:"lead-icon-direction",value:18,growth:5,up:true},
-        {label:"Catalog Visits",icon:"fa-solid fa-book-open",cls:"lead-icon-catalog",value:91,growth:14,up:true},
-        {label:"External Visits",icon:"fa-solid fa-arrow-up-right-from-square",cls:"lead-icon-external",value:22,growth:8,up:true}
-      ];
+
+      startDate.setDate(
+        startDate.getDate() - 6
+      );
+
+      break;
 
     case "This Quarter":
-      return[
-        {label:"WhatsApp Chats",icon:"fa-brands fa-whatsapp",cls:"lead-icon-whatsapp",value:1450,growth:32,up:true},
-        {label:"Phone Calls",icon:"fa-solid fa-phone",cls:"lead-icon-phone",value:126,growth:21,up:true},
-        {label:"Directions",icon:"fa-solid fa-location-dot",cls:"lead-icon-direction",value:184,growth:16,up:true},
-        {label:"Catalog Visits",icon:"fa-solid fa-book-open",cls:"lead-icon-catalog",value:91,growth:14,up:true},
-        {label:"External Visits",icon:"fa-solid fa-arrow-up-right-from-square",cls:"lead-icon-external",value:212,growth:19,up:true}
-      ];
+
+      const quarter =
+        Math.floor(
+          startDate.getMonth() / 3
+        );
+
+      startDate =
+        new Date(
+          startDate.getFullYear(),
+          quarter * 3,
+          1
+        );
+
+      break;
 
     case "This Year":
-      return[
-        {label:"WhatsApp Chats",icon:"fa-brands fa-whatsapp",cls:"lead-icon-whatsapp",value:5820,growth:58,up:true},
-        {label:"Phone Calls",icon:"fa-solid fa-phone",cls:"lead-icon-phone",value:624,growth:41,up:true},
-        {label:"Directions",icon:"fa-solid fa-location-dot",cls:"lead-icon-direction",value:714,growth:37,up:true},
-        {label:"Catalog Visits",icon:"fa-solid fa-book-open",cls:"lead-icon-catalog",value:91,growth:14,up:true},
-        {label:"External Visits",icon:"fa-solid fa-arrow-up-right-from-square",cls:"lead-icon-external",value:986,growth:43,up:true}
-      ];
+
+      startDate =
+        new Date(
+          startDate.getFullYear(),
+          0,
+          1
+        );
+
+      break;
 
     default:
-      return[
-        {label:"WhatsApp Chats",icon:"fa-brands fa-whatsapp",cls:"lead-icon-whatsapp",value:612,growth:23,up:true},
-        {label:"Phone Calls",icon:"fa-solid fa-phone",cls:"lead-icon-phone",value:42,growth:12,up:true},
-        {label:"Directions",icon:"fa-solid fa-location-dot",cls:"lead-icon-direction",value:62,growth:8,up:true},
-        {label:"Catalog Visits",icon:"fa-solid fa-book-open",cls:"lead-icon-catalog",value:91,growth:14,up:true},
-        {label:"External Visits",icon:"fa-solid fa-arrow-up-right-from-square",cls:"lead-icon-external",value:78,growth:11,up:true}
-      ];
+
+      startDate =
+        new Date(
+          startDate.getFullYear(),
+          startDate.getMonth(),
+          1
+        );
+
   }
+
+  const {
+    data,
+    error
+  } = await insightSupabase
+    .from(
+      "analytics_events"
+    )
+    .select(
+      "event_type"
+    )
+    .eq(
+      "vendor_id",
+      currentVendorId
+    )
+    .gte(
+      "created_at",
+      startDate.toISOString()
+    );
+
+  if (error) {
+
+    return [];
+
+  }
+
+  const count =
+    eventType =>
+      data.filter(
+        row =>
+          row.event_type ===
+          eventType
+      ).length;
+
+  return [
+
+    {
+      label:"WhatsApp Chats",
+      icon:"fa-brands fa-whatsapp",
+      cls:"lead-icon-whatsapp",
+      value:count(
+        "whatsapp_click"
+      ),
+      growth:0,
+      up:true
+    },
+
+    {
+      label:"Phone Calls",
+      icon:"fa-solid fa-phone",
+      cls:"lead-icon-phone",
+      value:count(
+        "phone_click"
+      ),
+      growth:0,
+      up:true
+    },
+
+    {
+      label:"Directions",
+      icon:"fa-solid fa-location-dot",
+      cls:"lead-icon-direction",
+      value:count(
+        "direction_click"
+      ),
+      growth:0,
+      up:true
+    },
+
+    {
+      label:"Catalog Visits",
+      icon:"fa-solid fa-book-open",
+      cls:"lead-icon-catalog",
+      value:count(
+        "catalog_visit"
+      ),
+      growth:0,
+      up:true
+    },
+
+    {
+      label:"External Visits",
+      icon:"fa-solid fa-arrow-up-right-from-square",
+      cls:"lead-icon-external",
+      value:count(
+        "external_visit"
+      ),
+      growth:0,
+      up:true
+    }
+
+  ];
+
 }
 
-function renderLeadGeneration(){
-  const leadChannels=getLeadChannels();
-  $("leadGrid").innerHTML=leadChannels.map(c=>`<div class="lead-card"><div class="lead-icon ${c.cls}"><i class="${c.icon}"></i></div><div class="lead-label">${c.label}</div><div class="lead-value">${fmt(c.value)}</div><div class="lead-trend ${c.up?"up":"down"}">${c.up?"▲":"▼"} ${c.growth}%</div></div>`).join("");
+async function renderLeadGeneration(){
+
+  const leadChannels =
+    await getLeadChannels();
+
+  $("leadGrid").innerHTML =
+    leadChannels.map(c => `
+      <div class="lead-card">
+        <div class="lead-icon ${c.cls}">
+          <i class="${c.icon}"></i>
+        </div>
+        <div class="lead-label">
+          ${c.label}
+        </div>
+        <div class="lead-value">
+          ${fmt(c.value)}
+        </div>
+        <div class="lead-trend ${c.up ? "up" : "down"}">
+          ${c.up ? "▲" : "▼"} ${c.growth}%
+        </div>
+      </div>
+    `).join("");
+
 }
 
 renderLeadGeneration();

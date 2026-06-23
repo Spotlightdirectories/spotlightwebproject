@@ -59,14 +59,15 @@ console.log(
 
 try {
 
-  const result =
-    await supabase
-      .from("analytics_events")
-      .insert({
-        vendor_id: data.vendor_id,
-        product_id: data.id,
-        event_type: "product_view"
-      });
+const result =
+  await supabase
+    .from("analytics_events")
+    .insert({
+      vendor_id: data.vendor_id,
+      product_id: data.id,
+      event_type: "product_view",
+      visitor_id: window.visitorId
+    });
 
   console.log(
     "PRODUCT ANALYTICS RESULT:",
