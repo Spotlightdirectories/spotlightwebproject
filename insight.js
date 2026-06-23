@@ -60,6 +60,10 @@ async function loadCurrentVendor() {
 async function getProfileViewsCount() {
 
   const {
+    currentStart
+  } = getPeriodRanges();
+
+  const {
     count,
     error
   } = await insightSupabase
@@ -77,15 +81,20 @@ async function getProfileViewsCount() {
       "vendor_id",
       currentVendorId
     )
- .eq(
-  "event_type",
-  "profile_view"
-);
+    .eq(
+      "event_type",
+      "profile_view"
+    )
+    .gte(
+      "created_at",
+      currentStart.toISOString()
+    );
 
-console.log(
-  "Current Period:",
-  insightPeriod
-);
+  console.log(
+    "Current Period:",
+    insightPeriod
+  );
+
   console.log(
     "Profile Views:",
     count
@@ -101,6 +110,10 @@ console.log(
 }
 
 async function getSearchImpressionsCount() {
+
+  const {
+    currentStart
+  } = getPeriodRanges();
 
   const {
     count,
@@ -121,6 +134,10 @@ async function getSearchImpressionsCount() {
     .eq(
       "event_type",
       "search_impression"
+    )
+    .gte(
+      "created_at",
+      currentStart.toISOString()
     );
 
   console.log(
@@ -134,6 +151,177 @@ async function getSearchImpressionsCount() {
   );
 
   return count || 0;
+
+}
+
+async function getUniqueVisitorsCount() {
+
+  const {
+    currentStart
+  } = getPeriodRanges();
+
+  const {
+    data,
+    error
+  } = await insightSupabase
+    .from(
+      "analytics_events"
+    )
+    .select(
+      "visitor_id"
+    )
+    .eq(
+      "vendor_id",
+      currentVendorId
+    )
+    .gte(
+      "created_at",
+      currentStart.toISOString()
+    );
+
+  console.log(
+    "Unique Visitors Data:",
+    data
+  );
+
+  console.log(
+    "Unique Visitors Error:",
+    error
+  );
+
+  const uniqueVisitors =
+    new Set(
+      (data || [])
+        .map(
+          row => row.visitor_id
+        )
+        .filter(Boolean)
+    );
+
+  return uniqueVisitors.size;
+
+}
+
+async function getMarketplaceProfileViewsData() {
+
+  const {
+    currentStart
+  } = getPeriodRanges();
+
+  const {
+    data,
+    error
+  } = await insightSupabase
+    .from(
+      "analytics_events"
+    )
+    .select(
+      "created_at"
+    )
+    .eq(
+      "vendor_id",
+      currentVendorId
+    )
+    .eq(
+      "event_type",
+      "profile_view"
+    )
+    .gte(
+      "created_at",
+      currentStart.toISOString()
+    );
+
+  console.log(
+    "Marketplace Chart Data:",
+    data
+  );
+
+  console.log(
+    "Marketplace Chart Error:",
+    error
+  );
+
+  return data || [];
+
+}
+
+function groupProfileViewsByPeriod(records) {
+
+  if (insightPeriod === "Today") {
+
+    const buckets = {
+      "6am":0,
+      "9am":0,
+      "12pm":0,
+      "3pm":0,
+      "6pm":0,
+      "9pm":0
+    };
+
+    records.forEach(record => {
+
+      const hour =
+        new Date(
+          record.created_at
+        ).getHours();
+
+      if (hour >= 6 && hour < 9) buckets["6am"]++;
+      else if (hour >= 9 && hour < 12) buckets["9am"]++;
+      else if (hour >= 12 && hour < 15) buckets["12pm"]++;
+      else if (hour >= 15 && hour < 18) buckets["3pm"]++;
+      else if (hour >= 18 && hour < 21) buckets["6pm"]++;
+      else if (hour >= 21) buckets["9pm"]++;
+
+    });
+
+    return {
+      labels:Object.keys(buckets),
+      values:Object.values(buckets)
+    };
+
+  }
+
+  if (insightPeriod === "This Week") {
+
+    const buckets = {
+      Mon:0,
+      Tue:0,
+      Wed:0,
+      Thu:0,
+      Fri:0,
+      Sat:0,
+      Sun:0
+    };
+
+    records.forEach(record => {
+
+      const day =
+        new Date(
+          record.created_at
+        ).toLocaleDateString(
+          "en-US",
+          {
+            weekday:"short"
+          }
+        );
+
+      if (
+        buckets[day] !==
+        undefined
+      ) {
+        buckets[day]++;
+      }
+
+    });
+
+    return {
+      labels:Object.keys(buckets),
+      values:Object.values(buckets)
+    };
+
+  }
+
+  return null;
 
 }
 
@@ -195,6 +383,97 @@ function getPeriodRanges(){
 
 }
 
+async function getProfileViewsGrowth() {
+
+  const {
+    currentStart,
+    previousStart,
+    previousEnd
+  } = getPeriodRanges();
+
+  const {
+    count: currentCount
+  } = await insightSupabase
+    .from("analytics_events")
+    .select("*", {
+      count: "exact",
+      head: true
+    })
+    .eq(
+      "vendor_id",
+      currentVendorId
+    )
+    .eq(
+      "event_type",
+      "profile_view"
+    )
+    .gte(
+      "created_at",
+      currentStart.toISOString()
+    );
+
+  const {
+    count: previousCount
+  } = await insightSupabase
+    .from("analytics_events")
+    .select("*", {
+      count: "exact",
+      head: true
+    })
+    .eq(
+      "vendor_id",
+      currentVendorId
+    )
+    .eq(
+      "event_type",
+      "profile_view"
+    )
+    .gte(
+      "created_at",
+      previousStart.toISOString()
+    )
+    .lt(
+      "created_at",
+      previousEnd.toISOString()
+    );
+
+console.log(
+  "Profile Views Current Count:",
+  currentCount
+);
+
+console.log(
+  "Profile Views Previous Count:",
+  previousCount
+);
+
+if (!previousCount) {
+
+  return {
+     growth: currentCount > 0 ? "NEW" : 0,
+    up: true
+  };
+
+}
+
+  const growth =
+    Math.round(
+      (
+        (
+          currentCount -
+          previousCount
+        ) /
+        previousCount
+      ) * 100
+    );
+
+  return {
+    growth: Math.abs(growth),
+    up: growth >= 0
+  };
+
+}
+
 let insightPeriod="This Month";
 
 let showAllKeywords=false;
@@ -206,7 +485,9 @@ insightPeriod=period;
 document.querySelectorAll(".period-select").forEach(s=>s.value=period);
 
 updateDateRange();
-renderMarketplaceStats();
+if(currentVendorId){
+  renderMarketplaceStats();
+}
 renderLineChart();
 renderLeadGeneration();
 renderAudience();
@@ -358,19 +639,81 @@ function getPerfStats(){
   }
 }
 
-function renderMarketplaceStats(){
-  const perfStats=getPerfStats();
-  $("perfStats").innerHTML="";
-  $("perfStats").className="grid-3";
-  perfStats.forEach(p=>{
-    const div=document.createElement("div");
-    div.className="perf-stat";
-    div.innerHTML=`<div class="p-lbl">${p.label}</div><div class="p-val">${fmt(p.value)}</div><div class="p-trend ${p.up?"up":"down"}">${p.up?"▲":"▼"} ${p.growth}%</div>`;
+async function renderMarketplaceStats(){
+
+  const profileViews =
+    await getProfileViewsCount();
+
+  const profileViewsGrowth =
+     await getProfileViewsGrowth();
+
+console.log(
+  "Profile Views Growth Object:",
+  profileViewsGrowth
+);
+
+  const uniqueVisitors =
+    await getUniqueVisitorsCount();
+
+  const searchImpressions =
+    await getSearchImpressionsCount();
+
+  const perfStats = [
+
+{
+  label:"Profile Views",
+  value:profileViews,
+  growth:profileViewsGrowth.growth,
+  up:profileViewsGrowth.up
+},
+
+    {
+      label:"Unique Visitors",
+      value:uniqueVisitors,
+      growth:0,
+      up:true
+    },
+
+    {
+      label:"Search Impressions",
+      value:searchImpressions,
+      growth:0,
+      up:true
+    }
+
+  ];
+
+  console.log(
+  "Performance Stats Array:",
+  perfStats
+);
+
+  $("perfStats").innerHTML = "";
+  $("perfStats").className = "grid-3";
+
+  perfStats.forEach(p => {
+
+    const div =
+      document.createElement("div");
+
+    div.className =
+      "perf-stat";
+
+div.innerHTML = `
+  <div class="p-lbl">${p.label}</div>
+  <div class="p-val">${fmt(p.value)}</div>
+  <div class="p-trend ${p.up ? "up" : "down"}">
+    ${p.up ? "▲" : "▼"} ${p.growth}%
+  </div>
+`;
+
     $("perfStats").appendChild(div);
+
   });
+
 }
 
-renderMarketplaceStats();
+//renderMarketplaceStats();
 
 function getMarketplaceChart(){
 
