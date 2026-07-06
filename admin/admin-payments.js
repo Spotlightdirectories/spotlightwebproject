@@ -55,10 +55,7 @@ if (error) {
       <td>
         ${
           p.transfer_proof_url
-            ? `<a href="${supabase.storage
-                .from("payment-receipts")
-                .getPublicUrl(p.transfer_proof_url).data.publicUrl}"
-                target="_blank">View</a>`
+            ? `<a href="#" onclick="viewSignedUrl('payment-receipts','${p.transfer_proof_url}');return false;">View</a>`
             : "—"
         }
       </td>
@@ -110,12 +107,12 @@ if (verificationError) {
       <td>${v.badge_type}</td>
       <td>${new Date(v.created_at).toLocaleDateString()}</td>
       <td>
-        <a href="${v.id_url}" target="_blank">ID</a> |
-        ${v.passport_photo_url ? `<a href="${v.passport_photo_url}" target="_blank">Passport</a> |` : ""}
-        ${v.cac_url ? `<a href="${v.cac_url}" target="_blank">CAC</a> |` : ""}
-        ${v.utility_url ? `<a href="${v.utility_url}" target="_blank">Utility</a> |` : ""}
-        ${v.memart_url ? `<a href="${v.memart_url}" target="_blank">MEMART</a> |` : ""}
-        ${v.status_report_url ? `<a href="${v.status_report_url}" target="_blank">Status Report</a>` : ""}
+        <a href="#" onclick="viewSignedUrl('vendor-verifications','${v.id_url}');return false;">ID</a> |
+        ${v.passport_photo_url ? `<a href="#" onclick="viewSignedUrl('vendor-verifications','${v.passport_photo_url}');return false;">Passport</a> |` : ""}
+        ${v.cac_url ? `<a href="#" onclick="viewSignedUrl('vendor-verifications','${v.cac_url}');return false;">CAC</a> |` : ""}
+        ${v.utility_url ? `<a href="#" onclick="viewSignedUrl('vendor-verifications','${v.utility_url}');return false;">Utility</a> |` : ""}
+        ${v.memart_url ? `<a href="#" onclick="viewSignedUrl('vendor-verifications','${v.memart_url}');return false;">MEMART</a> |` : ""}
+        ${v.status_report_url ? `<a href="#" onclick="viewSignedUrl('vendor-verifications','${v.status_report_url}');return false;">Status Report</a>` : ""}
       </td>
       <td>${v.status}</td>
       <td>
@@ -816,4 +813,260 @@ async function payPartner(partnerId) {
     }
    );
  }
+
+// -----------------------------
+// PAYMENT HISTORY
+// Shows all confirmed and rejected bank transfer payments.
+// Admins can view receipts via signed URLs —
+// no Supabase dashboard needed.
+// -----------------------------
+
+let allReviewedPayments = [];
+
+async function loadPaymentHistory() {
+  const historyTable = document.getElementById("paymentHistoryTable");
+  if (!historyTable) return;
+
+  const { data: payments, error } = await supabase
+    .from("vendorpayments")
+    .select(`
+      id,
+      plan,
+      billing_type,
+      amount,
+      status,
+      transfer_proof_url,
+      reviewed_at,
+      rejection_reason,
+      vendors ( name )
+    `)
+    .eq("payment_method", "bank")
+    .in("status", ["confirmed", "rejected"])
+    .order("reviewed_at", { ascending: false });
+
+  if (error) {
+    historyTable.innerHTML = `<tr><td colspan="7">Failed to load payment history.</td></tr>`;
+    return;
+  }
+
+  if (!payments || !payments.length) {
+    historyTable.innerHTML = `<tr><td colspan="7">No reviewed payments yet.</td></tr>`;
+    return;
+  }
+
+  allReviewedPayments = payments;
+  renderPaymentHistory(payments);
+
+  // Wire up search and filter
+  const searchInput = document.getElementById("paymentHistorySearch");
+  const statusFilter = document.getElementById("paymentHistoryFilter");
+
+  function applyFilters() {
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    const statusValue = statusFilter.value;
+    const filtered = allReviewedPayments.filter(p => {
+      const nameMatch = (p.vendors?.name || "").toLowerCase().includes(searchTerm);
+      const statusMatch = statusValue === "all" || p.status === statusValue;
+      return nameMatch && statusMatch;
+    });
+    renderPaymentHistory(filtered);
+  }
+
+  if (searchInput) searchInput.addEventListener("input", applyFilters);
+  if (statusFilter) statusFilter.addEventListener("change", applyFilters);
+}
+
+function renderPaymentHistory(payments) {
+  const historyTable = document.getElementById("paymentHistoryTable");
+  if (!historyTable) return;
+
+  if (!payments.length) {
+    historyTable.innerHTML = `<tr><td colspan="7">No results found.</td></tr>`;
+    return;
+  }
+
+  historyTable.innerHTML = "";
+
+  payments.forEach(p => {
+    const tr = document.createElement("tr");
+
+    const reviewedDate = p.reviewed_at
+      ? new Date(p.reviewed_at).toLocaleDateString()
+      : "—";
+
+    // Format amount from kobo to naira where possible
+    const amountDisplay = p.amount
+      ? `₦${Number(p.amount).toLocaleString()}`
+      : "—";
+
+    const statusClass = p.status === "confirmed"
+      ? "status-approved"
+      : "status-rejected";
+
+    const receiptLink = p.transfer_proof_url
+      ? `<a href="#"
+           onclick="viewSignedUrl('payment-receipts','${p.transfer_proof_url}');return false;"
+           style="color:#2563eb;text-decoration:underline;cursor:pointer;">View Receipt</a>`
+      : "—";
+
+    tr.innerHTML = `
+      <td>${p.vendors?.name || "—"}</td>
+      <td>${p.plan || "—"}</td>
+      <td>${p.billing_type || "—"}</td>
+      <td>${amountDisplay}</td>
+      <td>${reviewedDate}</td>
+      <td><span class="status-badge ${statusClass}">${p.status}</span></td>
+      <td>${receiptLink}</td>
+    `;
+
+    historyTable.appendChild(tr);
+  });
+}
+
+loadPaymentHistory();
+
+// -----------------------------
+// VERIFICATION HISTORY
+// Shows all approved and rejected verifications.
+// Admins can view documents via signed URLs directly
+// from the UI — no Supabase dashboard needed.
+// -----------------------------
+
+let allReviewedVerifications = [];
+
+async function loadVerificationHistory() {
+  const historyTable = document.getElementById("verificationHistoryTable");
+  if (!historyTable) return;
+
+  const { data: reviewed, error } = await supabase
+    .from("vendor_verifications")
+    .select(`
+      id,
+      badge_type,
+      status,
+      created_at,
+      reviewed_at,
+      id_url,
+      passport_photo_url,
+      cac_url,
+      utility_url,
+      memart_url,
+      status_report_url,
+      vendor:vendors ( name )
+    `)
+    .in("status", ["approved", "rejected"])
+    .order("reviewed_at", { ascending: false });
+
+  if (error) {
+    historyTable.innerHTML = `<tr><td colspan="6">Failed to load history.</td></tr>`;
+    return;
+  }
+
+  if (!reviewed || !reviewed.length) {
+    historyTable.innerHTML = `<tr><td colspan="6">No reviewed verifications yet.</td></tr>`;
+    return;
+  }
+
+  allReviewedVerifications = reviewed;
+  renderVerificationHistory(reviewed);
+
+  // Wire up search and filter
+  const searchInput = document.getElementById("verificationSearch");
+  const statusFilter = document.getElementById("verificationStatusFilter");
+
+  function applyFilters() {
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    const statusValue = statusFilter.value;
+    const filtered = allReviewedVerifications.filter(v => {
+      const nameMatch = (v.vendor?.name || "").toLowerCase().includes(searchTerm);
+      const statusMatch = statusValue === "all" || v.status === statusValue;
+      return nameMatch && statusMatch;
+    });
+    renderVerificationHistory(filtered);
+  }
+
+  if (searchInput) searchInput.addEventListener("input", applyFilters);
+  if (statusFilter) statusFilter.addEventListener("change", applyFilters);
+}
+
+function renderVerificationHistory(verifications) {
+  const historyTable = document.getElementById("verificationHistoryTable");
+  if (!historyTable) return;
+
+  if (!verifications.length) {
+    historyTable.innerHTML = `<tr><td colspan="6">No results found.</td></tr>`;
+    return;
+  }
+
+  historyTable.innerHTML = "";
+
+  verifications.forEach(v => {
+    const tr = document.createElement("tr");
+    const submittedDate = v.created_at ? new Date(v.created_at).toLocaleDateString() : "—";
+    const reviewedDate  = v.reviewed_at ? new Date(v.reviewed_at).toLocaleDateString() : "Not recorded";
+    const statusClass   = v.status === "approved" ? "status-approved" : "status-rejected";
+
+    const docLinks = [
+      { label: "ID",            url: v.id_url },
+      { label: "Passport",      url: v.passport_photo_url },
+      { label: "CAC",           url: v.cac_url },
+      { label: "Utility",       url: v.utility_url },
+      { label: "MEMART",        url: v.memart_url },
+      { label: "Status Report", url: v.status_report_url }
+    ]
+    .filter(doc => doc.url)
+    .map(doc =>
+      `<a href="#"
+         onclick="viewSignedUrl('vendor-verifications','${doc.url}');return false;"
+         style="margin-right:6px;color:#2563eb;text-decoration:underline;cursor:pointer;">${doc.label}</a>`
+    )
+    .join("");
+
+    tr.innerHTML = `
+      <td>${v.vendor?.name || "—"}</td>
+      <td>${v.badge_type}</td>
+      <td>${submittedDate}</td>
+      <td>${reviewedDate}</td>
+      <td><span class="status-badge ${statusClass}">${v.status}</span></td>
+      <td>${docLinks || "—"}</td>
+    `;
+
+    historyTable.appendChild(tr);
+  });
+}
+
+loadVerificationHistory();
+
 });
+
+// -----------------------------
+// VIEW SIGNED URL (Private Buckets)
+// Defined OUTSIDE DOMContentLoaded so it is globally
+// accessible from onclick attributes in the HTML.
+// Handles both full URLs (legacy) and file paths (new).
+// Link expires after 60 minutes automatically.
+// -----------------------------
+async function viewSignedUrl(bucket, pathOrUrl) {
+  if (!pathOrUrl) return;
+
+  // If a full URL was stored (legacy documents before this fix),
+  // extract just the file path from it.
+  let filePath = pathOrUrl;
+  const marker = `/object/public/${bucket}/`;
+  if (pathOrUrl.includes(marker)) {
+    filePath = pathOrUrl.split(marker)[1];
+  }
+
+  const supabase = window.supabaseClient;
+
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .createSignedUrl(filePath, 3600);
+
+  if (error || !data?.signedUrl) {
+    alert("Could not generate document link. Please try again.");
+    return;
+  }
+
+  window.open(data.signedUrl, "_blank");
+}

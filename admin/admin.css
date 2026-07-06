@@ -215,6 +215,49 @@ table tbody tr:last-child td:last-child {
 }
 
 /* ===============================
+   VERIFICATION HISTORY CONTROLS
+================================= */
+
+.review-history-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.history-search {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px 14px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  margin: 0;
+  width: auto;
+}
+
+.history-search:focus {
+  border-color: #e6c200;
+  box-shadow: 0 0 0 3px rgba(230, 194, 0, 0.15);
+}
+
+.history-filter {
+  padding: 10px 14px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
+  cursor: pointer;
+  outline: none;
+}
+
+.history-filter:focus {
+  border-color: #e6c200;
+}
+
+/* ===============================
    MOBILE RESPONSIVE (PARTNER DASHBOARD)
 ================================= */
 

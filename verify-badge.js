@@ -101,11 +101,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (error) throw error;
 
-      const { data } = supabase.storage
-        .from("vendor-verifications")
-        .getPublicUrl(path);
-
-      return data.publicUrl;
+      // Store the file path only — not a public URL.
+      // The bucket is private. Admins generate signed URLs
+      // on demand when reviewing verification documents.
+      return path;
     };
 
     try {

@@ -136,6 +136,75 @@
   </tbody>
 </table>
 
+
+<!-- PAYMENT HISTORY -->
+<h1 class="verification-heading">Payment History</h1>
+
+<div class="review-history-controls">
+  <input
+    type="text"
+    id="paymentHistorySearch"
+    placeholder="Search by vendor name..."
+    class="history-search"
+  />
+  <select id="paymentHistoryFilter" class="history-filter">
+    <option value="all">All Statuses</option>
+    <option value="confirmed">Confirmed</option>
+    <option value="rejected">Rejected</option>
+  </select>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Vendor</th>
+      <th>Plan</th>
+      <th>Billing</th>
+      <th>Amount</th>
+      <th>Reviewed</th>
+      <th>Status</th>
+      <th>Receipt</th>
+    </tr>
+  </thead>
+  <tbody id="paymentHistoryTable">
+    <tr><td colspan="7">Loading…</td></tr>
+  </tbody>
+</table>
+
+<!-- VERIFICATION HISTORY -->
+<h1 class="verification-heading">Verification History</h1>
+
+<!-- Search and filter bar -->
+<div class="review-history-controls">
+  <input
+    type="text"
+    id="verificationSearch"
+    placeholder="Search by vendor name..."
+    class="history-search"
+  />
+  <select id="verificationStatusFilter" class="history-filter">
+    <option value="all">All Statuses</option>
+    <option value="approved">Approved</option>
+    <option value="rejected">Rejected</option>
+  </select>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Vendor</th>
+      <th>Badge</th>
+      <th>Submitted</th>
+      <th>Reviewed</th>
+      <th>Status</th>
+      <th>Documents</th>
+    </tr>
+  </thead>
+  <tbody id="verificationHistoryTable">
+    <tr><td colspan="6">Loading…</td></tr>
+  </tbody>
+</table>
+
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
