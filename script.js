@@ -214,40 +214,41 @@ if (billingToggle) {
 // AUTH-AWARE NAV (LOGIN / LOGOUT)
 // ===============================
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
 
-  if (!supabaseClient) return;
+  if (!window.supabaseClient) return;
 
-  const supabase = supabaseClient;
+  const supabase = window.supabaseClient;
 
   const loginLink = document.getElementById("loginLink");
   const logoutLink = document.getElementById("logoutLink");
   const logoutBtn = document.getElementById("logoutBtn");
 
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-
-  if (user) {
-
-    loginLink?.classList.add("hidden");
-    logoutLink?.classList.remove("hidden");
-
-  } else {
-
-    loginLink?.classList.remove("hidden");
-    logoutLink?.classList.add("hidden");
-
+  // Update navbar based on session state
+  function updateNav(user) {
+    if (user) {
+      loginLink?.classList.add("hidden");
+      logoutLink?.classList.remove("hidden");
+    } else {
+      loginLink?.classList.remove("hidden");
+      logoutLink?.classList.add("hidden");
+    }
   }
 
+  // Listen for auth state changes — fires reliably on every page load
+  supabase.auth.onAuthStateChange((event, session) => {
+    updateNav(session?.user || null);
+  });
+
+  // Also check immediately in case session is already established
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    updateNav(session?.user || null);
+  });
+
   logoutBtn?.addEventListener("click", async (e) => {
-
     e.preventDefault();
-
     await supabase.auth.signOut();
-
     window.location.href = "index";
-
   });
 
 });

@@ -19,8 +19,21 @@ window.supabaseClient = window.supabase.createClient(
 // 🔐 Track current logged-in user (vendor)
 window.currentUser = null;
 
-window.supabaseClient.auth.onAuthStateChange((event, session) => {
+window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
   window.currentUser = session?.user || null;
   console.log("Auth state changed:", event, window.currentUser);
+
+  // When a vendor confirms their email change,
+  // sync the new email to the vendors table automatically.
+  if (event === "USER_UPDATED" && session?.user?.email) {
+    const { error } = await window.supabaseClient
+      .from("vendors")
+      .update({ email: session.user.email })
+      .eq("auth_user_id", session.user.id);
+
+    if (!error) {
+      console.log("Vendor email synced:", session.user.email);
+    }
+  }
 });
 
