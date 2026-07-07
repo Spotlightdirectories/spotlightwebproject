@@ -6026,8 +6026,169 @@ if (
 }
 
 /* =========================
-BUSINESS INSIGHTS
+CHANGE EMAIL (SETTINGS)
 ========================= */
+
+const settingsCurrentEmail =
+  document.getElementById(
+    "settingsCurrentEmail"
+  );
+
+const showChangeEmailBtn =
+  document.getElementById(
+    "showChangeEmailBtn"
+  );
+
+const changeEmailForm =
+  document.getElementById(
+    "changeEmailForm"
+  );
+
+const newEmailInput =
+  document.getElementById(
+    "newEmailInput"
+  );
+
+const sendEmailChangeBtn =
+  document.getElementById(
+    "sendEmailChangeBtn"
+  );
+
+const cancelEmailChangeBtn =
+  document.getElementById(
+    "cancelEmailChangeBtn"
+  );
+
+const emailChangeStatus =
+  document.getElementById(
+    "emailChangeStatus"
+  );
+
+// Show current email in settings
+if (settingsCurrentEmail && vendor) {
+  settingsCurrentEmail.textContent =
+    vendor.email || "—";
+}
+
+// Toggle the change email form
+if (showChangeEmailBtn && changeEmailForm) {
+
+  showChangeEmailBtn.addEventListener(
+    "click",
+    () => {
+      changeEmailForm.classList.toggle("active");
+      if (emailChangeStatus) {
+        emailChangeStatus.textContent = "";
+      }
+    }
+  );
+
+}
+
+// Cancel button hides the form
+if (cancelEmailChangeBtn && changeEmailForm) {
+
+  cancelEmailChangeBtn.addEventListener(
+    "click",
+    () => {
+      changeEmailForm.classList.remove("active");
+      if (newEmailInput) newEmailInput.value = "";
+      if (emailChangeStatus) emailChangeStatus.textContent = "";
+    }
+  );
+
+}
+
+// Send confirmation emails to both old and new address
+if (sendEmailChangeBtn && newEmailInput) {
+
+  sendEmailChangeBtn.addEventListener(
+    "click",
+    async () => {
+
+      const newEmail = newEmailInput.value.trim();
+
+      if (!newEmail) {
+        if (emailChangeStatus) {
+          emailChangeStatus.textContent =
+            "Please enter a new email address.";
+          emailChangeStatus.style.color = "#c0392b";
+        }
+        return;
+      }
+
+      // Basic email format check
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(newEmail)) {
+        if (emailChangeStatus) {
+          emailChangeStatus.textContent =
+            "Please enter a valid email address.";
+          emailChangeStatus.style.color = "#c0392b";
+        }
+        return;
+      }
+
+      // Block if same as current email
+      if (newEmail === vendor.email) {
+        if (emailChangeStatus) {
+          emailChangeStatus.textContent =
+            "This is already your current email address.";
+          emailChangeStatus.style.color = "#c0392b";
+        }
+        return;
+      }
+
+      sendEmailChangeBtn.disabled = true;
+      sendEmailChangeBtn.textContent = "Sending...";
+
+      try {
+
+        // Supabase sends confirmation to BOTH old and new email.
+        // The change only takes effect when both are confirmed.
+        const { error } =
+          await supabase.auth.updateUser({
+            email: newEmail
+          });
+
+        if (error) {
+          throw error;
+        }
+
+        if (emailChangeStatus) {
+          emailChangeStatus.textContent =
+            `✓ Confirmation links have been sent to ${vendor.email} and ${newEmail}. ` +
+            `You must click the confirmation link in BOTH emails to complete the change. ` +
+            `Check your inbox and spam folder.`;
+          emailChangeStatus.style.color = "#1a6b3a";
+        }
+
+        sendEmailChangeBtn.textContent =
+          "Confirmation Sent";
+
+      } catch (err) {
+
+        console.error("Email change error:", err);
+
+        if (emailChangeStatus) {
+          emailChangeStatus.textContent =
+            err.message ||
+            "Unable to send confirmation. Please try again.";
+          emailChangeStatus.style.color = "#c0392b";
+        }
+
+        sendEmailChangeBtn.disabled = false;
+        sendEmailChangeBtn.textContent = "Send Confirmation";
+
+      }
+
+    }
+  );
+
+}
+
+/* ========================= */
+/* BUSINESS INSIGHTS */
+/* ========================= */
 
 const businessInsightsSidebarBtn =
 

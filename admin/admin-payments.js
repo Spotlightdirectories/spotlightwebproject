@@ -9,13 +9,205 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // -----------------------------
   // ADMIN SESSION GUARD
+  // Now supports all admin role types.
   // -----------------------------
   const adminSession = JSON.parse(localStorage.getItem("admin_session"));
 
-  if (!adminSession || !["admin", "super_admin"].includes(adminSession.role)) {
+  const ADMIN_ROLES = [
+    "super_admin",
+    "admin",
+    "finance_admin",
+    "verification_admin"
+  ];
+
+  if (!adminSession || !ADMIN_ROLES.includes(adminSession.role)) {
     alert("Admin access only");
     window.location.href = "admin-login";
     return;
+  }
+
+  const currentRole = adminSession.role;
+
+  // -----------------------------
+  // ADMIN HEADER
+  // Show name, role badge, logout button
+  // -----------------------------
+  const roleBadge = document.getElementById("adminRoleBadge");
+  const nameLabel = document.getElementById("adminNameLabel");
+  const logoutBtn = document.getElementById("adminLogoutBtn");
+
+  const roleLabels = {
+    super_admin:       "Super Admin",
+    admin:             "Admin",
+    finance_admin:     "Finance Admin",
+    verification_admin:"Verification Admin"
+  };
+
+  if (roleBadge) {
+    roleBadge.textContent = roleLabels[currentRole] || currentRole;
+    roleBadge.classList.add(`role-${currentRole}`);
+  }
+
+  if (nameLabel) {
+    nameLabel.textContent = adminSession.email || "";
+  }
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+      await supabase.auth.signOut();
+      localStorage.removeItem("admin_session");
+      window.location.href = "admin-login";
+    });
+  }
+
+  // -----------------------------
+  // ROLE-BASED SECTION VISIBILITY
+  // Each section declares which roles can see it
+  // via data-roles="role1,role2" attribute.
+  // This runs once on load and controls what each
+  // admin personnel can see on their screen.
+  // -----------------------------
+  function applyRoleVisibility() {
+    document.querySelectorAll(".admin-section").forEach(section => {
+      const allowedRoles = (section.dataset.roles || "")
+        .split(",")
+        .map(r => r.trim());
+
+      if (allowedRoles.includes(currentRole)) {
+        section.classList.add("role-visible");
+      } else {
+        section.classList.remove("role-visible");
+        section.style.display = "none";
+      }
+    });
+  }
+
+  applyRoleVisibility();
+
+  // -----------------------------
+  // ADMIN STAFF MANAGEMENT
+  // Only visible to super_admin.
+  // Assign, change, or revoke admin roles.
+  // -----------------------------
+  if (currentRole === "super_admin") {
+
+    // Load current admin staff list
+    async function loadAdminStaff() {
+      const staffTable = document.getElementById("adminStaffTable");
+      if (!staffTable) return;
+
+      const { data: roles, error } = await supabase
+        .from("user_roles")
+        .select("user_id, role, created_at")
+        .in("role", ["admin", "finance_admin", "verification_admin"])
+        .order("created_at", { ascending: false });
+
+      if (error || !roles || !roles.length) {
+        staffTable.innerHTML = `<tr><td colspan="4">No admin staff assigned yet.</td></tr>`;
+        return;
+      }
+
+      // Get emails from auth for display
+      // We store email in admin_session but not in user_roles.
+      // We show user_id shortened as identifier for privacy.
+      staffTable.innerHTML = "";
+
+      roles.forEach(r => {
+        const tr = document.createElement("tr");
+        const assignedDate = r.created_at
+          ? new Date(r.created_at).toLocaleDateString()
+          : "—";
+
+        const roleDisplay = roleLabels[r.role] || r.role;
+        const shortId = r.user_id?.slice(0, 8) + "...";
+
+        tr.innerHTML = `
+          <td style="font-family:monospace;font-size:12px;">${shortId}</td>
+          <td><span class="admin-role-badge role-${r.role}" style="display:inline-block;">${roleDisplay}</span></td>
+          <td>${assignedDate}</td>
+          <td>
+            <button
+              class="reject-btn"
+              onclick="revokeAdminRole('${r.user_id}')">
+              Revoke
+            </button>
+          </td>
+        `;
+        staffTable.appendChild(tr);
+      });
+    }
+
+    loadAdminStaff();
+
+    // Assign a role to a user by email
+    const assignBtn = document.getElementById("assignAdminBtn");
+    if (assignBtn) {
+      assignBtn.addEventListener("click", async () => {
+        const email = document.getElementById("assignAdminEmail").value.trim();
+        const role  = document.getElementById("assignAdminRole").value;
+
+        if (!email || !role) {
+          alert("Please enter an email address and select a role.");
+          return;
+        }
+
+        assignBtn.disabled = true;
+        assignBtn.textContent = "Assigning...";
+
+        // Look up the user by email in auth
+        // We use the admin API via the edge function pattern.
+        // Since we cannot query auth.users directly from the browser,
+        // we check if the user exists by trying to find them in vendors
+        // or user_roles first.
+        const { data: existingRole } = await supabase
+          .from("user_roles")
+          .select("user_id, role")
+          .eq("role", "vendor")
+          .limit(100);
+
+        // Find user by checking vendors table for the email
+        const { data: vendorMatch } = await supabase
+          .from("vendors")
+          .select("auth_user_id, email")
+          .eq("email", email)
+          .maybeSingle();
+
+        if (!vendorMatch?.auth_user_id) {
+          alert(`No registered user found with email: ${email}\n\nThe person must first create an account on Spotlight before you can assign them an admin role.`);
+          assignBtn.disabled = false;
+          assignBtn.textContent = "Assign Role";
+          return;
+        }
+
+        const targetUserId = vendorMatch.auth_user_id;
+
+        // Upsert the role
+        const { error: upsertError } = await supabase
+          .from("user_roles")
+          .upsert({
+            user_id: targetUserId,
+            role: role,
+            assigned_by: adminSession.user_id,
+            created_at: new Date().toISOString()
+          }, { onConflict: "user_id" });
+
+        if (upsertError) {
+          alert("Failed to assign role: " + upsertError.message);
+          assignBtn.disabled = false;
+          assignBtn.textContent = "Assign Role";
+          return;
+        }
+
+        alert(`✓ Role assigned successfully!\n\n${email} is now a ${roleLabels[role]}.\n\nThey can log in at the admin login page with their existing account credentials.`);
+
+        document.getElementById("assignAdminEmail").value = "";
+        document.getElementById("assignAdminRole").value = "";
+        assignBtn.disabled = false;
+        assignBtn.textContent = "Assign Role";
+
+        loadAdminStaff();
+      });
+    }
   }
 
 // -----------------------------
@@ -37,9 +229,9 @@ const { data: payments, error } = await supabase
 console.log("PAYMENTS RESULT:", payments, error);
 
 if (error) {
-  table.innerHTML = `<tr><td colspan="6">${error.message}</td></tr>`;
+  table.innerHTML = `<tr><td colspan="6" class="empty-state-cell">${error.message}</td></tr>`;
 } else if (!payments.length) {
-  table.innerHTML = `<tr><td colspan="6">No pending payments</td></tr>`;
+  table.innerHTML = `<tr><td colspan="6" class="empty-state-cell">✓ All caught up — no pending payments.</td></tr>`;
 } else {
   table.innerHTML = "";
 
@@ -93,9 +285,9 @@ const { data: verifications, error: verificationError } = await window.supabaseC
   console.log("VERIFICATIONS RESULT:", verifications, verificationError);
 
 if (verificationError) {
-  verificationTable.innerHTML = `<tr><td colspan="6">${verificationError.message}</td></tr>`;
+  verificationTable.innerHTML = `<tr><td colspan="6" class="empty-state-cell">${verificationError.message}</td></tr>`;
 } else if (!verifications.length) {
-  verificationTable.innerHTML = `<tr><td colspan="6">No pending verifications</td></tr>`;
+  verificationTable.innerHTML = `<tr><td colspan="6" class="empty-state-cell">✓ All caught up — no pending verifications.</td></tr>`;
 } else {
   verificationTable.innerHTML = "";
 
@@ -136,9 +328,9 @@ const { data: partners, error: partnersError } = await supabase
 console.log("PARTNERS RESULT:", partners, partnersError);
 
 if (partnersError) {
-  partnersTable.innerHTML = `<tr><td colspan="6">${partnersError.message}</td></tr>`;
+  partnersTable.innerHTML = `<tr><td colspan="6" class="empty-state-cell">${partnersError.message}</td></tr>`;
 } else if (!partners.length) {
-  partnersTable.innerHTML = `<tr><td colspan="6">No pending partners</td></tr>`;
+  partnersTable.innerHTML = `<tr><td colspan="6" class="empty-state-cell">✓ All caught up — no pending partner applications.</td></tr>`;
 } else {
   partnersTable.innerHTML = "";
 
@@ -181,7 +373,8 @@ console.log("COMMISSIONS RESULT:", commissions, commissionsError);
 if (commissionsError) {
   commissionsTable.innerHTML = `<tr><td colspan="8">${commissionsError.message}</td></tr>`;
 } else if (!commissions.length) {
-  commissionsTable.innerHTML = `<tr><td colspan="8">No commissions</td></tr>`;
+  commissionsTable.innerHTML = `<tr><td colspan="8" class="empty-state-cell">✓ No commissions recorded yet. They will appear automatically when referred vendors make payments.</td></tr>`;
+  summaryTable.innerHTML = `<tr><td colspan="6" class="empty-state-cell">✓ No commission summary yet.</td></tr>`;
 } else {
   commissionsTable.innerHTML = "";
 
@@ -254,6 +447,9 @@ Object.values(summaryMap).forEach(p => {
 
   summaryTable.appendChild(tr);
 });
+
+// Wire up commission search and filter
+initCommissionSearch(commissions);
 
 }
 
@@ -351,23 +547,41 @@ if (updateError) {
 }
 
   // 2️⃣ Activate vendor
-
   const expiry =
-  payment.billing_type === "monthly"
-    ? new Date(new Date(now).setMonth(new Date(now).getMonth() + 1))
-    : new Date(new Date(now).setFullYear(new Date(now).getFullYear() + 1));
+    payment.billing_type === "monthly"
+      ? new Date(new Date(now).setMonth(new Date(now).getMonth() + 1))
+      : new Date(new Date(now).setFullYear(new Date(now).getFullYear() + 1));
 
-await supabase
-  .from("vendors")
-  .update({
+  // Generate a SPOT ID for paid vendors (carried over from verify-payments.js)
+  // P = Paid vendor type
+  let spotId = null;
+  try {
+    const { data: generatedSpotId } = await supabase.rpc(
+      "generate_spot_id",
+      { vendor_type: "P" }
+    );
+    spotId = generatedSpotId;
+  } catch (err) {
+    console.error("SPOT ID generation failed:", err);
+    // Non-fatal — proceed with activation even if SPOT ID fails
+  }
+
+  const vendorUpdate = {
     subscription_status: "active",
     plan_tier: payment.plan,
     billing_cycle: payment.billing_type,
     is_premium: true,
     paid_at: now,
-    expires_at: expiry
-  })
-  .eq("id", payment.vendor_id);
+    expires_at: expiry.toISOString()
+  };
+
+  // Only set spot_id if one was generated
+  if (spotId) vendorUpdate.spot_id = spotId;
+
+  await supabase
+    .from("vendors")
+    .update(vendorUpdate)
+    .eq("id", payment.vendor_id);
 
 
   // 3️⃣ Send email
@@ -815,6 +1029,151 @@ async function payPartner(partnerId) {
  }
 
 // -----------------------------
+// PARTNER HISTORY
+// Shows all approved and rejected partner applications.
+// Searchable and filterable — no data lost after actioning.
+// -----------------------------
+
+let allReviewedPartners = [];
+
+async function loadPartnerHistory() {
+  const historyTable = document.getElementById("partnerHistoryTable");
+  if (!historyTable) return;
+
+  const { data: partners, error } = await supabase
+    .from("partners")
+    .select("id, name, email, state, referral_code, status, created_at")
+    .in("status", ["approved", "rejected"])
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    historyTable.innerHTML = `<tr><td colspan="6">Failed to load partner history.</td></tr>`;
+    return;
+  }
+
+  if (!partners || !partners.length) {
+    historyTable.innerHTML = `<tr><td colspan="6">No reviewed partner applications yet.</td></tr>`;
+    return;
+  }
+
+  allReviewedPartners = partners;
+  renderPartnerHistory(partners);
+
+  const searchInput = document.getElementById("partnerHistorySearch");
+  const statusFilter = document.getElementById("partnerHistoryFilter");
+
+  function applyFilters() {
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    const statusValue = statusFilter.value;
+    const filtered = allReviewedPartners.filter(p => {
+      const nameMatch = (p.name || "").toLowerCase().includes(searchTerm)
+        || (p.referral_code || "").toLowerCase().includes(searchTerm);
+      const statusMatch = statusValue === "all" || p.status === statusValue;
+      return nameMatch && statusMatch;
+    });
+    renderPartnerHistory(filtered);
+  }
+
+  if (searchInput) searchInput.addEventListener("input", applyFilters);
+  if (statusFilter) statusFilter.addEventListener("change", applyFilters);
+}
+
+function renderPartnerHistory(partners) {
+  const historyTable = document.getElementById("partnerHistoryTable");
+  if (!historyTable) return;
+
+  if (!partners.length) {
+    historyTable.innerHTML = `<tr><td colspan="6">No results found.</td></tr>`;
+    return;
+  }
+
+  historyTable.innerHTML = "";
+
+  partners.forEach(p => {
+    const tr = document.createElement("tr");
+    const appliedDate = p.created_at
+      ? new Date(p.created_at).toLocaleDateString()
+      : "—";
+    const statusClass = p.status === "approved"
+      ? "status-approved"
+      : "status-rejected";
+
+    tr.innerHTML = `
+      <td>${p.name || "—"}</td>
+      <td>${p.email || "—"}</td>
+      <td>${p.state || "—"}</td>
+      <td>${p.referral_code
+        ? `<strong>${p.referral_code}</strong>`
+        : "—"}</td>
+      <td>${appliedDate}</td>
+      <td><span class="status-badge ${statusClass}">${p.status}</span></td>
+    `;
+    historyTable.appendChild(tr);
+  });
+}
+
+loadPartnerHistory();
+
+// -----------------------------
+// COMMISSION SEARCH & FILTER
+// Wires up the search and filter controls
+// on the All Commissions table.
+// -----------------------------
+
+let allCommissionsData = [];
+
+function initCommissionSearch(commissions) {
+  allCommissionsData = commissions;
+
+  const searchInput = document.getElementById("commissionsSearch");
+  const statusFilter = document.getElementById("commissionsFilter");
+
+  function applyFilters() {
+    const searchTerm = (searchInput?.value || "").toLowerCase().trim();
+    const statusValue = statusFilter?.value || "all";
+
+    const filtered = allCommissionsData.filter(c => {
+      const nameMatch =
+        (c.partners?.name || "").toLowerCase().includes(searchTerm) ||
+        (c.vendors?.name || "").toLowerCase().includes(searchTerm);
+      const statusMatch = statusValue === "all" || c.status === statusValue;
+      return nameMatch && statusMatch;
+    });
+
+    renderFilteredCommissions(filtered);
+  }
+
+  if (searchInput) searchInput.addEventListener("input", applyFilters);
+  if (statusFilter) statusFilter.addEventListener("change", applyFilters);
+}
+
+function renderFilteredCommissions(commissions) {
+  const commissionsTable = document.getElementById("commissionsTable");
+  if (!commissionsTable) return;
+
+  if (!commissions.length) {
+    commissionsTable.innerHTML = `<tr><td colspan="8">No results found.</td></tr>`;
+    return;
+  }
+
+  commissionsTable.innerHTML = "";
+  commissions.forEach(c => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${c.partners?.name || "—"}</td>
+      <td>${c.partners?.referral_code || "—"}</td>
+      <td>${c.vendors?.name || "—"}</td>
+      <td>${c.vendorpayments?.plan || "—"}</td>
+      <td>₦${(Number(c.amount) / 100).toLocaleString()}</td>
+      <td><span class="status-badge status-${c.status}">${c.status}</span></td>
+      <td>${c.partners?.status || "—"}</td>
+      <td>${new Date(c.created_at).toLocaleDateString()}</td>
+    `;
+    commissionsTable.appendChild(tr);
+  });
+}
+
+// -----------------------------
 // PAYMENT HISTORY
 // Shows all confirmed and rejected bank transfer payments.
 // Admins can view receipts via signed URLs —
@@ -1038,6 +1397,36 @@ function renderVerificationHistory(verifications) {
 loadVerificationHistory();
 
 });
+
+// -----------------------------
+// REVOKE ADMIN ROLE
+// Defined OUTSIDE DOMContentLoaded so it is globally
+// accessible from onclick in the staff table.
+// Only super_admin can call this (enforced at DB level too).
+// -----------------------------
+async function revokeAdminRole(userId) {
+  if (!confirm("Revoke this person's admin access? They will immediately lose all admin privileges.")) return;
+
+  const supabase = window.supabaseClient;
+
+  // Downgrade to vendor role (removes admin access)
+  const { error } = await supabase
+    .from("user_roles")
+    .update({ role: "vendor" })
+    .eq("user_id", userId);
+
+  if (error) {
+    alert("Failed to revoke role: " + error.message);
+    return;
+  }
+
+  alert("✓ Admin access revoked. The person is now a regular vendor account.");
+
+  // Refresh the staff table
+  const staffTable = document.getElementById("adminStaffTable");
+  if (staffTable) staffTable.innerHTML = `<tr><td colspan="4">Refreshing…</td></tr>`;
+  location.reload();
+}
 
 // -----------------------------
 // VIEW SIGNED URL (Private Buckets)

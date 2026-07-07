@@ -1826,6 +1826,82 @@
 
   <div class="vd-settings-layout">
 
+    <!-- ACCOUNT SETTINGS -->
+    <div class="vd-card vd-settings-card">
+
+      <div class="vd-settings-card-header">
+        <h3>Account Settings</h3>
+      </div>
+
+      <div class="vd-settings-content">
+
+        <div class="vd-setting-row vd-setting-row-col">
+
+          <div>
+            <h4>Email Address</h4>
+            <p id="settingsCurrentEmail" class="vd-settings-email-display">—</p>
+            <p class="vd-settings-email-note">
+              A confirmation link will be sent to both your current
+              and new email. You must confirm both to complete the change.
+            </p>
+          </div>
+
+          <button
+            id="showChangeEmailBtn"
+            type="button"
+            class="vd-secondary-outline-btn"
+            style="margin-top:8px;align-self:flex-start;"
+          >
+            Change Email
+          </button>
+
+          <!-- Change email form — hidden until button clicked -->
+          <div
+            id="changeEmailForm"
+            class="vd-inline-editor"
+            style="width:100%;margin-top:12px;"
+          >
+
+            <input
+              type="email"
+              id="newEmailInput"
+              class="vd-input"
+              placeholder="Enter new email address"
+              style="margin-bottom:10px;"
+            />
+
+            <div style="display:flex;gap:10px;">
+              <button
+                id="sendEmailChangeBtn"
+                type="button"
+                class="vd-primary-btn"
+              >
+                Send Confirmation
+              </button>
+
+              <button
+                id="cancelEmailChangeBtn"
+                type="button"
+                class="vd-secondary-outline-btn"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <p
+              id="emailChangeStatus"
+              class="vd-profile-status"
+              style="margin-top:10px;"
+            ></p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
     <!-- NOTIFICATIONS -->
     <div class="vd-card vd-settings-card">
 

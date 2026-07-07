@@ -29,7 +29,70 @@
 
 <body>
   <main class="admin-container">
-    <h1>Pending Payments</h1>
+
+    <!-- ============================================================
+         ADMIN HEADER — shows logged-in admin name and role badge
+    ============================================================ -->
+    <div class="admin-header-bar">
+      <div class="admin-header-left">
+        <img src="../images/spotlightlogo-512.png" class="admin-logo" alt="Spotlight" />
+        <span class="admin-title">Admin Dashboard</span>
+      </div>
+      <div class="admin-header-right">
+        <span id="adminRoleBadge" class="admin-role-badge"></span>
+        <span id="adminNameLabel" class="admin-name-label"></span>
+        <button id="adminLogoutBtn" class="admin-logout-btn">Logout</button>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         ADMIN MANAGEMENT — super_admin only
+         Assign, change, or revoke admin roles for any user.
+    ============================================================ -->
+    <div class="admin-section" data-roles="super_admin">
+      <h1 class="admin-section-heading super-admin-heading">
+        <i class="fa-solid fa-shield-halved"></i> Admin Staff Management
+      </h1>
+      <p class="section-note">Assign or revoke admin roles. Only you can see and use this section.</p>
+
+      <!-- Assign new admin -->
+      <div class="assign-admin-form">
+        <input
+          type="email"
+          id="assignAdminEmail"
+          placeholder="Enter staff email address..."
+          class="history-search"
+        />
+        <select id="assignAdminRole" class="history-filter">
+          <option value="">Select role...</option>
+          <option value="admin">Admin (full operations)</option>
+          <option value="finance_admin">Finance Admin (payments &amp; commissions)</option>
+          <option value="verification_admin">Verification Admin (badge reviews only)</option>
+        </select>
+        <button id="assignAdminBtn" class="approve-btn">Assign Role</button>
+      </div>
+
+      <!-- Current admin staff list -->
+      <table style="margin-top:16px;">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Assigned</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="adminStaffTable">
+          <tr><td colspan="4">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ============================================================
+         PENDING PAYMENTS — finance roles only
+    ============================================================ -->
+    <div class="admin-section" data-roles="super_admin,admin,finance_admin">
+    <h1 class="verification-heading">Pending Payments</h1>
 
     <table>
       <thead>
@@ -49,7 +112,12 @@
         </tr>
       </tbody>
     </table>
+    </div>
 
+    <!-- ============================================================
+         PENDING BADGE VERIFICATIONS — verification roles only
+    ============================================================ -->
+    <div class="admin-section" data-roles="super_admin,admin,verification_admin">
     <h1 class="verification-heading">Pending Badge Verifications</h1>
 
 <table>
@@ -70,7 +138,12 @@
     </tr>
   </tbody>
 </table>
+    </div>
 
+    <!-- ============================================================
+         PENDING PARTNER APPROVALS — admin and super_admin only
+    ============================================================ -->
+    <div class="admin-section" data-roles="super_admin,admin">
 <h1 class="partners-heading">Pending Partner Approvals</h1>
 
 <table>
@@ -91,7 +164,51 @@
     </tr>
   </tbody>
 </table>
+    </div>
 
+    <!-- ============================================================
+         PARTNER HISTORY — admin and super_admin only
+    ============================================================ -->
+    <div class="admin-section" data-roles="super_admin,admin">
+
+<h1 class="verification-heading">Partner History</h1>
+
+<div class="review-history-controls">
+  <input
+    type="text"
+    id="partnerHistorySearch"
+    placeholder="Search by name or referral code..."
+    class="history-search"
+  />
+  <select id="partnerHistoryFilter" class="history-filter">
+    <option value="all">All Statuses</option>
+    <option value="approved">Approved</option>
+    <option value="rejected">Rejected</option>
+  </select>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>State</th>
+      <th>Referral Code</th>
+      <th>Applied</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody id="partnerHistoryTable">
+    <tr><td colspan="6">Loading…</td></tr>
+  </tbody>
+</table>
+
+    </div>
+
+    <!-- ============================================================
+         COMMISSIONS — finance roles only
+    ============================================================ -->
+    <div class="admin-section" data-roles="super_admin,admin,finance_admin">
 <h1 class="verification-heading">Commission Summary (By Partner)</h1>
 
 <table>
@@ -115,6 +232,21 @@
 
 <h1 class="verification-heading">All Commissions</h1>
 
+<div class="review-history-controls">
+  <input
+    type="text"
+    id="commissionsSearch"
+    placeholder="Search by partner or vendor name..."
+    class="history-search"
+  />
+  <select id="commissionsFilter" class="history-filter">
+    <option value="all">All Statuses</option>
+    <option value="pending">Pending</option>
+    <option value="available">Available</option>
+    <option value="paid">Paid</option>
+  </select>
+</div>
+
 <table>
   <thead>
     <tr>
@@ -135,8 +267,12 @@
     </tr>
   </tbody>
 </table>
+    </div>
 
-
+    <!-- ============================================================
+         PAYMENT HISTORY — finance roles only
+    ============================================================ -->
+    <div class="admin-section" data-roles="super_admin,admin,finance_admin">
 <!-- PAYMENT HISTORY -->
 <h1 class="verification-heading">Payment History</h1>
 
@@ -170,7 +306,12 @@
     <tr><td colspan="7">Loading…</td></tr>
   </tbody>
 </table>
+    </div>
 
+    <!-- ============================================================
+         VERIFICATION HISTORY — verification roles only
+    ============================================================ -->
+    <div class="admin-section" data-roles="super_admin,admin,verification_admin">
 <!-- VERIFICATION HISTORY -->
 <h1 class="verification-heading">Verification History</h1>
 
@@ -204,6 +345,7 @@
     <tr><td colspan="6">Loading…</td></tr>
   </tbody>
 </table>
+    </div>
 
   </main>
 

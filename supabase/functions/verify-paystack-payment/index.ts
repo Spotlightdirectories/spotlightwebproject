@@ -132,24 +132,30 @@ if (!updatedPayment || updatedPayment.length === 0) {
   console.error("No payment matched reference:", reference);
 }
 
-//   // 🔹 Activate vendor
-//   const expiry =
-//   existingPayment.billing_type === "monthly"
-//     ? new Date(new Date(now).setMonth(new Date(now).getMonth() + 1))
-//     : new Date(new Date(now).setFullYear(new Date(now).getFullYear() + 1));
+  // 🔹 Activate vendor (fallback if webhook has not fired yet)
+  // The webhook is the primary activation path.
+  // This ensures the vendor is never left in limbo
+  // if the webhook is delayed due to network issues.
+  // If the webhook already fired, the vendor is already active
+  // and this update is a safe no-op (same values written again).
+  const expiry =
+    existingPayment.billing_type === "monthly"
+      ? new Date(new Date(now).setMonth(new Date(now).getMonth() + 1))
+      : new Date(new Date(now).setFullYear(new Date(now).getFullYear() + 1));
 
-// await supabase
-//   .from("vendors")
-//   .update({
-//     subscription_status: "active",
-//     plan_tier: existingPayment.plan,
-//     billing_cycle: existingPayment.billing_type,
-//     is_premium: true,
-//     paystack_reference: reference,
-//     paid_at: now,
-//     expires_at: expiry
-//   })
-//   .eq("id", existingPayment.vendor_id);
+  await supabase
+    .from("vendors")
+    .update({
+      subscription_status: "active",
+      plan_tier: existingPayment.plan,
+      billing_cycle: existingPayment.billing_type,
+      is_premium: true,
+      paystack_reference: reference,
+      paid_at: now,
+      expires_at: expiry.toISOString()
+    })
+    .eq("id", existingPayment.vendor_id)
+    .neq("subscription_status", "active"); // Only update if not already active
 
   // 🔹 Send activation email
   const { data: vendorData } = await supabase

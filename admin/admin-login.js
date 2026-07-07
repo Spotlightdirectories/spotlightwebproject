@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
    }
 
    // Ensure session is fully established before querying
-   await new Promise(resolve => setTimeout(resolve, 300));
+   await new Promise(resolve => setTimeout(resolve, 800));
 
     // 2. VERIFY ADMIN ROLE
     const {
@@ -75,7 +75,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const role = roleRow[0].role;
 
-if (!["admin", "super_admin"].includes(role)) {
+const VALID_ADMIN_ROLES = ["super_admin","admin","finance_admin","verification_admin"];
+if (!VALID_ADMIN_ROLES.includes(role)) {
   await window.supabaseClient.auth.signOut();
   errorEl.textContent = "You are not authorized as an admin";
   isSubmitting = false;

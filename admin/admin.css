@@ -215,6 +215,154 @@ table tbody tr:last-child td:last-child {
 }
 
 /* ===============================
+   ADMIN HEADER BAR
+================================= */
+
+.admin-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #000000;
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.admin-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: contain;
+}
+
+.admin-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #e6c200;
+  letter-spacing: 0.3px;
+}
+
+.admin-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-role-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.admin-role-badge.role-super_admin {
+  background: #e6c200;
+  color: #000000;
+}
+
+.admin-role-badge.role-admin {
+  background: #1a4a8a;
+  color: #ffffff;
+}
+
+.admin-role-badge.role-finance_admin {
+  background: #1a6b3a;
+  color: #ffffff;
+}
+
+.admin-role-badge.role-verification_admin {
+  background: #6a3093;
+  color: #ffffff;
+}
+
+.admin-name-label {
+  font-size: 14px;
+  color: #cccccc;
+}
+
+.admin-logout-btn {
+  padding: 6px 16px;
+  background: transparent;
+  border: 1px solid #555;
+  color: #ffffff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.admin-logout-btn:hover {
+  background: #c0392b;
+  border-color: #c0392b;
+}
+
+/* ===============================
+   ROLE-BASED SECTION VISIBILITY
+================================= */
+
+.admin-section {
+  display: none; /* hidden by default — JS shows based on role */
+}
+
+.admin-section.role-visible {
+  display: block;
+}
+
+/* ===============================
+   ADMIN MANAGEMENT SECTION
+================================= */
+
+.super-admin-heading {
+  color: #e6c200 !important;
+  border-bottom: 2px solid #e6c200;
+  padding-bottom: 8px;
+}
+
+.section-note {
+  color: #666;
+  font-size: 13px;
+  margin-bottom: 16px;
+  font-style: italic;
+}
+
+.assign-admin-form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.assign-admin-form .history-search {
+  flex: 1;
+  min-width: 220px;
+}
+
+.admin-section-heading {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.empty-state-cell {
+  color: #1a6b3a;
+  font-style: italic;
+  padding: 16px 12px;
+  font-size: 14px;
+}
+
+/* ===============================
    VERIFICATION HISTORY CONTROLS
 ================================= */
 

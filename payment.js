@@ -111,7 +111,7 @@ if (
   const { data: latestPendingPayment } =
     await supabase
       .from("vendorpayments")
-      .select("created_at")
+      .select("created_at, payment_method")
       .eq("vendor_id", vendor.id)
       .eq("status", "pending")
       .order("created_at", {
@@ -134,8 +134,13 @@ if (
       (now - createdAt) /
       (1000 * 60 * 60);
 
-    // 24-hour recovery fallback
-    if (hoursPassed >= 24) {
+    // Downgrade window:
+    // Bank transfers: 48 hours (admin needs time to review receipts)
+    // Card payments: 24 hours (webhook should fire within seconds)
+    const downgradeCutoffHours =
+      latestPendingPayment.payment_method === "bank" ? 48 : 24;
+
+    if (hoursPassed >= downgradeCutoffHours) {
 
    await supabase
   .from("vendors")
