@@ -132,6 +132,30 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (error) throw error;
 
+  // Send badge submission acknowledgement email
+  try {
+    await fetch(
+      "https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/send-email",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": window.SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({
+          to: email,
+          subject: "Verification Documents Received",
+          html: EmailTemplates.badgeSubmitted({
+            vendorName: applicantName,
+            badgeType: badgeType
+          })
+        })
+      }
+    );
+  } catch (err) {
+    console.error("Badge submission email failed:", err);
+  }
+
   verifyMsg.textContent =
     "Verification submitted successfully. Await admin review.";
 

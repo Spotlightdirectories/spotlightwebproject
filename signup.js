@@ -236,6 +236,30 @@ const { data: vendorData, error: vendorError } = insertResponse;
     localStorage.removeItem("billingType");
     localStorage.removeItem("referral_code");
 
+    // Send welcome email
+    try {
+      await fetch(
+        "https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/send-email",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": window.SUPABASE_ANON_KEY
+          },
+          body: JSON.stringify({
+            to: email,
+            subject: "Welcome to Spotlight Directories",
+            html: EmailTemplates.welcomeVendor({
+              vendorName: businessName,
+              plan: selectedPlan
+            })
+          })
+        }
+      );
+    } catch (err) {
+      console.error("Welcome email failed:", err);
+    }
+
     // Store business name and email for onboarding
     localStorage.setItem("pendingBusinessName", businessName);
     localStorage.setItem("pendingEmail", email);
