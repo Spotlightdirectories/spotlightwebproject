@@ -444,7 +444,7 @@ if (referredPartnersEl) {
           name,
           plan_tier
       ),
-      vendorpayments (
+      vendor_payments (
       plan,
       billing_type
      )
@@ -529,7 +529,7 @@ commissions.forEach(c => {
 
   const isVendor = c.type === "vendor";
   const isAvailable = c.status === "available";
-  const isYearly = c.vendorpayments?.billing_type === "yearly";
+  const isYearly = c.vendor_payments?.billing_type === "yearly";
 
   const createdDate = new Date(c.created_at);
 

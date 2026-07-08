@@ -375,7 +375,7 @@ if (commissionsError) {
       <td>${sanitize(c.partners?.name)}</td>
       <td>${sanitize(c.partners?.referral_code)}</td>
       <td>${sanitize(c.vendors?.name)}</td>
-      <td>${sanitize(c.vendorpayments?.plan)}</td>
+      <td>${sanitize(c.vendor_payments?.plan)}</td>
       <td>₦${(Number(c.amount) / 100).toLocaleString()}</td>
       <td><span class="status-badge status-${sanitize(c.status)}">${sanitize(c.status)}</span></td>
       <td>${sanitize(c.partners?.status)}</td>
@@ -1136,7 +1136,7 @@ function renderFilteredCommissions(commissions) {
       <td>${sanitize(c.partners?.name)}</td>
       <td>${sanitize(c.partners?.referral_code)}</td>
       <td>${sanitize(c.vendors?.name)}</td>
-      <td>${sanitize(c.vendorpayments?.plan)}</td>
+      <td>${sanitize(c.vendor_payments?.plan)}</td>
       <td>₦${(Number(c.amount) / 100).toLocaleString()}</td>
       <td><span class="status-badge status-${sanitize(c.status)}">${sanitize(c.status)}</span></td>
       <td>${sanitize(c.partners?.status)}</td>
