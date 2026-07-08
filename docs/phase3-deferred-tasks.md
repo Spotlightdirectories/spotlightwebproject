@@ -139,16 +139,44 @@ get_vendor_plan_limits() so UI always reflects server truth.
 
 ## FROM PHASE 2 — 2.4 Email Infrastructure
 
-### Branded HTML email templates (4 templates via Resend)
-All transactional emails currently send plain HTML. Build branded
-yellow/black templates with the Spotlight logo for:
-1. Welcome email on signup (include SPOT ID and getting started guide)
-2. Trial expiry warning (7 days remaining)
-3. Subscription expiry warning (before plan expires)
-4. Badge verification submission acknowledgement
+### Email notifications — full inventory and Phase 3 plan
 
-All via the send-email Edge Function using Resend from
-onboarding@mail.spotlightdirectories.com.
+**Currently live via Resend (6 emails):**
+1. Payment approved — sent when admin approves a bank transfer
+   Gap: does not include SPOT ID, plan name, or expiry date. Improve in Phase 3.
+2. Payment rejected — sent with rejection reason
+3. Badge verification approved — sent with badge type confirmed
+4. Badge verification rejected — sent with instruction to resubmit
+5. Partner application approved — sent with referral code, vendor link,
+   partner link, and induction link
+6. Partner application rejected — sent with rejection reason
+
+**Currently live via Supabase (3 emails, automatic):**
+7. Email confirmation on signup
+8. Password reset
+9. Email change confirmation (sent to both old and new email)
+
+**To be added in Phase 3 (4 new emails via Resend):**
+10. Welcome email on signup — sent immediately after vendor account is
+    created. Include: SPOT ID, plan name, login link, getting started guide.
+11. Trial expiry warning — sent 7 days before the 90-day free trial ends.
+    Include: days remaining, upgrade CTA with link to getlisted page.
+12. Subscription expiry warning — sent before a paid plan expires.
+    Include: expiry date, renewal CTA with link to getlisted page.
+13. Badge verification submitted acknowledgement — sent when a vendor
+    submits documents. Confirm receipt and that review is in progress.
+
+**Total after Phase 3: 13 emails**
+
+**All Phase 3 emails via the send-email Edge Function from
+onboarding@mail.spotlightdirectories.com using Resend.**
+
+All 13 emails to be rebuilt with branded yellow/black HTML templates
+including the Spotlight logo. Plain text fallback for each.
+
+Emails 11 and 12 (trial and subscription warnings) require a scheduled
+job or cron function to check expiry dates daily and send at the right
+time. Build this as a Supabase Edge Function triggered by pg_cron.
 
 ---
 
@@ -199,7 +227,12 @@ require visitor login before submitting a review.
 - [ ] Replace browser plan limit constants with server fetch
 - [ ] Build admin staff onboarding flow (no vendor profile)
 - [ ] Build OTP-based email change flow
-- [ ] Build 4 branded HTML email templates via Resend
+- [ ] Rebuild all 6 existing Resend emails with branded yellow/black HTML templates
+- [ ] Improve payment approved email to include SPOT ID, plan name, and expiry date
+- [ ] Build welcome email (email 10) — triggered on vendor signup
+- [ ] Build trial expiry warning (email 11) — pg_cron job, fires 7 days before trial ends
+- [ ] Build subscription expiry warning (email 12) — pg_cron job, fires before plan expires
+- [ ] Build badge submission acknowledgement (email 13) — triggered on document upload
 - [ ] Fix Resend custom click tracking subdomain
 - [ ] Rebuild landing page to world-class SaaS standard
 - [ ] Rebuild GetListed page and plan comparison page
