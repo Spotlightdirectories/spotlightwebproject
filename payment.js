@@ -351,13 +351,6 @@ const { data: paymentData, error: paymentError } =
     .select("id")
     .maybeSingle();
 
-console.log("PAYMENT INSERT RESULT:", JSON.stringify({ paymentData, paymentError }));
-console.log("VENDOR ID:", vendor.id);
-console.log("USER ID:", user?.id);
-console.log("EFFECTIVE PLAN:", effectivePlan);
-console.log("BILLING TYPE:", billingType);
-console.log("AMOUNT:", getAmountInKobo(effectivePlan, billingType));
-
 if (paymentError || !paymentData) {
   alert(
     paymentError?.message ||
@@ -376,7 +369,7 @@ if (paymentError || !paymentData) {
 
     const filePath = `bank-receipts/${window.currentPaymentId}-${file.name}`;
 
-    const { error: uploadError } = await supabase.storage
+const { error: uploadError } = await supabase.storage
       .from("payment-receipts")
       .upload(filePath, file, { upsert: true });
 
