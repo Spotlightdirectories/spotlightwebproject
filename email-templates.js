@@ -217,7 +217,7 @@ const EmailTemplates = (() => {
   // Triggered: Admin approves a bank transfer in admin dashboard
   // Improvement: now includes SPOT ID, plan name, expiry date
   // ============================================================
-  function paymentApproved({ vendorName = "", plan = "", spotId = "", expiresAt = "" }) {
+  function paymentApproved({ vendorName = "", plan = "", billingType = "", spotId = "", expiresAt = "" }) {
     const planDisplay = plan
       ? plan.charAt(0).toUpperCase() + plan.slice(1)
       : "—";
@@ -233,6 +233,7 @@ const EmailTemplates = (() => {
       ${paragraph("Your bank transfer has been reviewed and approved. Your Spotlight subscription is now active.")}
       ${infoTable(
         infoRow("Plan", planDisplay) +
+        infoRow("Billing", billingType ? billingType.charAt(0).toUpperCase() + billingType.slice(1) : "—") +
         (spotId ? infoRow("Your SPOT ID", spotId) : "") +
         infoRow("Valid Until", expiryDisplay)
       )}

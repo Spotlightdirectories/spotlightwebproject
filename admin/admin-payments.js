@@ -591,6 +591,7 @@ if (updateError) {
     html: EmailTemplates.paymentApproved({
       vendorName: confirmedVendorName,
       plan: payment.plan || "",
+      billingType: payment.billing_type || "",
       spotId: confirmedSpotId,
       expiresAt: expiry.toISOString()
     })
