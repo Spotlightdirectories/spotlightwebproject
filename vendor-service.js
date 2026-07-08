@@ -12,11 +12,6 @@ const serviceSlug =
     "slug"
   );
 
-console.log(
-  "Service Slug:",
-  serviceSlug
-);
-
 if (!serviceSlug)
   return;
 
@@ -43,35 +38,7 @@ const { data, error } = await supabase
   )
   .single();
 
-  console.log(
-  "Service Query Error:",
-  error
-);
 
-console.log(
-  "Service Query Data:",
-  data
-);
-
-  console.log(
-  "Service:",
-  data
-);
-
-console.log(
-  "Representative Image:",
-  data.representative_image_url
-);
-
-console.log(
-  "Additional Image:",
-  data.secondary_image_url
-);
-
-console.log(
-  "Error:",
-  error
-);
 
   if (error) {
     console.error("Product load error:", error.message);
@@ -267,10 +234,6 @@ if (
   productContainer.classList.add(
     "no-image"
   );
-
-console.log(
-  productContainer.className
-);
 
 }
 
@@ -527,26 +490,6 @@ const {
     data.slug
   );
 
-console.log(
-  "More Products:",
-  moreProducts
-);
-
-console.log(
-  "More Products Error:",
-  moreProductsError
-);
-
-console.log(
-  "First Product:",
-  moreProducts[0]
-);
-
-console.log(
-  "Vendor Object:",
-  moreProducts[0]?.vendors
-);
-
 const moreServicesSection =
 
   document.querySelector(
@@ -781,47 +724,8 @@ const {
       )
     `);
 
-console.log(
-  "Similar Services:",
-  similarProducts
-);
-
-console.log(
-  "Similar Services Error:",
-  similarProductsError
-);
-
-console.log(
-  "First Similar Service:",
-  similarProducts?.[0]
-);
-
-console.log(
-  "First Vendor Object:",
-  similarProducts?.[0]?.vendors
-);
-
-console.log(
-  "Current Subcategory:",
-  data.vendors?.subcategory
-);
-
-console.log(
-  "Current Category:",
-  data.vendors?.category
-);
 
 similarProducts.forEach(product => {
-
-  console.log(
-
-    product.service_name,
-
-    product.vendors?.subcategory,
-
-    product.vendors?.category
-
-  );
 
 });
 
@@ -857,20 +761,7 @@ if (
 
     );
 
-console.log(
-  JSON.stringify(
-    data.vendors,
-    null,
-    2
-  )
-);
-
 }
-
-console.log(
-  "Filtered Products:",
-  filteredProducts
-);
 
 const similarServicesSection =
 
@@ -1026,12 +917,6 @@ product.vendors?.average_rating || 0
 
 card.onclick =
   () => {
-
-    console.log(
-      "Clicked:",
-      product.service_name,
-      product.slug
-    );
 
     location.href =
       `vendor-service.html?slug=${product.slug}`;
