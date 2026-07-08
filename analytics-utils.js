@@ -21,7 +21,3 @@ window.visitorId = (() => {
 
 })();
 
-console.log(
-  "Global Visitor ID:",
-  window.visitorId
-);
