@@ -221,9 +221,9 @@ require visitor login before submitting a review.
 - [ ] 4.  Pick single auth nav pattern (authBtn) and update all HTML pages
 
 ### Block 2 — Design system
-- [ ] 5.  Build unified design tokens (colours, spacing, typography)
-- [ ] 6.  Merge style.css + style2.css → main.css
-- [ ] 7.  Merge script.js + script2.js → main.js
+- [x] 5.  Build unified design tokens (colours, spacing, typography)
+- [ ] 6.  Merge style.css + style2.css → main.css *(deferred to Block 7 — Next.js migration)*
+- [ ] 7.  Merge script.js + script2.js → main.js *(deferred to Block 7 — Next.js migration)*
 
 ### Block 3 — Email infrastructure
 - [ ] 8.  Rebuild all 6 existing Resend emails with branded yellow/black HTML templates
