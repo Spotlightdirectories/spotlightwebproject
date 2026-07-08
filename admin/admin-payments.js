@@ -213,7 +213,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 // LOAD PAYMENTS
 // -----------------------------
 const { data: payments, error } = await supabase
-  .from("vendorpayments")
+  .from("vendor_payments")
   .select(`
     id,
     plan,
@@ -356,7 +356,7 @@ const { data: commissions, error: commissionsError } = await supabase
   created_at,
   partners ( id, name, referral_code, status ),
   vendors ( name ),
-  vendorpayments ( plan )
+  vendor_payments ( plan )
 `)
   .order("created_at", { ascending: false });
 
@@ -489,7 +489,7 @@ if (e.target.dataset.partnerReject) {
     }
 
   const { data: payment, error } = await supabase
-    .from("vendorpayments")
+    .from("vendor_payments")
     .select(`
       id,
       vendor_id,
@@ -519,7 +519,7 @@ if (e.target.dataset.partnerReject) {
 
   // 1️⃣ Update vendorpayment
   const { error: updateError } = await supabase
-  .from("vendorpayments")
+  .from("vendor_payments")
   .update({
     status: "confirmed",
     reviewed_at: now,
@@ -588,7 +588,7 @@ if (updateError) {
 }
 
   await supabase
-  .from("vendorpayments")
+  .from("vendor_payments")
   .update({ notification_sent: true })
   .eq("id", paymentId);
 
@@ -612,7 +612,7 @@ if (updateError) {
    }
 
   const { data: payment, error } = await supabase
-    .from("vendorpayments")
+    .from("vendor_payments")
     .select(`
       id,
       vendor_id,
@@ -640,7 +640,7 @@ if (updateError) {
 
   // 1️⃣ Update vendorpayment
   const { data: updatedRow, error: updateError } = await supabase
-  .from("vendorpayments")
+  .from("vendor_payments")
   .update({
   status: "rejected",
   reviewed_at: now,
@@ -677,7 +677,7 @@ if (updateError) {
   });
 
   await supabase
-  .from("vendorpayments")
+  .from("vendor_payments")
   .update({ notification_sent: true })
   .eq("id", paymentId);
 
@@ -1160,7 +1160,7 @@ async function loadPaymentHistory() {
   if (!historyTable) return;
 
   const { data: payments, error } = await supabase
-    .from("vendorpayments")
+    .from("vendor_payments")
     .select(`
       id,
       plan,

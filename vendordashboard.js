@@ -3892,7 +3892,7 @@ if (subscriptionStatusBadge) {
 
 const { data: latestPayment } =
   await supabase
-    .from("vendorpayments")
+    .from("vendor_payments")
     .select(`
       amount,
       approved_at
@@ -3988,7 +3988,7 @@ if (billingHistoryList) {
 
   const { data: payments } =
     await supabase
-      .from("vendorpayments")
+      .from("vendor_payments")
       .select(`
         amount,
         approved_at

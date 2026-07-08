@@ -73,7 +73,7 @@ serve(async (req) => {
   );
 
     const { data: debugAllPayments } = await supabase
-  .from("vendorpayments")
+  .from("vendor_payments")
   .select("id, gateway_ref, status")
   .order("created_at", { ascending: false })
   .limit(5);
@@ -82,7 +82,7 @@ console.log("LATEST PAYMENTS:", debugAllPayments);
 
   // 🔹 Prevent duplicate processing
     const { data: existingPayment, error: fetchError } = await supabase
-     .from("vendorpayments")
+     .from("vendor_payments")
      .select("id, status, vendor_id, plan, billing_type")
      .eq("id", payment_id)
      .single();
@@ -114,7 +114,7 @@ if (existingPayment.status === "confirmed") {
 
   // 🔹 Update vendorpayment
   const { data: updatedPayment, error: paymentUpdateError } = await supabase
-  .from("vendorpayments")
+  .from("vendor_payments")
   .update({
     status: "confirmed",
     approved_at: now,

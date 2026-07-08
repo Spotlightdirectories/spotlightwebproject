@@ -73,7 +73,7 @@ if (!authUserId) {
 // ✅ Activate vendor
 // 🔹 Get payment record using reference
 const { data: payment } = await supabase
-  .from("vendorpayments")
+  .from("vendor_payments")
   .select("id, vendor_id, plan, billing_type, status")
   .eq("gateway_ref", reference)
   .maybeSingle();
@@ -89,7 +89,7 @@ if (!payment) {
 if (payment.status === "confirmed") {
   // 🔹 Still log audit for retries
   await supabase
-    .from("vendorpayments")
+    .from("vendor_payments")
     .update({
       webhook_event: event,
       webhook_received_at: new Date().toISOString()
@@ -145,7 +145,7 @@ await supabase
   .eq("id", payment.vendor_id);
 
   await supabase
-  .from("vendorpayments")
+  .from("vendor_payments")
   .update({
     status: "confirmed",
     approved_at: now,
@@ -156,7 +156,7 @@ await supabase
 
   // 🔹 Audit (first successful processing)
 await supabase
-  .from("vendorpayments")
+  .from("vendor_payments")
   .update({
     webhook_event: event,
     webhook_received_at: new Date().toISOString()

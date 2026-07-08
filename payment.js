@@ -108,7 +108,7 @@ if (
 
   const { data: latestPendingPayment } =
     await supabase
-      .from("vendorpayments")
+      .from("vendor_payments")
       .select("created_at, payment_method")
       .eq("vendor_id", vendor.id)
       .eq("status", "pending")
@@ -151,7 +151,7 @@ if (
   .eq("id", vendor.id);
 
   await supabase
-    .from("vendorpayments")
+    .from("vendor_payments")
     .update({
     status: "expired"
     })
@@ -178,7 +178,7 @@ if (
 
     // Expire older pending card payments
 await supabase
-  .from("vendorpayments")
+  .from("vendor_payments")
   .update({
     status: "expired"
   })
@@ -190,7 +190,7 @@ await supabase
    const paystackReference = `SPOT_${Date.now()}`;
 
 const { data, error } = await supabase
-  .from("vendorpayments")
+  .from("vendor_payments")
   .insert({
      vendor_id: vendor.id,
      auth_user_id: user.id,
@@ -335,7 +335,7 @@ payBankBtn.onclick = async () => {
 
     const { data: paymentData, error: paymentError } =
   await supabase
-    .from("vendorpayments")
+    .from("vendor_payments")
     .insert({
       vendor_id: vendor.id,
       auth_user_id: user.id,
@@ -383,7 +383,7 @@ if (paymentError || !paymentData) {
 
     // 1️⃣ Update payment record
     const { data: updateData, error: updateError } = await supabase
-      .from("vendorpayments")
+      .from("vendor_payments")
       .update({
        transfer_proof_url: filePath
      })
