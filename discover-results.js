@@ -386,8 +386,7 @@ function initializeSearchButton() {
       }
 
       window.location.href =
-
-        "discover-results2.html?" +
+        "discover-results.html?" +
 
         params.toString();
 
@@ -1396,7 +1395,6 @@ container
             ) {
 
               window.location.href =
-
                 "vendor-profile.html?slug=" +
 
                 encodeURIComponent(
