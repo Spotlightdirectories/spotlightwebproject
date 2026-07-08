@@ -226,13 +226,13 @@ require visitor login before submitting a review.
 - [ ] 7.  Merge script.js + script2.js → main.js *(deferred to Block 7 — Next.js migration)*
 
 ### Block 3 — Email infrastructure
-- [ ] 8.  Rebuild all 6 existing Resend emails with branded yellow/black HTML templates
-- [ ] 9.  Improve payment approved email to include SPOT ID, plan name, and expiry date
-- [ ] 10. Build welcome email — triggered immediately on vendor signup
-- [ ] 11. Build badge submission acknowledgement — triggered on document upload
-- [ ] 12. Build trial expiry warning — pg_cron job, fires 7 days before trial ends
-- [ ] 13. Build subscription expiry warning — pg_cron job, fires before plan expires
-- [ ] 14. Fix Resend custom click tracking subdomain
+- [x] 8.  Rebuild all 6 existing Resend emails with branded yellow/black HTML templates
+- [x] 9.  Improve payment approved email to include SPOT ID, plan name, and expiry date
+- [x] 10. Build welcome email — triggered immediately on vendor signup
+- [x] 11. Build badge submission acknowledgement — triggered on document upload
+- [x] 12. Build trial expiry warning — pg_cron job, fires 7 days before trial ends
+- [x] 13. Build subscription expiry warning — pg_cron job, fires before plan expires
+- [ ] 14. Fix Resend custom click tracking subdomain — CNAME added to Cloudflare, pending DNS propagation
 
 ### Block 4 — Backend hardening
 - [ ] 15. Build image validation Edge Function for storage uploads
