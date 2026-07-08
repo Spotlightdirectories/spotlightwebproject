@@ -99,7 +99,7 @@ const EmailTemplates = (() => {
                 Spotlight Directories &mdash; Helping Nigerian businesses get found.
               </p>
               <p style="margin:0;font-size:12px;color:#94a3b8;">
-                &copy; ${new Date().getFullYear()} Spotlight Directories. All rights reserved.
+                &copy; ${new Date().getFullYear()} Spotlight Digital Services Ltd. All rights reserved.
               </p>
               <p style="margin:8px 0 0;font-size:12px;color:#94a3b8;">
                 <a href="https://spotlightdirectories.com"
