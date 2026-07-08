@@ -212,32 +212,47 @@ require visitor login before submitting a review.
 
 ---
 
-## MASTER PHASE 3 CHECKLIST
+## MASTER PHASE 3 CHECKLIST — IN IMPLEMENTATION ORDER
 
-- [ ] Migrate to Next.js framework
-- [ ] Build unified design system (tokens, components, typography)
-- [ ] Merge style.css + style2.css → main.css
-- [ ] Merge script.js + script2.js → main.js
-- [ ] Pick single auth nav pattern (authBtn) and update all HTML pages
-- [ ] Rename vendorpayments → vendor_payments (DB + all code)
-- [ ] Rename discover-results2 files → discover-results
-- [ ] Rename insight-dynamic.js → insight.js
-- [ ] Consolidate 5 duplicate image upload handlers into single uploadVendorImage() function
-- [ ] Build image validation Edge Function for storage uploads
-- [ ] Replace browser plan limit constants with server fetch
-- [ ] Build admin staff onboarding flow (no vendor profile)
-- [ ] Build OTP-based email change flow
-- [ ] Rebuild all 6 existing Resend emails with branded yellow/black HTML templates
-- [ ] Improve payment approved email to include SPOT ID, plan name, and expiry date
-- [ ] Build welcome email (email 10) — triggered on vendor signup
-- [ ] Build trial expiry warning (email 11) — pg_cron job, fires 7 days before trial ends
-- [ ] Build subscription expiry warning (email 12) — pg_cron job, fires before plan expires
-- [ ] Build badge submission acknowledgement (email 13) — triggered on document upload
-- [ ] Fix Resend custom click tracking subdomain
-- [ ] Rebuild landing page to world-class SaaS standard
-- [ ] Rebuild GetListed page and plan comparison page
-- [ ] Harmonise partner program page with brand
-- [ ] Consolidate insight dashboards into one rebuilt dashboard
-- [ ] Build Claude API integration roadmap and first features
-- [ ] Build visitor authentication system
-- [ ] Upgrade vendor_reviews INSERT policy after visitor auth is live
+### Block 1 — Foundation renames (do first, everything else depends on this)
+- [ ] 1.  Rename vendorpayments → vendor_payments (DB + all JS files + RLS policies)
+- [ ] 2.  Rename discover-results2.html/js/css → discover-results.html/js/css
+- [ ] 3.  Rename insight-dynamic.js → insight.js
+- [ ] 4.  Pick single auth nav pattern (authBtn) and update all HTML pages
+
+### Block 2 — Design system
+- [ ] 5.  Build unified design tokens (colours, spacing, typography)
+- [ ] 6.  Merge style.css + style2.css → main.css
+- [ ] 7.  Merge script.js + script2.js → main.js
+
+### Block 3 — Email infrastructure
+- [ ] 8.  Rebuild all 6 existing Resend emails with branded yellow/black HTML templates
+- [ ] 9.  Improve payment approved email to include SPOT ID, plan name, and expiry date
+- [ ] 10. Build welcome email — triggered immediately on vendor signup
+- [ ] 11. Build badge submission acknowledgement — triggered on document upload
+- [ ] 12. Build trial expiry warning — pg_cron job, fires 7 days before trial ends
+- [ ] 13. Build subscription expiry warning — pg_cron job, fires before plan expires
+- [ ] 14. Fix Resend custom click tracking subdomain
+
+### Block 4 — Backend hardening
+- [ ] 15. Build image validation Edge Function for storage uploads
+- [ ] 16. Replace browser plan limit constants with server fetch
+- [ ] 17. Consolidate 5 duplicate image upload handlers into single uploadVendorImage() function
+- [ ] 18. Build admin staff onboarding flow (no vendor profile created)
+- [ ] 19. Build OTP-based email change flow
+
+### Block 5 — Page rebuilds
+- [ ] 20. Rebuild landing page to world-class SaaS standard
+- [ ] 21. Rebuild GetListed page and plan comparison page
+- [ ] 22. Harmonise partner program page with brand
+- [ ] 23. Consolidate insight dashboards into one rebuilt dashboard
+
+### Block 6 — Advanced features
+- [ ] 24. Build visitor authentication system
+- [ ] 25. Upgrade vendor_reviews INSERT policy after visitor auth is live
+- [ ] 26. Build Claude API integration — first features (vendor description assistant,
+          visitor search assistant, admin anomaly flagging)
+
+### Block 7 — Framework migration (absolutely last)
+- [ ] 27. Migrate entire platform to Next.js framework
+          (all features confirmed working in vanilla before this step)
