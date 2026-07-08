@@ -131,6 +131,10 @@ const EmailTemplates = (() => {
                         color:#0f172a;line-height:1.2;">${text}</h1>`;
   }
 
+  function greeting(name) {
+    return paragraph(`Hello${name ? " " + name : " there"},`);
+  }
+
   function paragraph(text) {
     return `<p style="margin:0 0 16px;font-size:15px;line-height:1.7;
                        color:#334155;">${text}</p>`;
@@ -229,7 +233,7 @@ const EmailTemplates = (() => {
 
     const body = `
       ${heading("Payment Confirmed ✓")}
-      ${paragraph(`Hello${vendorName ? " " + vendorName : ""},`)}
+      ${greeting(vendorName)}
       ${paragraph("Your bank transfer has been reviewed and approved. Your Spotlight subscription is now active.")}
       ${infoTable(
         infoRow("Plan", planDisplay) +
@@ -254,7 +258,7 @@ const EmailTemplates = (() => {
   function paymentRejected({ vendorName = "", reason = "" }) {
     const body = `
       ${heading("Payment Could Not Be Verified")}
-      ${paragraph(`Hello${vendorName ? " " + vendorName : ""},`)}
+      ${greeting(vendorName)}
       ${paragraph("We reviewed your bank transfer but were unable to verify it at this time.")}
       ${reason ? infoTable(infoRow("Reason", reason)) : ""}
       ${paragraph("Please check the details and try again. If you believe this is an error, please contact us.")}
@@ -279,7 +283,7 @@ const EmailTemplates = (() => {
 
     const body = `
       ${heading("Verification Approved ✓")}
-      ${paragraph(`Hello${vendorName ? " " + vendorName : ""},`)}
+      ${greeting(vendorName)}
       ${paragraph("Congratulations! Your verification documents have been reviewed and approved.")}
       ${infoTable(infoRow("Badge Awarded", `<span style="color:${badgeColour};font-weight:700;">${badgeDisplay} Badge</span>`))}
       ${paragraph("Your business listing now displays your verification badge, giving customers greater confidence in your business.")}
@@ -303,7 +307,7 @@ const EmailTemplates = (() => {
 
     const body = `
       ${heading("Verification Not Approved")}
-      ${paragraph(`Hello${vendorName ? " " + vendorName : ""},`)}
+      ${greeting(vendorName)}
       ${paragraph(`We reviewed your${badgeDisplay ? " " + badgeDisplay + " Badge" : ""} verification submission but were unable to approve it at this time.`)}
       ${reason ? infoTable(infoRow("Reason", reason)) : ""}
       ${paragraph("Please review your documents and submit again. Make sure all documents are clear, current, and match the requirements for your chosen badge tier.")}
@@ -323,7 +327,7 @@ const EmailTemplates = (() => {
   function partnerApproved({ partnerName = "", referralCode = "", vendorReferralLink = "", partnerReferralLink = "", inductionLink = "" }) {
     const body = `
       ${heading("Welcome to the Spotlight Partner Programme 🎉")}
-      ${paragraph(`Hello${partnerName ? " " + partnerName : ""},`)}
+      ${greeting(partnerName)}
       ${paragraph("Your partner application has been reviewed and approved. You are now an official Spotlight Partner.")}
       ${infoTable(
         infoRow("Your Referral Code", `<strong style="font-size:18px;letter-spacing:2px;">${referralCode}</strong>`) +
@@ -350,7 +354,7 @@ const EmailTemplates = (() => {
   function partnerRejected({ partnerName = "", reason = "" }) {
     const body = `
       ${heading("Application Update")}
-      ${paragraph(`Hello${partnerName ? " " + partnerName : ""},`)}
+      ${greeting(partnerName)}
       ${paragraph("Thank you for applying to the Spotlight Partner Programme. After reviewing your application, we are unable to approve it at this time.")}
       ${reason ? infoTable(infoRow("Reason", reason)) : ""}
       ${paragraph("You are welcome to address the issue and reapply. We look forward to potentially working with you in the future.")}
@@ -373,7 +377,7 @@ const EmailTemplates = (() => {
 
     const body = `
       ${heading("Welcome to Spotlight Directories 🎉")}
-      ${paragraph(`Hello${vendorName ? " " + vendorName : ""},`)}
+      ${greeting(vendorName)}
       ${paragraph("Your business is now on Spotlight — Nigeria's discovery platform connecting businesses with customers.")}
       ${spotId ? infoTable(
         infoRow("Your SPOT ID", spotId) +
@@ -407,7 +411,7 @@ const EmailTemplates = (() => {
 
     const body = `
       ${heading("Documents Received")}
-      ${paragraph(`Hello${vendorName ? " " + vendorName : ""},`)}
+      ${greeting(vendorName)}
       ${paragraph(`We have received your${badgeDisplay ? " " + badgeDisplay + " Badge" : ""} verification submission. Our team will review your documents and get back to you within 2–5 business days.`)}
       ${infoTable(infoRow("Status", "Under Review"))}
       ${paragraph("You do not need to resubmit. We will send you an email once the review is complete.")}
@@ -432,7 +436,7 @@ const EmailTemplates = (() => {
 
     const body = `
       ${heading(`Your Free Trial Ends in ${daysLeft} Days`)}
-      ${paragraph(`Hello${vendorName ? " " + vendorName : ""},`)}
+      ${greeting(vendorName)}
       ${paragraph(`Your Spotlight free trial expires on <strong>${expiryDisplay}</strong>. Upgrade now to keep your listing active and continue reaching customers.`)}
       ${infoTable(infoRow("Trial Expires", expiryDisplay))}
       ${paragraph("After your trial ends, your profile will no longer be visible to customers until you upgrade to a paid plan.")}
@@ -461,7 +465,7 @@ const EmailTemplates = (() => {
 
     const body = `
       ${heading("Your Subscription Is Expiring Soon")}
-      ${paragraph(`Hello${vendorName ? " " + vendorName : ""},`)}
+      ${greeting(vendorName)}
       ${paragraph(`Your <strong>${planDisplay} Plan</strong> subscription expires on <strong>${expiryDisplay}</strong>. Renew now to keep your business visible on Spotlight.`)}
       ${infoTable(
         infoRow("Plan", planDisplay) +
