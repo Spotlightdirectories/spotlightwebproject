@@ -333,7 +333,7 @@ payBankBtn.onclick = async () => {
       return;
     }
 
-    const { data: paymentData, error: paymentError } =
+const { data: paymentData, error: paymentError } =
   await supabase
     .from("vendor_payments")
     .insert({
@@ -351,8 +351,14 @@ payBankBtn.onclick = async () => {
     .select("id")
     .maybeSingle();
 
-if (paymentError || !paymentData) {
+console.log("PAYMENT INSERT RESULT:", JSON.stringify({ paymentData, paymentError }));
+console.log("VENDOR ID:", vendor.id);
+console.log("USER ID:", user?.id);
+console.log("EFFECTIVE PLAN:", effectivePlan);
+console.log("BILLING TYPE:", billingType);
+console.log("AMOUNT:", getAmountInKobo(effectivePlan, billingType));
 
+if (paymentError || !paymentData) {
   alert(
     paymentError?.message ||
     "Could not create payment record."
