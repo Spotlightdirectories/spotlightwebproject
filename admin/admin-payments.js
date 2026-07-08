@@ -573,17 +573,25 @@ if (updateError) {
     .update(vendorUpdate)
     .eq("id", payment.vendor_id);
 
+  // Fetch confirmed SPOT ID from vendor record after update
+  const { data: updatedVendor } = await supabase
+    .from("vendors")
+    .select("spot_id, name")
+    .eq("id", payment.vendor_id)
+    .single();
 
-  // 3️⃣ Send email
+  const confirmedSpotId = updatedVendor?.spot_id || spotId || "";
+  const confirmedVendorName = updatedVendor?.name || payment.vendors?.name || "";
 
+  // 3️⃣ Send email — after vendor update so SPOT ID is confirmed
   try {
   await sendEmail({
     to: payment.vendors.email,
     subject: "Payment Approved — Your Spotlight Listing is Active",
     html: EmailTemplates.paymentApproved({
-      vendorName: payment.vendors?.name || "",
+      vendorName: confirmedVendorName,
       plan: payment.plan || "",
-      spotId: spotId || "",
+      spotId: confirmedSpotId,
       expiresAt: expiry.toISOString()
     })
   });
