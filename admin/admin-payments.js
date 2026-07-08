@@ -579,9 +579,13 @@ if (updateError) {
   try {
   await sendEmail({
     to: payment.vendors.email,
-    subject: "Payment Approved 🎉",
-    html: `<p>Your bank transfer has been verified.</p>
-           <p>You can now complete onboarding and access your dashboard.</p>`
+    subject: "Payment Approved — Your Spotlight Listing is Active",
+    html: EmailTemplates.paymentApproved({
+      vendorName: payment.vendors?.name || "",
+      plan: payment.plan || "",
+      spotId: spotId || "",
+      expiresAt: expiry.toISOString()
+    })
   });
 } catch (err) {
   console.error("Email failed:", err);
@@ -672,8 +676,11 @@ if (updateError) {
   // 3️⃣ Send email
   await sendEmail({
     to: payment.vendors.email,
-    subject: "Payment Rejected",
-    html: `<p>Your bank transfer could not be verified.<br/>Reason: ${reason}</p>`
+    subject: "Payment Could Not Be Verified",
+    html: EmailTemplates.paymentRejected({
+      vendorName: payment.vendors?.name || "",
+      reason: reason
+    })
   });
 
   await supabase
@@ -742,9 +749,11 @@ async function approveVerification(verificationId, row) {
     try {
       await sendEmail({
         to: vendor.email,
-        subject: "Verification Approved ✔️",
-        html: `<p>Your vendor verification has been approved.</p>
-           <p>Your listing now displays the ${verification.badge_type} badge.</p>`
+        subject: "Verification Approved — Your Badge is Live",
+        html: EmailTemplates.badgeApproved({
+          vendorName: vendor?.name || "",
+          badgeType: verification.badge_type || ""
+        })
      });
    } catch (err) {
      console.error("Verification email failed:", err);
@@ -804,9 +813,12 @@ async function rejectVerification(verificationId, row) {
   try {
     await sendEmail({
       to: vendor.email,
-      subject: "Verification Rejected",
-      html: `<p>Your verification request was not approved.</p>
-             <p>Please review your documents and submit again.</p>`
+      subject: "Verification Not Approved",
+      html: EmailTemplates.badgeRejected({
+        vendorName: vendor?.name || "",
+        badgeType: verification.badge_type || "",
+        reason: reason
+      })
     });
   } catch (err) {
     console.error("Verification rejection email failed:", err);
@@ -871,17 +883,15 @@ if (updateError) {
 
 await sendEmail({
   to: partner.email,
-  subject: "You're Approved 🎉",
-    html: `
-      <p>Hello ${partner.name},</p>
-      <p>Your partner application has been approved.</p>
-      <p><a href="https://spotlightdirectories.com/partner-create-account.html?partner_id=${partner.id}">Create your account</a></p>
-      <p><strong>Your Referral Code:</strong> ${referralCode}</p>
-      <p><strong>Vendor Referral Link:</strong> ${vendorReferralLink}</p>
-      <p><strong>Partner Referral Link:</strong> ${partnerReferralLink}</p>
-      <p><a href="https://spotlightdirectories.com/partner-legal.html#assets"> visit here for induction</a></p>
-    `
-  });
+  subject: "You're Approved — Welcome to the Spotlight Partner Programme",
+  html: EmailTemplates.partnerApproved({
+    partnerName: partner.name || "",
+    referralCode: referralCode,
+    vendorReferralLink: vendorReferralLink,
+    partnerReferralLink: partnerReferralLink,
+    inductionLink: "https://spotlightdirectories.com/partner-legal.html#assets"
+  })
+});
 
   // 4️⃣ Mark notification sent
   await supabase
@@ -934,13 +944,11 @@ async function rejectPartner(partnerId, row) {
   // 2️⃣ Send email
   await sendEmail({
     to: partner.email,
-    subject: "Application Update",
-    html: `
-      <p>Hello ${partner.name},</p>
-      <p>We regret to inform you that your partner application was not approved.</p>
-      <p><strong>Reason:</strong> ${reason}</p>
-      <p>You may reapply after addressing the issue.</p>
-    `
+    subject: "Update on Your Partner Application",
+    html: EmailTemplates.partnerRejected({
+      partnerName: partner.name || "",
+      reason: reason
+    })
   });
 
   // 3️⃣ Mark notification sent
