@@ -232,7 +232,7 @@ require visitor login before submitting a review.
 - [x] 11. Build badge submission acknowledgement — triggered on document upload
 - [x] 12. Build trial expiry warning — pg_cron job, fires 7 days before trial ends
 - [x] 13. Build subscription expiry warning — pg_cron job, fires before plan expires
-- [ ] 14. Fix Resend custom click tracking subdomain — CNAME added to Cloudflare, pending DNS propagation
+- [x] 14. Fix Resend custom click tracking subdomain — track.mail.spotlightdirectories.com verified
 
 ### Block 4 — Backend hardening
 - [ ] 15. Build image validation Edge Function for storage uploads
