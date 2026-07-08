@@ -87,6 +87,34 @@ the entire project. Test all payment flows before deploying.
 
 ---
 
+## FROM PHASE 2 — 2.6 Image Upload Routine
+
+### Consolidate duplicate image upload handlers in vendordashboard.js
+The same 40-line upload routine (size check, type check, resolution
+check, Supabase upload, get public URL) is copied five times inside
+vendordashboard.js — once each for: primary product image, secondary
+product image, tertiary product image, primary service image, and
+secondary service image.
+
+If the max file size, allowed types, or minimum resolution ever needs
+changing, it must be updated in five separate places — high risk of
+missing one.
+
+Phase 3 action:
+Extract into a single reusable function during the dashboard rebuild:
+
+  async function uploadVendorImage(file, folder) {
+    // validate size, type, resolution
+    // upload to vendor-gallery/{vendor.id}/{folder}/
+    // return public URL
+  }
+
+Then call uploadVendorImage(file, 'products') and
+uploadVendorImage(file, 'services') from each handler.
+Delete all five duplicate blocks after migration is confirmed.
+
+---
+
 ## FROM PHASE 2 — 2.4 Business Rules
 
 ### Image file type and size validation (storage level)
@@ -166,6 +194,7 @@ require visitor login before submitting a review.
 - [ ] Rename vendorpayments → vendor_payments (DB + all code)
 - [ ] Rename discover-results2 files → discover-results
 - [ ] Rename insight-dynamic.js → insight.js
+- [ ] Consolidate 5 duplicate image upload handlers into single uploadVendorImage() function
 - [ ] Build image validation Edge Function for storage uploads
 - [ ] Replace browser plan limit constants with server fetch
 - [ ] Build admin staff onboarding flow (no vendor profile)
