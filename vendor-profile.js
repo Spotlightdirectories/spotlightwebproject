@@ -1,11 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
 
-  console.log(
-  "Profile Visitor ID:",
-  window.visitorId
-);
-
-  console.log("✅ vendor-profile.js loaded");
 
   const supabase = window.supabaseClient;
 
@@ -99,14 +93,6 @@ const isOwner =
 
 if (!isOwner) {
 
-console.log(
-  "PROFILE VIEW PAYLOAD",
-  {
-    vendor_id: vendor.id,
-    event_type: "profile_view",
-    visitor_id: window.visitorId
-  }
-);
 
 const result =
   await supabase
@@ -117,11 +103,6 @@ const result =
       visitor_id: window.visitorId
     })
     .select();
-
-console.log(
-  "PROFILE VIEW RESULT",
-  result
-);
 
 }
 
@@ -1057,15 +1038,6 @@ if (catalogBtn) {
 
   catalogBtn.onclick = async function () {
 
-console.log(
-  "CATALOG PAYLOAD",
-  {
-    vendor_id: vendor.id,
-    event_type: "catalog_visit",
-    visitor_id: window.visitorId
-  }
-);
-
 const result =
   await supabase
     .from("analytics_events")
@@ -1074,16 +1046,6 @@ const result =
       event_type: "catalog_visit",
       visitor_id: window.visitorId
     });
-
-console.log(
-  "CATALOG RESULT",
-  result
-);
-
-console.log(
-  "CATALOG RESULT",
-  result
-);
 
       document
         .getElementById("mediaSection")
@@ -1207,9 +1169,6 @@ const contactInfo =
   );
 
 if (contactInfo) {
-
-console.log(contactInfo);
-console.log(vendor);
 
   contactInfo.innerHTML = `
   
@@ -1871,35 +1830,10 @@ const {
   error
 } = await query;
 
-console.log(
-  "showAllReviews:",
-  showAllReviews
-);
-
-console.log(
-  "Review Count:",
-  reviews?.length
-);
-
-  console.log(
-    "Recent Reviews:",
-    reviews
-  );
-
-  console.log(
-    "Review Error:",
-    error
-  );
-
   const reviewsList =
   document.getElementById(
     "reviewsList"
   );
-
-console.log(
-  "Reviews List Element:",
-  reviewsList
-);
 
 if (
   reviewsList
@@ -2054,11 +1988,6 @@ async function loadSimilarBusinesses(
   vendor
 ) {
 
-  console.log(
-    "Loading Similar Businesses:",
-    vendor.category
-  );
-
   const {
     data: businesses,
     error
@@ -2105,16 +2034,6 @@ async function loadSimilarBusinesses(
       "id",
       vendor.id
     );
-
-  console.log(
-    "Similar Businesses:",
-    businesses
-  );
-
-  console.log(
-    "Similar Businesses Error:",
-    error
-  );
 
   if (
   error ||
@@ -2205,11 +2124,6 @@ businesses.sort(
     );
 
   }
-);
-
-console.log(
-  "Sorted Businesses:",
-  businesses
 );
 
 const similarBusinessesList =

@@ -2340,11 +2340,6 @@ if (
 
 }
 
-console.log(
-  "Saved Services:",
-  savedServices
-);
-
 /* LIMIT TEXT */
 
 if (serviceLimitText) {
@@ -2608,9 +2603,6 @@ if (editBtn) {
         String(item.id) ===
         String(serviceId)
     );
-
-  console.log(service);
-    
 
   if (!service) {
     return;
@@ -3258,17 +3250,7 @@ const {
   )
   .select();
 
-console.log(
-  "SERVICE INSERT DATA:",
-  data
-);
-
-console.log(
-  "SERVICE INSERT ERROR:",
-  error
-);
-
-          if (error) {
+         if (error) {
             throw error;
           }
 
@@ -3313,12 +3295,6 @@ console.log(
             }
 
         } catch (err) {
-
-console.log(err);
-console.log(err.message);
-console.log(err.details);
-console.log(err.hint);
-
 
           alert(
             "Unable to save services."

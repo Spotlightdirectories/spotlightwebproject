@@ -9,11 +9,6 @@ window.ReviewsUtils = {
     vendorId
   ) {
 
-  console.log(
-  "openReviewModal fired",
-  vendorId
-);
-
     let reviewModal =
       document.getElementById(
         "reviewModal"
@@ -116,7 +111,7 @@ if (
           "reviewModal"
         );
 
-        const reviewVendorId =
+const reviewVendorId =
   document.getElementById(
     "reviewVendorId"
   );
@@ -130,12 +125,7 @@ if (
 
 }
 
-console.log(
-  "Review Vendor ID:",
-  reviewVendorId.value
-);
-
-    const reviewStars =
+const reviewStars =
   reviewModal.querySelectorAll(
     ".review-stars button"
   );
@@ -145,11 +135,6 @@ reviewStars.forEach(star => {
   star.addEventListener(
     "click",
     () => {
-
-    console.log(
-  "Star clicked",
-  star.dataset.rating
-);
 
       selectedRating =
         Number(

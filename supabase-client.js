@@ -21,7 +21,6 @@ window.currentUser = null;
 
 window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
   window.currentUser = session?.user || null;
-  console.log("Auth state changed:", event, window.currentUser);
 
   // When a vendor confirms their email change,
   // sync the new email to the vendors table automatically.
@@ -30,10 +29,6 @@ window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
       .from("vendors")
       .update({ email: session.user.email })
       .eq("auth_user_id", session.user.id);
-
-    if (!error) {
-      console.log("Vendor email synced:", session.user.email);
-    }
   }
 });
 

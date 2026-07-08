@@ -6,9 +6,6 @@ const NS = 'http://www.w3.org/2000/svg';
 const insightSupabase = window.supabaseClient;
 const visitorId = window.visitorId;
 
-console.log("Insight Visitor ID:", visitorId);
-console.log("Insight Supabase:", insightSupabase);
-
 let currentVendorId = null;
 let insightPeriod = "This Month";
 let showAllKeywords = false;
@@ -28,7 +25,6 @@ async function loadCurrentVendor() {
     .single();
 
   currentVendorId = vendor?.id || null;
-  console.log("Current Vendor ID:", currentVendorId);
 }
 
 /* ===========================
@@ -173,8 +169,6 @@ async function renderMarketplaceStats() {
     { label: "Unique Visitors",     ...uniqueVisitors },
     { label: "Search Impressions",  ...searchImpressions }
   ];
-
-  console.log("Performance Stats:", perfStats);
 
   $("perfStats").innerHTML = "";
   $("perfStats").className = "grid-3";

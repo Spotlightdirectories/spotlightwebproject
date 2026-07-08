@@ -35,10 +35,8 @@ document.addEventListener("DOMContentLoaded", () => {
         email,
         password
       });
-      console.log("Logged in user:", data.user);
 
   const { data: sessionData } = await window.supabaseClient.auth.getSession();
-  console.log("Session user:", sessionData.session?.user);
 
     if (error) {
       errorEl.textContent = error.message;
@@ -59,8 +57,6 @@ document.addEventListener("DOMContentLoaded", () => {
     .from("user_roles")
     .select("user_id, role")
     .eq("user_id", session.user.id);
-
-    console.log("Role row:", roleRow);
 
    if (
   roleError ||

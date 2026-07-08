@@ -6,16 +6,7 @@
 // supabase setup moved to its own file: supabase-client.js
 const supabaseClient = window.supabaseClient;
 
-// ✅ Test Supabase connection
-(async () => {
-  try {
-    const { data, error } = await supabaseClient.from("vendors").select("*").limit(1);
-    if (error) console.error("❌ Supabase connection failed:", error.message);
-    else console.log("✅ Supabase connected! Sample:", data);
-  } catch (err) {
-    console.error("⚠️ Supabase test error:", err);
-  }
-})();
+// Connection verified via supabase-client.js
 
 
 // ===============================

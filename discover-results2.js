@@ -2153,11 +2153,6 @@ const slug =
 
   card.dataset.slug;
 
-console.log(
-  "Service slug:",
-  slug
-);
-
 if (!slug) {
 
   alert(
@@ -2970,14 +2965,7 @@ function normalizeServiceResults(
 
     function (service) {
 
-      console.log(
-  "SERVICE:",
-  service.service_name,
-  "SLUG:",
-  service.slug
-);
-
-      return {
+     return {
 
         id:
           service.id,

@@ -71,7 +71,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     verifyMsg.textContent = "Uploading documents...";
-    console.log("Submitting verification form...");
 
     const applicantName = document.getElementById("applicantName").value.trim();
     const phone = document.getElementById("phone").value.trim();
@@ -108,30 +107,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     try {
-
-  console.log("Uploading ID...");
-  const idUrl = await upload(idFile, "id");
-  console.log("ID uploaded");
-
-  console.log("Uploading passport...");
-  const passportUrl = passportFile ? await upload(passportFile, "passport") : null;
-  console.log("Passport uploaded");
-
-  console.log("Uploading CAC...");
-  const cacUrl = cacFile ? await upload(cacFile, "cac") : null;
-  console.log("CAC uploaded");
-
-  console.log("Uploading utility...");
-  const utilityUrl = utilityFile ? await upload(utilityFile, "utility") : null;
-  console.log("Utility uploaded");
-
-  console.log("Uploading MEMART...");
-  const memartUrl = memartFile ? await upload(memartFile, "memart") : null;
-  console.log("MEMART uploaded");
-
-  console.log("Uploading status report...");
-  const statusReportUrl = statusReportFile ? await upload(statusReportFile, "status-report") : null;
-  console.log("Status report uploaded");
 
   const { error } = await supabase
     .from("vendor_verifications")

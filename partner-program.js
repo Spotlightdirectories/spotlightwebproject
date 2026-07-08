@@ -1,5 +1,3 @@
-console.log("JS LOADED");
-
 document.addEventListener("DOMContentLoaded", async () => {
 
   const supabase = window.supabaseClient;
@@ -84,7 +82,6 @@ if (loginForm) {
 
   if (partnerForm) {
     partnerForm.addEventListener("submit", async (e) => {
-      console.log("FORM SUBMIT TRIGGERED");
 
     const submitBtn = partnerForm.querySelector("button");
      submitBtn.classList.add("partner-btn-loading");

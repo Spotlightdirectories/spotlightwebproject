@@ -12,11 +12,6 @@ const productSlug =
     "slug"
   );
 
-console.log(
-  "Product Slug:",
-  productSlug
-);
-
 if (!productSlug)
   return;
 
@@ -42,16 +37,6 @@ const { data, error } = await supabase
   )
   .single();
 
-  console.log(
-  "Product:",
-  data
-);
-
-console.log(
-  "Error:",
-  error
-);
-
   if (error) {
     console.error("Product load error:", error.message);
     return;
@@ -68,11 +53,6 @@ const result =
       event_type: "product_view",
       visitor_id: window.visitorId
     });
-
-  console.log(
-    "PRODUCT ANALYTICS RESULT:",
-    result
-  );
 
 } catch(err) {
 
@@ -406,26 +386,6 @@ const {
     }
   );
 
-console.log(
-  "More Products:",
-  moreProducts
-);
-
-console.log(
-  "More Products Error:",
-  moreProductsError
-);
-
-console.log(
-  "First Product:",
-  moreProducts[0]
-);
-
-console.log(
-  "Vendor Object:",
-  moreProducts[0]?.vendors
-);
-
 const moreProductsSection =
 
   document.querySelector(
@@ -647,26 +607,6 @@ if (
       )
     `);
 
-  console.log(
-    "Similar Products:",
-    similarProducts
-  );
-
-  console.log(
-  "Similar Products Error:",
-  similarProductsError
-);
-
-console.log(
-  "First Similar Product:",
-  similarProducts?.[0]
-);
-
-console.log(
-  "First Vendor Object:",
-  similarProducts?.[0]?.vendors
-);
-
 let filteredProducts =
   similarProducts.filter(
     product =>
@@ -700,11 +640,6 @@ if (
     );
 
 }
-
-console.log(
-  "Filtered Products:",
-  filteredProducts
-);
 
 const similarProductsSection =
 

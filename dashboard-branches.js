@@ -1,7 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
 
-console.log("Branches manager loaded");
-
 const supabase = window.supabaseClient;
 
 
@@ -35,9 +33,6 @@ if (!vendor) {
 console.error("Vendor not found");
 return;
 }
-
-console.log("Vendor loaded:", vendor);
-
 
 // ===============================
 // PLACEHOLDER

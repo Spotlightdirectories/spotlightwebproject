@@ -5,7 +5,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const partnersTable = document.getElementById("partnersTable");
   const commissionsTable = document.getElementById("commissionsTable");
   const summaryTable = document.getElementById("commissionSummaryTable");
-  console.log("Verification table:", verificationTable);
 
   // -----------------------------
   // ADMIN SESSION GUARD
@@ -226,8 +225,6 @@ const { data: payments, error } = await supabase
   .eq("payment_method", "bank")
   .eq("status", "pending");
 
-console.log("PAYMENTS RESULT:", payments, error);
-
 if (error) {
   table.innerHTML = `<tr><td colspan="6" class="empty-state-cell">${error.message}</td></tr>`;
 } else if (!payments.length) {
@@ -236,25 +233,24 @@ if (error) {
   table.innerHTML = "";
 
   payments.forEach(p => {
-    console.log("DB PAYMENT ID:", p.id);
 
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-      <td>${p.vendors?.name || "—"}</td>
-      <td>${p.plan}</td>
-      <td>${p.billing_type}</td>
+      <td>${sanitize(p.vendors?.name)}</td>
+      <td>${sanitize(p.plan)}</td>
+      <td>${sanitize(p.billing_type)}</td>
       <td>
         ${
           p.transfer_proof_url
-            ? `<a href="#" onclick="viewSignedUrl('payment-receipts','${p.transfer_proof_url}');return false;">View</a>`
+            ? `<a href="#" onclick="viewSignedUrl('payment-receipts','${sanitize(p.transfer_proof_url)}');return false;">View</a>`
             : "—"
         }
       </td>
-      <td>${p.status}</td>
+      <td>${sanitize(p.status)}</td>
       <td>
-        <button class="approve-btn" data-approve="${p.id}">Approve</button>
-        <button class="reject-btn" data-reject="${p.id}">Reject</button>
+        <button class="approve-btn" data-approve="${sanitize(p.id)}">Approve</button>
+        <button class="reject-btn" data-reject="${sanitize(p.id)}">Reject</button>
       </td>
     `;
 
@@ -282,8 +278,6 @@ const { data: verifications, error: verificationError } = await window.supabaseC
   
     .eq("status", "pending");
 
-  console.log("VERIFICATIONS RESULT:", verifications, verificationError);
-
 if (verificationError) {
   verificationTable.innerHTML = `<tr><td colspan="6" class="empty-state-cell">${verificationError.message}</td></tr>`;
 } else if (!verifications.length) {
@@ -295,8 +289,8 @@ if (verificationError) {
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-      <td>${v.vendor?.name || "—"}</td>
-      <td>${v.badge_type}</td>
+      <td>${sanitize(v.vendor?.name)}</td>
+      <td>${sanitize(v.badge_type)}</td>
       <td>${new Date(v.created_at).toLocaleDateString()}</td>
       <td>
         <a href="#" onclick="viewSignedUrl('vendor-verifications','${v.id_url}');return false;">ID</a> |
@@ -306,10 +300,10 @@ if (verificationError) {
         ${v.memart_url ? `<a href="#" onclick="viewSignedUrl('vendor-verifications','${v.memart_url}');return false;">MEMART</a> |` : ""}
         ${v.status_report_url ? `<a href="#" onclick="viewSignedUrl('vendor-verifications','${v.status_report_url}');return false;">Status Report</a>` : ""}
       </td>
-      <td>${v.status}</td>
+      <td>${sanitize(v.status)}</td>
       <td>
-        <button class="approve-btn" data-verify-approve="${v.id}">Approve</button>
-        <button class="reject-btn" data-verify-reject="${v.id}">Reject</button>
+        <button class="approve-btn" data-verify-approve="${sanitize(v.id)}">Approve</button>
+        <button class="reject-btn" data-verify-reject="${sanitize(v.id)}">Reject</button>
       </td>
     `;
 
@@ -325,8 +319,6 @@ const { data: partners, error: partnersError } = await supabase
   .select("id, name, phone, state, local_government, status")
   .eq("status", "pending");
 
-console.log("PARTNERS RESULT:", partners, partnersError);
-
 if (partnersError) {
   partnersTable.innerHTML = `<tr><td colspan="6" class="empty-state-cell">${partnersError.message}</td></tr>`;
 } else if (!partners.length) {
@@ -338,14 +330,14 @@ if (partnersError) {
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-      <td>${p.name || "—"}</td>
-      <td>${p.phone || "—"}</td>
-      <td>${p.state || "—"}</td>
-      <td>${p.local_government || "—"}</td>
-      <td>${p.status}</td>
+      <td>${sanitize(p.name)}</td>
+      <td>${sanitize(p.phone)}</td>
+      <td>${sanitize(p.state)}</td>
+      <td>${sanitize(p.local_government)}</td>
+      <td>${sanitize(p.status)}</td>
       <td>
-        <button class="approve-btn" data-partner-approve="${p.id}">Approve</button>
-        <button class="reject-btn" data-partner-reject="${p.id}">Reject</button>
+        <button class="approve-btn" data-partner-approve="${sanitize(p.id)}">Approve</button>
+        <button class="reject-btn" data-partner-reject="${sanitize(p.id)}">Reject</button>
       </td>
     `;
 
@@ -368,8 +360,6 @@ const { data: commissions, error: commissionsError } = await supabase
 `)
   .order("created_at", { ascending: false });
 
-console.log("COMMISSIONS RESULT:", commissions, commissionsError);
-
 if (commissionsError) {
   commissionsTable.innerHTML = `<tr><td colspan="8">${commissionsError.message}</td></tr>`;
 } else if (!commissions.length) {
@@ -382,13 +372,13 @@ if (commissionsError) {
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-      <td>${c.partners?.name || "—"}</td>
-      <td>${c.partners?.referral_code || "—"}</td>
-      <td>${c.vendors?.name || "—"}</td>
-      <td>${c.vendorpayments?.plan || "—"}</td>
+      <td>${sanitize(c.partners?.name)}</td>
+      <td>${sanitize(c.partners?.referral_code)}</td>
+      <td>${sanitize(c.vendors?.name)}</td>
+      <td>${sanitize(c.vendorpayments?.plan)}</td>
       <td>₦${(Number(c.amount) / 100).toLocaleString()}</td>
-      <td><span class="status-badge status-${c.status}">${c.status}</span></td>
-      <td>${c.partners?.status || "—"}</td>
+      <td><span class="status-badge status-${sanitize(c.status)}">${sanitize(c.status)}</span></td>
+      <td>${sanitize(c.partners?.status)}</td>
       <td>${new Date(c.created_at).toLocaleDateString()}</td>
     `;
 
@@ -431,15 +421,15 @@ Object.values(summaryMap).forEach(p => {
   const tr = document.createElement("tr");
 
   tr.innerHTML = `
-  <td>${p.name}</td>
-  <td>${p.code}</td>
+  <td>${sanitize(p.name)}</td>
+  <td>${sanitize(p.code)}</td>
   <td>₦${Math.round(p.pending).toLocaleString()}</td>
   <td>₦${Math.round(p.available).toLocaleString()}</td>
   <td>₦${Math.round(p.paid).toLocaleString()}</td>
   <td>
     ${
       p.available > 0
-        ? `<button class="approve-btn" data-pay="${p.id}">Pay</button>`
+        ? `<button class="approve-btn" data-pay="${sanitize(p.id)}">Pay</button>`
         : "-"
     }
   </td>
@@ -586,8 +576,6 @@ if (updateError) {
 
   // 3️⃣ Send email
 
-  console.log("SENDING EMAIL TO:", payment.vendors.email); 
-
   try {
   await sendEmail({
     to: payment.vendors.email,
@@ -613,7 +601,6 @@ if (updateError) {
   // REJECT
   // -----------------------------
   async function rejectPayment(paymentId, row) {
-    console.log("REJECT FUNCTION ENTERED");
     const reason = prompt("Reason for rejection?");
   
     if (!reason) return;
@@ -635,9 +622,6 @@ if (updateError) {
     .eq("id", paymentId)
     .single();
 
-  console.log("FETCHED PAYMENT:", payment);
-  console.log("FETCH ERROR:", error);
-
     if (error || !payment) {
       alert("Payment not found.");
       if (rejectBtn) {
@@ -647,15 +631,10 @@ if (updateError) {
      return;
    }
 
-  console.log("CURRENT STATUS:", payment.status);
-
   if (payment.status !== "pending") {
   alert("This payment is rejected.");
   return;
 }
-
-  const { data: authData } = await supabase.auth.getUser();
-  console.log("AUTH USER:", authData?.user);
 
   const now = new Date().toISOString();
 
@@ -671,9 +650,6 @@ if (updateError) {
   reviewed_by: adminSession.user_id
 })
 .eq("id", paymentId);
-
-console.log("UPDATE RESULT:", updatedRow);
-console.log("UPDATE ERROR:", updateError);
 
 if (updateError) {
   console.error("VendorPayment update failed:", updateError);
@@ -878,9 +854,6 @@ const { data: updateData, error: updateError } = await supabase
   })
   .eq("id", partnerId)
   .select();
-
-console.log("PARTNER UPDATE RESULT:", updateData);
-console.log("PARTNER UPDATE ERROR:", updateError);
 
 if (updateError) {
   alert("Failed to approve partner: " + updateError.message);
@@ -1099,14 +1072,14 @@ function renderPartnerHistory(partners) {
       : "status-rejected";
 
     tr.innerHTML = `
-      <td>${p.name || "—"}</td>
-      <td>${p.email || "—"}</td>
-      <td>${p.state || "—"}</td>
+      <td>${sanitize(p.name)}</td>
+      <td>${sanitize(p.email)}</td>
+      <td>${sanitize(p.state)}</td>
       <td>${p.referral_code
-        ? `<strong>${p.referral_code}</strong>`
+        ? `<strong>${sanitize(p.referral_code)}</strong>`
         : "—"}</td>
       <td>${appliedDate}</td>
-      <td><span class="status-badge ${statusClass}">${p.status}</span></td>
+      <td><span class="status-badge ${statusClass}">${sanitize(p.status)}</span></td>
     `;
     historyTable.appendChild(tr);
   });
@@ -1160,13 +1133,13 @@ function renderFilteredCommissions(commissions) {
   commissions.forEach(c => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${c.partners?.name || "—"}</td>
-      <td>${c.partners?.referral_code || "—"}</td>
-      <td>${c.vendors?.name || "—"}</td>
-      <td>${c.vendorpayments?.plan || "—"}</td>
+      <td>${sanitize(c.partners?.name)}</td>
+      <td>${sanitize(c.partners?.referral_code)}</td>
+      <td>${sanitize(c.vendors?.name)}</td>
+      <td>${sanitize(c.vendorpayments?.plan)}</td>
       <td>₦${(Number(c.amount) / 100).toLocaleString()}</td>
-      <td><span class="status-badge status-${c.status}">${c.status}</span></td>
-      <td>${c.partners?.status || "—"}</td>
+      <td><span class="status-badge status-${sanitize(c.status)}">${sanitize(c.status)}</span></td>
+      <td>${sanitize(c.partners?.status)}</td>
       <td>${new Date(c.created_at).toLocaleDateString()}</td>
     `;
     commissionsTable.appendChild(tr);
@@ -1269,12 +1242,12 @@ function renderPaymentHistory(payments) {
       : "—";
 
     tr.innerHTML = `
-      <td>${p.vendors?.name || "—"}</td>
-      <td>${p.plan || "—"}</td>
-      <td>${p.billing_type || "—"}</td>
+      <td>${sanitize(p.vendors?.name)}</td>
+      <td>${sanitize(p.plan)}</td>
+      <td>${sanitize(p.billing_type)}</td>
       <td>${amountDisplay}</td>
       <td>${reviewedDate}</td>
-      <td><span class="status-badge ${statusClass}">${p.status}</span></td>
+      <td><span class="status-badge ${statusClass}">${sanitize(p.status)}</span></td>
       <td>${receiptLink}</td>
     `;
 
@@ -1382,11 +1355,11 @@ function renderVerificationHistory(verifications) {
     .join("");
 
     tr.innerHTML = `
-      <td>${v.vendor?.name || "—"}</td>
-      <td>${v.badge_type}</td>
+      <td>${sanitize(v.vendor?.name)}</td>
+      <td>${sanitize(v.badge_type)}</td>
       <td>${submittedDate}</td>
       <td>${reviewedDate}</td>
-      <td><span class="status-badge ${statusClass}">${v.status}</span></td>
+      <td><span class="status-badge ${statusClass}">${sanitize(v.status)}</span></td>
       <td>${docLinks || "—"}</td>
     `;
 
@@ -1397,6 +1370,22 @@ function renderVerificationHistory(verifications) {
 loadVerificationHistory();
 
 });
+
+// -----------------------------
+// SANITIZE — XSS PROTECTION
+// Converts vendor-supplied text to safe plain text
+// before inserting into the admin page HTML.
+// Prevents any injected scripts from executing.
+// -----------------------------
+function sanitize(str) {
+  if (str === null || str === undefined) return "—";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
 
 // -----------------------------
 // REVOKE ADMIN ROLE

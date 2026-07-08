@@ -23,14 +23,12 @@ if (referralCode) {
       .maybeSingle();
 
     if (existingVendor) {
-      console.log("Existing vendor detected — referral ignored");
       return;
     }
   }
 
   // ✅ Only save for new users
   localStorage.setItem("referral_code", referralCode);
-  console.log("REF SAVED FROM GETLISTED:", referralCode);
 }
 
   const billingToggle = document.getElementById("billingToggle");
@@ -40,8 +38,6 @@ if (referralCode) {
   console.error("No plan buttons found");
   return;
 }
-
-console.log("PLAN BUTTONS FOUND:", planButtons.length);
 
   // -----------------------------
   // Billing toggle UI (UNCHANGED)
@@ -84,8 +80,6 @@ if (!localStorage.getItem("billingType")) {
   // -----------------------------
   planButtons.forEach(btn => {
     btn.addEventListener("click", async (e) => {
-
-      console.log("BUTTON CLICKED");
 
       // ✅ Skip custom plan → allow normal link/navigation
       e.preventDefault();

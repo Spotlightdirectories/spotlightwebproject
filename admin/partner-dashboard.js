@@ -45,10 +45,7 @@ if (partnerError || !partner) {
 }
 
   const partnerId = partner.id;
-  console.log("CURRENT PARTNER ID:", partnerId);
-  console.log("ACCOUNT STATUS:", partner.account_status);
-
-  // SET 14 DAYS FROM NOW
+    // SET 14 DAYS FROM NOW
   const deletionDate = new Date();
   deletionDate.setDate(deletionDate.getDate() + 14);
 
@@ -137,7 +134,6 @@ if (!table) {
       data: { user },
       error: authError
     } = await supabase.auth.getUser();
-    console.log("7fc1e3c0-a9b9-4d05-93b3-a4c73f2ac199:", user.id);
 
     if (authError || !user) {
       table.innerHTML = `<tr><td colspan="6">Not logged in</td></tr>`;
@@ -152,7 +148,6 @@ if (!table) {
       .select("id, account_status, scheduled_deletion_at, created_at")
       .eq("user_id", user.id)
       .single();
-      console.log("PARTNER:", partner, "ERROR:", partnerError);
 
     if (partnerError || !partner) {
   console.error("INVALID SESSION: Not a partner");
@@ -162,9 +157,6 @@ if (!table) {
   window.location.href = "/partner-program.html#login";
   return;
 }
-
-    console.log("ACCOUNT STATUS ON LOAD:", partner.account_status);
-
 
 const partnerId = partner.id;
 
@@ -177,8 +169,6 @@ if (partner.scheduled_deletion_at) {
   const deletionDate = new Date(partner.scheduled_deletion_at);
 
   if (now >= deletionDate) {
-
-    console.log("ENFORCING ACCOUNT CLOSURE:", partnerId);
 
     // 1. UPDATE STATUS TO CLOSED
     const { error: closeError } = await supabase

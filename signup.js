@@ -10,7 +10,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let isSubmitting = false;
 
   form.addEventListener("submit", async (e) => {
-    console.log("FORM SUBMIT TRIGGERED");
 
     e.preventDefault();
 
@@ -163,16 +162,11 @@ if (!validWhatsapp) {
 let partnerId = null;
 
 const storedReferral = localStorage.getItem("referral_code")?.trim().toUpperCase();
-console.log("RAW storedReferral:", storedReferral);
-console.log("TYPE:", typeof storedReferral);
 
 if (storedReferral) {
   const { data: partners, error } = await supabase
   .from("partners")
   .select("id, referral_code");
-
-console.log("PARTNERS DATA:", partners);
-console.log("PARTNERS ERROR:", error);
 
   if (partners && partners.length > 0) {
     const match = partners.find(
@@ -185,14 +179,11 @@ console.log("PARTNERS ERROR:", error);
   }
 }
 
-console.log("RESOLVED partnerId:", partnerId);
-
     if (!selectedPlan) {
       showError("Please select a plan first.");
       resetSubmitState();
       return;
     }
-   console.log("BEFORE VENDOR INSERT");
    const insertResponse = await supabase
   .from("vendors")
   .insert([
@@ -232,7 +223,6 @@ console.log("RESOLVED partnerId:", partnerId);
 
   ]);
 const { data: vendorData, error: vendorError } = insertResponse;
-console.log("AFTER VENDOR INSERT", vendorError);
 
     if (vendorError) {
       console.error("Vendor creation error:", vendorError);

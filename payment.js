@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("PAYMENT JS STARTED");
   const supabase = window.supabaseClient;
 
   const planSummaryEl = document.getElementById("planSummary");
@@ -10,7 +9,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const payOnlineBtn = document.getElementById("payOnlineBtn");
   const payBankBtn = document.getElementById("payBankBtn");
   const submitReceiptBtn = document.getElementById("submitReceiptBtn");
-  console.log("SUBMIT BTN:", submitReceiptBtn);
   const receiptFileInput = document.getElementById("receiptFile");
 
   // ===============================
@@ -261,10 +259,7 @@ async function verifyPayment(reference) {
       }
     );
 
-    console.log("Invoke result:", data, error);
-
     if (error) {
-      console.log("VERIFY ERROR:", error);
       alert("Payment verification failed.");
       return;
     }
@@ -323,8 +318,6 @@ payBankBtn.onclick = async () => {
 
 };
 
-  console.log("ATTACHING CLICK HANDLER");
-
   submitReceiptBtn.onclick = async () => {
     
 
@@ -332,7 +325,6 @@ payBankBtn.onclick = async () => {
     submitReceiptBtn.textContent = "Uploading Receipt...";
 
     const file = receiptFileInput.files[0];
-    console.log("FILE INPUT:", receiptFileInput.files);
 
     if (!file) {
       alert("Select a receipt file.");
@@ -382,10 +374,7 @@ if (paymentError || !paymentData) {
       .from("payment-receipts")
       .upload(filePath, file, { upsert: true });
 
-      console.log("UPLOAD COMPLETED");
-
     if (uploadError) {
-      console.log("UPLOAD ERROR:", uploadError);
       alert(uploadError.message);
       submitReceiptBtn.disabled = false;
       submitReceiptBtn.textContent = "Submit Receipt";
@@ -400,8 +389,6 @@ if (paymentError || !paymentData) {
      })
       .eq("id", window.currentPaymentId)
       .select();
-
-console.log("UPDATE RESULT:", updateData, updateError, window.currentPaymentId);
 
 // 2️⃣ Ensure vendor subscription is pending
     await supabase
