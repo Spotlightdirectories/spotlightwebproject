@@ -242,6 +242,13 @@ Additional emails built during Block 3 (not in original plan):
 
 Total emails now live: 17 branded templates via Resend
 
+NOTE: Emails 12 and 13 (trial expiry warning and subscription expiry
+warning) were built and deployed but NOT yet tested end-to-end.
+Test after Block 6 is complete using dev-reset-vendor.sql to set
+trial_started_at to 83 days ago, then manually call:
+https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/send-expiry-warnings
+Confirm email arrives before Next.js migration.
+
 ### Block 3 — Additional hardening completed during email testing
 - [x] Fix bank transfer receipt upload — storage RLS policies corrected
 - [x] Fix admin session conflict — dedicated admin-supabase-client.js with separate storage key
