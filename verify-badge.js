@@ -112,7 +112,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!applicantName) markRequired("applicantName", "Full name is required");
     if (!phone) markRequired("phone", "Phone number is required");
     if (!idFile) markRequired("idFile", "Government ID is required");
-    if (!passportFile) markRequired("passportFile", "Passport photograph is required");
+
+    if (badgeType === "gray") {
+      if (!passportFile) markRequired("passportFile", "Passport photograph is required");
+    }
 
     if (badgeType === "blue") {
       if (!cacFile) markRequired("cacFile", "CAC Certificate is required");
