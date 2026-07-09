@@ -387,7 +387,7 @@ const EmailTemplates = (() => {
       <ol style="margin:0 0 16px;padding-left:20px;font-size:15px;
                  line-height:1.9;color:#334155;">
         <li>Complete your business profile — name, address, description, photo</li>
-        <li>Add your products or services with clear images and prices</li>
+        <li>Add your listings with clear images and prices</li>
         <li>Set your exact business location so customers can find you</li>
         <li>Apply for verification to build trust with customers</li>
       </ol>
