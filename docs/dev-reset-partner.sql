@@ -11,6 +11,7 @@
 DO $$
 DECLARE
   p_id UUID;
+  auth_id UUID;
 BEGIN
 
   -- Get partner ID by email
@@ -18,36 +19,49 @@ BEGIN
   FROM public.partners
   WHERE email = 'your-test-partner@email.com'; -- CHANGE THIS
 
-  IF p_id IS NULL THEN
-    RAISE EXCEPTION 'Partner not found';
-  END IF;
+  -- Get auth user ID by email
+  SELECT id INTO auth_id
+  FROM auth.users
+  WHERE email = 'your-test-partner@email.com'; -- CHANGE THIS (same email)
 
   -- Delete commissions linked to this partner
-  DELETE FROM public.commissions
-  WHERE partner_id = p_id;
+  IF p_id IS NOT NULL THEN
+    DELETE FROM public.commissions
+    WHERE partner_id = p_id;
+  END IF;
 
   -- ============================================================
-  -- OPTION A: Full delete — removes the partner record entirely
-  -- Use this when you want to re-test the signup form from scratch
+  -- OPTION A: Full delete — removes partner record AND auth user
+  -- Use this when you want to re-test the full signup flow
   -- ============================================================
-  DELETE FROM public.partners
-  WHERE id = p_id;
+  IF p_id IS NOT NULL THEN
+    DELETE FROM public.partners WHERE id = p_id;
+    RAISE NOTICE 'Partner record deleted';
+  ELSE
+    RAISE NOTICE 'No partner record found — skipping';
+  END IF;
 
-  RAISE NOTICE 'Partner fully deleted for re-testing signup';
+  IF auth_id IS NOT NULL THEN
+    DELETE FROM auth.users WHERE id = auth_id;
+    RAISE NOTICE 'Auth user deleted';
+  ELSE
+    RAISE NOTICE 'No auth user found — skipping';
+  END IF;
 
   -- ============================================================
-  -- OPTION B: Status reset only — keeps the partner record
+  -- OPTION B: Status reset only — keeps partner record and auth user
   -- Use this when you want to re-test the approval/rejection flow
   -- Comment out OPTION A above and uncomment this block instead
   -- ============================================================
-  -- UPDATE public.partners
-  -- SET
-  --   status = 'pending',
-  --   referral_code = NULL,
-  --   user_id = NULL,
-  --   notification_sent = false
-  -- WHERE id = p_id;
-  --
-  -- RAISE NOTICE 'Partner reset to pending for ID: %', p_id;
+  -- IF p_id IS NOT NULL THEN
+  --   UPDATE public.partners
+  --   SET
+  --     status = 'pending',
+  --     referral_code = NULL,
+  --     user_id = NULL,
+  --     notification_sent = false
+  --   WHERE id = p_id;
+  --   RAISE NOTICE 'Partner reset to pending for ID: %', p_id;
+  -- END IF;
 
 END $$;
