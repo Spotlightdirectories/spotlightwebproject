@@ -753,11 +753,6 @@ async function approveVerification(verificationId, row) {
      return;
   }
 
-  // Debug: check current session
-  const { data: sessionData } = await supabase.auth.getSession();
-  console.log("Admin session uid:", sessionData?.session?.user?.id);
-  console.log("Admin session email:", sessionData?.session?.user?.email);
-
   const { error: verUpdateError } = await supabase
     .from("vendor_verifications")
     .update({
