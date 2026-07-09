@@ -28,7 +28,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const vendorId = vendorRow.id;
 
-  const badgeTitle = document.getElementById("badgeTitle");
+  // Check if vendor already has a pending verification
+  const { data: existingPending } = await supabase
+    .from("vendor_verifications")
+    .select("id, badge_type")
+    .eq("vendor_id", vendorId)
+    .eq("status", "pending")
+    .maybeSingle();
+
+  const verifyMsg = document.getElementById("verifyMsg");
+  const form = document.getElementById("verificationForm");
+
+  if (existingPending) {
+    if (verifyMsg) {
+      verifyMsg.textContent =
+        `You already have a pending ${existingPending.badge_type} badge verification under review. Please wait for the admin to complete the review before submitting again.`;
+      verifyMsg.style.color = "#dc2626";
+    }
+    if (form) {
+      form.style.opacity = "0.4";
+      form.style.pointerEvents = "none";
+    }
+    return;
+  }
   const badgeRequirements = document.getElementById("badgeRequirements");
   const applicantNameField = document.getElementById("applicantName");
 
@@ -53,8 +75,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       "Name (must be a Director or Shareholder in the CAC registration)";
    }
 
-    const form = document.getElementById("verificationForm");
-    const verifyMsg = document.getElementById("verifyMsg");
+    const badgeTitle = document.getElementById("badgeTitle");
     document.getElementById("email").value = user.email;
 
 

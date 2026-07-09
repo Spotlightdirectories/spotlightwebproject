@@ -304,6 +304,7 @@ if (verificationError) {
       <td>
         <button class="approve-btn" data-verify-approve="${sanitize(v.id)}">Approve</button>
         <button class="reject-btn" data-verify-reject="${sanitize(v.id)}">Reject</button>
+        <button class="reject-btn" style="background:#64748b;" data-verify-delete="${sanitize(v.id)}">Delete</button>
       </td>
     `;
 
@@ -446,34 +447,39 @@ initCommissionSearch(commissions);
   document.addEventListener("click", async (e) => {
   const row = e.target.closest("tr");
 
-  if (e.target.dataset.approve) {
+  if (e.target.matches("[data-approve]")) {
     await approvePayment(e.target.dataset.approve, row);
   }
 
-  if (e.target.dataset.reject) {
+  if (e.target.matches("[data-reject]")) {
     await rejectPayment(e.target.dataset.reject, row);
   }
 
-  if (e.target.dataset.verifyApprove) {
-  await approveVerification(e.target.dataset.verifyApprove, row);
-}
+  if (e.target.matches("[data-verify-approve]")) {
+    await approveVerification(e.target.dataset.verifyApprove, row);
+  }
 
-if (e.target.dataset.verifyReject) {
-  await rejectVerification(e.target.dataset.verifyReject, row);
-}
+  if (e.target.matches("[data-verify-reject]")) {
+    await rejectVerification(e.target.dataset.verifyReject, row);
+  }
 
-if (e.target.dataset.partnerApprove) {
-  await approvePartner(e.target.dataset.partnerApprove, row);
-}
+  if (e.target.matches("[data-verify-delete]")) {
+    await deleteVerification(e.target.dataset.verifyDelete, row);
+  }
 
-if (e.target.dataset.partnerReject) {
-  await rejectPartner(e.target.dataset.partnerReject, row);
-}
-  if (e.target.dataset.pay) {
-  await payPartner(e.target.dataset.pay);
-}
+  if (e.target.matches("[data-partner-approve]")) {
+    await approvePartner(e.target.dataset.partnerApprove, row);
+  }
 
-});
+  if (e.target.matches("[data-partner-reject]")) {
+    await rejectPartner(e.target.dataset.partnerReject, row);
+  }
+
+  if (e.target.matches("[data-pay]")) {
+    await payPartner(e.target.dataset.pay);
+  }
+
+  });
 
   // -----------------------------
   // APPROVE
@@ -847,6 +853,37 @@ async function rejectVerification(verificationId, row) {
 
   alert("Verification rejected");
 
+  if (row) row.remove();
+}
+
+// -----------------------------
+// DELETE BADGE VERIFICATION (Admin cleanup)
+// -----------------------------
+async function deleteVerification(verificationId, row) {
+
+  if (!confirm("Delete this verification submission? This cannot be undone.")) return;
+
+  const deleteBtn = document.querySelector(`[data-verify-delete="${verificationId}"]`);
+  if (deleteBtn) {
+    deleteBtn.disabled = true;
+    deleteBtn.textContent = "Deleting...";
+  }
+
+  const { error } = await supabase
+    .from("vendor_verifications")
+    .delete()
+    .eq("id", verificationId);
+
+  if (error) {
+    alert("Failed to delete: " + error.message);
+    if (deleteBtn) {
+      deleteBtn.disabled = false;
+      deleteBtn.textContent = "Delete";
+    }
+    return;
+  }
+
+  alert("Verification deleted");
   if (row) row.remove();
 }
 
