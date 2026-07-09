@@ -630,7 +630,7 @@ if (updateError) {
       id,
       vendor_id,
       status,
-      vendors ( email )
+      vendors ( email, name )
     `)
     .eq("id", paymentId)
     .single();
