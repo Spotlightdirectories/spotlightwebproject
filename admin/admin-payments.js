@@ -455,6 +455,10 @@ initCommissionSearch(commissions);
     await rejectPayment(e.target.dataset.reject, row);
   }
 
+  if (e.target.matches("[data-revoke]")) {
+    await revokeVerification(e.target.dataset.revoke, e.target.closest("tr"));
+  }
+
   if (e.target.matches("[data-verify-approve]")) {
     await approveVerification(e.target.dataset.verifyApprove, row);
   }
@@ -898,6 +902,100 @@ async function deleteVerification(verificationId, row) {
   }
 
   alert("Verification deleted");
+  if (row) row.remove();
+}
+
+// -----------------------------
+// REVOKE BADGE (super_admin only)
+// -----------------------------
+async function revokeVerification(verificationId, row) {
+
+  if (currentRole !== "super_admin") {
+    alert("Only Super Admin can revoke badges.");
+    return;
+  }
+
+  const reason = prompt("Reason for revoking this badge? This will be sent to the vendor.");
+  if (!reason) return;
+
+  const revokeBtn = document.querySelector(`[data-revoke="${verificationId}"]`);
+  if (revokeBtn) {
+    revokeBtn.disabled = true;
+    revokeBtn.textContent = "Revoking...";
+  }
+
+  // Get verification details
+  const { data: verification, error: fetchError } = await supabase
+    .from("vendor_verifications")
+    .select("vendor_id, badge_type")
+    .eq("id", verificationId)
+    .single();
+
+  if (fetchError || !verification) {
+    alert("Verification not found.");
+    if (revokeBtn) {
+      revokeBtn.disabled = false;
+      revokeBtn.textContent = "Revoke";
+    }
+    return;
+  }
+
+  // Get vendor details
+  const { data: vendor } = await supabase
+    .from("vendors")
+    .select("email, name")
+    .eq("id", verification.vendor_id)
+    .single();
+
+  const now = new Date().toISOString();
+
+  // Update verification record to revoked
+  const { error: verError } = await supabase
+    .from("vendor_verifications")
+    .update({
+      status: "revoked",
+      reviewed_at: now,
+      reviewed_by: adminSession.user_id,
+      rejection_reason: reason
+    })
+    .eq("id", verificationId);
+
+  if (verError) {
+    alert("Failed to revoke verification: " + verError.message);
+    if (revokeBtn) {
+      revokeBtn.disabled = false;
+      revokeBtn.textContent = "Revoke";
+    }
+    return;
+  }
+
+  // Remove badge from vendor profile
+  const { error: vendorError } = await supabase
+    .from("vendors")
+    .update({ verification_status: null })
+    .eq("id", verification.vendor_id);
+
+  if (vendorError) {
+    alert("Badge removed from verification but vendor profile update failed: " + vendorError.message);
+    return;
+  }
+
+  // Send revocation email
+  try {
+    await sendEmail({
+      to: vendor.email,
+      subject: "Your Spotlight Verification Badge Has Been Revoked",
+      html: EmailTemplates.badgeRevoked({
+        vendorName: vendor?.name || "",
+        badgeType: verification.badge_type || "",
+        reason: reason
+      })
+    });
+  } catch (err) {
+    console.error("Revocation email failed:", err);
+  }
+
+  alert("Badge revoked and vendor notified");
   if (row) row.remove();
 }
 
@@ -1453,6 +1551,11 @@ function renderVerificationHistory(verifications) {
     )
     .join("");
 
+    const revokeBtn = currentRole === "super_admin" && v.status === "approved"
+      ? `<button class="reject-btn" style="margin-top:4px;background:#dc2626;"
+           data-revoke="${sanitize(v.id)}">Revoke</button>`
+      : "";
+
     tr.innerHTML = `
       <td>${sanitize(v.vendor?.name)}</td>
       <td>${sanitize(v.badge_type)}</td>
@@ -1460,6 +1563,7 @@ function renderVerificationHistory(verifications) {
       <td>${reviewedDate}</td>
       <td><span class="status-badge ${statusClass}">${sanitize(v.status)}</span></td>
       <td>${docLinks || "—"}</td>
+      <td>${revokeBtn}</td>
     `;
 
     historyTable.appendChild(tr);

@@ -387,6 +387,29 @@ const EmailTemplates = (() => {
   }
 
   // ============================================================
+  // EMAIL — BADGE REVOKED
+  // Triggered: Super admin revokes a vendor's badge
+  // ============================================================
+  function badgeRevoked({ vendorName = "", badgeType = "", reason = "" }) {
+    const badgeDisplay = badgeType
+      ? badgeType.charAt(0).toUpperCase() + badgeType.slice(1)
+      : "";
+
+    const body = `
+      ${heading("Verification Badge Revoked")}
+      ${greeting(vendorName)}
+      ${paragraph(`Your ${badgeDisplay ? badgeDisplay + " Badge" : "verification badge"} has been revoked by the Spotlight team following a review of your account.`)}
+      ${reason ? infoTable(infoRow("Reason", reason)) : ""}
+      ${paragraph("If you believe this decision was made in error, please contact us at support@spotlightdirectories.com with supporting documentation.")}
+      ${alertBox("Your business profile will no longer display a verification badge. You may reapply for verification once the issue has been resolved.", "warning")}
+    `;
+    return base({
+      preheader: "An important update regarding your Spotlight verification badge.",
+      body
+    });
+  }
+
+  // ============================================================
   // EMAIL 6 — PARTNER APPLICATION REJECTED
   // Triggered: Admin rejects a partner application
   // ============================================================
@@ -528,6 +551,7 @@ const EmailTemplates = (() => {
     paymentRejected,
     badgeApproved,
     badgeRejected,
+    badgeRevoked,
     partnerApplicationReceived,
     partnerApproved,
     partnerAccountCreated,
