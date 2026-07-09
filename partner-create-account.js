@@ -144,7 +144,7 @@ if (!user) {
       console.error("Partner account email failed:", err);
     }
 
-    alert("Account created successfully. Check your email and confirm your account before logging in.");
+    alert("Account created successfully. You can now log in to your partner dashboard.");
     window.location.href = "/partner-program";
 
 });

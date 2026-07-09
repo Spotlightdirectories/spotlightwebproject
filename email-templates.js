@@ -359,7 +359,7 @@ const EmailTemplates = (() => {
       ${referralCode ? infoTable(infoRow("Your Referral Code", `<strong style="font-size:18px;letter-spacing:2px;">${referralCode}</strong>`)) : ""}
       ${paragraph("Share your referral link with businesses to help them get listed on Spotlight. You earn a commission every time a vendor subscribes through your link.")}
       ${primaryButton("Log In to Partner Dashboard", "https://spotlightdirectories.com/partner-program.html")}
-      ${alertBox("Please confirm your email address first if you have not already done so. Check your inbox for a confirmation link from Spotlight.", "info")}
+      ${alertBox("Your referral code is unique to you. Share it with businesses to start earning commissions immediately.", "info")}
     `;
     return base({
       preheader: "Your Spotlight Partner account is ready. Log in to start earning.",
