@@ -720,7 +720,7 @@ async function approveVerification(verificationId, row) {
 
   const { data: vendor } = await supabase
     .from("vendors")
-    .select("email")
+    .select("email, name")
     .eq("id", verification.vendor_id)
     .single();
 
@@ -804,7 +804,7 @@ async function rejectVerification(verificationId, row) {
 
   const { data: vendor } = await supabase
     .from("vendors")
-    .select("email")
+    .select("email, name")
     .eq("id", verification.vendor_id)
     .single();
 
