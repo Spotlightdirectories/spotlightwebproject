@@ -77,7 +77,11 @@ form.addEventListener("submit", async (e) => {
 });
 
   if (error) {
-    alert(error.message);
+    if (error.message.includes("already registered") || error.message.includes("already been registered")) {
+      alert("An account already exists with this email. Please log in directly from the partner page instead.");
+    } else {
+      alert(error.message);
+    }
 
     isSubmitting = false;
     if (submitBtn) {
