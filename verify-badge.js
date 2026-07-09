@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const badgeType = localStorage.getItem("pendingBadgeType");
 
   if (!badgeType) {
-    window.location.href = "dashboard";
+    window.location.href = "vendordashboard.html";
     return;
   }
 
@@ -213,7 +213,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       localStorage.removeItem("pendingBadgeType");
 
       setTimeout(() => {
-        window.location.href = "dashboard";
+        window.location.href = "vendordashboard.html";
       }, 1500);
 
     } catch (err) {
