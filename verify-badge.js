@@ -72,8 +72,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     let hasError = false;
 
     // Clear previous highlights
-    document.querySelectorAll(".field-error").forEach(el => el.classList.remove("field-error"));
+    document.querySelectorAll(".field-error").forEach(el => {
+      el.classList.remove("field-error");
+      el.style.borderColor = "";
+    });
     document.querySelectorAll(".field-error-msg").forEach(el => el.remove());
+    verifyMsg.textContent = "";
+    verifyMsg.style.color = "";
 
     function markRequired(inputId, message) {
       const el = document.getElementById(inputId);
