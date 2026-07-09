@@ -241,7 +241,7 @@ const EmailTemplates = (() => {
         (spotId ? infoRow("Your SPOT ID", spotId) : "") +
         infoRow("Valid Until", expiryDisplay)
       )}
-      ${paragraph("You can now complete your profile, add your products and services, and start getting discovered by customers.")}
+      ${paragraph("You can now complete your profile, add your listings, and start getting discovered by customers.")}
       ${primaryButton("Go to My Dashboard", "https://spotlightdirectories.com/vendordashboard.html")}
       ${alertBox("Your SPOT ID is your unique business identifier on Spotlight. Keep it safe — you may need it when contacting support.", "info")}
     `;
