@@ -188,8 +188,12 @@ if (!existing) {
 
       if (error) {
         console.error("Signup error:", error.message);
-        alert("Something went wrong. Please try again.");
-          submitBtn.classList.remove("partner-btn-loading");
+        if (error.message.includes("duplicate key") || error.message.includes("unique")) {
+          alert("An application already exists with this email or phone number.");
+        } else {
+          alert("Something went wrong. Please try again.");
+        }
+        submitBtn.classList.remove("partner-btn-loading");
         return;
       }
 
