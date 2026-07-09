@@ -113,6 +113,37 @@ if (!user) {
       .update({ user_id: user.id })
       .eq("id", partnerId);
 
+    // Fetch partner name and referral code for the email
+    const { data: partnerRecord } = await supabase
+      .from("partners")
+      .select("name, referral_code")
+      .eq("id", partnerId)
+      .single();
+
+    // Send account created confirmation email
+    try {
+      await fetch(
+        "https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/send-email",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": window.SUPABASE_ANON_KEY
+          },
+          body: JSON.stringify({
+            to: email,
+            subject: "Your Spotlight Partner Account is Ready",
+            html: EmailTemplates.partnerAccountCreated({
+              partnerName: partnerRecord?.name || "",
+              referralCode: partnerRecord?.referral_code || ""
+            })
+          })
+        }
+      );
+    } catch (err) {
+      console.error("Partner account email failed:", err);
+    }
+
     alert("Account created successfully. Check your email and confirm your account before logging in.");
     window.location.href = "/partner-program";
 

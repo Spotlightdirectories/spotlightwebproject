@@ -348,6 +348,26 @@ const EmailTemplates = (() => {
   }
 
   // ============================================================
+  // EMAIL 5b — PARTNER ACCOUNT CREATED
+  // Triggered: Partner completes account creation
+  // ============================================================
+  function partnerAccountCreated({ partnerName = "", referralCode = "" }) {
+    const body = `
+      ${heading("Your Partner Account is Ready 🎉")}
+      ${greeting(partnerName)}
+      ${paragraph("Your Spotlight Partner account has been created successfully. You can now log in to your partner dashboard and start earning commissions.")}
+      ${referralCode ? infoTable(infoRow("Your Referral Code", `<strong style="font-size:18px;letter-spacing:2px;">${referralCode}</strong>`)) : ""}
+      ${paragraph("Share your referral link with businesses to help them get listed on Spotlight. You earn a commission every time a vendor subscribes through your link.")}
+      ${primaryButton("Log In to Partner Dashboard", "https://spotlightdirectories.com/partner-program.html")}
+      ${alertBox("Please confirm your email address first if you have not already done so. Check your inbox for a confirmation link from Spotlight.", "info")}
+    `;
+    return base({
+      preheader: "Your Spotlight Partner account is ready. Log in to start earning.",
+      body
+    });
+  }
+
+  // ============================================================
   // EMAIL 6 — PARTNER APPLICATION REJECTED
   // Triggered: Admin rejects a partner application
   // ============================================================
@@ -490,6 +510,7 @@ const EmailTemplates = (() => {
     badgeApproved,
     badgeRejected,
     partnerApproved,
+    partnerAccountCreated,
     partnerRejected,
     welcomeVendor,
     badgeSubmitted,
