@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     badgeTitle.textContent = "Gray Badge Verification";
     badgeRequirements.textContent =
       "Gray badge builds trust. Requires Government ID and Passport photo.";
-    blueOnly.forEach(el => el.style.display = "none");
+    grayOnly.forEach(el => el.style.display = "block");
     applicantNameField.placeholder = "Name must match the Government ID";
   }
 
@@ -69,8 +69,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     badgeTitle.textContent = "Blue Badge Verification";
     badgeRequirements.textContent =
       "Blue badge verifies registered businesses. Requires Government ID, CAC Certificate, Mermat, Status Report and Utility Bill.";
-    grayOnly.forEach(el => el.style.display = "none");
-
+    blueOnly.forEach(el => el.style.display = "block");
     applicantNameField.placeholder =
       "Name (must be a Director or Shareholder in the CAC registration)";
    }
