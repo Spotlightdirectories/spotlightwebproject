@@ -125,6 +125,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     verifyMsg.style.color = "";
     verifyMsg.textContent = "Uploading documents...";
 
+    const submitBtn = document.getElementById("submitVerificationBtn") ||
+      form.querySelector("button[type='submit']");
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Uploading...";
+    }
+
+    // --- UPLOAD FUNCTION ---
+    const upload = async (file, name) => {
+      if (!file) return null;
+      const path = `${user.id}/${name}-${Date.now()}`;
+      const { error } = await supabase.storage
+        .from("vendor-verifications")
+        .upload(path, file, { upsert: true });
+      if (error) throw error;
+      return path;
+    };
+
     try {
       // --- UPLOAD ALL FILES ---
       const idUrl = await upload(idFile, "id");
@@ -197,6 +215,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.error("Error hint:", err?.hint);
       verifyMsg.textContent = "Upload failed. Please try again.";
       verifyMsg.style.color = "#dc2626";
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Submit Verification";
+      }
     }
 
   });
