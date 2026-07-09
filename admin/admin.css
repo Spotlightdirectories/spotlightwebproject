@@ -166,6 +166,11 @@ tbody tr:hover {
   color: #991b1b;
 }
 
+.status-revoked {
+  background: #fef3c7;
+  color: #92400e;
+}
+
 /* Badge Verification Status Badges */
 
 .verification-heading {

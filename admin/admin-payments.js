@@ -1483,16 +1483,16 @@ async function loadVerificationHistory() {
       status_report_url,
       vendor:vendors ( name )
     `)
-    .in("status", ["approved", "rejected"])
+    .in("status", ["approved", "rejected", "revoked"])
     .order("reviewed_at", { ascending: false });
 
   if (error) {
-    historyTable.innerHTML = `<tr><td colspan="6">Failed to load history.</td></tr>`;
+    historyTable.innerHTML = `<tr><td colspan="7">Failed to load history.</td></tr>`;
     return;
   }
 
   if (!reviewed || !reviewed.length) {
-    historyTable.innerHTML = `<tr><td colspan="6">No reviewed verifications yet.</td></tr>`;
+    historyTable.innerHTML = `<tr><td colspan="7">No reviewed verifications yet.</td></tr>`;
     return;
   }
 
@@ -1523,7 +1523,7 @@ function renderVerificationHistory(verifications) {
   if (!historyTable) return;
 
   if (!verifications.length) {
-    historyTable.innerHTML = `<tr><td colspan="6">No results found.</td></tr>`;
+    historyTable.innerHTML = `<tr><td colspan="7">No results found.</td></tr>`;
     return;
   }
 
@@ -1533,7 +1533,9 @@ function renderVerificationHistory(verifications) {
     const tr = document.createElement("tr");
     const submittedDate = v.created_at ? new Date(v.created_at).toLocaleDateString() : "—";
     const reviewedDate  = v.reviewed_at ? new Date(v.reviewed_at).toLocaleDateString() : "Not recorded";
-    const statusClass   = v.status === "approved" ? "status-approved" : "status-rejected";
+    const statusClass   = v.status === "approved" ? "status-approved"
+                        : v.status === "revoked"  ? "status-revoked"
+                        : "status-rejected";
 
     const docLinks = [
       { label: "ID",            url: v.id_url },
