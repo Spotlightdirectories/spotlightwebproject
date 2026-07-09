@@ -28,6 +28,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const vendorId = vendorRow.id;
 
+  // Declare all DOM elements first
+  const verifyMsg = document.getElementById("verifyMsg");
+  const form = document.getElementById("verificationForm");
+  const badgeTitle = document.getElementById("badgeTitle");
+  const badgeRequirements = document.getElementById("badgeRequirements");
+  const applicantNameField = document.getElementById("applicantName");
+  const grayOnly = document.querySelectorAll(".gray-only");
+  const blueOnly = document.querySelectorAll(".blue-only");
+
+  // Set email field from auth
+  const emailField = document.getElementById("email");
+  if (emailField) emailField.value = user.email;
+
   // Check if vendor already has a pending verification
   const { data: existingPending } = await supabase
     .from("vendor_verifications")
@@ -35,9 +48,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     .eq("vendor_id", vendorId)
     .eq("status", "pending")
     .maybeSingle();
-
-  const verifyMsg = document.getElementById("verifyMsg");
-  const form = document.getElementById("verificationForm");
 
   if (existingPending) {
     if (verifyMsg) {
@@ -51,31 +61,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     return;
   }
-  const badgeRequirements = document.getElementById("badgeRequirements");
-  const applicantNameField = document.getElementById("applicantName");
 
-  const grayOnly = document.querySelectorAll(".gray-only");
-  const blueOnly = document.querySelectorAll(".blue-only");
-
+  // Show correct badge fields based on type
   if (badgeType === "gray") {
-    badgeTitle.textContent = "Gray Badge Verification";
-    badgeRequirements.textContent =
+    if (badgeTitle) badgeTitle.textContent = "Gray Badge Verification";
+    if (badgeRequirements) badgeRequirements.textContent =
       "Gray badge builds trust. Requires Government ID and Passport photo.";
     grayOnly.forEach(el => el.style.display = "block");
-    applicantNameField.placeholder = "Name must match the Government ID";
+    if (applicantNameField) applicantNameField.placeholder = "Name must match the Government ID";
   }
 
   if (badgeType === "blue") {
-    badgeTitle.textContent = "Blue Badge Verification";
-    badgeRequirements.textContent =
-      "Blue badge verifies registered businesses. Requires Government ID, CAC Certificate, Mermat, Status Report and Utility Bill.";
+    if (badgeTitle) badgeTitle.textContent = "Blue Badge Verification";
+    if (badgeRequirements) badgeRequirements.textContent =
+      "Blue badge verifies registered businesses. Requires Government ID, CAC Certificate, MEMART, Status Report and Utility Bill.";
     blueOnly.forEach(el => el.style.display = "block");
-    applicantNameField.placeholder =
+    if (applicantNameField) applicantNameField.placeholder =
       "Name (must be a Director or Shareholder in the CAC registration)";
-   }
-
-    const badgeTitle = document.getElementById("badgeTitle");
-    document.getElementById("email").value = user.email;
+  }
 
 
   form.addEventListener("submit", async (e) => {
