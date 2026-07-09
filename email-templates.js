@@ -242,7 +242,7 @@ const EmailTemplates = (() => {
         infoRow("Valid Until", expiryDisplay)
       )}
       ${paragraph("You can now complete your profile, add your listings, and start getting discovered by customers.")}
-      ${primaryButton("Go to My Dashboard", "https://spotlightdirectories.com/vendordashboard.html")}
+      ${primaryButton("Go to My Dashboard", "https://spotlightdirectories.com/login.html")}
       ${alertBox("Your SPOT ID is your unique business identifier on Spotlight. Keep it safe — you may need it when contacting support.", "info")}
     `;
     return base({
@@ -287,7 +287,7 @@ const EmailTemplates = (() => {
       ${paragraph("Congratulations! Your verification documents have been reviewed and approved.")}
       ${infoTable(infoRow("Badge Awarded", `<span style="color:${badgeColour};font-weight:700;">${badgeDisplay} Badge</span>`))}
       ${paragraph("Your business listing now displays your verification badge, giving customers greater confidence in your business.")}
-      ${primaryButton("View My Profile", "https://spotlightdirectories.com/vendordashboard.html")}
+      ${primaryButton("View My Profile", "https://spotlightdirectories.com/login.html")}
       ${alertBox("Your badge is now visible to all visitors viewing your profile on Spotlight.", "success")}
     `;
     return base({
@@ -311,7 +311,7 @@ const EmailTemplates = (() => {
       ${paragraph(`We reviewed your${badgeDisplay ? " " + badgeDisplay + " Badge" : ""} verification submission but were unable to approve it at this time.`)}
       ${reason ? infoTable(infoRow("Reason", reason)) : ""}
       ${paragraph("Please review your documents and submit again. Make sure all documents are clear, current, and match the requirements for your chosen badge tier.")}
-      ${primaryButton("Resubmit Documents", "https://spotlightdirectories.com/vendordashboard.html")}
+      ${primaryButton("Resubmit Documents", "https://spotlightdirectories.com/login.html")}
       ${alertBox("Gray Badge requires: Government ID + Passport Photograph.<br/>Blue Badge requires: Government ID + CAC Certificate + Utility Bill + MEMART + CAC Status Report.", "info")}
     `;
     return base({
@@ -391,7 +391,7 @@ const EmailTemplates = (() => {
         <li>Set your exact business location so customers can find you</li>
         <li>Apply for verification to build trust with customers</li>
       </ol>
-      ${primaryButton("Complete My Profile", "https://spotlightdirectories.com/vendordashboard.html")}
+      ${primaryButton("Complete My Profile", "https://spotlightdirectories.com/login.html")}
       ${alertBox("Your 90-day free trial starts today. You can upgrade to a paid plan at any time to unlock more features.", "info")}
     `;
     return base({
