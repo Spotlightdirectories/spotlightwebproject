@@ -214,25 +214,45 @@ require visitor login before submitting a review.
 
 ## MASTER PHASE 3 CHECKLIST — IN IMPLEMENTATION ORDER
 
-### Block 1 — Foundation renames (do first, everything else depends on this)
-- [ ] 1.  Rename vendorpayments → vendor_payments (DB + all JS files + RLS policies)
-- [ ] 2.  Rename discover-results2.html/js/css → discover-results.html/js/css
-- [ ] 3.  Rename insight-dynamic.js → insight.js
-- [ ] 4.  Pick single auth nav pattern (authBtn) and update all HTML pages
+### Block 1 — Foundation renames ✅ COMPLETE
+- [x] 1.  Rename vendorpayments → vendor_payments (DB + all JS files + RLS policies)
+- [x] 2.  Rename discover-results2.html/js/css → discover-results.html/js/css
+- [x] 3.  Rename insight-dynamic.js → insight.js
+- [x] 4.  Pick single auth nav pattern (authBtn) and update all HTML pages
 
-### Block 2 — Design system
+### Block 2 — Design system ✅ COMPLETE
 - [x] 5.  Build unified design tokens (colours, spacing, typography)
 - [ ] 6.  Merge style.css + style2.css → main.css *(deferred to Block 7 — Next.js migration)*
 - [ ] 7.  Merge script.js + script2.js → main.js *(deferred to Block 7 — Next.js migration)*
 
-### Block 3 — Email infrastructure
+### Block 3 — Email infrastructure ✅ COMPLETE
 - [x] 8.  Rebuild all 6 existing Resend emails with branded yellow/black HTML templates
-- [x] 9.  Improve payment approved email to include SPOT ID, plan name, and expiry date
+- [x] 9.  Improve payment approved email to include SPOT ID, plan name, billing type and expiry date
 - [x] 10. Build welcome email — triggered immediately on vendor signup
 - [x] 11. Build badge submission acknowledgement — triggered on document upload
 - [x] 12. Build trial expiry warning — pg_cron job, fires 7 days before trial ends
 - [x] 13. Build subscription expiry warning — pg_cron job, fires before plan expires
 - [x] 14. Fix Resend custom click tracking subdomain — track.mail.spotlightdirectories.com verified
+
+Additional emails built during Block 3 (not in original plan):
+- [x] Partner application received acknowledgement
+- [x] Partner application approved (with referral code and create account link)
+- [x] Partner account created confirmation
+- [x] Badge revocation notification (super_admin only)
+
+Total emails now live: 17 branded templates via Resend
+
+### Block 3 — Additional hardening completed during email testing
+- [x] Fix bank transfer receipt upload — storage RLS policies corrected
+- [x] Fix admin session conflict — dedicated admin-supabase-client.js with separate storage key
+- [x] Fix badge approval RLS — vendor_verifications UPDATE policy corrected
+- [x] Fix badge form flicker — gray/blue fields hidden by default in HTML
+- [x] Add badge revocation feature — super_admin can revoke with reason, email, profile update
+- [x] Add Delete button on pending verifications for orphan cleanup
+- [x] Prevent duplicate verification submissions when one is pending
+- [x] Add Processing... feedback to all admin action buttons
+- [x] Add Revoked status to verification history filter and table
+- [x] Dev reset scripts: dev-reset-vendor.sql and dev-reset-partner.sql
 
 ### Block 4 — Backend hardening
 - [ ] 15. Build image validation Edge Function for storage uploads
@@ -244,7 +264,9 @@ require visitor login before submitting a review.
 ### Block 5 — Page rebuilds
 - [ ] 20. Rebuild landing page to world-class SaaS standard
 - [ ] 21. Rebuild GetListed page and plan comparison page
-- [ ] 22. Harmonise partner program page with brand
+- [ ] 22. Harmonise partner program page with brand — including world-class
+          marketing assets for partners (referral toolkit, brand guide,
+          earning calculator, onboarding guide, promotional materials)
 - [ ] 23. Consolidate insight dashboards into one rebuilt dashboard
 
 ### Block 6 — Advanced features
@@ -256,3 +278,11 @@ require visitor login before submitting a review.
 ### Block 7 — Framework migration (absolutely last)
 - [ ] 27. Migrate entire platform to Next.js framework
           (all features confirmed working in vanilla before this step)
+
+### Post-Block 3 items noted for attention
+- [ ] Subscription module hardening:
+      (a) Manage Payment Method button not yet functional
+      (b) Manage Branches button not yet functional
+      (c) Billing history showing old confirmed payments even when vendor
+          was on free plan — subscription logic inconsistency to investigate
+      (d) Next payment amount and billing date display logic needs review
