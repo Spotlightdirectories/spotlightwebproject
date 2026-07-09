@@ -324,7 +324,7 @@ const EmailTemplates = (() => {
   // EMAIL 5 — PARTNER APPLICATION APPROVED
   // Triggered: Admin approves a partner application
   // ============================================================
-  function partnerApproved({ partnerName = "", referralCode = "", vendorReferralLink = "", partnerReferralLink = "", inductionLink = "" }) {
+  function partnerApproved({ partnerName = "", referralCode = "", vendorReferralLink = "", partnerReferralLink = "", inductionLink = "", createAccountLink = "" }) {
     const body = `
       ${heading("Welcome to the Spotlight Partner Programme 🎉")}
       ${greeting(partnerName)}
@@ -335,7 +335,7 @@ const EmailTemplates = (() => {
         infoRow("Partner Referral Link", `<a href="${partnerReferralLink}" style="color:#2563eb;">${partnerReferralLink}</a>`)
       )}
       ${paragraph("Share your Vendor Referral Link with businesses to help them get listed on Spotlight. You earn a commission for every vendor who subscribes through your link.")}
-      ${primaryButton("Create My Partner Account", `https://spotlightdirectories.com/partner-create-account.html?partner_id=${referralCode}`)}
+      ${primaryButton("Create My Partner Account", createAccountLink || `https://spotlightdirectories.com/partner-create-account.html`)}
       ${inductionLink ? `<p style="margin:0 0 16px;font-size:14px;color:#64748b;">
         New to the programme? <a href="${inductionLink}" style="color:#2563eb;text-decoration:underline;">Read the partner induction guide</a> to get started.
       </p>` : ""}

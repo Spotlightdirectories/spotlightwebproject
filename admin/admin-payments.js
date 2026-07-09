@@ -898,7 +898,8 @@ await sendEmail({
     referralCode: referralCode,
     vendorReferralLink: vendorReferralLink,
     partnerReferralLink: partnerReferralLink,
-    inductionLink: "https://spotlightdirectories.com/partner-legal.html#assets"
+    inductionLink: "https://spotlightdirectories.com/partner-legal.html#assets",
+    createAccountLink: `https://spotlightdirectories.com/partner-create-account.html?partner_id=${partner.id}`
   })
 });
 
