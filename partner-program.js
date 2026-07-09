@@ -197,7 +197,30 @@ if (!existing) {
         return;
       }
 
-      alert("Application submitted successfully!");
+      // Send application received acknowledgement email
+      try {
+        await fetch(
+          "https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/send-email",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "apikey": window.SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify({
+              to: email,
+              subject: "We Have Received Your Partner Application",
+              html: EmailTemplates.partnerApplicationReceived({
+                partnerName: name
+              })
+            })
+          }
+        );
+      } catch (err) {
+        console.error("Partner application email failed:", err);
+      }
+
+      alert("Application submitted successfully! Check your email for confirmation.");
       localStorage.removeItem("referral_code");
       partnerForm.reset();
       submitBtn.classList.remove("partner-btn-loading");

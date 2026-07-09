@@ -348,6 +348,25 @@ const EmailTemplates = (() => {
   }
 
   // ============================================================
+  // EMAIL 5a — PARTNER APPLICATION RECEIVED
+  // Triggered: Partner submits application form
+  // ============================================================
+  function partnerApplicationReceived({ partnerName = "" }) {
+    const body = `
+      ${heading("Application Received")}
+      ${greeting(partnerName)}
+      ${paragraph("Thank you for applying to the Spotlight Partner Programme. We have received your application and our team will review it shortly.")}
+      ${infoTable(infoRow("Status", "Under Review"))}
+      ${paragraph("We will notify you by email once a decision has been made. This typically takes 2–5 business days.")}
+      ${alertBox("You do not need to resubmit. If you have any questions, contact us at support@spotlightdirectories.com.", "info")}
+    `;
+    return base({
+      preheader: "We have received your Spotlight Partner application. We will be in touch shortly.",
+      body
+    });
+  }
+
+  // ============================================================
   // EMAIL 5b — PARTNER ACCOUNT CREATED
   // Triggered: Partner completes account creation
   // ============================================================
@@ -509,6 +528,7 @@ const EmailTemplates = (() => {
     paymentRejected,
     badgeApproved,
     badgeRejected,
+    partnerApplicationReceived,
     partnerApproved,
     partnerAccountCreated,
     partnerRejected,
