@@ -753,7 +753,7 @@ async function approveVerification(verificationId, row) {
      return;
   }
 
-  await supabase
+  const { error: verUpdateError } = await supabase
     .from("vendor_verifications")
     .update({
       status: "approved",
@@ -761,6 +761,16 @@ async function approveVerification(verificationId, row) {
       reviewed_by: adminSession.user_id
     })
     .eq("id", verificationId);
+
+  if (verUpdateError) {
+    console.error("Verification update failed:", verUpdateError);
+    alert("Failed to update verification: " + verUpdateError.message);
+    if (approveBtn) {
+      approveBtn.disabled = false;
+      approveBtn.textContent = "Approve";
+    }
+    return;
+  }
 
   await supabase
     .from("vendors")
