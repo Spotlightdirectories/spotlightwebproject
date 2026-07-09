@@ -710,6 +710,12 @@ async function approveVerification(verificationId, row) {
 
   if (!confirm("Approve this badge verification?")) return;
 
+  const approveBtn = document.querySelector(`[data-verify-approve="${verificationId}"]`);
+  if (approveBtn) {
+    approveBtn.disabled = true;
+    approveBtn.textContent = "Processing...";
+  }
+
   const now = new Date().toISOString();
 
   const { data: verification } = await supabase
@@ -781,6 +787,12 @@ async function rejectVerification(verificationId, row) {
   const reason = prompt("Reason for rejection?");
   if (!reason) return;
 
+  const rejectBtn = document.querySelector(`[data-verify-reject="${verificationId}"]`);
+  if (rejectBtn) {
+    rejectBtn.disabled = true;
+    rejectBtn.textContent = "Processing...";
+  }
+
   const { data: verification } = await supabase
     .from("vendor_verifications")
     .select("vendor_id, badge_type, status")
@@ -844,6 +856,12 @@ async function rejectVerification(verificationId, row) {
 async function approvePartner(partnerId, row) {
 
   if (!confirm("Approve this partner?")) return;
+
+  const approveBtn = document.querySelector(`[data-partner-approve="${partnerId}"]`);
+  if (approveBtn) {
+    approveBtn.disabled = true;
+    approveBtn.textContent = "Processing...";
+  }
 
   const { data: partner, error } = await supabase
     .from("partners")
@@ -922,6 +940,12 @@ async function rejectPartner(partnerId, row) {
   const reason = prompt("Reason for rejection?");
   if (!reason) return;
 
+  const rejectBtn = document.querySelector(`[data-partner-reject="${partnerId}"]`);
+  if (rejectBtn) {
+    rejectBtn.disabled = true;
+    rejectBtn.textContent = "Processing...";
+  }
+
   const { data: partner, error } = await supabase
     .from("partners")
     .select("id, name, email, status")
@@ -978,6 +1002,12 @@ async function rejectPartner(partnerId, row) {
 async function payPartner(partnerId) {
 
   if (!confirm("Mark all available commissions as paid for this partner?")) return;
+
+  const payBtn = document.querySelector(`[data-pay="${partnerId}"]`);
+  if (payBtn) {
+    payBtn.disabled = true;
+    payBtn.textContent = "Processing...";
+  }
 
   const now = new Date().toISOString();
 
