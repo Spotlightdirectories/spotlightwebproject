@@ -743,11 +743,13 @@ async function approveVerification(verificationId, row) {
 
    if (verification.status === "rejected") {
      alert("This verification is already rejected.");
+     if (row) row.remove();
      return;
   }
 
    if (verification.status === "approved") {
      alert("This verification is already approved.");
+     if (row) row.remove();
      return;
   }
 
@@ -812,11 +814,13 @@ async function rejectVerification(verificationId, row) {
 
   if (verification.status === "rejected") {
     alert("This verification is already rejected.");
+    if (row) row.remove();
     return;
   }
 
   if (verification.status === "approved") {
     alert("This verification is already approved.");
+    if (row) row.remove();
     return;
   }
 
