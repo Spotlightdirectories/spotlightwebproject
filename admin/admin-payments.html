@@ -86,6 +86,58 @@
           <tr><td colspan="4">Loading…</td></tr>
         </tbody>
       </table>
+
+      <!-- Pending invitations (staff who haven't signed up / logged in yet) -->
+      <h2 style="margin-top:24px;font-size:16px;">Pending Invitations</h2>
+      <p class="section-note">People invited but who haven't logged in yet to claim their role. Send them the <code>/admin/admin-signup.html</code> link.</p>
+      <table style="margin-top:8px;">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Invited</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="pendingInvitationsTable">
+          <tr><td colspan="4">Loading…</td></tr>
+        </tbody>
+      </table>
+
+      <!-- Staff Activity History (permanent audit trail) -->
+      <h2 style="margin-top:24px;font-size:16px;">Staff Activity History</h2>
+      <p class="section-note">A permanent record of every invite, assignment, and revocation. This log is never altered or deleted, even after the underlying invitation or account is cleaned up.</p>
+      <div class="review-history-controls">
+        <input
+          type="text"
+          id="staffAuditSearch"
+          placeholder="Search by email..."
+          class="history-search"
+        />
+        <select id="staffAuditFilter" class="history-filter">
+          <option value="all">All Actions</option>
+          <option value="invited">Invited</option>
+          <option value="assigned_role">Assigned Role</option>
+          <option value="claimed_invitation">Claimed Invitation</option>
+          <option value="revoked_role">Revoked Role</option>
+          <option value="revoked_invitation">Revoked Invitation</option>
+        </select>
+      </div>
+      <table style="margin-top:8px;">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Action</th>
+            <th>Target Email</th>
+            <th>Role</th>
+            <th>By</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody id="staffAuditLogTable">
+          <tr><td colspan="6">Loading…</td></tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- ============================================================

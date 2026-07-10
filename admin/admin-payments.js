@@ -95,20 +95,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       const staffTable = document.getElementById("adminStaffTable");
       if (!staffTable) return;
 
-      const { data: roles, error } = await supabase
-        .from("user_roles")
-        .select("user_id, role, created_at")
-        .in("role", ["admin", "finance_admin", "verification_admin"])
-        .order("created_at", { ascending: false });
+      const { data: roles, error } = await supabase.rpc("get_admin_staff_list");
 
       if (error || !roles || !roles.length) {
         staffTable.innerHTML = `<tr><td colspan="4">No admin staff assigned yet.</td></tr>`;
         return;
       }
 
-      // Get emails from auth for display
-      // We store email in admin_session but not in user_roles.
-      // We show user_id shortened as identifier for privacy.
       staffTable.innerHTML = "";
 
       roles.forEach(r => {
@@ -118,16 +111,15 @@ document.addEventListener("DOMContentLoaded", async () => {
           : "—";
 
         const roleDisplay = roleLabels[r.role] || r.role;
-        const shortId = r.user_id?.slice(0, 8) + "...";
 
         tr.innerHTML = `
-          <td style="font-family:monospace;font-size:12px;">${shortId}</td>
+          <td>${sanitize(r.email)}</td>
           <td><span class="admin-role-badge role-${r.role}" style="display:inline-block;">${roleDisplay}</span></td>
           <td>${assignedDate}</td>
           <td>
             <button
               class="reject-btn"
-              onclick="revokeAdminRole('${r.user_id}')">
+              onclick="revokeAdminRole('${r.user_id}', '${sanitize(r.email)}', '${r.role}')">
               Revoke
             </button>
           </td>
@@ -137,6 +129,95 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     loadAdminStaff();
+    loadPendingInvitations();
+    loadStaffAuditLog();
+
+    // Load pending invitations (people invited but not yet logged in)
+    async function loadPendingInvitations() {
+      const invitesTable = document.getElementById("pendingInvitationsTable");
+      if (!invitesTable) return;
+
+      const { data: invitations, error } = await supabase
+        .from("admin_invitations")
+        .select("id, email, role, created_at")
+        .eq("used", false)
+        .order("created_at", { ascending: false });
+
+      if (error || !invitations || !invitations.length) {
+        invitesTable.innerHTML = `<tr><td colspan="4">No pending invitations.</td></tr>`;
+        return;
+      }
+
+      invitesTable.innerHTML = "";
+
+      invitations.forEach(inv => {
+        const tr = document.createElement("tr");
+        const invitedDate = inv.created_at
+          ? new Date(inv.created_at).toLocaleDateString()
+          : "—";
+
+        const roleDisplay = roleLabels[inv.role] || inv.role;
+
+        tr.innerHTML = `
+          <td>${sanitize(inv.email)}</td>
+          <td><span class="admin-role-badge role-${sanitize(inv.role)}" style="display:inline-block;">${roleDisplay}</span></td>
+          <td>${invitedDate}</td>
+          <td>
+            <button
+              class="reject-btn"
+              onclick="revokeInvitation('${inv.id}')">
+              Revoke
+            </button>
+          </td>
+        `;
+        invitesTable.appendChild(tr);
+      });
+    }
+
+    // Load the permanent staff activity audit log
+    async function loadStaffAuditLog() {
+      const auditTable = document.getElementById("staffAuditLogTable");
+      if (!auditTable) return;
+
+      const { data: entries, error } = await supabase
+        .from("admin_audit_log")
+        .select("id, actor_email, action, target_email, role, details, created_at")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        auditTable.innerHTML = `<tr><td colspan="6">Failed to load audit log.</td></tr>`;
+        return;
+      }
+
+      if (!entries || !entries.length) {
+        auditTable.innerHTML = `<tr><td colspan="6">No staff activity recorded yet.</td></tr>`;
+        return;
+      }
+
+      allStaffAuditEntries = entries;
+      renderStaffAuditLog(entries);
+
+      const searchInput = document.getElementById("staffAuditSearch");
+      const actionFilter = document.getElementById("staffAuditFilter");
+
+      function applyFilters() {
+        const searchTerm = (searchInput?.value || "").toLowerCase().trim();
+        const actionValue = actionFilter?.value || "all";
+
+        const filtered = allStaffAuditEntries.filter(e => {
+          const emailMatch =
+            (e.target_email || "").toLowerCase().includes(searchTerm) ||
+            (e.actor_email || "").toLowerCase().includes(searchTerm);
+          const actionMatch = actionValue === "all" || e.action === actionValue;
+          return emailMatch && actionMatch;
+        });
+
+        renderStaffAuditLog(filtered);
+      }
+
+      if (searchInput) searchInput.addEventListener("input", applyFilters);
+      if (actionFilter) actionFilter.addEventListener("change", applyFilters);
+    }
 
     // Assign a role to a user by email
     const assignBtn = document.getElementById("assignAdminBtn");
@@ -172,9 +253,92 @@ document.addEventListener("DOMContentLoaded", async () => {
           .maybeSingle();
 
         if (!vendorMatch?.auth_user_id) {
-          alert(`No registered user found with email: ${email}\n\nThe person must first create an account on Spotlight before you can assign them an admin role.`);
+
+          // Not a vendor. Check whether this email already belongs to
+          // an ACTIVE admin — if so, update their role directly rather
+          // than creating an invitation they'll never see (an existing
+          // admin's login never re-checks invitations, since they
+          // already have a real role on file).
+          const { data: existingStaff } = await supabase.rpc("get_admin_staff_list");
+
+          const matchedStaff = existingStaff?.find(
+            s => s.email?.toLowerCase() === email.toLowerCase()
+          );
+
+          if (matchedStaff) {
+
+            const { error: updateRoleError } = await supabase
+              .from("user_roles")
+              .update({ role: role })
+              .eq("user_id", matchedStaff.user_id);
+
+            if (updateRoleError) {
+              alert("Failed to update role: " + updateRoleError.message);
+              assignBtn.disabled = false;
+              assignBtn.textContent = "Assign Role";
+              return;
+            }
+
+            await logAdminAudit("assigned_role", email, role, "Role changed directly (was already an active admin).");
+
+            alert(`\u2713 Role updated!\n\n${email} is now a ${roleLabels[role]}.\n\nThis takes effect immediately — no need to log out or back in.`);
+
+            document.getElementById("assignAdminEmail").value = "";
+            document.getElementById("assignAdminRole").value = "";
+            assignBtn.disabled = false;
+            assignBtn.textContent = "Assign Role";
+
+            loadAdminStaff();
+            loadStaffAuditLog();
+
+            return;
+          }
+
+          // No existing account found. Instead of failing, create an
+          // invitation — the person signs up at admin-signup.html and
+          // their role is applied automatically the first time they log in.
+          const { error: inviteError } = await supabase
+            .from("admin_invitations")
+            .upsert({
+              email: email,
+              role: role,
+              invited_by: adminSession.user_id,
+              used: false,
+              used_at: null
+            }, { onConflict: "email" });
+
+          if (inviteError) {
+            alert("Failed to create invitation: " + inviteError.message);
+            assignBtn.disabled = false;
+            assignBtn.textContent = "Assign Role";
+            return;
+          }
+
+          try {
+            await sendEmail({
+              to: email,
+              subject: "You've Been Invited to Spotlight Admin",
+              html: EmailTemplates.adminInvitation({
+                role: role,
+                signupLink: "https://spotlightdirectories.com/admin/admin-signup.html"
+              })
+            });
+          } catch (emailErr) {
+            console.error("Admin invitation email failed:", emailErr);
+          }
+
+          await logAdminAudit("invited", email, role);
+
+          alert(`\u2713 Invitation created and email sent!\n\n${email} has been invited as a ${roleLabels[role]} and notified by email with a signup link.\n\nTheir role is applied automatically the first time they log in \u2014 no further action needed from you.`);
+
+          document.getElementById("assignAdminEmail").value = "";
+          document.getElementById("assignAdminRole").value = "";
           assignBtn.disabled = false;
           assignBtn.textContent = "Assign Role";
+
+          loadPendingInvitations();
+          loadStaffAuditLog();
+
           return;
         }
 
@@ -197,6 +361,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           return;
         }
 
+        await logAdminAudit("assigned_role", email, role);
+
         alert(`✓ Role assigned successfully!\n\n${email} is now a ${roleLabels[role]}.\n\nThey can log in at the admin login page with their existing account credentials.`);
 
         document.getElementById("assignAdminEmail").value = "";
@@ -205,6 +371,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         assignBtn.textContent = "Assign Role";
 
         loadAdminStaff();
+        loadStaffAuditLog();
       });
     }
   }
@@ -1199,6 +1366,54 @@ async function payPartner(partnerId) {
  }
 
 // -----------------------------
+// STAFF ACTIVITY AUDIT LOG
+// Permanent record of admin invite/assign/revoke actions.
+// Never altered or deleted, even after the underlying invitation
+// or account is cleaned up — this is history, not a working record.
+// -----------------------------
+
+let allStaffAuditEntries = [];
+
+const auditActionLabels = {
+  invited: "Invited",
+  assigned_role: "Assigned Role",
+  claimed_invitation: "Claimed Invitation",
+  revoked_role: "Revoked Role",
+  revoked_invitation: "Revoked Invitation"
+};
+
+function renderStaffAuditLog(entries) {
+  const auditTable = document.getElementById("staffAuditLogTable");
+  if (!auditTable) return;
+
+  if (!entries.length) {
+    auditTable.innerHTML = `<tr><td colspan="6">No results found.</td></tr>`;
+    return;
+  }
+
+  auditTable.innerHTML = "";
+
+  entries.forEach(e => {
+    const tr = document.createElement("tr");
+    const when = e.created_at
+      ? new Date(e.created_at).toLocaleString()
+      : "—";
+
+    const actionDisplay = auditActionLabels[e.action] || e.action;
+
+    tr.innerHTML = `
+      <td>${when}</td>
+      <td>${sanitize(actionDisplay)}</td>
+      <td>${sanitize(e.target_email)}</td>
+      <td>${sanitize(e.role)}</td>
+      <td>${sanitize(e.actor_email)}</td>
+      <td>${sanitize(e.details)}</td>
+    `;
+    auditTable.appendChild(tr);
+  });
+}
+
+// -----------------------------
 // PARTNER HISTORY
 // Shows all approved and rejected partner applications.
 // Searchable and filterable — no data lost after actioning.
@@ -1593,33 +1808,130 @@ function sanitize(str) {
 }
 
 // -----------------------------
+// LOG ADMIN AUDIT ENTRY
+// A permanent, append-only record of staff actions. Never blocks
+// or interferes with anything — it only remembers. Defined OUTSIDE
+// DOMContentLoaded so it's accessible from revokeAdminRole too.
+// -----------------------------
+async function logAdminAudit(action, targetEmail, role, details) {
+  const supabase = window.supabaseClient;
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+  if (!user) return;
+
+  await supabase.from("admin_audit_log").insert({
+    actor_id: user.id,
+    actor_email: user.email,
+    action: action,
+    target_email: targetEmail || null,
+    role: role || null,
+    details: details || null
+  });
+}
+
+// -----------------------------
 // REVOKE ADMIN ROLE
 // Defined OUTSIDE DOMContentLoaded so it is globally
 // accessible from onclick in the staff table.
 // Only super_admin can call this (enforced at DB level too).
 // -----------------------------
-async function revokeAdminRole(userId) {
-  if (!confirm("Revoke this person's admin access? They will immediately lose all admin privileges.")) return;
+async function revokeAdminRole(userId, email, role) {
+  if (!confirm("Revoke this person's admin access? If they have no separate vendor profile, their account will be fully removed rather than just downgraded.")) return;
 
   const supabase = window.supabaseClient;
 
-  // Downgrade to vendor role (removes admin access)
-  const { error } = await supabase
-    .from("user_roles")
-    .update({ role: "vendor" })
-    .eq("user_id", userId);
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
 
-  if (error) {
-    alert("Failed to revoke role: " + error.message);
+  if (!session) {
+    alert("Your session has expired. Please log in again.");
     return;
   }
 
-  alert("✓ Admin access revoked. The person is now a regular vendor account.");
+  try {
 
-  // Refresh the staff table
-  const staffTable = document.getElementById("adminStaffTable");
-  if (staffTable) staffTable.innerHTML = `<tr><td colspan="4">Refreshing…</td></tr>`;
-  location.reload();
+    const response = await fetch(
+      "https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/admin-revoke-role",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ targetUserId: userId, email, role })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      alert("Failed to revoke role: " + (result.error || "Unknown error"));
+      return;
+    }
+
+    alert(`✓ Admin access revoked.\n\n${result.cleanupNote}`);
+
+    // Refresh the staff table
+    const staffTable = document.getElementById("adminStaffTable");
+    if (staffTable) staffTable.innerHTML = `<tr><td colspan="4">Refreshing…</td></tr>`;
+    location.reload();
+
+  } catch (err) {
+    alert("Failed to revoke role: " + err.message);
+  }
+}
+
+// -----------------------------
+// REVOKE PENDING INVITATION
+// Defined OUTSIDE DOMContentLoaded so it is globally
+// accessible from onclick in the pending invitations table.
+// Enforced at the DB level too (super_admin_delete_invitations policy).
+// -----------------------------
+async function revokeInvitation(invitationId) {
+  if (!confirm("Revoke this invitation? If the person created a signup account that was never activated, it will be fully removed too — re-inviting this email later will start completely fresh.")) return;
+
+  const supabase = window.supabaseClient;
+
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    alert("Your session has expired. Please log in again.");
+    return;
+  }
+
+  try {
+
+    const response = await fetch(
+      "https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/admin-revoke-invitation",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ invitationId })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      alert("Failed to revoke invitation: " + (result.error || "Unknown error"));
+      return;
+    }
+
+    alert(`✓ Invitation revoked.\n\n${result.cleanupNote}`);
+    location.reload();
+
+  } catch (err) {
+    alert("Failed to revoke invitation: " + err.message);
+  }
 }
 
 // -----------------------------

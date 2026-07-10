@@ -5501,6 +5501,21 @@ if (settingsCurrentEmail && vendor) {
     vendor.email || "—";
 }
 
+const emailChangeStep1 = document.getElementById("emailChangeStep1");
+const emailChangeStep2 = document.getElementById("emailChangeStep2");
+const otpCodeInput = document.getElementById("otpCodeInput");
+const confirmEmailChangeBtn = document.getElementById("confirmEmailChangeBtn");
+const cancelEmailChangeStep2Btn = document.getElementById("cancelEmailChangeStep2Btn");
+
+function resetEmailChangeForm() {
+  if (changeEmailForm) changeEmailForm.classList.remove("active");
+  if (newEmailInput) newEmailInput.value = "";
+  if (otpCodeInput) otpCodeInput.value = "";
+  if (emailChangeStep1) emailChangeStep1.classList.remove("hidden");
+  if (emailChangeStep2) emailChangeStep2.classList.add("hidden");
+  if (emailChangeStatus) emailChangeStatus.textContent = "";
+}
+
 // Toggle the change email form
 if (showChangeEmailBtn && changeEmailForm) {
 
@@ -5516,21 +5531,22 @@ if (showChangeEmailBtn && changeEmailForm) {
 
 }
 
-// Cancel button hides the form
+// Cancel button (step 1) hides the whole form
 if (cancelEmailChangeBtn && changeEmailForm) {
 
   cancelEmailChangeBtn.addEventListener(
     "click",
-    () => {
-      changeEmailForm.classList.remove("active");
-      if (newEmailInput) newEmailInput.value = "";
-      if (emailChangeStatus) emailChangeStatus.textContent = "";
-    }
+    resetEmailChangeForm
   );
 
 }
 
-// Send confirmation emails to both old and new address
+// Cancel button (step 2) also resets back to the start
+if (cancelEmailChangeStep2Btn) {
+  cancelEmailChangeStep2Btn.addEventListener("click", resetEmailChangeForm);
+}
+
+// STEP 1: request the two verification codes
 if (sendEmailChangeBtn && newEmailInput) {
 
   sendEmailChangeBtn.addEventListener(
@@ -5560,7 +5576,7 @@ if (sendEmailChangeBtn && newEmailInput) {
       }
 
       // Block if same as current email
-      if (newEmail === vendor.email) {
+      if (newEmail.toLowerCase() === (vendor.email || "").toLowerCase()) {
         if (emailChangeStatus) {
           emailChangeStatus.textContent =
             "This is already your current email address.";
@@ -5574,41 +5590,139 @@ if (sendEmailChangeBtn && newEmailInput) {
 
       try {
 
-        // Supabase sends confirmation to BOTH old and new email.
-        // The change only takes effect when both are confirmed.
-        const { error } =
-          await supabase.auth.updateUser({
-            email: newEmail
-          });
+        const {
+          data: { session }
+        } = await supabase.auth.getSession();
 
-        if (error) {
-          throw error;
+        const response = await fetch(
+          "https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/request-email-change",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ newEmail })
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || "Unable to send verification codes.");
         }
 
         if (emailChangeStatus) {
           emailChangeStatus.textContent =
-            `✓ Confirmation links have been sent to ${vendor.email} and ${newEmail}. ` +
-            `You must click the confirmation link in BOTH emails to complete the change. ` +
-            `Check your inbox and spam folder.`;
+            `✓ Code sent to ${newEmail}. Enter it above to confirm.`;
           emailChangeStatus.style.color = "#1a6b3a";
         }
 
-        sendEmailChangeBtn.textContent =
-          "Confirmation Sent";
+        if (emailChangeStep1) emailChangeStep1.classList.add("hidden");
+        if (emailChangeStep2) emailChangeStep2.classList.remove("hidden");
 
       } catch (err) {
 
-        console.error("Email change error:", err);
+        console.error("Email change request error:", err);
 
         if (emailChangeStatus) {
           emailChangeStatus.textContent =
             err.message ||
-            "Unable to send confirmation. Please try again.";
+            "Unable to send verification codes. Please try again.";
           emailChangeStatus.style.color = "#c0392b";
         }
 
+      } finally {
+
         sendEmailChangeBtn.disabled = false;
-        sendEmailChangeBtn.textContent = "Send Confirmation";
+        sendEmailChangeBtn.textContent = "Send Verification Codes";
+
+      }
+
+    }
+  );
+
+}
+
+// STEP 2: confirm both codes and apply the change
+if (confirmEmailChangeBtn) {
+
+  confirmEmailChangeBtn.addEventListener(
+    "click",
+    async () => {
+
+      const otp = (otpCodeInput?.value || "").trim();
+
+      if (!otp) {
+        if (emailChangeStatus) {
+          emailChangeStatus.textContent =
+            "Please enter the code.";
+          emailChangeStatus.style.color = "#c0392b";
+        }
+        return;
+      }
+
+      confirmEmailChangeBtn.disabled = true;
+      confirmEmailChangeBtn.textContent = "Confirming...";
+
+      try {
+
+        const {
+          data: { session }
+        } = await supabase.auth.getSession();
+
+        const response = await fetch(
+          "https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/confirm-email-change",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ otp })
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || "Unable to confirm email change.");
+        }
+
+        if (emailChangeStatus) {
+          emailChangeStatus.textContent =
+            `✓ Your email has been changed to ${result.newEmail}.`;
+          emailChangeStatus.style.color = "#1a6b3a";
+        }
+
+        if (settingsCurrentEmail) settingsCurrentEmail.textContent = result.newEmail;
+        if (bizEmail) bizEmail.textContent = result.newEmail;
+        vendor.email = result.newEmail;
+
+        if (emailChangeStep1) emailChangeStep1.classList.remove("hidden");
+        if (emailChangeStep2) emailChangeStep2.classList.add("hidden");
+        if (newEmailInput) newEmailInput.value = "";
+        if (otpCodeInput) otpCodeInput.value = "";
+
+        setTimeout(() => {
+          if (changeEmailForm) changeEmailForm.classList.remove("active");
+        }, 2500);
+
+      } catch (err) {
+
+        console.error("Email change confirm error:", err);
+
+        if (emailChangeStatus) {
+          emailChangeStatus.textContent =
+            err.message ||
+            "Unable to confirm email change. Please try again.";
+          emailChangeStatus.style.color = "#c0392b";
+        }
+
+      } finally {
+
+        confirmEmailChangeBtn.disabled = false;
+        confirmEmailChangeBtn.textContent = "Confirm Email Change";
 
       }
 

@@ -543,6 +543,35 @@ const EmailTemplates = (() => {
     });
   }
 
+  // ============================================================
+  // EMAIL 11 — ADMIN STAFF INVITATION
+  // Triggered: Super admin invites a new staff member who doesn't
+  // already have an account (admin_invitations table)
+  // ============================================================
+  function adminInvitation({ role = "", signupLink = "" }) {
+    const roleLabels = {
+      super_admin: "Super Admin",
+      admin: "Admin",
+      finance_admin: "Finance Admin",
+      verification_admin: "Verification Admin"
+    };
+    const roleDisplay = roleLabels[role] || role;
+
+    const body = `
+      ${heading("You've Been Invited to Spotlight Admin")}
+      ${paragraph("Hello,")}
+      ${paragraph(`You have been invited to join the Spotlight Directories admin team as a <strong>${roleDisplay}</strong>.`)}
+      ${infoTable(infoRow("Role", roleDisplay))}
+      ${paragraph("To get started, create your admin account using the button below. Your role is applied automatically the first time you log in — no further steps needed.")}
+      ${primaryButton("Create My Admin Account", signupLink)}
+      ${alertBox("This invitation was sent by a Spotlight super admin. If you were not expecting this, you can safely ignore this email.", "info")}
+    `;
+    return base({
+      preheader: `You've been invited to join Spotlight as a ${roleDisplay}.`,
+      body
+    });
+  }
+
   // ------------------------------------------------------------
   // PUBLIC API
   // ------------------------------------------------------------
@@ -559,7 +588,8 @@ const EmailTemplates = (() => {
     welcomeVendor,
     badgeSubmitted,
     trialExpiryWarning,
-    subscriptionExpiryWarning
+    subscriptionExpiryWarning,
+    adminInvitation
   };
 
 })();

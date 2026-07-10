@@ -1,0 +1,13 @@
+-- ===============================================================
+-- SUPERSEDED — no action needed.
+--
+-- This file originally contained an ALTER TABLE migration to
+-- simplify email_change_requests from a two-code design down to a
+-- single code. That two-code version was never actually applied to
+-- the database (the CREATE TABLE step was caught and corrected
+-- first), so there was nothing to alter.
+--
+-- The corrected single-code table is now created directly in
+-- 20260710_email_change_otp.sql. This file is kept only so the
+-- history of what happened is visible; it does not need to be run.
+-- ===============================================================

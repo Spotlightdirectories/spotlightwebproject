@@ -1841,8 +1841,8 @@
             <h4>Email Address</h4>
             <p id="settingsCurrentEmail" class="vd-settings-email-display">—</p>
             <p class="vd-settings-email-note">
-              A confirmation link will be sent to both your current
-              and new email. You must confirm both to complete the change.
+              We'll send a verification code to your new email address.
+              Enter the code to confirm the change.
             </p>
           </div>
 
@@ -1862,30 +1862,72 @@
             style="width:100%;margin-top:12px;"
           >
 
-            <input
-              type="email"
-              id="newEmailInput"
-              class="vd-input"
-              placeholder="Enter new email address"
-              style="margin-bottom:10px;"
-            />
+            <!-- STEP 1: enter new email, request codes -->
+            <div id="emailChangeStep1">
 
-            <div style="display:flex;gap:10px;">
-              <button
-                id="sendEmailChangeBtn"
-                type="button"
-                class="vd-primary-btn"
-              >
-                Send Confirmation
-              </button>
+              <input
+                type="email"
+                id="newEmailInput"
+                class="vd-input"
+                placeholder="Enter new email address"
+                style="margin-bottom:10px;"
+              />
 
-              <button
-                id="cancelEmailChangeBtn"
-                type="button"
-                class="vd-secondary-outline-btn"
-              >
-                Cancel
-              </button>
+              <div style="display:flex;gap:10px;">
+                <button
+                  id="sendEmailChangeBtn"
+                  type="button"
+                  class="vd-primary-btn"
+                >
+                  Send Verification Codes
+                </button>
+
+                <button
+                  id="cancelEmailChangeBtn"
+                  type="button"
+                  class="vd-secondary-outline-btn"
+                >
+                  Cancel
+                </button>
+              </div>
+
+            </div>
+
+            <!-- STEP 2: enter the code — hidden until it's sent -->
+            <div id="emailChangeStep2" class="hidden" style="margin-top:14px;">
+
+              <p class="vd-settings-email-note">
+                Enter the code sent to your new email address. It expires in 15 minutes.
+              </p>
+
+              <input
+                type="text"
+                id="otpCodeInput"
+                class="vd-input"
+                placeholder="Enter verification code"
+                maxlength="6"
+                inputmode="numeric"
+                style="margin-bottom:10px;"
+              />
+
+              <div style="display:flex;gap:10px;">
+                <button
+                  id="confirmEmailChangeBtn"
+                  type="button"
+                  class="vd-primary-btn"
+                >
+                  Confirm Email Change
+                </button>
+
+                <button
+                  id="cancelEmailChangeStep2Btn"
+                  type="button"
+                  class="vd-secondary-outline-btn"
+                >
+                  Cancel
+                </button>
+              </div>
+
             </div>
 
             <p
