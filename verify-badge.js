@@ -164,14 +164,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // --- UPLOAD FUNCTION ---
+    // Sends the file to the validate-upload Edge Function, which checks
+    // it server-side (real file type, size) before it reaches storage.
     const upload = async (file, name) => {
       if (!file) return null;
-      const path = `${user.id}/${name}-${Date.now()}`;
-      const { error } = await supabase.storage
-        .from("vendor-verifications")
-        .upload(path, file, { upsert: true });
-      if (error) throw error;
-      return path;
+      const result = await uploadVendorFile(file, "verification");
+      return result.path;
     };
 
     try {

@@ -367,24 +367,24 @@ if (paymentError || !paymentData) {
  window.currentPaymentId =
   paymentData.id;
 
-    const filePath = `bank-receipts/${window.currentPaymentId}-${file.name}`;
+// Sends the file to the validate-upload Edge Function, which checks
+// it server-side (real file type, size) before it reaches storage.
+let uploadResult;
 
-const { error: uploadError } = await supabase.storage
-      .from("payment-receipts")
-      .upload(filePath, file, { upsert: true });
-
-    if (uploadError) {
-      alert(uploadError.message);
-      submitReceiptBtn.disabled = false;
-      submitReceiptBtn.textContent = "Submit Receipt";
-      return;
-    }
+try {
+  uploadResult = await uploadVendorFile(file, "receipt");
+} catch (err) {
+  alert(err.message || "Receipt upload failed.");
+  submitReceiptBtn.disabled = false;
+  submitReceiptBtn.textContent = "Submit Receipt";
+  return;
+}
 
     // 1️⃣ Update payment record
     const { data: updateData, error: updateError } = await supabase
       .from("vendor_payments")
       .update({
-       transfer_proof_url: filePath
+       transfer_proof_url: uploadResult.path
      })
       .eq("id", window.currentPaymentId)
       .select();
@@ -403,9 +403,9 @@ const { error: uploadError } = await supabase.storage
 
   function getAmountInKobo(plan, billingType) {
   const prices = {
-    standard: { monthly: 299800, yearly: 2597600 },
-    enterprise: { monthly: 899800, yearly: 8297600 },
-    elite: { monthly: 2299800, yearly: 11097600 }
+    standard: { monthly: 299800, yearly: 2698200 },
+    enterprise: { monthly: 1260000, yearly: 11340000 },
+    elite: { monthly: 2240000, yearly: 20160000 }
   };
 
   const normalizedPlan =

@@ -13,17 +13,47 @@ SERVICE LIMITS
 
 const SERVICE_LIMITS = {
 
-  free: 3,
+  free: 1,
 
-  standard: 10,
+  standard: 6,
 
-  enterprise: 25,
+  enterprise: 12,
 
-  elite: 50,
+  elite: 24,
 
   custom: Infinity
 
 };
+
+/* ===============================
+DESCRIPTION WORD LIMITS
+=============================== */
+
+const DESCRIPTION_WORD_LIMITS = {
+
+  free: 100,
+
+  standard: 150,
+
+  enterprise: 300,
+
+  elite: 500,
+
+  custom: 650
+
+};
+
+function countWords(html) {
+
+  const text = (html || "")
+    .replace(/<[^>]*>/g, " ")
+    .trim();
+
+  if (!text) return 0;
+
+  return text.split(/\s+/).length;
+
+}
 
 /* ===============================
 GET SERVICE LIMIT
@@ -79,6 +109,33 @@ if (vendorError) {
 if (!vendor) {
   // If no profile yet → still allow access (important for onboarding merge)
   console.warn("No vendor record yet");
+}
+
+/* ===============================
+TRIAL STATE (for product/service limits)
+=============================== */
+
+let trialActive = false;
+let trialExpired = false;
+
+if (
+  (vendor?.plan_tier || "free") === "free" &&
+  vendor?.trial_started_at
+) {
+
+  const trialStart = new Date(vendor.trial_started_at);
+  const trialNow = new Date();
+
+  const trialDiffDays = Math.floor(
+    (trialNow - trialStart) / (1000 * 60 * 60 * 24)
+  );
+
+  if (trialDiffDays <= 90) {
+    trialActive = true;
+  } else {
+    trialExpired = true;
+  }
+
 }
 
 /* ===============================
@@ -488,148 +545,46 @@ if (
         ).textContent =
           "Uploading...";
 
-        const MAX_IMAGE_SIZE =
-          2 * 1024 * 1024;
-  
-       if (
-         file.size >
-         MAX_IMAGE_SIZE
-       ) {
+        try {
 
-         alert(
-           "Image size must not exceed 2 MB."
-        );
+          const result =
+            await uploadVendorFile(
+              file,
+              "product"
+            );
 
-        primaryProductImageInput.value =
-          "";
+          primaryProductImageUrl =
+            result.publicUrl;
 
-        return;
+          document.getElementById(
+            "primaryProductImageName"
+          ).textContent =
+            file.name;
 
-      }
+        } catch (err) {
 
-        const allowedTypes = [
-          "image/jpeg",
-          "image/png",
-          "image/webp"
-        ];
+          console.error(
+            "PRIMARY IMAGE UPLOAD ERROR:",
+            err
+          );
 
-        if (
-          !allowedTypes.includes(
-            file.type
-          )
-        ) {
+          document.getElementById(
+            "primaryProductImageName"
+          ).textContent =
+            "";
 
           alert(
-            "Only JPG, PNG or WEBP images allowed."
+            err.message ||
+            "Primary image upload failed."
           );
 
           primaryProductImageInput.value =
             "";
 
-          return;
-
         }
 
-        const image =
-          new Image();
-
-        image.src =
-          URL.createObjectURL(
-            file
-         );
-
-        await new Promise(
-          resolve => {
-
-            image.onload =
-              resolve;
-
-         }
-       );
-
-       if (
-
-          image.width < 800 ||
-
-          image.height < 800
-
-       ) {
-
-         alert(
-           "Image resolution must be at least 800 × 800 pixels."
-       );
-
-       primaryProductImageInput.value =
-         "";
-
-       URL.revokeObjectURL(
-         image.src
-      );
-
-      return;
-
       }
-
-      URL.revokeObjectURL(
-        image.src
-     );
-
-const filePath =
-  `${vendor.id}/products/${Date.now()}-${file.name}`;
-
-const {
-  error: uploadError
-} = await supabase.storage
-  .from(
-    "vendor-gallery"
-  )
-  .upload(
-    filePath,
-    file
-  );
-
-if (
-  uploadError
-) {
-
-  console.error(
-    "PRIMARY IMAGE UPLOAD ERROR:",
-    uploadError
-  );
-
-document.getElementById(
-  "primaryProductImageName"
-).textContent =
-  "";
-
-  alert(
-    "Primary image upload failed."
-  );
-
-  return;
-
-}
-
-const {
-  data
-} = supabase.storage
-  .from(
-    "vendor-gallery"
-  )
-  .getPublicUrl(
-    filePath
-  );
-
-primaryProductImageUrl =
-  data.publicUrl;
-
-document.getElementById(
-  "primaryProductImageName"
-).textContent =
-  file.name;
-
-  }
-);
+    );
 
 }
 
@@ -658,148 +613,46 @@ if (
         ).textContent =
           "Uploading...";
 
-        const MAX_IMAGE_SIZE =
-          2 * 1024 * 1024;
-  
-       if (
-         file.size >
-         MAX_IMAGE_SIZE
-       ) {
+        try {
 
-         alert(
-           "Image size must not exceed 2 MB."
-        );
+          const result =
+            await uploadVendorFile(
+              file,
+              "service"
+            );
 
-        servicePrimaryImageInput.value =
-          "";
+          representativeServiceImageUrl =
+            result.publicUrl;
 
-        return;
+          document.getElementById(
+            "servicePrimaryImageName"
+          ).textContent =
+            file.name;
 
-      }
+        } catch (err) {
 
-        const allowedTypes = [
-          "image/jpeg",
-          "image/png",
-          "image/webp"
-        ];
+          console.error(
+            "SERVICE IMAGE UPLOAD ERROR:",
+            err
+          );
 
-        if (
-          !allowedTypes.includes(
-            file.type
-          )
-        ) {
+          document.getElementById(
+            "servicePrimaryImageName"
+          ).textContent =
+            "";
 
           alert(
-            "Only JPG, PNG or WEBP images allowed."
+            err.message ||
+            "Representative image upload failed."
           );
 
           servicePrimaryImageInput.value =
             "";
 
-          return;
-
         }
 
-        const image =
-          new Image();
-
-        image.src =
-          URL.createObjectURL(
-            file
-         );
-
-        await new Promise(
-          resolve => {
-
-            image.onload =
-              resolve;
-
-         }
-       );
-
-       if (
-
-          image.width < 800 ||
-
-          image.height < 800
-
-       ) {
-
-         alert(
-           "Image resolution must be at least 800 × 800 pixels."
-       );
-
-       servicePrimaryImageInput.value =
-         "";
-
-       URL.revokeObjectURL(
-         image.src
-      );
-
-      return;
-
       }
-
-      URL.revokeObjectURL(
-        image.src
-     );
-
-const filePath =
-  `${vendor.id}/services/${Date.now()}-${file.name}`;
-
-const {
-  error: uploadError
-} = await supabase.storage
-  .from(
-    "vendor-gallery"
-  )
-  .upload(
-    filePath,
-    file
-  );
-
-if (
-  uploadError
-) {
-
-  document.getElementById(
-    "servicePrimaryImageName"
-  ).textContent =
-    "";
-
-  console.error(
-    "SERVICE IMAGE UPLOAD ERROR:",
-    uploadError
-  );
-
-  alert(
-    "Representative image upload failed."
-  );
-
-  return;
-
-}
-
-const {
-  data
-} = supabase.storage
-  .from(
-    "vendor-gallery"
-  )
-  .getPublicUrl(
-    filePath
-  );
-
-representativeServiceImageUrl =
-  data.publicUrl;
-
-document.getElementById(
-  "servicePrimaryImageName"
-).textContent =
-  file.name;
-
-  }
-);
+    );
 
 }
 
@@ -828,109 +681,23 @@ if (
         ).textContent =
           "Uploading...";
 
-        const MAX_IMAGE_SIZE =
-          2 * 1024 * 1024;
+        try {
 
-        if (
-          file.size >
-          MAX_IMAGE_SIZE
-        ) {
+          const result =
+            await uploadVendorFile(
+              file,
+              "product"
+            );
 
-          alert(
-            "Image size must not exceed 2 MB."
-          );
+          secondaryProductImageUrl =
+            result.publicUrl;
 
-          secondaryProductImageInput.value =
-            "";
+          document.getElementById(
+            "secondaryProductImageName"
+          ).textContent =
+            file.name;
 
-          return;
-
-        }
-
-        const allowedTypes = [
-          "image/jpeg",
-          "image/png",
-          "image/webp"
-        ];
-
-        if (
-          !allowedTypes.includes(
-            file.type
-          )
-        ) {
-
-          alert(
-            "Only JPG, PNG or WEBP images allowed."
-          );
-
-          secondaryProductImageInput.value =
-            "";
-
-          return;
-
-        }
-
-        const image =
-          new Image();
-
-        image.src =
-          URL.createObjectURL(
-            file
-          );
-
-        await new Promise(
-          resolve => {
-
-            image.onload =
-              resolve;
-
-          }
-        );
-
-        if (
-
-          image.width < 800 ||
-
-          image.height < 800
-
-        ) {
-
-          alert(
-            "Image resolution must be at least 800 × 800 pixels."
-          );
-
-          secondaryProductImageInput.value =
-            "";
-
-          URL.revokeObjectURL(
-            image.src
-          );
-
-          return;
-
-        }
-
-        URL.revokeObjectURL(
-          image.src
-        );
-
-        const filePath =
-          `${vendor.id}/products/${Date.now()}-${file.name}`;
-
-        const {
-          error: uploadError
-        } = await supabase.storage
-          .from(
-            "vendor-gallery"
-          )
-          .upload(
-            filePath,
-            file
-          );
-
-        if (
-          uploadError
-        ) {
+        } catch (err) {
 
           document.getElementById(
             "secondaryProductImageName"
@@ -938,30 +705,14 @@ if (
             "";
 
           alert(
+            err.message ||
             "Secondary image upload failed."
           );
 
-          return;
+          secondaryProductImageInput.value =
+            "";
 
         }
-
-        const {
-          data
-        } = supabase.storage
-          .from(
-            "vendor-gallery"
-          )
-          .getPublicUrl(
-            filePath
-          );
-
-        secondaryProductImageUrl =
-          data.publicUrl;
-
-        document.getElementById(
-          "secondaryProductImageName"
-        ).textContent =
-          file.name;
 
       }
     );
@@ -993,140 +744,38 @@ if (
         ).textContent =
           "Uploading...";
 
-        const MAX_IMAGE_SIZE =
-          2 * 1024 * 1024;
+        try {
 
-        if (
-          file.size >
-          MAX_IMAGE_SIZE
-        ) {
+          const result =
+            await uploadVendorFile(
+              file,
+              "service"
+            );
+
+          secondaryServiceImageUrl =
+            result.publicUrl;
+
+          document.getElementById(
+            "serviceSecondaryImageName"
+          ).textContent =
+            file.name;
+
+        } catch (err) {
+
+          document.getElementById(
+            "serviceSecondaryImageName"
+          ).textContent =
+            "";
 
           alert(
-            "Image size must not exceed 2 MB."
+            err.message ||
+            "Additional image upload failed."
           );
 
           serviceSecondaryImageInput.value =
             "";
 
-          return;
-
         }
-
-        const allowedTypes = [
-          "image/jpeg",
-          "image/png",
-          "image/webp"
-        ];
-
-        if (
-          !allowedTypes.includes(
-            file.type
-          )
-        ) {
-
-          alert(
-            "Only JPG, PNG or WEBP images allowed."
-          );
-
-          serviceSecondaryImageInput.value =
-            "";
-
-          return;
-
-        }
-
-        const image =
-          new Image();
-
-        image.src =
-          URL.createObjectURL(
-            file
-          );
-
-        await new Promise(
-          resolve => {
-
-            image.onload =
-              resolve;
-
-          }
-        );
-
-        if (
-
-          image.width < 800 ||
-
-          image.height < 800
-
-        ) {
-
-          alert(
-            "Image resolution must be at least 800 × 800 pixels."
-          );
-
-          serviceSecondaryImageInput.value =
-            "";
-
-          URL.revokeObjectURL(
-            image.src
-          );
-
-          return;
-
-        }
-
-        URL.revokeObjectURL(
-          image.src
-        );
-
-        const filePath =
-          `${vendor.id}/services/${Date.now()}-${file.name}`;
-
-        const {
-          error: uploadError
-        } = await supabase.storage
-          .from(
-            "vendor-gallery"
-          )
-          .upload(
-            filePath,
-            file
-          );
-
-         if (
-           uploadError
-          ) {
-
-           document.getElementById(
-             "serviceSecondaryImageName"
-           ).textContent =
-             "";
-
-           alert(
-             "Additional image upload failed."
-           );
-
-           return;
-
-           }
-
-        const {
-          data
-        } = supabase.storage
-          .from(
-            "vendor-gallery"
-          )
-          .getPublicUrl(
-            filePath
-          );
-
-        secondaryServiceImageUrl =
-          data.publicUrl;
-
-      document.getElementById(
-        "serviceSecondaryImageName"
-      ).textContent =
-        file.name;
 
       }
     );
@@ -1159,109 +808,23 @@ if (
         ).textContent =
           "Uploading...";
 
-        const MAX_IMAGE_SIZE =
-          2 * 1024 * 1024;
+        try {
 
-        if (
-          file.size >
-          MAX_IMAGE_SIZE
-        ) {
+          const result =
+            await uploadVendorFile(
+              file,
+              "product"
+            );
 
-          alert(
-            "Image size must not exceed 2 MB."
-          );
+          tertiaryProductImageUrl =
+            result.publicUrl;
 
-          tertiaryProductImageInput.value =
-            "";
+          document.getElementById(
+            "tertiaryProductImageName"
+          ).textContent =
+            file.name;
 
-          return;
-
-        }
-
-        const allowedTypes = [
-          "image/jpeg",
-          "image/png",
-          "image/webp"
-        ];
-
-        if (
-          !allowedTypes.includes(
-            file.type
-          )
-        ) {
-
-          alert(
-            "Only JPG, PNG or WEBP images allowed."
-          );
-
-          tertiaryProductImageInput.value =
-            "";
-
-          return;
-
-        }
-
-        const image =
-          new Image();
-
-        image.src =
-          URL.createObjectURL(
-            file
-          );
-
-        await new Promise(
-          resolve => {
-
-            image.onload =
-              resolve;
-
-          }
-        );
-
-        if (
-
-          image.width < 800 ||
-
-          image.height < 800
-
-        ) {
-
-          alert(
-            "Image resolution must be at least 800 × 800 pixels."
-          );
-
-          tertiaryProductImageInput.value =
-            "";
-
-          URL.revokeObjectURL(
-            image.src
-          );
-
-          return;
-
-        }
-
-        URL.revokeObjectURL(
-          image.src
-        );
-
-        const filePath =
-          `${vendor.id}/products/${Date.now()}-${file.name}`;
-
-        const {
-          error: uploadError
-        } = await supabase.storage
-          .from(
-            "vendor-gallery"
-          )
-          .upload(
-            filePath,
-            file
-          );
-
-        if (
-          uploadError
-        ) {
+        } catch (err) {
 
           document.getElementById(
             "tertiaryProductImageName"
@@ -1269,30 +832,14 @@ if (
             "";
 
           alert(
+            err.message ||
             "Third image upload failed."
           );
 
-          return;
+          tertiaryProductImageInput.value =
+            "";
 
         }
-
-        const {
-          data
-        } = supabase.storage
-          .from(
-            "vendor-gallery"
-          )
-          .getPublicUrl(
-            filePath
-          );
-
-        tertiaryProductImageUrl =
-          data.publicUrl;
-
-        document.getElementById(
-          "tertiaryProductImageName"
-        ).textContent =
-          file.name;
 
       }
     );
@@ -1336,9 +883,11 @@ function getProductLimit(
 }
 
 const currentProductLimit =
-  getProductLimit(
-    vendor?.plan_tier || "free"
-  );
+  trialActive
+    ? 3
+    : getProductLimit(
+        vendor?.plan_tier || "free"
+      );
 
 if (productLimitText) {
 
@@ -2276,9 +1825,11 @@ alert(
 /* ========================= */
 
 const currentServiceLimit =
-  getServiceLimit(
-    vendor?.plan_tier || "free"
-  );
+  trialActive
+    ? 3
+    : getServiceLimit(
+        vendor?.plan_tier || "free"
+      );
 
 /* EXISTING SAVED SERVICES */
 
@@ -4699,92 +4250,6 @@ if (progressBar && statusIcon) {
   
 }
 
-/*
-DESCRIPTION TOOLBAR
-
-
-function applyFormat(command) {
-
-  const selection =
-    window.getSelection();
-
-  if (!selection.rangeCount) return;
-
-  const range =
-    selection.getRangeAt(0);
-
-  if (command === "bold") {
-
-    const strong =
-      document.createElement("strong");
-
-    strong.appendChild(
-      range.extractContents()
-    );
-
-    range.insertNode(strong);
-
-  }
-
-  if (command === "italic") {
-
-    const em =
-      document.createElement("em");
-
-    em.appendChild(
-      range.extractContents()
-    );
-
-    range.insertNode(em);
-
-  }
-
-  if (command === "underline") {
-
-    const u =
-      document.createElement("u");
-
-    u.appendChild(
-      range.extractContents()
-    );
-
-    range.insertNode(u);
-
-  }
-
-}
-
-if (aboutToolbar) {
-
-  aboutToolbar.classList.remove(
-    "hidden"
-  );
-
-  aboutToolbar
-    .querySelectorAll("button")
-    .forEach(btn => {
-
-      btn.addEventListener(
-        "mousedown",
-        function (e) {
-
-          e.preventDefault();
-
-          const cmd =
-            this.getAttribute(
-              "data-cmd"
-            );
-
-          applyFormat(cmd);
-
-        }
-      );
-
-    });
-
-}
-*/
-
 /* =========================
 INLINE EDIT TOGGLES
 ========================= */
@@ -5371,6 +4836,35 @@ if (
 
     profileStatusMsg.textContent =
       "Category and subcategory are required.";
+
+  }
+
+  saveProfileBtn.disabled = false;
+
+  return;
+
+}
+
+/* DESCRIPTION WORD LIMIT VALIDATION */
+
+const descriptionWordLimit =
+  DESCRIPTION_WORD_LIMITS[
+    vendor?.plan_tier || "free"
+  ] ?? 100;
+
+const descriptionWordCount =
+  countWords(
+    descriptionField?.innerHTML || ""
+  );
+
+if (
+  descriptionWordCount > descriptionWordLimit
+) {
+
+  if (profileStatusMsg) {
+
+    profileStatusMsg.textContent =
+      `Your business description exceeds the ${descriptionWordLimit}-word limit for your plan. Please shorten it.`;
 
   }
 

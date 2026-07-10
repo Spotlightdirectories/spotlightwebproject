@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const BRANCH_LIMITS = {
   free: 0,
-  standard: 1,
+  standard: 0,
   enterprise: 10,
   elite: 30,
   custom: Infinity
@@ -48,6 +48,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   enterprise: { allowed: true, maxDuration: 60, maxSize: 12 * 1024 * 1024 },
   elite: { allowed: true, maxDuration: 90, maxSize: 18 * 1024 * 1024 },
   custom: { allowed: true, maxDuration: 120, maxSize: 24 * 1024 * 1024 }
+};
+
+  const DESCRIPTION_WORD_LIMITS = {
+  free: 100,
+  standard: 150,
+  enterprise: 300,
+  elite: 500,
+  custom: 650
 };
 
   // ===============================
@@ -155,9 +163,11 @@ if (vendor.plan_tier === "free") {
   if (trial_active) {
     effectiveSocialLimit = 1;
     effectiveGalleryLimit = 3;
-  }
-
-  if (trial_expired) {
+  } else if (trial_expired) {
+    effectiveSocialLimit = 0;
+    effectiveGalleryLimit = 1;
+  } else {
+    // No trial record on file — treat as permanent Free baseline
     effectiveSocialLimit = 0;
     effectiveGalleryLimit = 1;
   }
@@ -170,7 +180,7 @@ if (vendor.plan_tier === "free") {
     standard: 6,
     enterprise: 12,
     elite: 24,
-    custom: 24
+    custom: Infinity
   };
 
   effectiveGalleryLimit = GALLERY_LIMITS[vendor.plan_tier] ?? 0;
@@ -211,57 +221,8 @@ if (galleryInput) {
 
 galleryInput.addEventListener("change", async (e) => {
 
-let file = e.target.files[0];
+const file = e.target.files[0];
 if (!file) return;
-
-// ===============================
-// RESIZE + COMPRESS IMAGE
-// ===============================
-const img = document.createElement("img");
-img.src = URL.createObjectURL(file);
-
-await new Promise(resolve => {
-  img.onload = resolve;
-});
-
-const canvas = document.createElement("canvas");
-const ctx = canvas.getContext("2d");
-
-// MAX SIZE
-const MAX_WIDTH = 1200;
-const MAX_HEIGHT = 1200;
-
-let width = img.width;
-let height = img.height;
-
-// Maintain aspect ratio
-if (width > height) {
-  if (width > MAX_WIDTH) {
-    height *= MAX_WIDTH / width;
-    width = MAX_WIDTH;
-  }
-} else {
-  if (height > MAX_HEIGHT) {
-    width *= MAX_HEIGHT / height;
-    height = MAX_HEIGHT;
-  }
-}
-
-canvas.width = width;
-canvas.height = height;
-
-ctx.drawImage(img, 0, 0, width, height);
-
-// COMPRESS
-const blob = await new Promise(resolve =>
-  canvas.toBlob(resolve, "image/jpeg", 0.7)
-);
-
-// Replace file
-file = new File([blob], `optimized-${Date.now()}.jpg`, {
-  type: "image/jpeg"
-});
-
 
 // ===============================
 // ENFORCE GALLERY LIMIT
@@ -279,20 +240,7 @@ if (existingImages && existingImages.length >= limit) {
   return;
 }
 
-       // file type validation
-           const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-           if (!allowedTypes.includes(file.type)) {
-           alert("Only JPG, PNG or WEBP images allowed.");
-           return;
-          }
-
-        // 750KB size limit
-           if (file.size > 750 * 1024) {
-           alert("Image must be less than 750KB.");
-           return;
-          }
-
-          // ===============================
+// ===============================
 // INSTANT PREVIEW (UX IMPROVEMENT)
 // ===============================
 const previewUrl = URL.createObjectURL(file);
@@ -310,24 +258,21 @@ if (grid) {
   grid.prepend(previewItem);
 }
 
-           const fileName = `${Date.now()}-${file.name}`;
-           const filePath = `${vendor.id}/gallery/${fileName}`;
+// ===============================
+// VALIDATE + RESIZE + UPLOAD (server-side)
+// ===============================
+let uploadResult;
 
-         // upload to storage
-        const { error: uploadError } = await supabase.storage
-          .from("vendor-branding")
-          .upload(filePath, file);
-
-          if (uploadError) {
-          console.error("Upload error:", uploadError.message);
-          alert("Upload failed.");
-          return;
-          }
-
-
-          const { data } = supabase.storage
-           .from("vendor-branding")
-           .getPublicUrl(filePath);
+try {
+  uploadResult = await uploadVendorFile(file, "gallery");
+} catch (err) {
+  console.error("Upload error:", err.message);
+  alert(err.message || "Upload failed.");
+  if (grid && grid.firstChild) {
+    grid.removeChild(grid.firstChild);
+  }
+  return;
+}
 
     // save record in vendor_media
         // GET CURRENT MAX ORDER
@@ -347,7 +292,7 @@ const { error: dbError } = await supabase
   .insert({
     vendor_id: vendor.id,
     media_type: "image",
-    file_url: data.publicUrl,
+    file_url: uploadResult.publicUrl,
     display_order: nextOrder
   });
 
@@ -381,11 +326,13 @@ if (videoInput) {
 
     if (!limits.allowed) {
       alert("Your current plan does not allow video upload.");
+      videoInput.disabled = false;
       return;
     }
 
     if (file.size > limits.maxSize) {
       alert("Video file exceeds the maximum size allowed for your plan.");
+      videoInput.disabled = false;
       return;
     }
 
@@ -400,8 +347,22 @@ await new Promise((resolve) => {
 
 if (video.duration > limits.maxDuration) {
   alert("Video duration exceeds the maximum allowed for your plan.");
+  videoInput.disabled = false;
   return;
 }
+
+// ===============================
+// RESOLUTION CHECK (720p max)
+// ===============================
+const videoLongSide = Math.max(video.videoWidth, video.videoHeight);
+const videoShortSide = Math.min(video.videoWidth, video.videoHeight);
+
+if (videoLongSide > 1280 || videoShortSide > 720) {
+  alert("Video resolution must be 720p or lower. Please lower your phone's recording quality and try again.");
+  videoInput.disabled = false;
+  return;
+}
+
  // remove existing vendor video
   const { data: existingVideos } = await supabase
   .from("vendor_media")
@@ -1100,6 +1061,17 @@ if (desc) {
     textarea.innerHTML = vendor.description || "";
 
     textarea.addEventListener("blur", async () => {
+
+      const descriptionWordLimit =
+        DESCRIPTION_WORD_LIMITS[vendor.plan_tier] ?? 100;
+
+      const plainText = textarea.innerText.trim();
+      const wordCount = plainText ? plainText.split(/\s+/).length : 0;
+
+      if (wordCount > descriptionWordLimit) {
+        alert(`Your business description exceeds the ${descriptionWordLimit}-word limit for your plan. Please shorten it — changes were not saved.`);
+        return;
+      }
 
       const { error } = await supabase
         .from("vendors")
@@ -2453,24 +2425,6 @@ if (socialLimit === 0) {
     const file = e.target.files[0];
     if (!file) return;
 
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp"
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-      alert("Only JPG, PNG or WEBP images allowed.");
-      coverInput.value = "";
-      return;
-    }
-
-    if (file.size > 1024 * 1024) {
-      alert("Cover image must be less than 1MB.");
-      coverInput.value = "";
-      return;
-    }
-
     if (vendor.cover_url) {
 
       const oldPath =
@@ -2484,34 +2438,24 @@ if (socialLimit === 0) {
 
     }
 
-    const ext =
-      file.name.split(".").pop().toLowerCase();
+    let uploadResult;
 
-    const filePath =
-      `${currentUser.id}/cover-${Date.now()}.${ext}`;
-
-    const { error } = await supabase.storage
-      .from("vendor-branding")
-      .upload(filePath, file);
-
-    if (error) {
-      alert("Cover upload failed.");
+    try {
+      uploadResult = await uploadVendorFile(file, "cover");
+    } catch (err) {
+      alert(err.message || "Cover upload failed.");
       coverInput.value = "";
       return;
     }
 
-    const { data } = supabase.storage
-      .from("vendor-branding")
-      .getPublicUrl(filePath);
-
     await supabase
       .from("vendors")
       .update({
-        cover_url: data.publicUrl
+        cover_url: uploadResult.publicUrl
       })
       .eq("id", vendor.id);
 
-    vendor.cover_url = data.publicUrl;
+    vendor.cover_url = uploadResult.publicUrl;
 
     renderBranding();
 
@@ -2617,18 +2561,6 @@ if (logoInput) {
     const file = e.target.files[0];
     if (!file) return;
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-
-    if (!allowedTypes.includes(file.type)) {
-      alert("Only JPG, PNG or WEBP images allowed.");
-      return;
-    }
-
-    if (file.size > 1024 * 1024) {
-      alert("Logo image must be less than 1MB.");
-      return;
-    }
-
     if (vendor.logo_url) {
 
       const oldPath = vendor.logo_url.split("/vendor-branding/")[1];
@@ -2641,30 +2573,22 @@ if (logoInput) {
 
     }
 
-    const ext = file.name.split(".").pop().toLowerCase();
+    let uploadResult;
 
-    const filePath =
-      `${currentUser.id}/logo-${Date.now()}.${ext}`;
-
-    const { error } = await supabase.storage
-      .from("vendor-branding")
-      .upload(filePath, file);
-
-    if (error) {
-      console.error("Logo Upload Error:", error.message);
+    try {
+      uploadResult = await uploadVendorFile(file, "logo");
+    } catch (err) {
+      console.error("Logo Upload Error:", err.message);
+      alert(err.message || "Logo upload failed.");
       return;
     }
 
-    const { data } = supabase.storage
-      .from("vendor-branding")
-      .getPublicUrl(filePath);
-
     await supabase
       .from("vendors")
-      .update({ logo_url: data.publicUrl })
+      .update({ logo_url: uploadResult.publicUrl })
       .eq("id", vendor.id);
 
-    vendor.logo_url = data.publicUrl;
+    vendor.logo_url = uploadResult.publicUrl;
 
     renderBranding();
 

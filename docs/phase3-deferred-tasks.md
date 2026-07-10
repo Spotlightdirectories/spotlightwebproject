@@ -262,7 +262,16 @@ Confirm email arrives before Next.js migration.
 - [x] Dev reset scripts: dev-reset-vendor.sql and dev-reset-partner.sql
 
 ### Block 4 — Backend hardening
-- [ ] 15. Build image validation Edge Function for storage uploads
+- [x] 15. Build image validation Edge Function for storage uploads (validate-upload deployed)
+      - [ ] 15b. IMPORTANT — Storage bucket RLS policies must be updated to reject
+            direct client-side uploads to vendor-gallery, vendor-branding,
+            vendor-verifications, and payment-receipts buckets, allowing writes
+            only via the service role (i.e. only through validate-upload). Without
+            this, a technically determined user can bypass validate-upload entirely
+            by calling Supabase storage directly with their own session, even after
+            item 17 wires the site to use the function. Do this alongside or
+            immediately after item 17 — do not consider upload validation complete
+            until this is done.
 - [ ] 16. Replace browser plan limit constants with server fetch
 - [ ] 17. Consolidate 5 duplicate image upload handlers into single uploadVendorImage() function
 - [ ] 18. Build admin staff onboarding flow (no vendor profile created)

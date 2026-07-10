@@ -44,11 +44,28 @@ window.vendorData = vendor;
 // PLAN LIMITS
 // ===============================
 
+// ===============================
+// BUSINESS NAME GUARD
+// Uses word-boundary matching (not plain substring) so a short
+// business name like "AB" doesn't false-positive on unrelated
+// words like "Cabin". Still catches real duplication like
+// vendor name "ABC Traders" appearing in "ABC Traders Ikeja".
+// ===============================
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function containsBusinessName(text, businessName) {
+  if (!businessName) return false;
+  const pattern = new RegExp(`\\b${escapeRegex(businessName)}\\b`, "i");
+  return pattern.test(text);
+}
+
 const BRANCH_LIMITS = {
 free: 0,
-standard: 1,
+standard: 0,
 enterprise: 10,
-elite: 50,
+elite: 30,
 custom: Infinity
 };
 
@@ -92,7 +109,7 @@ if (!branchInput) {
 }
 
 // Block vendor name usage
-if (branchInput.toLowerCase().includes(vendor.name.toLowerCase())) {
+if (containsBusinessName(branchInput, vendor.name)) {
   alert("Do not include your business name. Enter only the branch identifier (e.g. 'Isolo').");
   return;
 }
@@ -116,13 +133,11 @@ if (!branchInput || !address) {
   return;
 }
 
-// Prevent user from typing full business name
-if (branchInput.toLowerCase().includes(vendor.name.toLowerCase())) {
-  alert("Enter only branch identifier (e.g. 'Isolo'), not full business name.");
-  return;
-}
+// check plan limit (only applies when creating a NEW branch —
+// editing an existing branch must never be blocked by the limit,
+// since you're not adding a row, just changing one you already have)
+if (!window.editingBranchId) {
 
-// check plan limit
 const limit = BRANCH_LIMITS[vendor.plan_tier] ?? 0;
 
 const { data: existingBranches } = await supabase
@@ -134,6 +149,8 @@ if (existingBranches && existingBranches.length >= limit) {
 
 alert("You have reached the maximum number of branches allowed for your plan.");
 return;
+
+}
 
 }
 
