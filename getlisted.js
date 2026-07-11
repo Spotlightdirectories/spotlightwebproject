@@ -1,90 +1,97 @@
 document.addEventListener("DOMContentLoaded", async () => {
 
-// -----------------------------
-// CAPTURE REFERRAL CODE (ENTRY PAGE)
-// -----------------------------
-const urlParams = new URLSearchParams(window.location.search);
-const referralCode = urlParams.get("ref");
+  // -----------------------------
+  // CAPTURE REFERRAL CODE (ENTRY PAGE)
+  // -----------------------------
+  const urlParams = new URLSearchParams(window.location.search);
+  const referralCode = urlParams.get("ref");
 
-if (referralCode) {
+  if (referralCode) {
 
-  const supabase = window.supabaseClient;
+    const supabase = window.supabaseClient;
+    const { data } = await supabase.auth.getUser();
+    const user = data?.user;
 
-  const { data } = await supabase.auth.getUser();
-  const user = data?.user;
+    if (user) {
+      const { data: existingVendor } = await supabase
+        .from("vendors")
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
 
-  // 🚫 If user already exists → ignore referral
-  if (user) {
-
-    const { data: existingVendor } = await supabase
-      .from("vendors")
-      .select("id")
-      .eq("auth_user_id", user.id)
-      .maybeSingle();
-
-    if (existingVendor) {
-      return;
+      if (existingVendor) {
+        return;
+      }
     }
+
+    localStorage.setItem("referral_code", referralCode);
   }
 
-  // ✅ Only save for new users
-  localStorage.setItem("referral_code", referralCode);
-}
-
   const billingToggle = document.getElementById("billingToggle");
-  const planButtons = document.querySelectorAll(".glcard .btn, .plan-btn");
+  const planButtons = document.querySelectorAll(".gl-btn, .gl-plan-btn");
+
+  if (!billingToggle) {
+    console.error("Billing toggle not found");
+    return;
+  }
 
   if (planButtons.length === 0) {
-  console.error("No plan buttons found");
-  return;
-}
+    console.error("No plan buttons found");
+    return;
+  }
 
   // -----------------------------
-  // Billing toggle UI (UNCHANGED)
+  // Billing toggle UI
   // -----------------------------
-  const prices = document.querySelectorAll(".price");
-  const yearlyTexts = document.querySelectorAll(".yearly"); 
-  // ✅ FORCE DEFAULT TO YEARLY ON LOAD
-billingToggle.checked = true;
+  const prices = document.querySelectorAll(".gl-price");
+  const yearlyNotes = document.querySelectorAll(".gl-yearly-note");
 
-// ✅ APPLY YEARLY PRICING IMMEDIATELY
-prices.forEach(price => {
-  price.textContent = price.dataset.yearly;
-});
+  // Default to yearly on load
+  billingToggle.checked = true;
 
-yearlyTexts.forEach(text => {
-  text.style.display = "none";
-});
+  prices.forEach(price => {
+    if (price.dataset.yearly) {
+      price.textContent = price.dataset.yearly;
+    }
+  });
 
-// ✅ ENSURE DEFAULT BILLING IS ALWAYS SET
-if (!localStorage.getItem("billingType")) {
-  localStorage.setItem("billingType", "yearly");
-}
+  if (!localStorage.getItem("billingType")) {
+    localStorage.setItem("billingType", "yearly");
+  }
 
   billingToggle.addEventListener("change", () => {
     const yearly = billingToggle.checked;
 
     prices.forEach(price => {
+      if (!price.dataset.monthly) return; // skip "Let's talk" custom price
       price.textContent = yearly
         ? price.dataset.yearly
         : price.dataset.monthly;
     });
 
-    yearlyTexts.forEach(text => {
-      text.style.display = yearly ? "none" : "block";
+    yearlyNotes.forEach(note => {
+      if (note.textContent.includes("save 25%") || note.textContent.includes("Billed")) {
+        note.style.visibility = yearly ? "visible" : "hidden";
+      }
     });
   });
 
   // -----------------------------
-  // Plan intent capture (LOCKED)
+  // Plan intent capture
   // -----------------------------
   planButtons.forEach(btn => {
     btn.addEventListener("click", async (e) => {
 
-      // ✅ Skip custom plan → allow normal link/navigation
-      e.preventDefault();
+      // Custom plan → let it navigate normally to contact-us
+      const card = btn.closest(".gl-card");
+      const isCustomCard = card && !card.querySelector("h2[data-plan]");
+      const isCustomTableLink = btn.classList.contains("gl-plan-btn-link");
 
-      const card = btn.closest(".glcard");
+      if (isCustomCard || isCustomTableLink) {
+        return;
+      }
+
+      e.preventDefault();
 
       let plan =
         card?.querySelector("h2")?.dataset.plan ||
@@ -93,9 +100,8 @@ if (!localStorage.getItem("billingType")) {
       if (!plan) {
         console.error("Plan not detected");
         return;
-     }
+      }
 
-      // 🔒 ALLOWED PLANS ONLY
       const allowedPlans = ["free", "standard", "enterprise", "elite", "custom"];
       if (!allowedPlans.includes(plan)) {
         console.error("Invalid plan selected:", plan);
@@ -107,43 +113,14 @@ if (!localStorage.getItem("billingType")) {
       localStorage.setItem("selectedPlan", plan);
       localStorage.setItem("billingType", billing);
 
-      const { data } =
-        await window.supabaseClient.auth.getUser();
+      const { data } = await window.supabaseClient.auth.getUser();
 
-        if (data?.user) {
-
-        window.location.href =
-          "payment";
-
-       } else {
-
-        window.location.href =
-          "signup";
-
+      if (data?.user) {
+        window.location.href = "payment";
+      } else {
+        window.location.href = "signup";
       }
     });
   });
+
 });
-
-// ===============================
-// VERIFIED BADGE BUTTONS
-// ===============================
-
-document.querySelectorAll(".verify-btn").forEach(btn => {
-  btn.addEventListener("click", async () => {
-
-    const badgeType = btn.dataset.badge;
-
-    const { data: { user } } = await window.supabaseClient.auth.getUser();
-
-    if (!user) {
-      localStorage.setItem("pendingBadgeType", badgeType);
-      window.location.href = "login";
-      return;
-    }
-
-    localStorage.setItem("pendingBadgeType", badgeType);
-    window.location.href = "verify-badge";
-  });
-});
-

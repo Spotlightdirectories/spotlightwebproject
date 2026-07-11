@@ -789,6 +789,49 @@ color:inherit;
   color: #9a3412;
 }
 
+.vd-trial-upgrade-btn {
+  margin-top: 12px;
+  width: 100%;
+
+  padding: 10px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #000000;
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.vd-trial-upgrade-btn:hover {
+  background: #e6c200;
+  color: #000000;
+}
+
+.vd-trial-box.vd-trial-ended {
+  background: linear-gradient(
+    135deg,
+    #fef2f2 0%,
+    #fee2e2 100%
+  );
+
+  border-color: #fca5a5;
+}
+
+.vd-trial-box.vd-trial-ended .vd-trial-days {
+  color: #b91c1c;
+}
+
+.vd-trial-box.vd-trial-ended .vd-trial-time {
+  color: #7f1d1d;
+}
+
 /* =========================
 PROFILE ARCHITECTURE
 ========================= */

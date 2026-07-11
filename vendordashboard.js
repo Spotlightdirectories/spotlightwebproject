@@ -3853,6 +3853,25 @@ const trialTimeLeftEl =
     "trialTimeLeft"
   );
 
+const trialUpgradeBtn =
+  document.getElementById(
+    "trialUpgradeBtn"
+  );
+
+if (trialUpgradeBtn) {
+
+  trialUpgradeBtn.addEventListener(
+    "click",
+    () => {
+
+      window.location.href =
+        "getlisted.html";
+
+    }
+  );
+
+}
+
 const isFreeVendor =
   vendor.plan_tier === "free";
 
@@ -3878,6 +3897,13 @@ if (
     expiryDate.getDate() + 90
   );
 
+  // Declared before first use — if the trial has already expired
+  // the moment this page loads, updateTrialCountdown() below calls
+  // clearInterval() on this before setInterval() ever runs. Using
+  // `let` here (not `const`) avoids a temporal-dead-zone crash in
+  // that case; clearInterval(undefined) is a safe no-op.
+  let trialCountdownInterval;
+
   const updateTrialCountdown =
     () => {
 
@@ -3887,8 +3913,35 @@ if (
       let timeDiff =
         expiryDate - now;
 
-      if (timeDiff < 0) {
-        timeDiff = 0;
+      if (timeDiff <= 0) {
+
+        // Trial has ended — show a clear, distinct state and
+        // stop counting, rather than sitting at zero forever
+        // with no explanation or next step.
+        if (trialDaysLeftEl) {
+
+          trialDaysLeftEl.textContent =
+            "Your trial has ended";
+
+        }
+
+        if (trialTimeLeftEl) {
+
+          trialTimeLeftEl.textContent =
+            "Upgrade to keep your extra products, services, gallery photos and social link.";
+
+        }
+
+        trialBox.classList.add(
+          "vd-trial-ended"
+        );
+
+        clearInterval(
+          trialCountdownInterval
+        );
+
+        return;
+
       }
 
       const daysLeft =
@@ -3913,13 +3966,21 @@ if (
           ) % 60
         );
 
+      const secondsLeft =
+        Math.floor(
+          (
+            timeDiff /
+            1000
+          ) % 60
+        );
+
       trialDaysLeftEl.textContent =
         `${daysLeft} Days Left`;
 
       if (trialTimeLeftEl) {
 
         trialTimeLeftEl.textContent =
-          `${hoursLeft}h ${minutesLeft}m remaining`;
+          `${hoursLeft}h ${minutesLeft}m ${secondsLeft}s remaining`;
 
       }
 
@@ -3927,10 +3988,11 @@ if (
 
   updateTrialCountdown();
 
-  setInterval(
-    updateTrialCountdown,
-    60000
-  );
+  trialCountdownInterval =
+    setInterval(
+      updateTrialCountdown,
+      1000
+    );
 
 }
 

@@ -211,6 +211,14 @@ if (storedReferral) {
     ? "free"
     : "pending",
 
+  // The 90-day free trial clock starts here. Without this, a free
+  // signup would silently be stuck on the bare baseline forever,
+  // never actually receiving the enhanced trial-period limits.
+  trial_started_at:
+  selectedPlan === "free"
+    ? new Date().toISOString()
+    : null,
+
   is_premium:
     selectedPlan !== "free",
 

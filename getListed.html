@@ -10,7 +10,6 @@
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://www.spotlightdirectories.com/getlisted">
 
-    <!-- Social (recommended) -->
     <meta property="og:title" content="Get Listed | Spotlight Directories">
     <meta property="og:description" content="Compare vendor listing tiers and pricing plans on Spotlight Directories.">
     <meta property="og:type" content="website">
@@ -19,39 +18,36 @@
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
 
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 
-    <!-- Styles -->
+    <!-- Styles: same brand tokens + navbar as the live site, plus a
+         dedicated stylesheet for this page only. Nothing shared is
+         modified. -->
     <link rel="stylesheet" href="theme.css">
     <link rel="stylesheet" href="navbar.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="getlisted.css">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-<!-- ✅ UPDATED FAVICONS -->
-<link rel="icon" type="image/png" sizes="48x48" href="/images/favicon-48.png">
-<link rel="icon" type="image/png" sizes="64x64" href="/images/favicon-64.png">
-<link rel="apple-touch-icon" href="/images/favicon-180.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="/images/favicon-48.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="/images/favicon-64.png">
+    <link rel="apple-touch-icon" href="/images/favicon-180.png">
 
-<!-- ✅ STRUCTURED DATA (GOOGLE LOGO CONTROL) -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "Spotlight Directories",
-  "url": "https://spotlightdirectories.com",
-  "logo": "https://spotlightdirectories.com/images/spotlightlogo-512.png"
-}
-</script>
-    
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Spotlight Directories",
+      "url": "https://spotlightdirectories.com",
+      "logo": "https://spotlightdirectories.com/images/spotlightlogo-512.png"
+    }
+    </script>
 </head>
 <body>
 
- <header class="navbar">
-
+<header class="navbar">
   <div class="logo-left">
     <a href="index">
       <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg">
@@ -60,308 +56,293 @@
   </div>
 
   <nav>
-
-    <!-- HAMBURGER OPEN -->
     <button class="menu-open hide-desktop" aria-label="Open menu">
       <img src="images/hbopen.png" alt="Open menu" width="32" height="32">
     </button>
 
     <ul class="nav-links">
-
-      <!-- CLOSE BUTTON -->
       <li class="menu-close">
         <button class="xclose" aria-label="Close menu">
           <img src="images/xclose.png" alt="Close menu" width="32" height="32">
         </button>
       </li>
-
       <li><a href="aboutUs">Why Spotlight?</a></li>
       <li><a href="getListed">Get Listed</a></li>
       <li><a href="contact-us">Contact Us</a></li>
       <li><a href="FAQ">FAQ</a></li>
       <li><a href="feedback">Feedback</a></li>
-
     </ul>
-
   </nav>
-
 </header>
 
 <main>
 
-     <div>
-     <p id="onboardingStatus"></p>
-     </div>
+  <div><p id="onboardingStatus"></p></div>
 
-    <section class="get-listed-content">
-    <section class="intro">
-      <h1>Get Listed on Spotlight</h1>
-      <p>Select the plan that fits your business best.</p>
+  <!-- ===============================
+       HERO
+       =============================== -->
+  <section class="gl-hero">
+    <p class="gl-eyebrow">Pricing built around how your business actually grows</p>
+    <h1>One listing. As many locations as you need.</h1>
+    <p class="gl-hero-sub">From a small or little shop to a nationwide chain — pick the plan that matches how many places your business shows up.</p>
 
-      <div class="toggle-container">
-        <span id="billingMonthly">Monthly</span>
+    <div class="gl-trial-banner">
+      <i class="fa-solid fa-bolt"></i>
+      Every business starts with a <strong>90-day free trial</strong> — no card required, live in minutes.
+    </div>
 
-        <label class="switch" for="billingToggle">
-          <span class="sr-only">Toggle billing period</span>
-          <input type="checkbox" id="billingToggle" aria-labelledby="billingMonthly billingYearly">
-          <span class="glslider round"></span>
-        </label>
+    <div class="gl-toggle-container">
+      <span id="billingMonthly">Monthly</span>
+      <label class="gl-switch" for="billingToggle">
+        <span class="sr-only">Toggle billing period</span>
+        <input type="checkbox" id="billingToggle" aria-labelledby="billingMonthly billingYearly">
+        <span class="gl-slider round"></span>
+      </label>
+      <span id="billingYearly">Yearly <span class="gl-save-tag">save 25%</span></span>
+    </div>
+  </section>
 
-        <span id="billingYearly">Yearly</span>
+  <!-- ===============================
+       PRICING CARDS
+       =============================== -->
+  <section class="gl-pricing-grid">
+
+    <!-- FREE -->
+    <article class="gl-card gl-card-trial">
+      <div class="gl-badge gl-badge-trial">90-Day Free Trial</div>
+
+      <div class="gl-card-top">
+        <h2 data-plan="free">Basic</h2>
+        <p class="gl-for">For solo artisans &amp; traders</p>
       </div>
-    </section>
 
-   <div class="pricing-wrapper">
-    <section class="pricing-grid">
+      <p class="gl-price" data-monthly="₦0" data-yearly="₦0">₦0</p>
+      <p class="gl-yearly-note">Free to start — no card needed</p>
 
-      <!-- BASIC PLAN -->
-      <div class="glcard">
-        <h2 data-plan="free">Basic (Free)</h2>
-        <p class="price" data-monthly="₦0" data-yearly="₦0">₦0</p>
-        <div class="recommendedbanner">
-        <p>For Artisans</p>
+      <div class="gl-scale-meter" data-filled="1">
+        <div class="gl-scale-dots">
+          <span class="dot filled"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
         </div>
-        <ul>
-          <li>Business Name</li>
-          <li>Business Category</li>
-          <li>Business Address</li>
-          <li>WhatsApp Number</li>
-          <li>1 business branch</li>
-          <li>Map & Directions (clickable) </li>
-        </ul>
-        <a href="#" class="btn">Get Started</a>
+        <p class="gl-scale-label"><i class="fa-solid fa-location-dot"></i> 1 location</p>
       </div>
 
-      <!-- STANDARD PLAN -->
-      <div class="glcard highlight">
-      <div class="badge">⚡ Most popular</div>
+      <p class="gl-everything">Your first 90 days include:</p>
+      <ul class="gl-feature-list">
+        <li>List up to 3 products or services</li>
+        <li>1 social media handle</li>
+        <li>Photo gallery — 3 images</li>
+        <li>Clickable WhatsApp number</li>
+        <li>Google Map &amp; Directions</li>
+        <li>Eligible for a verification badge</li>
+      </ul>
+
+      <p class="gl-trial-note">After 90 days, your listing stays free with core features — upgrade anytime to keep the extras.</p>
+
+      <a href="#" class="gl-btn gl-btn-trial">Start Free Trial</a>
+      <p class="gl-micro-trust">No credit card &middot; Takes 5 minutes</p>
+    </article>
+
+    <!-- STANDARD -->
+    <article class="gl-card gl-card-highlight">
+      <div class="gl-badge">Most popular</div>
+
+      <div class="gl-card-top">
         <h2 data-plan="standard">Standard</h2>
-        <p class="price" data-monthly="₦2,998" data-yearly="₦26,982">₦2,998</p>
-        <p class="yearly">Do yearly, save <strong>25%</strong></p>
-        <div class="recommendedbanner">
-        <p>For Professionals & Small Businesses</p>
-        </div>
-        <p class="big"><br>Everything in Basic</br></p>
-        <ul>
-          <li>Mini web page to display wares</li>
-          <li>Profile photo & Cover image</li>
-          <li>Photo Gallery</li>
-          <li>Business logo & videos</li>
-          <li>2 social media handles</li>
-          <li>1 business branch</li>
-        </ul>
-        <a href="#" class="btn">Choose Plan</a>
+        <p class="gl-for">For professionals &amp; small businesses</p>
       </div>
 
-      <!-- ENTERPRISE PLAN -->
-      <div class="glcard">
+      <p class="gl-price" data-monthly="₦2,998" data-yearly="₦26,982">₦2,998</p>
+      <p class="gl-yearly-note">Billed yearly, save 25%</p>
+
+      <div class="gl-scale-meter" data-filled="1">
+        <div class="gl-scale-dots">
+          <span class="dot filled"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+        <p class="gl-scale-label"><i class="fa-solid fa-location-dot"></i> 1 location</p>
+      </div>
+
+      <p class="gl-everything">Everything in Basic, plus:</p>
+      <ul class="gl-feature-list">
+        <li>Mini web page for products &amp; services</li>
+        <li>Profile photo, cover image &amp; logo</li>
+        <li>Photo gallery — 6 images</li>
+        <li>Business video — up to 30 seconds</li>
+        <li>2 social media handles</li>
+        <li>Up to 150-word description</li>
+      </ul>
+
+      <a href="#" class="gl-btn gl-btn-dark">Choose Standard</a>
+    </article>
+
+    <!-- ENTERPRISE -->
+    <article class="gl-card">
+      <div class="gl-card-top">
         <h2 data-plan="enterprise">Enterprise</h2>
-        <p class="price" data-monthly="₦12,600" data-yearly="₦113,400">₦12,600</p>
-        <p class="yearly">Do yearly, save <strong>25%</strong></p>
-
-        <div class="recommendedbanner">
-        <p class="recommendation">For Growing Chains</p>
-        </div>
-
-        <p class="big"><br>Everything in Standard</br></p>
-        
-        <ul>
-          <li>Up to 10 business branches</li>
-          <li>1 WhatsApp line for each branch</li>
-          <li>3 social media handles</li>
-        </ul>
-        <a href="#" class="btn">Choose Plan</a>
+        <p class="gl-for">For growing chains</p>
       </div>
 
-      <!-- ELITE PLAN -->
-      <div class="glcard">
+      <p class="gl-price" data-monthly="₦12,600" data-yearly="₦113,400">₦12,600</p>
+      <p class="gl-yearly-note">Billed yearly, save 25%</p>
+
+      <div class="gl-scale-meter" data-filled="3">
+        <div class="gl-scale-dots">
+          <span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+        <p class="gl-scale-label"><i class="fa-solid fa-location-dot"></i> Up to 10 locations</p>
+      </div>
+
+      <p class="gl-everything">Everything in Standard, plus:</p>
+      <ul class="gl-feature-list">
+        <li>Up to 10 business branches</li>
+        <li>Own address &amp; WhatsApp number per branch</li>
+        <li>Photo gallery — 12 images</li>
+        <li>Business video — up to 60 seconds</li>
+        <li>3 social media handles</li>
+        <li>Up to 300-word description</li>
+      </ul>
+
+      <a href="#" class="gl-btn gl-btn-dark">Choose Enterprise</a>
+    </article>
+
+    <!-- ELITE -->
+    <article class="gl-card">
+      <div class="gl-card-top">
         <h2 data-plan="elite">Elite</h2>
-        <p class="price" data-monthly="₦22,400" data-yearly="₦201,600">₦22,400</p>
-        <p class="yearly">Do yearly, save <strong>25%</strong></p>
-        <div class="recommendedbanner">
-        <p>For Nationwide Brands</p>
-        </div>
-
-        <p class="big"><br>Everything in Enterprise</br></p>
-
-        <ul>
-          <li>Up to 30 branches</li>
-          <li>5 social media handles</li>
-          <li>Help setting up Google Business profile</li>
-          <li>Dedicated Support</li>
-        </ul>
-        <a href="#" class="btn">Choose Plan</a>
+        <p class="gl-for">For nationwide brands</p>
       </div>
 
-       <!-- CUSTOM PLAN -->
-      <div class="glcard dark-card">
+      <p class="gl-price" data-monthly="₦22,400" data-yearly="₦201,600">₦22,400</p>
+      <p class="gl-yearly-note">Billed yearly, save 25%</p>
+
+      <div class="gl-scale-meter" data-filled="4">
+        <div class="gl-scale-dots">
+          <span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span>
+        </div>
+        <p class="gl-scale-label"><i class="fa-solid fa-location-dot"></i> Up to 30 locations</p>
+      </div>
+
+      <p class="gl-everything">Everything in Enterprise, plus:</p>
+      <ul class="gl-feature-list">
+        <li>Up to 30 business branches</li>
+        <li>Photo gallery — 24 images</li>
+        <li>Business video — up to 90 seconds</li>
+        <li>5 social media handles</li>
+        <li>Help setting up Google Business Profile</li>
+        <li>Dedicated support</li>
+      </ul>
+
+      <a href="#" class="gl-btn gl-btn-dark">Choose Elite</a>
+    </article>
+
+    <!-- CUSTOM -->
+    <article class="gl-card gl-card-dark">
+      <div class="gl-card-top">
         <h2>Custom</h2>
-        <p class="letsTalk">Let's Talk</p>
-
-        <div class="recommendedbanner">
-        <p>For Large Enterprises</p>
-        </div>
-
-        <p class="big"><br>Everything in Elite</br></p>
-
-        <ul>
-          <li>Unlimited branches</li>
-          <li>Unlimited social media handles</li>
-        </ul>
-        <a href="contact-us" class="btnwhite">Go Unlimited</a>
-      </div>
+        <p class="gl-for">For large enterprises</p>
       </div>
 
-    </section>
-    </section>
+      <p class="gl-price gl-lets-talk">Let's talk</p>
+      <p class="gl-yearly-note">Tailored to your business</p>
 
-
-<!-- Feature Comparison Table -->
-
-<section class="pricing-table">
-  <h2>See all features and compare plans</h2>
-
-  <div class="pricing-container">
-
-  <div class="pricing-header">
-    <div class="feature-col header-empty"></div>
-    
-    <div class="plan-header">
-    <h3>Basic(Free)</h3>
-    <button class="plan-btn" data-plan="free">Get Started</button>
-    </div>
-    
-    <div class="plan-header">
-    <h3>Standard</h3>
-    <button class="plan-btn" data-plan="standard">Choose Plan</button>
-    </div>
-
-    <div class="plan-header">
-    <h3>Enterprise</h3>
-    <button class="plan-btn" data-plan="enterprise">Choose Plan</button>
-    </div>
-
-    <div class="plan-header">
-    <h3>Elite</h3>
-    <button class="plan-btn" data-plan="elite">Choose Plan</button>
-    </div>
-
-    <div class="plan-header">
-    <h3>Custom</h3>
-      <a href="contact-us" class="plan-btn">Go Unlimited</a>
-    </div>
-  </div>
-
-  <div class="pricing-body">
-  <div class="row">
-    <div class="feature-name">1 Vendor Business Name</div>
-    <div>1 Name</div><div>1 Name</div><div>1 Name</div><div>1 Name</div><div>1 Name</div>
-  </div>
-
-  <div class="row">
-    <div class="feature-name">Vendor Address</div>
-    <div>1 Address</div><div>1 Address</div><div>Up to 10 Addresses</div><div>Up to 30 Addresses</div><div>Unlimited Addresses</div>
-  </div>
-
-  <div class="row">
-    <div class="feature-name">Click-to-call & WhatsApp</div>
-    <div>1 WhatsApp No</div><div>1 WhatsApp No</div><div>Up to 10 WhatsApp Nos</div><div>Up to 30 WhatsApp Nos</div><div>Unlimited WhatsApp Nos</div>
-  </div>
-
-    <div class="row">
-    <div class="feature-name">Vendor Business Category</div>
-    <div>✔</div><div>✔</div><div>Same Category for all branches</div><div>Same Category for all branches</div><div>Same Category for all branches</div>
-  </div>
-
-  <div class="row">
-    <div class="feature-name">Mini Web Page to Display goods and services</div>
-    <div>Yes</div><div>Yes</div><div>Yes</div><div>Yes</div><div>Yes</div>
-  </div>
-
-    <div class="row">
-    <div class="feature-name">Business description</div>
-    <div>Up to 100 words</div><div>Up to 150 words</div><div>Up to 300 words</div><div>Up to 500 words</div><div>Up to 650 words</div>
-  </div>  
-  
-  <div class="row">
-    <div class="feature-name">Vendor Profile Update</div>
-    <div>Ability to update in dashboard</div><div>Ability to update in dashboard</div><div>Ability to update in dashboard</div><div>Ability to update in dashboard</div><div>Ability to update in dashboard</div>
-  </div> 
-
-    <div class="row">
-    <div class="feature-name">Profile or Business Logo/Cover Image</div>
-    <div>Yes</div><div>Yes</div><div>Yes</div><div>Yes</div><div>Yes</div>
-  </div>
-
-  <div class="row">
-    <div class="feature-name">Office or Shop/product videos</div>
-    <div>✖</div><div>✔</div><div>1 video for all branches at a time</div><div>1 video for all branches at a time</div><div>1 video for all branches at a time</div>
-  </div>
-
-   <div class="row">
-    <div class="feature-name">Video Duration</div>
-    <div>0</div><div>30 seconds</div><div>60 seconds</div><div>90 seconds</div><div>120 seconds</div>
-  </div>
-
-    <div class="row">
-    <div class="feature-name">Social Media Handles</div>
-    <div>✖</div><div>2 social media handles</div><div>3 social media handles</div><div>5 social media handles</div><div>unlimited social media handles</div>
-  </div>  
-  
-  <div class="row">
-    <div class="feature-name">Google Business Profile</div>
-    <div>✖</div><div>✖</div><div>✖</div><div>One Profile for all branches</div><div>One Profile for all branches</div>
-  </div>  
-  
-  <div class="row">
-    <div class="feature-name">Google Map & Directions</div>
-    <div>✔</div><div>✔</div><div>✔</div><div>✔</div><div>✔</div>
-  </div>  
-  
-  <div class="row">
-    <div class="feature-name">Photo Gallery for Display</div>
-    <div>1 image</div><div>6 images</div><div>12 images</div><div>24 images</div><div>Custom</div>
-  </div>  
-  
-  <div class="row">
-    <div class="feature-name">Dedicated Support</div>
-    <div>Low</div><div>medium</div><div>high</div><div>special</div><div>special</div>
-  </div>  
-  
-  <div class="row">
-    <div class="feature-name">Ability to obtain verification badges</div>
-    <div>✔</div><div>✔</div><div>✔</div><div>✔</div><div>✔</div>
-  </div>  
-  
-  <div class="row">
-    <div class="feature-name">Listing for registered and unregistered business(es)</div>
-    <div>✔</div><div>✔</div><div>✔</div><div>✔</div><div>✔</div>
-  </div>  
-  
-  <div class="row">
-    <div class="feature-name">Ability to close listed account by email request</div>
-    <div>✔</div><div>✔</div><div>✔</div><div>✔</div><div>✔</div>
-  </div>
-
- </div>
-</div> 
-</section>
-
-  
-  </main>
-   <footer>
-        <div class="footer-content">
-             <a href="terms">Terms</a> 
-             <a href="privacy">Privacy</a>   
-             <a href="disclaimer">Disclaimer</a>   
-             <p>&copy; 2026 Spotlight Digital Services Ltd. All Rights Reserved</p>
+      <div class="gl-scale-meter" data-filled="5">
+        <div class="gl-scale-dots">
+          <span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span>
         </div>
-     </footer>
-     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-     <script src="supabase-client.js"></script>
-     <script src="script2.js"></script>
-     <script src="script.js"></script>
-     <script src="getlisted.js"></script>
+        <p class="gl-scale-label"><i class="fa-solid fa-infinity"></i> Unlimited locations</p>
+      </div>
 
-  </body>
+      <p class="gl-everything">Everything in Elite, plus:</p>
+      <ul class="gl-feature-list">
+        <li>Unlimited business branches</li>
+        <li>Unlimited social media handles</li>
+        <li>Up to 650-word description</li>
+        <li>Special dedicated support</li>
+      </ul>
+
+      <a href="contact-us" class="gl-btn gl-btn-white">Go Unlimited</a>
+    </article>
+
+  </section>
+
+  <p class="gl-trust-note"><i class="fa-solid fa-shield-halved"></i> Cancel or change your plan anytime from your dashboard.</p>
+
+  <!-- ===============================
+       COMPARE FEATURES TABLE
+       =============================== -->
+  <section class="gl-compare">
+    <h2>Compare every feature, plan by plan</h2>
+
+    <div class="gl-compare-scroll">
+      <div class="gl-compare-table">
+
+        <div class="gl-compare-header">
+          <div class="gl-feature-col"></div>
+          <div class="gl-plan-col">
+            <h3>Basic</h3>
+            <button class="gl-plan-btn" data-plan="free">Get Started</button>
+          </div>
+          <div class="gl-plan-col gl-plan-col-highlight">
+            <span class="gl-col-badge">Most popular</span>
+            <h3>Standard</h3>
+            <button class="gl-plan-btn" data-plan="standard">Choose Plan</button>
+          </div>
+          <div class="gl-plan-col">
+            <h3>Enterprise</h3>
+            <button class="gl-plan-btn" data-plan="enterprise">Choose Plan</button>
+          </div>
+          <div class="gl-plan-col">
+            <h3>Elite</h3>
+            <button class="gl-plan-btn" data-plan="elite">Choose Plan</button>
+          </div>
+          <div class="gl-plan-col">
+            <h3>Custom</h3>
+            <a href="contact-us" class="gl-plan-btn gl-plan-btn-link">Go Unlimited</a>
+          </div>
+        </div>
+
+        <div class="gl-compare-body">
+
+          <div class="gl-row"><div class="gl-feature-name">Business name</div><div>1</div><div class="gl-col-highlight">1</div><div>1</div><div>1</div><div>1</div></div>
+          <div class="gl-row"><div class="gl-feature-name">Business address</div><div>1</div><div class="gl-col-highlight">1</div><div>Up to 10</div><div>Up to 30</div><div>Unlimited</div></div>
+          <div class="gl-row"><div class="gl-feature-name">Click-to-call &amp; WhatsApp</div><div>1 number</div><div class="gl-col-highlight">1 number</div><div>Up to 10</div><div>Up to 30</div><div>Unlimited</div></div>
+          <div class="gl-row"><div class="gl-feature-name">Products &amp; services you can list</div><div>Up to 3 (90-day trial), then 1</div><div class="gl-col-highlight">6</div><div>12</div><div>24</div><div>Unlimited</div></div>
+          <div class="gl-row"><div class="gl-feature-name">Business category</div><div><i class="fa-solid fa-check"></i></div><div class="gl-col-highlight"><i class="fa-solid fa-check"></i></div><div>Same for all branches</div><div>Same for all branches</div><div>Same for all branches</div></div>
+          <div class="gl-row"><div class="gl-feature-name">Mini web page for goods &amp; services</div><div><i class="fa-solid fa-check"></i></div><div class="gl-col-highlight"><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div></div>
+          <div class="gl-row"><div class="gl-feature-name">Business description</div><div>100 words</div><div class="gl-col-highlight">150 words</div><div>300 words</div><div>500 words</div><div>650 words</div></div>
+          <div class="gl-row"><div class="gl-feature-name">Update profile anytime</div><div><i class="fa-solid fa-check"></i></div><div class="gl-col-highlight"><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div></div>
+          <div class="gl-row"><div class="gl-feature-name">Logo &amp; cover image</div><div><i class="fa-solid fa-check"></i></div><div class="gl-col-highlight"><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div></div>
+          <div class="gl-row"><div class="gl-feature-name">Business video</div><div><i class="fa-solid fa-xmark"></i></div><div class="gl-col-highlight"><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div></div>
+          <div class="gl-row"><div class="gl-feature-name">Video duration</div><div>&mdash;</div><div class="gl-col-highlight">30 sec</div><div>60 sec</div><div>90 sec</div><div>120 sec</div></div>
+          <div class="gl-row"><div class="gl-feature-name">Social media handles</div><div><i class="fa-solid fa-xmark"></i></div><div class="gl-col-highlight">2</div><div>3</div><div>5</div><div>Unlimited</div></div>
+          <div class="gl-row"><div class="gl-feature-name">Google Business Profile setup help</div><div><i class="fa-solid fa-xmark"></i></div><div class="gl-col-highlight"><i class="fa-solid fa-xmark"></i></div><div><i class="fa-solid fa-xmark"></i></div><div>1 profile, all branches</div><div>1 profile, all branches</div></div>
+          <div class="gl-row"><div class="gl-feature-name">Google Map &amp; Directions</div><div><i class="fa-solid fa-check"></i></div><div class="gl-col-highlight"><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div></div>
+          <div class="gl-row"><div class="gl-feature-name">Photo gallery</div><div>1 image</div><div class="gl-col-highlight">6 images</div><div>12 images</div><div>24 images</div><div>Custom</div></div>
+          <div class="gl-row"><div class="gl-feature-name">Support level</div><div>Standard</div><div class="gl-col-highlight">Standard</div><div>Priority</div><div>Priority+</div><div>Dedicated</div></div>
+          <div class="gl-row"><div class="gl-feature-name">Eligible for verification badge</div><div><i class="fa-solid fa-check"></i></div><div class="gl-col-highlight"><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div></div>
+          <div class="gl-row"><div class="gl-feature-name">Registered &amp; unregistered businesses welcome</div><div><i class="fa-solid fa-check"></i></div><div class="gl-col-highlight"><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div></div>
+          <div class="gl-row"><div class="gl-feature-name">Close your account anytime in your dashboard</div><div><i class="fa-solid fa-check"></i></div><div class="gl-col-highlight"><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div><div><i class="fa-solid fa-check"></i></div></div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="footer-content">
+    <a href="terms">Terms</a>
+    <a href="privacy">Privacy</a>
+    <a href="disclaimer">Disclaimer</a>
+    <p>&copy; 2026 Spotlight Digital Services Ltd. All Rights Reserved</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="script2.js"></script>
+<script src="getlisted.js"></script>
+
+</body>
 </html>
