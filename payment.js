@@ -29,6 +29,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     .eq("auth_user_id", user.id)
     .maybeSingle();
 
+  // Check this BEFORE anything below tries to read vendor.plan_tier —
+  // a vendor row can genuinely not exist yet (e.g. signup completed
+  // but business profile setup was never finished), and reading a
+  // property off null here would crash the whole script silently,
+  // before any payment button click handlers get attached.
+  if (!vendor) {
+    window.location.replace(
+  "vendordashboard"
+);
+    return;
+  }
+
     const billingType = vendor?.billing_cycle || "monthly";
 
     const selectedPlan =
@@ -45,13 +57,6 @@ if (planSummaryEl && vendor) {
   planSummaryEl.textContent =
     `You selected the ${effectivePlan.toUpperCase()} plan.`;
 }
-
-  if (!vendor) {
-    window.location.replace(
-  "vendordashboard"
-);
-    return;
-  }
 
 const upgradingFromFree =
   vendor.plan_tier === "free" &&
@@ -260,9 +265,48 @@ async function verifyPayment(reference) {
     );
 
     if (error) {
-      alert("Payment verification failed.");
+
+      // The webhook (paystack-webhook) is the PRIMARY activation path
+      // — this client-side verify call is really just a UX nicety for
+      // showing the success screen a little faster. If this call
+      // fails for a network reason, check the vendor's actual current
+      // status before showing a scary "payment failed" message that
+      // may not even be true.
+      const { data: refreshedVendor } = await supabase
+        .from("vendors")
+        .select("subscription_status, plan_tier")
+        .eq("id", vendor.id)
+        .maybeSingle();
+
+      if (
+        refreshedVendor?.subscription_status === "active" &&
+        refreshedVendor?.plan_tier === effectivePlan
+      ) {
+        // The webhook already activated the plan successfully —
+        // this was a false alarm, not a real failure.
+        showPaymentSuccessScreen();
+        return;
+      }
+
+      alert(
+        "We couldn't confirm your payment right away. If money was deducted, your account will update automatically within a few minutes once our system receives confirmation. Please check your dashboard shortly."
+      );
+
+      window.location.replace("vendordashboard");
+
       return;
     }
+
+    showPaymentSuccessScreen();
+
+  } catch (err) {
+    console.error("Unexpected verification error:", err);
+    alert("Payment verification failed. Please contact support.");
+  }
+
+}
+
+function showPaymentSuccessScreen() {
 
      // Show inline success state
 document.body.innerHTML = `
@@ -298,11 +342,6 @@ setTimeout(() => {
   "vendordashboard"
 );
 }, 2500);
-
-  } catch (err) {
-    console.error("Unexpected verification error:", err);
-    alert("Payment verification failed. Please contact support.");
-  }
 
 }
 

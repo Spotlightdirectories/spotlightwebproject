@@ -4,30 +4,31 @@
 
 ## FROM PHASE 1
 
-### Rec 1.2 — Review submission policy (Phase 4 trigger)
+### Rec 1.2 — Review submission policy (Block 6 trigger)
 Reviews currently accept submissions without login (Option A interim).
-When visitor authentication is built in Phase 4, upgrade the
-vendor_reviews INSERT policy to require a visitor account login.
-DO NOT forget this — it is a security gap that is intentionally
-deferred only until Phase 4.
+When visitor authentication is built (Block 6, item 24), upgrade the
+vendor_reviews INSERT policy to require a visitor account login
+(Block 6, item 25). DO NOT forget this — it is a security gap that is
+intentionally deferred only until then.
 
-### Rec 1.8 — OTP-based email change flow
-Current double-link confirmation flow works but is clunky. Vendors
-must confirm from two separate email inboxes. Replace with a cleaner
-OTP (one-time code) sent to the new email address. Vendor enters code
-in the dashboard. One step, one inbox.
-Requires: custom OTP generation, Resend integration, vendor table sync.
+NOTE (July 2026): "Phase 4" as a separate future phase has been
+retired. Everything originally slated for it is now folded into
+Blocks 5–6 of this same Phase 3 roadmap. Block 7 (Next.js migration)
+is the definitive end of this roadmap — see the master checklist below.
 
-### Rec 1.8 — Fix Resend shared click tracking subdomain
-Resend currently uses a shared tracking domain for click tracking.
-Set up a custom subdomain (e.g. track.spotlightdirectories.com) to
-improve email deliverability and brand consistency.
+### Rec 1.8 — OTP-based email change flow ✅ DONE (Block 4, item 19)
+Built as a single-verification flow: one 6-digit code sent only to the
+new email address. (Originally scoped as two-sided confirmation to both
+old and new email; simplified per Cyril's explicit correction during
+Block 4 — see master checklist for full detail.)
 
-### Rec 1.5 — Admin staff onboarding flow
-Admin staff currently must sign up as a vendor first, then be assigned
-a role via the Admin Staff Management section. Build a dedicated admin
-signup path that creates an auth user without inserting a vendor row.
-Route directly to admin login after account creation.
+### Rec 1.8 — Fix Resend shared click tracking subdomain ✅ DONE (Block 3)
+track.mail.spotlightdirectories.com verified and live.
+
+### Rec 1.5 — Admin staff onboarding flow ✅ DONE (Block 4, item 18)
+Built as a full invitation system, not just a signup page — see master
+checklist for full detail (invitations, claim-on-login, revoke with
+account cleanup, permanent audit log).
 
 ---
 
@@ -38,10 +39,13 @@ Route directly to admin login after account creation.
 - style2.css serves homepage only (hero, benefits, footer)
 - Both loaded together on most pages even when only parts are needed
 
-Phase 3 action:
-Merge into a single main.css using CSS custom properties for tokens.
-Update every HTML page to load main.css only.
-Delete both originals after migration is confirmed working.
+Block 7 action (confirmed with Cyril — do this AS PART OF the Next.js
+migration itself, not as a preceding step; Next.js has its own styling
+conventions, e.g. a global stylesheet plus component-scoped styles —
+merging into a literal single main.css first would likely get redone
+once the migration's real structure is known):
+Organise styles properly using Next.js's own conventions during item 27.
+Delete both originals once the migration is confirmed working.
 
 ### Script files
 - script.js: contact form, feedback form, billing toggle, FAQ accordion,
@@ -53,162 +57,86 @@ Known overlap: both files contain auth nav logic using different element
 IDs. Pages loading both run two auth listeners simultaneously. Harmless
 but redundant.
 
-Phase 3 action:
-1. Pick one auth nav pattern — authBtn is the newer preferred one
-2. Update all HTML pages to use that single pattern
-3. Merge all logic into a single main.js organised by feature module
-4. Update all HTML pages to load main.js only
-5. Delete both originals after migration is confirmed working
+Block 7 action (same reasoning as CSS above):
+Fold this logic into React components/hooks as part of item 27, rather
+than merging into a single main.js beforehand.
 
 ---
 
 ## FROM PHASE 2 — 2.3 Table Naming Consistency
 
-### vendorpayments → vendor_payments
-Every other table uses the vendor_ prefix but vendorpayments breaks it.
+### vendorpayments → vendor_payments ✅ DONE (Block 1)
 
-Files that reference vendorpayments:
-- admin/admin-payments.js (multiple queries)
-- payment.js
-- vendordashboard.js
-- Supabase Edge Functions
-
-Phase 3 SQL:
-  ALTER TABLE public.vendorpayments RENAME TO vendor_payments;
-
-Then global find-and-replace vendorpayments → vendor_payments across
-the entire project. Test all payment flows before deploying.
-
-### File renames (do at rebuild time)
+### File renames ✅ DONE (Block 1)
 - discover-results2.html/js/css → discover-results.html/js/css
 - insight-dynamic.js → insight.js
-- style.css + style2.css → main.css
-- script.js + script2.js → main.js
+
+### File renames still pending (Block 7, see above)
+- style.css + style2.css → (organised per Next.js conventions)
+- script.js + script2.js → (organised per Next.js conventions)
 
 ---
 
 ## FROM PHASE 2 — 2.6 Image Upload Routine
 
-### Consolidate duplicate image upload handlers in vendordashboard.js
-The same 40-line upload routine (size check, type check, resolution
-check, Supabase upload, get public URL) is copied five times inside
-vendordashboard.js — once each for: primary product image, secondary
-product image, tertiary product image, primary service image, and
-secondary service image.
-
-If the max file size, allowed types, or minimum resolution ever needs
-changing, it must be updated in five separate places — high risk of
-missing one.
-
-Phase 3 action:
-Extract into a single reusable function during the dashboard rebuild:
-
-  async function uploadVendorImage(file, folder) {
-    // validate size, type, resolution
-    // upload to vendor-gallery/{vendor.id}/{folder}/
-    // return public URL
-  }
-
-Then call uploadVendorImage(file, 'products') and
-uploadVendorImage(file, 'services') from each handler.
-Delete all five duplicate blocks after migration is confirmed.
+### Consolidate duplicate image upload handlers ✅ DONE (Block 4, item 16)
+Built as a shared `uploadVendorFile(file, category)` helper in the new
+`upload-utils.js`, calling the `validate-upload` Edge Function for
+server-side validation/resize — not a client-side-only function as
+originally sketched here. Wired into all five former duplicate
+handlers in vendordashboard.js, plus vendor-profile.js (gallery/cover/
+logo), verify-badge.js, and payment.js. See master checklist for detail.
 
 ---
 
 ## FROM PHASE 2 — 2.4 Business Rules
 
-### Image file type and size validation (storage level)
-Browser currently validates file types (JPG/PNG/WEBP), max size (2MB),
-and min resolution (800x800px). These checks exist only in the browser.
-A vendor using technical tools could bypass them.
+### Image file type and size validation (storage level) ✅ DONE (Block 4, items 15/15b)
+Built as the `validate-upload` Edge Function (server-side magic-byte
+type detection, size/resolution checks, resize + re-encode) AND locked
+the storage buckets themselves to service-role-only writes, so the
+Edge Function can no longer be bypassed by calling storage directly.
+See master checklist for full detail, including bugs found and fixed
+during real testing.
 
-Phase 3 action:
-Build a Supabase Edge Function to validate file type and size
-server-side before writing to storage. Wire into the upload flow in
-vendordashboard.js, vendor-product.js, and vendor-service.js.
-
-### Browser-side plan limit display constants
-vendordashboard.js contains hardcoded PRODUCT_LIMITS and SERVICE_LIMITS
-for UI display only. Actual enforcement is already on the server via RLS.
-
-Phase 3 action:
-Replace hardcoded constants with a server fetch from
-get_vendor_plan_limits() so UI always reflects server truth.
+### Browser-side plan limit display constants — PARTIALLY DONE
+Real enforcement now lives server-side via RLS policies and
+`get_vendor_plan_limits()` (Block 4, item 17) — this is the part that
+actually matters for security, and it's done. The client-side DISPLAY
+constants (PRODUCT_LIMITS, SERVICE_LIMITS, etc., used only for "your
+plan allows X" text) are still hardcoded rather than fetched live.
+Low priority, cosmetic only — candidate for Block 5 cleanup if time
+allows, not blocking anything.
 
 ---
 
 ## FROM PHASE 2 — 2.4 Email Infrastructure
 
-### Email notifications — full inventory and Phase 3 plan
-
-**Currently live via Resend (6 emails):**
-1. Payment approved — sent when admin approves a bank transfer
-   Gap: does not include SPOT ID, plan name, or expiry date. Improve in Phase 3.
-2. Payment rejected — sent with rejection reason
-3. Badge verification approved — sent with badge type confirmed
-4. Badge verification rejected — sent with instruction to resubmit
-5. Partner application approved — sent with referral code, vendor link,
-   partner link, and induction link
-6. Partner application rejected — sent with rejection reason
-
-**Currently live via Supabase (3 emails, automatic):**
-7. Email confirmation on signup
-8. Password reset
-9. Email change confirmation (sent to both old and new email)
-
-**To be added in Phase 3 (4 new emails via Resend):**
-10. Welcome email on signup — sent immediately after vendor account is
-    created. Include: SPOT ID, plan name, login link, getting started guide.
-11. Trial expiry warning — sent 7 days before the 90-day free trial ends.
-    Include: days remaining, upgrade CTA with link to getlisted page.
-12. Subscription expiry warning — sent before a paid plan expires.
-    Include: expiry date, renewal CTA with link to getlisted page.
-13. Badge verification submitted acknowledgement — sent when a vendor
-    submits documents. Confirm receipt and that review is in progress.
-
-**Total after Phase 3: 13 emails**
-
-**All Phase 3 emails via the send-email Edge Function from
-onboarding@mail.spotlightdirectories.com using Resend.**
-
-All 13 emails to be rebuilt with branded yellow/black HTML templates
-including the Spotlight logo. Plain text fallback for each.
-
-Emails 11 and 12 (trial and subscription warnings) require a scheduled
-job or cron function to check expiry dates daily and send at the right
-time. Build this as a Supabase Edge Function triggered by pg_cron.
+### Email notifications — full inventory ✅ DONE (Block 3)
+17 branded templates now live via Resend. See Block 3 detail in master
+checklist below. Emails 12–13 (trial/subscription expiry warnings)
+built and deployed but not yet tested end-to-end — scheduled to test
+after Block 6, per master checklist.
 
 ---
 
 ## GENERAL PHASE 3
 
-### Framework migration
+### Framework migration — Block 7 (last)
 Migrate from vanilla HTML/JS/CSS to Next.js.
-Reason: component reuse, server-side rendering, proper routing, easier
-maintenance, and better foundation for Claude API integration.
 
-### Design system
-Build unified design tokens, component library, and typography system.
-Brand colours: deep yellow #e6c200 and chalk coal black #000000.
+### Design system ✅ DONE (Block 2)
+Design tokens (colours, spacing, typography, shadows, z-index, and
+light/dark mode token pairs) built in theme.css. Dark mode TOGGLE
+mechanism (the actual switch + JS wiring) still pending — scheduled
+for Block 5.
 
-### Page rebuilds
-- Landing page (index.html) — world-class SaaS standard
-- GetListed page — including plan comparison table
-- Partner program page — harmonise with brand
-- Insight dashboard — consolidate insight-dynamic.js into one
-  world-class rebuilt dashboard with real data throughout
+### Page rebuilds — Block 5 (see master checklist for full, current list)
 
-### Claude API integration
-Roadmap for Claude API as internal platform engine:
-- AI assistant for visitors (help find vendors)
-- AI assistant for vendors (write product/service descriptions,
-  image guidance matched to business type)
-- AI assistant for admin (flag suspicious activity)
+### Claude API integration — Block 6
 
-### Visitor authentication (Phase 4 prerequisite)
-Build visitor account system before Phase 4 begins.
-After this is live, upgrade the vendor_reviews INSERT policy to
-require visitor login before submitting a review.
+### Visitor authentication — Block 6 (item 24)
+See Rec 1.2 above for the follow-on reviews policy change (item 25).
 
 ---
 
@@ -221,9 +149,9 @@ require visitor login before submitting a review.
 - [x] 4.  Pick single auth nav pattern (authBtn) and update all HTML pages
 
 ### Block 2 — Design system ✅ COMPLETE
-- [x] 5.  Build unified design tokens (colours, spacing, typography)
-- [ ] 6.  Merge style.css + style2.css → main.css *(deferred to Block 7 — Next.js migration)*
-- [ ] 7.  Merge script.js + script2.js → main.js *(deferred to Block 7 — Next.js migration)*
+- [x] 5.  Build unified design tokens (colours, spacing, typography, light/dark mode tokens)
+- [ ] 6.  Merge style.css + style2.css → organised Next.js structure *(Block 7, as part of the migration itself)*
+- [ ] 7.  Merge script.js + script2.js → organised Next.js structure *(Block 7, as part of the migration itself)*
 
 ### Block 3 — Email infrastructure ✅ COMPLETE
 - [x] 8.  Rebuild all 6 existing Resend emails with branded yellow/black HTML templates
@@ -261,44 +189,130 @@ Confirm email arrives before Next.js migration.
 - [x] Add Revoked status to verification history filter and table
 - [x] Dev reset scripts: dev-reset-vendor.sql and dev-reset-partner.sql
 
-### Block 4 — Backend hardening
-- [x] 15. Build image validation Edge Function for storage uploads (validate-upload deployed)
-      - [ ] 15b. IMPORTANT — Storage bucket RLS policies must be updated to reject
-            direct client-side uploads to vendor-gallery, vendor-branding,
-            vendor-verifications, and payment-receipts buckets, allowing writes
-            only via the service role (i.e. only through validate-upload). Without
-            this, a technically determined user can bypass validate-upload entirely
-            by calling Supabase storage directly with their own session, even after
-            item 17 wires the site to use the function. Do this alongside or
-            immediately after item 17 — do not consider upload validation complete
-            until this is done.
-- [ ] 16. Replace browser plan limit constants with server fetch
-- [ ] 17. Consolidate 5 duplicate image upload handlers into single uploadVendorImage() function
-- [ ] 18. Build admin staff onboarding flow (no vendor profile created)
-- [ ] 19. Build OTP-based email change flow
+### Block 4 — Backend hardening ✅ COMPLETE (July 2026)
+
+- [x] 15. Build image validation Edge Function (`validate-upload`) — JWT-verified vendor
+      ownership lookup, magic-byte real file type detection, size/resolution checks,
+      resize + JPEG re-encode, PDF passthrough. Graceful fallback added for images this
+      lightweight decoder can't parse (common with some Canva exports) — accepted as-is
+      for categories with no minimum resolution requirement, still rejected where
+      resolution must be verified (product/service images).
+- [x] 15b. Storage bucket RLS lockdown — removed every permissive client-facing
+      INSERT/UPDATE policy on vendor-gallery, vendor-branding, vendor-verifications,
+      and payment-receipts (some had effectively no protection at all, e.g. `WITH CHECK
+      (bucket_id = 'x' AND true)`). Now only the service role (used internally by
+      validate-upload) can write. vendor-videos deliberately left untouched — video was
+      never routed through validate-upload. Migration:
+      20260711_lock_storage_buckets_service_role_only.sql
+- [x] 16. Consolidated all 7 duplicate upload handlers (5 in vendordashboard.js, plus
+      vendor-profile.js cover/logo, verify-badge.js, payment.js) into one shared
+      `uploadVendorFile(file, category)` helper in upload-utils.js, calling validate-upload.
+- [x] 17. Server-side plan limits — extended `get_vendor_plan_limits()` to cover
+      products/services/social links/branches/gallery/video; fixed two pre-existing bugs
+      (Custom tier was capped at 1; trial check used the wrong date field). Fixed the
+      vendor_media ownership gap (previously anyone could insert media under any
+      vendor_id). Fixed an infinite recursion bug found via live testing (Postgres
+      42P17) affecting all five limit-checking policies — each now uses a small
+      counting function instead of a self-referential subquery. Fixed two bugs in
+      dashboard-branches.js (wrong branch limit numbers; a plan-limit check that
+      incorrectly blocked editing existing branches). Fixed a missing `vendor_name`
+      field that made saving a NEW product always fail — pre-existing bug, never
+      previously exercised end-to-end.
+- [x] 18. Admin staff onboarding — built as a full invitation system: a super_admin
+      invites by email + role, the invited person signs up at a dedicated
+      admin-signup.html (creates no vendor row), and their role is claimed
+      automatically on first login. Revoking an invitation or an active admin's role
+      now also cleans up any orphaned auth account tied to it, when safe to do so
+      (never touches an account that has a real vendor profile or is already an
+      active admin). Added a permanent, append-only audit log
+      (admin_audit_log — invited/assigned/claimed/revoked, never editable or
+      deletable through the app) and fixed a pre-existing gap where a super_admin
+      could never see anyone else's role (only their own).
+- [x] 19. OTP-based email change — single verification, one code sent only to the
+      new email address (redesigned from an initial two-sided draft per Cyril's
+      correction). Applies the change directly via the Admin API to both the login
+      email and the vendor profile at once, bypassing Supabase's own unreliable
+      built-in email confirmation system entirely.
+
+Additional real bugs found and fixed via live testing during Block 4
+(none of these were part of the original plan — all surfaced only once
+actual end-to-end testing began):
+- [x] Cover image upload failing on legitimate Canva exports — added graceful decode fallback
+- [x] Uploaded images with transparency turning solid black instead of white after resize/JPEG conversion
+- [x] Session-hijack bug: creating a new admin account in the same browser silently
+      logged the browser into that new account, invalidating whoever was already
+      logged in as a different admin — fixed with fully isolated signup-page session storage
+- [x] payment.js crashing silently (breaking ALL payment buttons) when a vendor row
+      doesn't exist yet — null check was present but placed after the crash, not before it
+- [x] Paystack "payment verification failed" false alarm — the webhook (the real,
+      authoritative activation path) was succeeding, but a secondary, less important
+      client-side confirmation call was failing for an unrelated network reason and
+      showing a scary, inaccurate error. Fixed to check the vendor's real status
+      before ever showing a failure message.
+- [x] "Manage Branches" showing for Standard plans (which don't allow branches at all)
+- [x] Confirmed products/services/social-links/branches/cover/logo/video all working
+      end-to-end via real, live testing (not just code review)
+
+Migrations from Block 4:
+- 20260710_extend_plan_limits_and_fix_bugs.sql
+- 20260710_admin_staff_invitations.sql
+- 20260710_staff_visibility_and_audit_log.sql
+- 20260710_fix_audit_log_actor_fk.sql
+- 20260710_email_change_otp.sql
+- 20260711_lock_storage_buckets_service_role_only.sql
+- 20260711_fix_plan_limit_infinite_recursion.sql
 
 ### Block 5 — Page rebuilds
 - [ ] 20. Rebuild landing page to world-class SaaS standard
-- [ ] 21. Rebuild GetListed page and plan comparison page
+- [ ] 21. Rebuild GetListed page and plan comparison page — fold in displaying
+          product/service limits and the 90-day trial publicly (currently missing)
 - [ ] 22. Harmonise partner program page with brand — including world-class
           marketing assets for partners (referral toolkit, brand guide,
           earning calculator, onboarding guide, promotional materials)
-- [ ] 23. Consolidate insight dashboards into one rebuilt dashboard
+- [ ] 23. Consolidate insight dashboards into one rebuilt dashboard — fold in
+          building the sponsorship feature for real (currently hardcoded, no logic)
+- [ ] Build the light/dark mode toggle (tokens already exist in theme.css from
+      Block 2 — this is the actual switch + JS wiring, applied across all rebuilt pages)
+- [ ] Subscription module fixes: Manage Payment Method button not functional;
+      Manage Branches button not functional (separate from the plan-visibility fix
+      already done in Block 4 — this is about the button's own action); billing
+      history showing old confirmed payments even when vendor is on free plan;
+      next payment amount/billing date display logic needs review
+
+### Block 5 — Location-aware search & branch architecture (added July 2026)
+Confirmed as a real, previously-unintentional gap: branches were built only to be
+listed on a vendor's own profile page, never as independently discoverable/searchable
+entities — despite genuinely having their own location and contact details. Also
+found while investigating this: the "search near me" distance toggle exists in the
+discover.html UI and captures GPS coordinates, but is never actually applied in any
+search query, for any result type (vendor, product, or service) — a real gap
+affecting the whole platform, not just branches, and a stated major selling point
+for the platform.
+- [ ] Add `state` and `lga` columns to the `branches` table + the branch form in
+      dashboard-branches.js (not all branches share the parent's state/lga)
+- [ ] Build real distance-based ("near me") search — currently non-functional for
+      all search types
+- [ ] Build `searchBranches()` in discover-results.js, following the same pattern
+      as the existing searchProducts()/searchServices() — each branch becomes its
+      own searchable result, inheriting name/category/subcategory/verification/
+      rating/logo/cover/about/social links/hours from its parent vendor, using its
+      own address/phone/WhatsApp/coordinates/state/lga
+- [ ] Build a swappable branch view in vendor-profile.html (not a separate page) —
+      when a branch's "View Profile" is clicked from search, the same profile page
+      renders with that branch's own contact details, WhatsApp/Call/Directions
+      buttons, and location swapped in, while everything else (identity, verification,
+      about, hours, socials) stays inherited from the parent vendor
 
 ### Block 6 — Advanced features
 - [ ] 24. Build visitor authentication system
 - [ ] 25. Upgrade vendor_reviews INSERT policy after visitor auth is live
 - [ ] 26. Build Claude API integration — first features (vendor description assistant,
           visitor search assistant, admin anomaly flagging)
+- [ ] Test emails 12–13 (trial/subscription expiry warnings) end-to-end using
+      dev-reset-vendor.sql, before Block 7 begins
 
 ### Block 7 — Framework migration (absolutely last)
-- [ ] 27. Migrate entire platform to Next.js framework
-          (all features confirmed working in vanilla before this step)
-
-### Post-Block 3 items noted for attention
-- [ ] Subscription module hardening:
-      (a) Manage Payment Method button not yet functional
-      (b) Manage Branches button not yet functional
-      (c) Billing history showing old confirmed payments even when vendor
-          was on free plan — subscription logic inconsistency to investigate
-      (d) Next payment amount and billing date display logic needs review
+- [ ] 27. Migrate entire platform to Next.js framework (all features confirmed
+          working in vanilla before this step). CSS/JS consolidation (items 6/7)
+          happens AS PART OF this migration, organised using Next.js's own
+          conventions — not as a separate preceding step.

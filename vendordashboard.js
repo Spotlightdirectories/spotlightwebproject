@@ -990,9 +990,29 @@ function renderPendingProducts() {
         "vd-service-pill";
 
       item.innerHTML = `
-        <span>
-          ${product.product_name}
-        </span>
+        <img
+          class="vd-service-image"
+          src="${product.primary_image_url || 'images/placeholder.png'}"
+          alt="${product.product_name}"
+        >
+
+        <div class="vd-service-content">
+
+          <div class="vd-service-name">
+            ${product.product_name}
+          </div>
+
+          ${
+            product.short_description
+              ? `<div class="vd-service-description">${product.short_description}</div>`
+              : ""
+          }
+
+          <div class="vd-product-price">
+            ₦${Number(product.price).toLocaleString()}
+          </div>
+
+        </div>
 
         <button
           type="button"
@@ -1699,6 +1719,9 @@ const payload =
 
       vendor_id:
         vendor.id,
+
+      vendor_name:
+        vendor.name,
 
       product_name:
         product.product_name,
@@ -3482,17 +3505,19 @@ if (subscriptionAmount) {
 
 if (manageBranchesBtn) {
 
+  const branchAllowedPlans = ["enterprise", "elite", "custom"];
+
   if (
-    vendor.plan_tier === "free"
+    branchAllowedPlans.includes(vendor.plan_tier)
   ) {
 
-    manageBranchesBtn.classList.add(
+    manageBranchesBtn.classList.remove(
       "hidden"
     );
 
   } else {
 
-    manageBranchesBtn.classList.remove(
+    manageBranchesBtn.classList.add(
       "hidden"
     );
 

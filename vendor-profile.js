@@ -18,14 +18,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ===============================
   // PLAN CAPABILITIES
   // ===============================
-  const TIER_CAPABILITIES = {
-    free: { media: true },
-    standard: { media: true },
-    enterprise: { media: true },
-    elite: { media: true },
-    custom: { media: true }
-  };
-
   const SOCIAL_LIMITS = {
     free: 1,
     standard: 2,
@@ -156,40 +148,24 @@ if (vendor.plan_tier === "free" && vendor.trial_started_at) {
 // EFFECTIVE LIMITS (PLAN + TRIAL)
 // ===============================
 let effectiveSocialLimit = 0;
-let effectiveGalleryLimit = 0;
 
 if (vendor.plan_tier === "free") {
 
   if (trial_active) {
     effectiveSocialLimit = 1;
-    effectiveGalleryLimit = 3;
   } else if (trial_expired) {
     effectiveSocialLimit = 0;
-    effectiveGalleryLimit = 1;
   } else {
     // No trial record on file — treat as permanent Free baseline
     effectiveSocialLimit = 0;
-    effectiveGalleryLimit = 1;
   }
 
 } else {
   effectiveSocialLimit = SOCIAL_LIMITS[vendor.plan_tier] ?? 0;
-
-  const GALLERY_LIMITS = {
-    free: 3,
-    standard: 6,
-    enterprise: 12,
-    elite: 24,
-    custom: Infinity
-  };
-
-  effectiveGalleryLimit = GALLERY_LIMITS[vendor.plan_tier] ?? 0;
 }
 
       const isFree = vendor.plan_tier === "free";
       const isPaid = !isFree;
-
-      const galleryInput = document.getElementById("galleryInput");
 
       const videoInput = document.getElementById("videoInput");
       const videoPlayer = document.getElementById("vendorVideo");
@@ -214,96 +190,6 @@ if (videoNote) {
       "Video upload not available on this plan.";
 
   }
-
-}
-
-if (galleryInput) {
-
-galleryInput.addEventListener("change", async (e) => {
-
-const file = e.target.files[0];
-if (!file) return;
-
-// ===============================
-// ENFORCE GALLERY LIMIT
-// ===============================
-const limit = effectiveGalleryLimit;
-
-const { data: existingImages } = await supabase
-  .from("vendor_media")
-  .select("id")
-  .eq("vendor_id", vendor.id)
-  .eq("media_type", "image");
-
-if (existingImages && existingImages.length >= limit) {
-  alert("You have reached the maximum number of images allowed for your plan.");
-  return;
-}
-
-// ===============================
-// INSTANT PREVIEW (UX IMPROVEMENT)
-// ===============================
-const previewUrl = URL.createObjectURL(file);
-
-const grid = document.getElementById("galleryGrid");
-if (grid) {
-  const previewItem = document.createElement("div");
-  previewItem.className = "gallery-item";
-
-  const previewImg = document.createElement("img");
-  previewImg.src = previewUrl;
-  previewImg.style.opacity = "0.5";
-
-  previewItem.appendChild(previewImg);
-  grid.prepend(previewItem);
-}
-
-// ===============================
-// VALIDATE + RESIZE + UPLOAD (server-side)
-// ===============================
-let uploadResult;
-
-try {
-  uploadResult = await uploadVendorFile(file, "gallery");
-} catch (err) {
-  console.error("Upload error:", err.message);
-  alert(err.message || "Upload failed.");
-  if (grid && grid.firstChild) {
-    grid.removeChild(grid.firstChild);
-  }
-  return;
-}
-
-    // save record in vendor_media
-        // GET CURRENT MAX ORDER
-const { data: existing } = await supabase
-  .from("vendor_media")
-  .select("display_order")
-  .eq("vendor_id", vendor.id)
-  .order("display_order", { ascending: false })
-  .limit(1);
-
-const nextOrder = existing && existing.length > 0
-  ? existing[0].display_order + 1
-  : 1;
-
-const { error: dbError } = await supabase
-  .from("vendor_media")
-  .insert({
-    vendor_id: vendor.id,
-    media_type: "image",
-    file_url: uploadResult.publicUrl,
-    display_order: nextOrder
-  });
-
-    if (dbError) {
-      console.error("DB error:", dbError.message);
-      return;
-    }
-
-    await loadGallery();
-
-  });
 
 }
 
@@ -434,21 +320,10 @@ videoInput.disabled = false;
 
 }
 
-      const galleryUploader = document.getElementById("galleryUploader");
-
-      
-     if (galleryUploader && isOwner && TIER_CAPABILITIES[vendor.plan_tier].media) {
-        galleryUploader.classList.remove("hidden");
-    }
-
     const videoLimits = VIDEO_LIMITS[vendor.plan_tier];
 
     if (videoUploader && isOwner && videoLimits.allowed) {
       videoUploader.classList.remove("hidden");
-    }
-
-     if (isFree && galleryInput) {
-     galleryInput.disabled = false;
     }
 
     // -------------------------------
@@ -2443,6 +2318,7 @@ if (socialLimit === 0) {
     try {
       uploadResult = await uploadVendorFile(file, "cover");
     } catch (err) {
+      console.error("Cover Upload Error:", err.message);
       alert(err.message || "Cover upload failed.");
       coverInput.value = "";
       return;
