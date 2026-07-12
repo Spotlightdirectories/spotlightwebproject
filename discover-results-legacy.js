@@ -155,7 +155,7 @@ function activateSearchTab() {
 
   const tabs =
     document.querySelectorAll(
-      ".discover-results-tab"
+      ".discover-results2-tab"
     );
 
   tabs.forEach((tab) => {
@@ -169,7 +169,7 @@ function activateSearchTab() {
   const activeTab =
     document.querySelector(
 
-      '.discover-results-tab[data-type="' +
+      '.discover-results2-tab[data-type="' +
       discoverResultsState.searchType +
       '"]'
 
@@ -814,9 +814,11 @@ updateSearchSummary(
 
 );
 
-renderSponsoredFeed(
-  sponsoredFeed
-);
+// renderSponsoredFeed(
+//   buildSponsoredFeed(
+//     displayResults
+//   )
+// );
 
 renderProductCards(
 
@@ -1044,7 +1046,7 @@ function applySearchTypeVisibility(
     default:
 
       sponsoredSection.style.display =
-        "block";
+        "none";
 
       productsSection.style.display =
         "block";
@@ -1185,7 +1187,7 @@ if (
 
 <article
 
-class="discover-results-vendor-card"
+class="discover-results2-vendor-card"
 
 data-slug="${vendor.slug}"
 
@@ -1193,7 +1195,7 @@ data-vendor-id="${vendor.id}"
 
 >
 
-<div class="discover-results-vendor-left">
+<div class="discover-results2-vendor-left">
 
 <img
 
@@ -1201,7 +1203,7 @@ src="${vendorLogo}"
 
 alt="${vendor.name}"
 
-class="discover-results-vendor-logo"
+class="discover-results2-vendor-logo"
 
 onerror="
 this.onerror=null;
@@ -1212,11 +1214,11 @@ this.src='images/default-vendor-logo.webp';
 
 </div>
 
-<div class="discover-results-vendor-center">
+<div class="discover-results2-vendor-center">
 
-<div class="discover-results-vendor-title-row">
+<div class="discover-results2-vendor-title-row">
 
-<div class="discover-results-vendor-heading">
+<div class="discover-results2-vendor-heading">
 
 <h3>
 
@@ -1232,7 +1234,7 @@ isVerified
 `
 
 <span
-class="discover-results-badge-wrap"
+class="discover-results2-badge-wrap"
 >
 
 <img
@@ -1250,7 +1252,7 @@ verificationStatus === "gray"
 
 }"
 
-class="discover-results-badge"
+class="discover-results2-badge"
 
 >
 
@@ -1264,7 +1266,7 @@ class="discover-results-badge"
 
 }
 
-<div class="discover-results-rating-wrap">
+<div class="discover-results2-rating-wrap">
 
 <i class="fa-solid fa-star"></i>
 
@@ -1286,13 +1288,13 @@ ${averageRating}
 
 </div>
 
-<p class="discover-results-address">
+<p class="discover-results2-address">
 
 ${vendorAddress}
 
 </p>
 
-<span class="discover-results-category">
+<span class="discover-results2-category">
 
 ${vendor.subcategory ||
 
@@ -1302,11 +1304,11 @@ vendor.category ||
 
 </span>
 
-<div class="discover-results-actions">
+<div class="discover-results2-actions">
 
 <button
 
-class="discover-results-review-btn"
+class="discover-results2-review-btn"
 
 data-vendor-id="${vendor.id}"
 
@@ -1318,7 +1320,7 @@ Leave Review
 
 <button
 
-class="discover-results-profile-btn"
+class="discover-results2-profile-btn"
 
 data-slug="${vendor.slug || ""}"
 
@@ -1352,7 +1354,7 @@ container
 
   .querySelectorAll(
 
-    ".discover-results-profile-btn, .discover-results-review-btn"
+    ".discover-results2-profile-btn, .discover-results2-review-btn"
 
   )
 
@@ -1376,7 +1378,7 @@ container
 
             button.classList.contains(
 
-              "discover-results-profile-btn"
+              "discover-results2-profile-btn"
 
             )
 
@@ -1413,7 +1415,7 @@ container
 
             button.classList.contains(
 
-              "discover-results-review-btn"
+              "discover-results2-review-btn"
 
             )
 
@@ -1573,7 +1575,7 @@ visibleProducts.forEach(
         );
 
       card.className =
-        "discover-results-product-card";
+        "discover-results2-product-card";
 
       card.innerHTML =
 
@@ -1581,19 +1583,19 @@ visibleProducts.forEach(
 
 <img
 src="${product.image}"
-class="discover-results-product-image"
+class="discover-results2-product-image"
 alt="${product.productName}"
 >
 
-<h3 class="discover-results-product-title">
+<h3 class="discover-results2-product-title">
 ${product.productName}
 </h3>
 
-<p class="discover-results-product-price">
+<p class="discover-results2-product-price">
 ₦${Number(product.price || 0).toLocaleString()}
 </p>
 
-<div class="discover-results-product-vendor">
+<div class="discover-results2-product-vendor">
 
 <span>
 By ${product.vendorName}
@@ -1601,15 +1603,15 @@ By ${product.vendorName}
 
 ${
 product.vendorVerification === "blue"
-? `<img src="images/bluebadge.png" class="discover-results-product-badge">`
+? `<img src="images/bluebadge.png" class="discover-results2-product-badge">`
 : product.vendorVerification === "gray"
-? `<img src="images/graybadge.png" class="discover-results-product-badge">`
+? `<img src="images/graybadge.png" class="discover-results2-product-badge">`
 : ""
 }
 
 </div>
 
-<div class="discover-results-product-rating">
+<div class="discover-results2-product-rating">
 
 <i class="fa-solid fa-star"></i>
 
@@ -1625,7 +1627,7 @@ ${Number(product.vendorRating || 0).toFixed(1)}
 
 ${
 product.sponsored
-? `<p class="discover-results-product-sponsored">Sponsored</p>`
+? `<p class="discover-results2-product-sponsored">Sponsored</p>`
 : ""
 }
 
@@ -1829,7 +1831,7 @@ if (
 
 <article
 
-class="discover-results-service-card"
+class="discover-results2-service-card"
 
 data-slug="${service.slug}"
 
@@ -1837,13 +1839,13 @@ data-vendor-id="${service.vendorId}"
 
 >
 
-<div class="discover-results-vendor-left">
+<div class="discover-results2-vendor-left">
 
 <img
 
 src="${vendorLogo}"
 
-class="discover-results-vendor-logo"
+class="discover-results2-vendor-logo"
 
 onerror="
 this.onerror=null;
@@ -1854,11 +1856,11 @@ this.src='images/default-vendor-logo.webp';
 
 </div>
 
-<div class="discover-results-vendor-center">
+<div class="discover-results2-vendor-center">
 
-<div class="discover-results-vendor-title-row">
+<div class="discover-results2-vendor-title-row">
 
-<div class="discover-results-vendor-heading">
+<div class="discover-results2-vendor-heading">
 
 <h3>
 
@@ -1870,9 +1872,9 @@ ${service.serviceName}
 
 </div>
 
-<div class="discover-results-vendor-heading">
+<div class="discover-results2-vendor-heading">
 
-<p class="discover-results-service-vendor">
+<p class="discover-results2-service-vendor">
 
 By:
 
@@ -1888,7 +1890,7 @@ isVerified
 `
 
 <span
-class="discover-results-badge-wrap"
+class="discover-results2-badge-wrap"
 >
 
 <img
@@ -1906,7 +1908,7 @@ verificationStatus === "gray"
 
 }"
 
-class="discover-results-badge"
+class="discover-results2-badge"
 
 >
 
@@ -1920,7 +1922,7 @@ class="discover-results-badge"
 
 }
 
-<div class="discover-results-rating-wrap">
+<div class="discover-results2-rating-wrap">
 
 <i class="fa-solid fa-star"></i>
 
@@ -1945,7 +1947,7 @@ serviceDescription
 
 `
 
-<p class="discover-results-service-description">
+<p class="discover-results2-service-description">
 
 ${serviceDescription}
 
@@ -1961,7 +1963,7 @@ ${serviceDescription}
 
 </div>
 
-<p class="discover-results-address">
+<p class="discover-results2-address">
 
 ${service.vendorLga || ""}
 
@@ -1969,7 +1971,7 @@ ${service.vendorState ? `, ${service.vendorState}` : ""}
 
 </p>
 
-<span class="discover-results-category">
+<span class="discover-results2-category">
 
 ${service.vendorSubcategory ||
 
@@ -1979,11 +1981,11 @@ service.vendorCategory ||
 
 </span>
 
-<div class="discover-results-actions">
+<div class="discover-results2-actions">
 
 <button
 
-class="discover-results-review-btn"
+class="discover-results2-review-btn"
 
 data-vendor-id="${service.vendorId}"
 
@@ -1995,7 +1997,7 @@ Leave Review
 
 <button
 
-class="discover-results-profile-btn"
+class="discover-results2-profile-btn"
 
 data-slug="${service.vendorSlug}"
 
@@ -2029,7 +2031,7 @@ container
 
   .querySelectorAll(
 
-    ".discover-results-profile-btn, .discover-results-review-btn"
+    ".discover-results2-profile-btn, .discover-results2-review-btn"
 
   )
 
@@ -2053,7 +2055,7 @@ container
 
             button.classList.contains(
 
-              "discover-results-profile-btn"
+              "discover-results2-profile-btn"
 
             )
 
@@ -2091,7 +2093,7 @@ container
 
             button.classList.contains(
 
-              "discover-results-review-btn"
+              "discover-results2-review-btn"
 
             )
 
@@ -2131,7 +2133,7 @@ container
 
   .querySelectorAll(
 
-    ".discover-results-service-card"
+    ".discover-results2-service-card"
 
   )
 
@@ -2217,62 +2219,6 @@ function hideLoading() {
 
   loading.style.display =
     "none";
-
-}
-
-// ======================================
-// HAVERSINE DISTANCE (km)
-// ======================================
-
-function haversineDistanceKm(lat1, lon1, lat2, lon2) {
-
-  if (
-    lat1 == null || lon1 == null ||
-    lat2 == null || lon2 == null
-  ) {
-    return null;
-  }
-
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c;
-
-}
-
-function applyDistanceFilter(items, getLat, getLng) {
-
-  if (
-    !discoverResultsState.distanceEnabled ||
-    discoverResultsState.latitude === null ||
-    discoverResultsState.longitude === null
-  ) {
-    return items;
-  }
-
-  return items
-    .map(item => {
-      const distance = haversineDistanceKm(
-        discoverResultsState.latitude,
-        discoverResultsState.longitude,
-        getLat(item),
-        getLng(item)
-      );
-      return { ...item, distanceKm: distance };
-    })
-    .filter(item =>
-      item.distanceKm !== null &&
-      item.distanceKm <= discoverResultsState.radius
-    )
-    .sort((a, b) => a.distanceKm - b.distanceKm);
 
 }
 
@@ -2441,11 +2387,7 @@ async function searchVendors() {
 
   }
 
-  return applyDistanceFilter(
-    data || [],
-    v => v.latitude,
-    v => v.longitude
-  );
+  return data || [];
 
 }
 
@@ -2522,10 +2464,6 @@ function normalizeVendorResults(
 
 // ======================================
 // SEARCH PRODUCTS
-// Now uses the search_products RPC — real
-// server-side filtering (keyword, category,
-// subcategory, state, lga, verified), instead
-// of fetching every product in the database.
 // ======================================
 
 async function searchProducts() {
@@ -2533,38 +2471,191 @@ async function searchProducts() {
   const keyword =
     discoverResultsState.keyword.trim();
 
-  const { data, error } =
-    await window.supabaseClient.rpc(
-      "search_products",
-      {
-        p_keyword: keyword || null,
-        p_category: discoverResultsState.category || null,
-        p_subcategory: discoverResultsState.subcategory || null,
-        p_state: discoverResultsState.state || null,
-        p_lga: discoverResultsState.lga || null,
-        p_verified_only: discoverResultsState.verified
-      }
-    );
+  let query =
+
+    window.supabaseClient
+
+      .from("vendor_products")
+
+      .select(`
+        *,
+        vendors (
+          id,
+          name,
+          category,
+          subcategory,
+          state,
+          lga,
+          verification_status,
+          is_sponsored,
+          average_rating,
+          reviews_count,
+          account_status
+        )
+      `);
+
+  const {
+
+    data,
+
+    error
+
+  } = await query;
 
   if (error) {
 
-    console.error("search_products error:", error);
+    console.error(error);
+
     return [];
 
   }
 
-  return applyDistanceFilter(
-    data || [],
-    p => p.vendor_latitude,
-    p => p.vendor_longitude
-  );
+  let results =
+
+    (data || []).filter((product) => {
+
+      if (
+
+        !product.vendors ||
+
+        product.vendors.account_status !== "active"
+
+      ) {
+
+        return false;
+
+      }
+
+      if (!keyword) {
+
+        return true;
+
+      }
+
+      const text = [
+
+        product.product_name,
+
+        product.short_description,
+
+        product.key_details,
+
+        product.vendors.name,
+
+        product.vendors.category,
+
+        product.vendors.subcategory
+
+      ]
+
+        .join(" ")
+
+        .toLowerCase();
+
+      return text.includes(
+
+        keyword.toLowerCase()
+
+      );
+
+    });
+
+  if (
+
+    discoverResultsState.category
+
+  ) {
+
+    results = results.filter(
+
+      (product) =>
+
+        product.vendors.category ===
+
+        discoverResultsState.category
+
+    );
+
+  }
+
+  if (
+
+    discoverResultsState.subcategory
+
+  ) {
+
+    results = results.filter(
+
+      (product) =>
+
+        product.vendors.subcategory ===
+
+        discoverResultsState.subcategory
+
+    );
+
+  }
+
+  if (
+
+    discoverResultsState.state
+
+  ) {
+
+    results = results.filter(
+
+      (product) =>
+
+        product.vendors.state ===
+
+        discoverResultsState.state
+
+    );
+
+  }
+
+  if (
+
+    discoverResultsState.lga
+
+  ) {
+
+    results = results.filter(
+
+      (product) =>
+
+        product.vendors.lga ===
+
+        discoverResultsState.lga
+
+    );
+
+  }
+
+  if (
+
+    discoverResultsState.verified
+
+  ) {
+
+    results = results.filter(
+
+      (product) =>
+
+        product.vendors.verification_status !==
+
+        "none"
+
+    );
+
+  }
+
+  return results;
 
 }
 
 // ======================================
 // NORMALIZE PRODUCTS
-// Adapted for the flat RPC row shape
-// (vendor_* columns) instead of a nested join.
 // ======================================
 
 function normalizeProductResults(
@@ -2592,55 +2683,60 @@ function normalizeProductResults(
         description:
           product.short_description || "",
 
+        keyDetails:
+          product.key_details || "",
+
         price:
           product.price,
 
         image:
           product.primary_image_url || "",
 
+        secondaryImage:
+          product.secondary_image_url || "",
+
+        tertiaryImage:
+          product.tertiary_image_url || "",
+
         vendorName:
-          product.vendor_name || "",
+          product.vendors.name || "",
 
         vendorCategory:
-          product.vendor_category || "",
+          product.vendors.category || "",
 
         vendorSubcategory:
-          product.vendor_subcategory || "",
+          product.vendors.subcategory || "",
 
         vendorState:
-          product.vendor_state || "",
+          product.vendors.state || "",
 
         vendorLga:
-          product.vendor_lga || "",
+          product.vendors.lga || "",
 
         vendorRating:
           Number(
-            product.vendor_average_rating
+            product.vendors.average_rating
           ) || 0,
 
         vendorReviews:
 
           Number(
-            product.vendor_reviews_count
+            product.vendors.reviews_count
           ) || 0,
 
         vendorVerification:
 
-          product.vendor_verification_status ||
+          product.vendors.verification_status ||
 
           "none",
 
         sponsored:
 
-          product.vendor_is_sponsored,
+          product.vendors.is_sponsored,
 
         vendorSlug:
 
-          product.vendor_slug || "",
-
-        vendorLogo:
-
-          product.vendor_logo_url || "",
+          product.vendors.slug || "",
 
         raw:
           product
@@ -2655,8 +2751,6 @@ function normalizeProductResults(
 
 // ======================================
 // SEARCH SERVICES
-// Now uses the search_services RPC — same
-// real server-side filtering as products.
 // ======================================
 
 async function searchServices() {
@@ -2664,42 +2758,201 @@ async function searchServices() {
   const keyword =
     discoverResultsState.keyword.trim();
 
-  const { data, error } =
-    await window.supabaseClient.rpc(
-      "search_services",
-      {
-        p_keyword: keyword || null,
-        p_category: discoverResultsState.category || null,
-        p_subcategory: discoverResultsState.subcategory || null,
-        p_state: discoverResultsState.state || null,
-        p_lga: discoverResultsState.lga || null,
-        p_verified_only: discoverResultsState.verified
-      }
-    );
+  const {
+    data,
+    error
+  } =
+
+    await window.supabaseClient
+
+      .from("vendor_services")
+
+      .select(`
+        *,
+         vendors (
+           id,
+           name,
+           slug,
+           logo_url,
+           category,
+           subcategory,
+           state,
+           lga,
+           verification_status,
+           is_sponsored,
+           average_rating,
+           reviews_count,
+           account_status
+        )
+      `);
 
   if (error) {
 
-    console.error("search_services error:", error);
+    console.error(error);
+
     return [];
 
   }
 
-  return applyDistanceFilter(
-    data || [],
-    s => s.vendor_latitude,
-    s => s.vendor_longitude
-  );
+  let results =
+
+    (data || []).filter(
+
+      (service) => {
+
+        if (
+
+          !service.vendors ||
+
+          service.vendors.account_status !==
+          "active"
+
+        ) {
+
+          return false;
+
+        }
+
+        if (!keyword) {
+
+          return true;
+
+        }
+
+        const text = [
+
+          service.service_name,
+
+          service.short_description,
+
+          service.vendors.name,
+
+          service.vendors.category,
+
+          service.vendors.subcategory
+
+        ]
+
+          .join(" ")
+
+          .toLowerCase();
+
+        return text.includes(
+
+          keyword.toLowerCase()
+
+        );
+
+      }
+
+    );
+
+  if (
+
+    discoverResultsState.category
+
+  ) {
+
+    results =
+
+      results.filter(
+
+        (service) =>
+
+          service.vendors.category ===
+
+          discoverResultsState.category
+
+      );
+
+  }
+
+  if (
+
+    discoverResultsState.subcategory
+
+  ) {
+
+    results =
+
+      results.filter(
+
+        (service) =>
+
+          service.vendors.subcategory ===
+
+          discoverResultsState.subcategory
+
+      );
+
+  }
+
+  if (
+
+    discoverResultsState.state
+
+  ) {
+
+    results =
+
+      results.filter(
+
+        (service) =>
+
+          service.vendors.state ===
+
+          discoverResultsState.state
+
+      );
+
+  }
+
+  if (
+
+    discoverResultsState.lga
+
+  ) {
+
+    results =
+
+      results.filter(
+
+        (service) =>
+
+          service.vendors.lga ===
+
+          discoverResultsState.lga
+
+      );
+
+  }
+
+  if (
+
+    discoverResultsState.verified
+
+  ) {
+
+    results =
+
+      results.filter(
+
+        (service) =>
+
+          service.vendors.verification_status !==
+
+          "none"
+
+      );
+
+  }
+
+  return results;
 
 }
 
 // ======================================
 // NORMALIZE SERVICES
-// Adapted for the flat RPC row shape, and now
-// carries full vendor fields (slug/logo/etc)
-// so a service's vendor can be safely merged
-// into vendor results without missing data —
-// fixes the previous broken-image/broken-link
-// bug when merging services into "All" search.
 // ======================================
 
 function normalizeServiceResults(
@@ -2716,6 +2969,9 @@ function normalizeServiceResults(
           service.id,
         slug:
         service.slug || "",
+      
+        rawSlug:
+          service.slug,
 
         vendorId:
           service.vendor_id,
@@ -2727,63 +2983,44 @@ function normalizeServiceResults(
           service.short_description || "",
 
         vendorName:
-          service.vendor_name || "",
+          service.vendors.name || "",
 
         vendorCategory:
-          service.vendor_category || "",
+          service.vendors.category || "",
 
         vendorSubcategory:
-          service.vendor_subcategory || "",
+          service.vendors.subcategory || "",
 
         vendorState:
-          service.vendor_state || "",
+          service.vendors.state || "",
 
         vendorLga:
-          service.vendor_lga || "",
+          service.vendors.lga || "",
 
         vendorRating:
           Number(
-            service.vendor_average_rating
+            service.vendors.average_rating
           ) || 0,
         vendorReviews:
 
-        service.vendor_reviews_count || 0,
+        service.vendors.reviews_count || 0,
 
         vendorVerification:
 
-          service.vendor_verification_status ||
+          service.vendors.verification_status ||
 
           "none",
 
         sponsored:
 
-          service.vendor_is_sponsored,
+          service.vendors.is_sponsored,
 
         vendorSlug:
 
-          service.vendor_slug || "",
-
-        vendorLogo:
-
-          service.vendor_logo_url || "",
+          service.vendors.slug || "",
 
         raw:
-          service,
-
-        // Full vendor shape available for safe merging into
-        // vendor results (fixes the missing slug/logo bug)
-        vendors: {
-          id: service.vendor_id,
-          slug: service.vendor_slug || "",
-          name: service.vendor_name || "",
-          logo_url: service.vendor_logo_url || "",
-          category: service.vendor_category || "",
-          subcategory: service.vendor_subcategory || "",
-          verification_status: service.vendor_verification_status || "none",
-          average_rating: service.vendor_average_rating || 0,
-          reviews_count: service.vendor_reviews_count || 0,
-          is_sponsored: service.vendor_is_sponsored
-        }
+          service
 
       };
 
@@ -2868,97 +3105,6 @@ function buildSponsoredFeed(
     ...marketplaceResults.sponsoredVendors
 
   ];
-
-}
-
-// ======================================
-// RENDER SPONSORED FEED
-// Previously built but never rendered (the
-// call was commented out and no render
-// function existed). Now actually renders the
-// dedicated Sponsored section, reusing the
-// same card markup patterns as the other
-// sections.
-// ======================================
-
-function renderSponsoredFeed(items) {
-
-  const section = document.getElementById("discoverResultsSponsoredSection");
-  const container = document.getElementById("discoverResultsSponsoredContainer");
-
-  if (!section || !container) {
-    return;
-  }
-
-  if (!items || items.length === 0) {
-    section.style.display = "none";
-    return;
-  }
-
-  container.innerHTML = "";
-
-  items.forEach(item => {
-
-    const card = document.createElement("article");
-    card.className = "discover-results-sponsored-card";
-
-    const isProduct = "productName" in item;
-    const isService = "serviceName" in item;
-
-    const name = isProduct
-      ? item.productName
-      : isService
-        ? item.serviceName
-        : item.name;
-
-    const image = isProduct
-      ? item.image
-      : isService
-        ? (item.vendorLogo || "images/default-vendor-logo.webp")
-        : (item.logo || "images/default-vendor-logo.webp");
-
-    const slugTarget = isProduct
-      ? `vendor-product.html?slug=${encodeURIComponent(item.slug)}`
-      : isService
-        ? `vendor-service.html?slug=${encodeURIComponent(item.slug)}`
-        : `vendor-profile.html?slug=${encodeURIComponent(item.slug)}`;
-
-    const vendorName = isProduct || isService ? item.vendorName : item.name;
-    const rating = isProduct || isService ? item.vendorRating : item.rating;
-    const reviews = isProduct || isService ? item.vendorReviews : item.reviews;
-    const verification = isProduct || isService ? item.vendorVerification : item.verificationStatus;
-
-    const badge =
-      verification === "blue"
-        ? `<img src="images/bluebadge.png" class="discover-results-product-badge">`
-        : verification === "gray"
-          ? `<img src="images/graybadge.png" class="discover-results-product-badge">`
-          : "";
-
-    card.innerHTML = `
-      <img src="${image}" class="discover-results-product-image" alt="${name}">
-      <h3 class="discover-results-product-title">${name}</h3>
-      <div class="discover-results-product-vendor">
-        <span>By ${vendorName}</span>
-        ${badge}
-      </div>
-      <div class="discover-results-product-rating">
-        <i class="fa-solid fa-star"></i>
-        <span>${Number(rating || 0).toFixed(1)}</span>
-        <small>(${reviews || 0})</small>
-      </div>
-      <p class="discover-results-product-sponsored">Sponsored</p>
-    `;
-
-    card.addEventListener("click", () => {
-      window.location.href = slugTarget;
-    });
-
-    container.appendChild(card);
-
-  });
-
-  section.style.display = "";
 
 }
 
@@ -3076,254 +3222,5 @@ if (
 
 }
 
-/* ========================= */
-/* DISTANCE FILTER DRAWER UI  */
-/* (mirrors discover.js) */
-/* ========================= */
 
-document.addEventListener("DOMContentLoaded", () => {
 
-  const filtersBtn = document.getElementById("discoverResultsFiltersBtn");
-  const drawer = document.getElementById("discoverResultsFiltersDrawer");
-  const overlay = document.getElementById("discoverResultsDrawerOverlay");
-  const closeBtn = document.getElementById("discoverResultsCloseFiltersBtn");
-
-  function openDrawer() {
-    if (drawer && overlay) {
-      drawer.classList.add("active");
-      overlay.classList.add("active");
-    }
-  }
-
-  function closeDrawer() {
-    if (drawer && overlay) {
-      drawer.classList.remove("active");
-      overlay.classList.remove("active");
-    }
-  }
-
-  if (filtersBtn) filtersBtn.addEventListener("click", openDrawer);
-  if (closeBtn) closeBtn.addEventListener("click", closeDrawer);
-  if (overlay) overlay.addEventListener("click", closeDrawer);
-
-  const enableDistance = document.getElementById("discoverResultsEnableDistanceSearch");
-  const radiusSlider = document.getElementById("discoverResultsRadiusSlider");
-  const radiusValue = document.getElementById("discoverResultsRadiusValue");
-  const useLocationBtn = document.getElementById("discoverResultsUseLocationBtn");
-
-  if (radiusSlider && radiusValue) {
-    radiusSlider.addEventListener("input", () => {
-      radiusValue.textContent = `${radiusSlider.value}km`;
-      discoverResultsState.radius = Number(radiusSlider.value);
-    });
-  }
-
-  if (enableDistance) {
-
-    enableDistance.checked = discoverResultsState.distanceEnabled;
-
-    enableDistance.addEventListener("change", () => {
-
-      discoverResultsState.distanceEnabled = enableDistance.checked;
-
-      if (enableDistance.checked && navigator.geolocation) {
-
-        if (useLocationBtn) {
-          useLocationBtn.innerHTML = `<i class="fa-solid fa-location-crosshairs"></i> Detecting...`;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-
-          position => {
-            discoverResultsState.latitude = position.coords.latitude;
-            discoverResultsState.longitude = position.coords.longitude;
-
-            if (useLocationBtn) {
-              useLocationBtn.innerHTML = `<i class="fa-solid fa-circle-check"></i> Location Ready`;
-            }
-          },
-
-          () => {
-            discoverResultsState.distanceEnabled = false;
-            enableDistance.checked = false;
-
-            if (useLocationBtn) {
-              useLocationBtn.innerHTML = `<i class="fa-solid fa-location-xmark"></i> Denied`;
-            }
-          },
-
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
-
-        );
-
-      }
-
-    });
-
-  }
-
-  const applyBtn = document.getElementById("discoverResultsApplyFiltersBtn");
-  const resetBtn = document.getElementById("discoverResultsResetFiltersBtn");
-
-  const categorySelect = document.getElementById("discoverResultsCategory");
-  const subcategorySelect = document.getElementById("discoverResultsSubcategory");
-  const stateSelect = document.getElementById("discoverResultsState");
-  const lgaSelect = document.getElementById("discoverResultsLga");
-
-  async function loadFilterOptions() {
-
-    if (categorySelect) {
-
-      const { data } = await window.supabaseClient
-        .from("vendors")
-        .select("category")
-        .not("category", "is", null);
-
-      const unique = [...new Set((data || []).map(r => r.category?.trim()).filter(Boolean))].sort();
-
-      categorySelect.innerHTML = `<option value="">Select Category</option>`;
-
-      unique.forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c;
-        opt.textContent = c;
-        if (c === discoverResultsState.category) opt.selected = true;
-        categorySelect.appendChild(opt);
-      });
-
-    }
-
-    if (stateSelect && window.nigeriaData) {
-
-      stateSelect.innerHTML = `<option value="">Select State</option>`;
-
-      Object.keys(window.nigeriaData).sort().forEach(state => {
-        const opt = document.createElement("option");
-        opt.value = state;
-        opt.textContent = state;
-        if (state === discoverResultsState.state) opt.selected = true;
-        stateSelect.appendChild(opt);
-      });
-
-    }
-
-  }
-
-  if (categorySelect) {
-
-    categorySelect.addEventListener("change", async () => {
-
-      subcategorySelect.innerHTML = `<option value="">Select Subcategory</option>`;
-
-      if (!categorySelect.value) return;
-
-      const { data } = await window.supabaseClient
-        .from("vendors")
-        .select("subcategory")
-        .eq("category", categorySelect.value)
-        .not("subcategory", "is", null);
-
-      const unique = [...new Set((data || []).map(r => r.subcategory?.trim()).filter(Boolean))].sort();
-
-      unique.forEach(sc => {
-        const opt = document.createElement("option");
-        opt.value = sc;
-        opt.textContent = sc;
-        subcategorySelect.appendChild(opt);
-      });
-
-    });
-
-  }
-
-  if (stateSelect) {
-
-    stateSelect.addEventListener("change", () => {
-
-      lgaSelect.innerHTML = `<option value="">Select LGA</option>`;
-
-      const lgas = (window.nigeriaData || {})[stateSelect.value] || [];
-
-      lgas.forEach(lga => {
-        const opt = document.createElement("option");
-        opt.value = lga;
-        opt.textContent = lga;
-        lgaSelect.appendChild(opt);
-      });
-
-    });
-
-  }
-
-  if (applyBtn) {
-
-    applyBtn.addEventListener("click", () => {
-
-      discoverResultsState.category = categorySelect?.value || "";
-      discoverResultsState.subcategory = subcategorySelect?.value || "";
-      discoverResultsState.state = stateSelect?.value || "";
-      discoverResultsState.lga = lgaSelect?.value || "";
-
-      closeDrawer();
-
-      performMarketplaceSearch();
-
-    });
-
-  }
-
-  if (resetBtn) {
-
-    resetBtn.addEventListener("click", () => {
-
-      if (categorySelect) categorySelect.value = "";
-      if (subcategorySelect) subcategorySelect.innerHTML = `<option value="">Select Subcategory</option>`;
-      if (stateSelect) stateSelect.value = "";
-      if (lgaSelect) lgaSelect.innerHTML = `<option value="">Select LGA</option>`;
-
-    });
-
-  }
-
-  const nearbyBtn = document.getElementById("discoverResultsNearbyBtn");
-
-  if (nearbyBtn) {
-
-    nearbyBtn.addEventListener("click", () => {
-
-      if (enableDistance) {
-        enableDistance.checked = true;
-        enableDistance.dispatchEvent(new Event("change"));
-      }
-
-      openDrawer();
-
-    });
-
-  }
-
-  loadFilterOptions();
-
-  const profileNav = document.getElementById("discoverResultsProfileNav");
-
-  if (profileNav) {
-
-    profileNav.addEventListener("click", async () => {
-
-      try {
-
-        const { data: { session } } = await window.supabaseClient.auth.getSession();
-
-        window.location.href = session ? "vendordashboard.html" : "login.html";
-
-      } catch {
-
-        window.location.href = "login.html";
-
-      }
-
-    });
-
-  }
-
-});

@@ -1052,43 +1052,25 @@ function executeSearch() {
       searchParams.radius
     );
 
-      const storedLocationData =
-      sessionStorage.getItem(
-        "discoverUserLocation"
+    if (
+
+      searchParams.latitude !== null &&
+
+      searchParams.longitude !== null
+
+    ) {
+
+      queryParams.set(
+        "lat",
+        searchParams.latitude
       );
 
-    if (storedLocationData) {
-
-      try {
-
-        const parsedLocation =
-          JSON.parse(
-            storedLocationData
-          );
-
-        queryParams.set(
-          "lat",
-          parsedLocation.latitude
-        );
-
-        queryParams.set(
-          "lng",
-          parsedLocation.longitude
-        );
-
-      } catch {}
+      queryParams.set(
+        "lng",
+        searchParams.longitude
+      );
 
     }
-
-  queryParams.set(
-    "lat",
-    searchParams.latitude
-  );
-
-  queryParams.set(
-    "lng",
-    searchParams.longitude
-  );
 
 }
 
@@ -1719,6 +1701,11 @@ if (discoverState) {
 }
 
 loadStates();
+
+const discoverProfileNav =
+  document.getElementById(
+    "discoverProfileNav"
+  );
 
 if (discoverProfileNav) {
 

@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Partner Program | Spotlight</title>
+<title>Partner Program | Spotlight Directories</title>
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="navbar.css">
 <link rel="stylesheet" href="partner-program.css">
-
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-<!-- ✅ UPDATED FAVICONS -->
 <link rel="icon" type="image/png" sizes="48x48" href="/images/favicon-48.png">
 <link rel="icon" type="image/png" sizes="64x64" href="/images/favicon-64.png">
 <link rel="apple-touch-icon" href="/images/favicon-180.png">
 
-<!-- ✅ STRUCTURED DATA (GOOGLE LOGO CONTROL) -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -28,102 +28,92 @@
   "logo": "https://spotlightdirectories.com/images/spotlightlogo-512.png"
 }
 </script>
-
 </head>
 
 <body>
 
-<!-- HEADER -->
-<header class="partner-header">
-  <div class="partner-header-inner partner-container">
-
-    <div class="partner-logo">
-      <img src="images/partner-logo.jpg" class="partner-logo-img" alt="PartnerProgram Logo">
-      <span class="partner-logo-text">PartnerProgram</span>
-    </div>
-
-    <nav class="partner-nav">
-      <a href="#rewards">Rewards</a>
-      <a href="contact-us">Contact</a>
-      <a href="index">Home</a>
-    </nav>
-
-    <div class="partner-nav-actions">
-      <a href="#login" class="partner-login-link">Login</a>
-      <a href="#signup" class="partner-btn-primary">Sign Up Now</a>
-    </div>
-
+<header class="navbar">
+  <div class="logo-left">
+    <a href="index">
+      <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg">
+    </a>
+    <a href="index" class="home">Home</a>
   </div>
+
+  <nav>
+    <button class="menu-open hide-desktop" aria-label="Open menu">
+      <img src="images/hbopen.png" alt="Open menu" width="32" height="32">
+    </button>
+
+    <ul class="nav-links">
+      <li class="menu-close">
+        <button class="xclose" aria-label="Close menu">
+          <img src="images/xclose.png" alt="Close menu" width="32" height="32">
+        </button>
+      </li>
+      <li><a href="aboutUs">Why Spotlight?</a></li>
+      <li><a href="getlisted">Get Listed</a></li>
+      <li><a href="#rewards">Partner Rewards</a></li>
+      <li><a href="contact-us">Contact Us</a></li>
+      <li id="authButton">
+        <a href="login" id="authBtn" class="nav-login-btn">Log in</a>
+      </li>
+    </ul>
+  </nav>
 </header>
 
 <main>
 
 <!-- HERO -->
-<section id="signup" class="partner-hero partner-section">
-  <div class="partner-container">
+<section id="signup" class="pp-hero">
+  <div class="pp-container pp-hero-grid">
 
-    <div class="partner-hero-left">
-      <span class="partner-badge">New Partnership Intake Open</span>
+    <div class="pp-hero-left">
+      <span class="pp-badge">New Partnership Intake Open</span>
 
-     <h1 class="partner-font-headline">
-  <span class="line-desktop">
-    Do You Want to Be
-  </span>
+      <h1>Become a <span class="ld-spotlight-glow">Spotlight</span> Partner</h1>
 
-  <span class="line-mobile">
-    Do You Want
-  </span>
-
-  <span class="line-mobile">
-    to Be
-  </span>
-
-  <span>
-    <span class="partner-highlight">Our Partner</span>?
-  </span>
-</h1>
-
-      <p class="partner-hero-subtext">
-        Join our high-paying affiliate network and start earning commissions today with our industry-leading tools and support.
+      <p class="pp-hero-sub">
+        Help Nigerian businesses get discovered, and earn real commission for every one you bring on board.
       </p>
 
-      <div class="partner-hero-image"></div>
+      <div class="pp-hero-image"></div>
     </div>
 
-    <div class="partner-card">
-      <h2 class="partner-font-headline partner-text-center">Get Started</h2>
+    <div class="pp-card">
+      <h2 class="pp-text-center">Get Started</h2>
 
-      <form class="partner-form">
+      <form class="pp-form">
 
         <label>Full Name</label>
-        <input type="text" id="partner-name" placeholder="Enter your name" class="partner-input" required>
+        <input type="text" id="partner-name" placeholder="Enter your name" class="pp-input" required>
 
         <label>Email Address</label>
-        <input type="email" id="partner-email" placeholder="name@email.com" class="partner-input" required>
+        <input type="email" id="partner-email" placeholder="name@email.com" class="pp-input" required>
 
         <label>Phone Number</label>
-        <input type="tel" id="partner-phone" placeholder="+234-802-345-6789" class="partner-input" required>
+        <input type="tel" id="partner-phone" placeholder="+234-802-345-6789" class="pp-input" required>
 
         <label for="partner-state">State</label>
-        <select id="partner-state" name="state" class="partner-input" required>
-        <option value="" disabled selected>Select State</option>
+        <select id="partner-state" name="state" class="pp-input" required>
+          <option value="" disabled selected>Select State</option>
         </select>
 
         <label for="partner-lga">LGA</label>
-        <select id="partner-lga" name="lga" class="partner-input" required>
-        <option value="" disabled selected>Select LGA</option>
+        <select id="partner-lga" name="lga" class="pp-input" required>
+          <option value="" disabled selected>Select LGA</option>
         </select>
 
         <label for="partner-dob">Date of Birth</label>
-        <input type="date" id="partner-dob" name="dob" class="partner-input" required>
+        <input type="date" id="partner-dob" name="dob" class="pp-input" required>
 
-        <button type="submit" name="submit" class="partner-btn-primary">Apply to Join</button>
+        <button type="submit" name="submit" class="pp-btn-primary">Apply to Join</button>
 
-        <label class="partner-consent">
-         <input type="checkbox" id="partner-consent" required>
-         By signing up, you agree to our 
-         <a href="https://spotlightdirectories.com/partner-legal#terms">Terms</a> and 
-         <a href="https://spotlightdirectories.com/partner-legal#privacy">Privacy Policy</a>
+        <label class="pp-consent">
+          <input type="checkbox" id="partner-consent" required>
+          By signing up, you agree to our
+          <a href="partner-legal#terms">Terms</a> and
+          <a href="partner-legal#privacy">Privacy Policy</a>
         </label>
 
       </form>
@@ -133,122 +123,125 @@
 </section>
 
 <!-- REWARDS -->
-<section id="rewards" class="partner-section">
-  <div class="partner-container">
+<section id="rewards" class="pp-section pp-rewards">
+  <div class="pp-container">
 
-    <div class="partner-text-center">
-      <h2 class="partner-rewards-heading">Partner Rewards & Bonuses</h2>
-      <p class="partner-rewards-subtext">
-        We reward performance. As you grow, your earnings grow with you.
-      </p>
+    <div class="pp-text-center">
+      <h2>Partner Rewards &amp; Bonuses</h2>
+      <p class="pp-rewards-subtext">We reward performance. As you grow, your earnings grow with you.</p>
     </div>
 
-    <div class="partner-grid">
+    <div class="pp-grid">
 
-      <!-- Card 1 -->
+      <div class="pp-reward-card">
+        <div class="pp-card-icon"><i class="fa-solid fa-sack-dollar"></i></div>
+        <h3>High Commission</h3>
+        <p>Earn 20% commission on every paid vendor you bring, plus 10% on renewals.</p>
+        <h2 class="pp-card-value">20%</h2>
+        <small>ON FIRST PAYMENT</small>
+      </div>
 
-      <div class="partner-reward-card">
+      <div class="pp-reward-card pp-reward-featured">
+        <div class="pp-badge-top">Monthly Target</div>
+        <div class="pp-card-icon"><i class="fa-solid fa-medal"></i></div>
+        <h3>Monthly Performance Bonus</h3>
+        <p>Hit 50 yearly-paid vendors in a month and earn a ₦30,000 cash bonus.</p>
+        <h2 class="pp-card-value">₦30,000</h2>
+        <small>PER 50 YEARLY VENDORS</small>
+      </div>
 
-  <div class="partner-card-icon partner-icon-1">
-    <span class="material-symbols-outlined">payments</span>
-  </div>
-
-  <h3 class="partner-reward-title">High Commission</h3>
-
-     <p class="partner-reward-text">
-       Earn 20% commission on every paid vendor you bring, plus 10% on renewals.
-     </p>
-
-     <h2 class="partner-card-value partner-value-1">20%</h2>
-     <small>FLAT RATE</small>
-
-   </div>
-
-   <!-- Card 2 -->
-
-      <div class="partner-reward-card partner-reward-featured">
-        <div class="partner-card-icon partner-icon-2">
-          <span class="material-symbols-outlined">military_tech</span>
-        </div>
-
-        <h3 class="partner-reward-title">Monthly Performance Bonus</h3>
-
-         <p class="partner-reward-text">
-          Hit 50 (yearly) paid vendors in a month and earn a ₦30,000 cash bonus.
-         </p>
-
-         <h2 class="partner-card-value partner-value-2">₦30,000</h2>
-        <small>TARGET BONUS</small>
-       </div>
-
-        <!-- Card 3 -->
-
-      <div class="partner-reward-card">
-        <div class="partner-card-icon partner-icon-3">
-          <span class="material-symbols-outlined">groups</span>
-        </div>
-
-        <h3 class="partner-reward-title">Growth Rewards</h3>
-
-          <p class="partner-reward-text">
-             Get 5% of every vendor payment processed by partners you refer.
-         </p>
-
-          <h2 class="partner-card-value partner-value-3">5%</h2>
-        <small>DIRECT REFERRAL COMMISSION</small>
+      <div class="pp-reward-card">
+        <div class="pp-card-icon"><i class="fa-solid fa-users"></i></div>
+        <h3>Growth Rewards</h3>
+        <p>Refer other partners and earn a 5% override on their commissions — paid separately by Spotlight, never deducted from what they earn.</p>
+        <h2 class="pp-card-value">5%</h2>
+        <small>OVERRIDE ON THEIR COMMISSION</small>
       </div>
 
     </div>
 
+    <p class="pp-rewards-note">
+      <i class="fa-solid fa-clock"></i>
+      Commissions become available 7 days after a payment is confirmed. Full terms on the
+      <a href="partner-legal#terms">Partner Terms page</a>.
+    </p>
+
   </div>
 </section>
 
-<section id="login" class="partner-section">
-  <div class="partner-container">
+<!-- RESOURCES -->
+<section class="pp-section pp-resources">
+  <div class="pp-container pp-text-center">
+    <h2>Everything You Need to Succeed</h2>
+    <p class="pp-rewards-subtext">Real tools, not just a referral link.</p>
 
-    <div class="partner-login">
+    <div class="pp-resource-grid">
 
-      <!-- LEFT IMAGE -->
-      <div class="partner-login-left"></div>
+      <a href="partner-legal#assets" class="pp-resource-card">
+        <i class="fa-solid fa-bullhorn"></i>
+        <h3>Referral Toolkit</h3>
+        <p>Ready-to-use WhatsApp templates and a simple sales script.</p>
+      </a>
 
-      <!-- RIGHT -->
-      <div class="partner-login-right">
+      <a href="partner-legal#brand" class="pp-resource-card">
+        <i class="fa-solid fa-swatchbook"></i>
+        <h3>Brand Guide</h3>
+        <p>How to represent Spotlight correctly when you promote it.</p>
+      </a>
 
-        <h2 class="partner-font-headline">Already a Partner?</h2>
+      <a href="partner-legal#calculator" class="pp-resource-card">
+        <i class="fa-solid fa-calculator"></i>
+        <h3>Earning Calculator</h3>
+        <p>See what your real, honest monthly earnings could look like.</p>
+      </a>
 
-        <p class="partner-login-subtext">
-          Access your dashboard to track earnings and performance.
-        </p>
+      <a href="partner-legal#assets" class="pp-resource-card">
+        <i class="fa-solid fa-route"></i>
+        <h3>Onboarding Guide</h3>
+        <p>Step-by-step guidance for getting a new vendor listed.</p>
+      </a>
 
-        <form class="partner-form partner-login-form">
+    </div>
+  </div>
+</section>
+
+<!-- LOGIN -->
+<section id="login" class="pp-section">
+  <div class="pp-container">
+
+    <div class="pp-login">
+
+      <div class="pp-login-left"></div>
+
+      <div class="pp-login-right">
+
+        <h2>Already a Partner?</h2>
+        <p class="pp-login-subtext">Access your dashboard to track earnings and performance.</p>
+
+        <form class="pp-form pp-login-form">
 
           <label>Email Address</label>
-          <input id="login-email" type="email" name="email" placeholder="Enter your email address" class="partner-input" autocomplete="off">
+          <input id="login-email" type="email" name="email" placeholder="Enter your email address" class="pp-input" autocomplete="off">
 
           <label>Password</label>
-          <div class="partner-password-field">
-         <input id="login-password" type="password" name="password" placeholder="Enter your password" class="partner-input" autocomplete="new-password">
-         <span class="partner-password-toggle material-symbols-outlined" id="toggle-password">visibility</span>
-         </div>
+          <div class="pp-password-field">
+            <input id="login-password" type="password" name="password" placeholder="Enter your password" class="pp-input" autocomplete="new-password">
+            <i class="fa-regular fa-eye pp-password-toggle" id="toggle-password"></i>
+          </div>
 
-          <button type="submit" class="partner-btn-primary">
-            Login to Dashboard
-          </button>
+          <button type="submit" class="pp-btn-primary">Login to Dashboard</button>
 
-          <div class="partner-remember-row">
-
-           <label class="partner-remember">
-            <input type="checkbox" name="remember">
-             Remember me
-           </label>
-
-           <a href="/forgot-password.html?type=partner" class="partner-forgot-password">Forgot Password?</a>
-
-         </div>
+          <div class="pp-remember-row">
+            <label class="pp-remember">
+              <input type="checkbox" name="remember">
+              Remember me
+            </label>
+            <a href="forgot-password?type=partner" class="pp-forgot-password">Forgot Password?</a>
+          </div>
 
         </form>
 
-        <div class="partner-login-footer">
+        <div class="pp-login-footer">
           <small>New here?</small><br>
           <a href="#signup">Apply for an account</a>
         </div>
@@ -262,48 +255,46 @@
 
 </main>
 
-<footer class="partner-footer">
-  <div class="partner-container">
+<footer class="hfooter">
 
-    <div class="partner-footer-grid">
+  <div class="hcontainer hfooter-grid">
 
-      <div class="partner-footer-brand">
-        <h3 class="partner-font-headline">PartnerProgram</h3>
-        <p class="partner-footer-desc">
-          The premium destination for high-performing affiliate marketers.
-        </p>
-      </div>
-
-      <div>
-        <h4 class="partner-footer-title">Quick Links</h4>
-        <ul class="partner-footer-links">
-          <li><a href="partner-legal.html#terms">Program Terms</a></li>
-          <li><a href="partner-legal.html#privacy">Privacy Policy</a></li>
-          <li><a href="partner-legal.html#assets">Marketing Assets</a></li>
-        </ul>
-      </div>
-
-      <div>
-        <h4 class="partner-footer-title">Support</h4>
-        <ul class="partner-footer-links">
-          <li><a href="partner-legal.html#faq">FAQ</a></li>
-          <li><a href="contact-us">Contact Support</a></li>
-        </ul>
-      </div>
-
+    <div class="hfooter-brand">
+      <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg">
+      <p>Dedicated to digitalizing local businesses and making services accessible to everyone, everywhere.</p>
     </div>
 
-    <div class="partner-footer-bottom">
-      <span>© 2026 Spotlight Digital Services Ltd. All Rights Reserved.</span>
+    <div class="hfooter-links">
+      <h4>Quick Links</h4>
+      <a href="index">Home</a>
+      <a href="getlisted">Get Listed</a>
+      <a href="discover">Search Vendors</a>
+    </div>
+
+    <div class="hfooter-support">
+      <h4>Partner Support</h4>
+      <a href="partner-legal#terms">Program Terms</a>
+      <a href="partner-legal#privacy">Privacy Policy</a>
+      <a href="partner-legal#faq">FAQ</a>
+      <a href="contact-us">Contact Support</a>
     </div>
 
   </div>
+
+  <div class="hcontainer hfooter-bottom">
+    <p>&copy; 2026 Spotlight Digital Services Ltd. All Rights Reserved.</p>
+    <div class="hfooter-legal">
+      <a href="terms">Terms</a>
+      <a href="privacy">Privacy</a>
+      <a href="disclaimer">Disclaimer</a>
+    </div>
+  </div>
+
 </footer>
 
-<!-- Supabase CDN (FIRST) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
-<script src="email-templates.js"></script>
+<script src="nigeria-data.js"></script>
 <script defer src="partner-program.js"></script>
 
 </body>
