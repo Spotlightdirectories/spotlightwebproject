@@ -72,9 +72,12 @@
 
 **Note:** item 42's original scope also included folding in the missing plan-limit/90-day-trial public display — this was overlooked during the rebuild and should be added as a follow-up polish item.
 
+## ACHIEVED — Block 5, item 41
+
+- [x] 41. Rebuild landing page — DONE. Hero consolidated the two previously-redundant slideshows into one purposeful carousel (archetype captions per photo, Ken Burns slow-zoom effect, glowing/shimmering treatment on the word "Spotlight"); benefits trimmed and rebalanced to 6 cards in a clean 3-and-3 grid; second slideshow replaced entirely with an honest "How It Works" 3-step section; fake "smart scheduling" claim removed and replaced with the real, universal Business Insight Dashboard; mobile app section kept but honestly reframed as "Coming Soon" with no fake clickable store badges. Fixed several real bugs along the way: broken footer "Search Vendors" link, inconsistent link capitalization, dead signup.js script tag, missing auth Log in/Log out button, wrong hamburger-menu class name, undefined --gold CSS variable breaking the login button's hover. Built as separate files first, tested live through several rounds of feedback, then promoted to the real filenames (index.html/css/js). Old version archived as index-legacy.html, not deleted.
+
 ## PENDING — Block 5, remaining page rebuilds
 
-- [ ] 41. Rebuild landing page to world-class SaaS standard — NEXT UP
 - [ ] 43. Harmonize partner program page + build marketing assets (referral toolkit, brand guide, earning calculator, onboarding guide)
 - [ ] 44. Consolidate insight dashboard — fold in building the sponsorship feature for real (currently hardcoded, no logic)
 - [ ] 45. Build light/dark mode toggle switch + JS wiring (tokens already exist from item 6)

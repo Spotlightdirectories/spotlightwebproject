@@ -517,9 +517,15 @@ if (referredPartnersEl) {
     });
 
     // ===============================
-// MONTHLY BONUS CALCULATION (STEP 3)
-// ===============================
+    // MONTHLY PROGRESS + BONUS STATUS
+    // Reads real, persisted data only — no separate live
+    // recalculation. The bonus trigger now writes an actual
+    // 'bonus' commission row the moment a partner crosses each
+    // new 50-vendor threshold, so this just reflects what's
+    // really in the database.
+    // ===============================
 let monthlyQualified = 0;
+let monthlyBonusEarned = 0;
 
 const now = new Date();
 const currentMonth = now.getMonth();
@@ -527,24 +533,26 @@ const currentYear = now.getFullYear();
 
 commissions.forEach(c => {
 
-  const isVendor = c.type === "vendor";
-  const isAvailable = c.status === "available";
-  const isYearly = c.vendor_payments?.billing_type === "yearly";
-
   const createdDate = new Date(c.created_at);
 
   const isCurrentMonth =
     createdDate.getMonth() === currentMonth &&
     createdDate.getFullYear() === currentYear;
 
-   if (isVendor && isYearly && isCurrentMonth) {
+  if (!isCurrentMonth) return;
+
+  const isVendor = c.type === "vendor";
+  const isYearly = c.vendor_payments?.billing_type === "yearly";
+
+   if (isVendor && isYearly) {
      monthlyQualified++;
     }
 
- });
+  if (c.type === "bonus") {
+    monthlyBonusEarned += Number(c.amount) / 100;
+  }
 
-const bonusUnits = Math.floor(monthlyQualified / 50);
-const bonusAmount = bonusUnits * 30000;
+ });
 
     // ===============================
     // UPDATE SUMMARY
@@ -585,14 +593,14 @@ if (bonusCurrentEl) {
 
 if (bonusStatusEl) {
   bonusStatusEl.innerText =
-    bonusUnits > 0 ? `₦${bonusAmount.toLocaleString()} Earned` : "Not Achieved";
+    monthlyBonusEarned > 0 ? `₦${monthlyBonusEarned.toLocaleString()} Earned` : "Not Achieved";
 }
 
     const downloadBtn = document.getElementById("downloadStatementBtn");
 
 if (downloadBtn) {
   downloadBtn.addEventListener("click", () => {
-    downloadCSV(commissions, bonusAmount);
+    downloadCSV(commissions);
   });
 }
 
@@ -607,7 +615,7 @@ if (downloadBtn) {
 }
 });
 
-function downloadCSV(data, bonusAmount) {
+function downloadCSV(data) {
 
   if (!data || data.length === 0) {
     alert("No data to export");
@@ -617,7 +625,7 @@ function downloadCSV(data, bonusAmount) {
   // 1️⃣ Remove pending
   const filtered = data.filter(c => c.status !== "pending");
 
-  if (filtered.length === 0 && bonusAmount === 0) {
+  if (filtered.length === 0) {
     alert("No available or paid records to export");
     return;
   }
@@ -639,7 +647,8 @@ function downloadCSV(data, bonusAmount) {
     if (c.status === "available") {
       credit = amount;
       balance += amount;
-      description = `${c.type} earning`;
+      description =
+        c.type === "bonus" ? "Monthly Bonus" : `${c.type} earning`;
     }
 
     if (c.status === "paid") {
@@ -656,23 +665,6 @@ function downloadCSV(data, bonusAmount) {
       Balance: balance.toFixed(2)
     });
   });
-
-  // ===============================
-// ADD MONTHLY BONUS TO STATEMENT
-// ===============================
-if (bonusAmount > 0) {
-
-  balance += bonusAmount;
-
-  rows.push({
-    Date: new Date().toLocaleDateString(),
-    Description: "Monthly Bonus",
-    Credit: bonusAmount.toFixed(2),
-    Debit: "",
-    Balance: balance.toFixed(2)
-  });
-
-}
 
   const csvContent = [
     Object.keys(rows[0]).join(","),
