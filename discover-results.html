@@ -194,20 +194,6 @@
 
   </label>
 
-  <!-- NEARBY -->
-
-  <button
-    type="button"
-    id="discoverResultsNearbyBtn"
-    class="discover-results-nearby-btn"
-  >
-
-    <i class="fa-solid fa-location-dot"></i>
-
-    Nearby
-
-  </button>
-
   <!-- FILTERS -->
 
   <button
@@ -223,6 +209,75 @@
   </button>
 
 </section>
+
+<!-- ========================= -->
+<!-- DISTANCE SEARCH — always visible, matching discover.html,
+     not hidden inside the More Filters drawer -->
+<!-- ========================= -->
+
+<div class="discover-results-distance-card">
+
+  <div class="discover-results-distance-top">
+
+    <label class="discover-results-distance-toggle">
+
+      <input
+        type="checkbox"
+        id="discoverResultsEnableDistanceSearch"
+      >
+
+      <span class="discover-results-distance-checkbox"></span>
+
+      <span class="discover-results-distance-text">
+        Enable Distance Search
+      </span>
+
+    </label>
+
+    <button
+      type="button"
+      id="discoverResultsUseLocationBtn"
+      class="discover-results-location-btn"
+    >
+
+      <i class="fa-solid fa-location-crosshairs"></i>
+
+      Use Current
+
+    </button>
+
+  </div>
+
+  <div class="discover-results-distance-slider-wrap">
+
+    <input
+      type="range"
+      id="discoverResultsRadiusSlider"
+      class="discover-results-distance-slider"
+      min="1"
+      max="20"
+      value="5"
+    >
+
+    <div class="discover-results-distance-scale">
+
+      <span>
+        0km
+      </span>
+
+      <span id="discoverResultsRadiusValue">
+        5km
+      </span>
+
+      <span>
+        20km
+      </span>
+
+    </div>
+
+  </div>
+
+</div>
 
   <!-- ========================= -->
   <!-- SEARCH SUMMARY -->
@@ -472,74 +527,6 @@
   </div>
 
   <div class="discover-results-filters-body">
-
-   <!-- ========================= -->
-<!-- DISTANCE SEARCH -->
-<!-- ========================= -->
-
-<div class="discover-results-distance-card">
-
-  <div class="discover-results-distance-top">
-
-    <label class="discover-results-distance-toggle">
-
-      <input
-        type="checkbox"
-        id="discoverResultsEnableDistanceSearch"
-      >
-
-      <span class="discover-results-distance-checkbox"></span>
-
-      <span class="discover-results-distance-text">
-        Enable Distance Search
-      </span>
-
-    </label>
-
-    <button
-      type="button"
-      id="discoverResultsUseLocationBtn"
-      class="discover-results-location-btn"
-    >
-
-      <i class="fa-solid fa-location-crosshairs"></i>
-
-      Use Current
-
-    </button>
-
-  </div>
-
-  <div class="discover-results-distance-slider-wrap">
-
-    <input
-      type="range"
-      id="discoverResultsRadiusSlider"
-      class="discover-results-distance-slider"
-      min="1"
-      max="20"
-      value="5"
-    >
-
-    <div class="discover-results-distance-scale">
-
-      <span>
-        0km
-      </span>
-
-      <span id="discoverResultsRadiusValue">
-        5km
-      </span>
-
-      <span>
-        20km
-      </span>
-
-    </div>
-
-  </div>
-
-</div>
 
     <div class="discover-results-filter-group">
 

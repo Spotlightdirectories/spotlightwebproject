@@ -430,6 +430,12 @@ function initializeVerifiedToggle() {
 
         toggle.checked;
 
+      // Previously this only updated state silently, so toggling
+      // had no visible effect until the next unrelated search —
+      // it now re-runs the search immediately so the change is
+      // actually visible right away.
+      performMarketplaceSearch();
+
     }
 
   );
@@ -1288,7 +1294,7 @@ ${averageRating}
 
 <p class="discover-results-address">
 
-${vendorAddress}
+${vendorAddress}${formatDistanceInline(vendor.distanceKm)}
 
 </p>
 
@@ -1608,6 +1614,8 @@ product.vendorVerification === "blue"
 }
 
 </div>
+
+${formatDistanceLabel(product.distanceKm)}
 
 <div class="discover-results-product-rating">
 
@@ -1965,7 +1973,7 @@ ${serviceDescription}
 
 ${service.vendorLga || ""}
 
-${service.vendorState ? `, ${service.vendorState}` : ""}
+${service.vendorState ? `, ${service.vendorState}` : ""}${formatDistanceInline(service.distanceKm)}
 
 </p>
 
@@ -2277,6 +2285,62 @@ function applyDistanceFilter(items, getLat, getLng) {
 }
 
 // ======================================
+// FORMAT DISTANCE LABEL
+// e.g. "3.5km away" or "450m away". Returns
+// an empty string when distance wasn't
+// computed for this item (distance search
+// not enabled), so cards simply omit the
+// label rather than showing something wrong.
+// ======================================
+
+function formatDistanceLabel(distanceKm) {
+
+  if (
+    distanceKm === undefined ||
+    distanceKm === null ||
+    isNaN(distanceKm)
+  ) {
+    return "";
+  }
+
+  const displayValue =
+    distanceKm < 1
+      ? `${Math.round(distanceKm * 1000)}m`
+      : `${distanceKm.toFixed(1)}km`;
+
+  return `<p class="discover-results-distance-label"><i class="fa-solid fa-location-dot"></i>${displayValue} away</p>`;
+
+}
+
+// ======================================
+// FORMAT DISTANCE INLINE
+// Same as above, but as an inline fragment
+// meant to sit directly in front of an
+// address/LGA/state line, e.g.
+// "0.5km away · Alimosho, Lagos" — rather
+// than its own separate block below it.
+// ======================================
+
+function formatDistanceInline(distanceKm) {
+
+  if (
+    distanceKm === undefined ||
+    distanceKm === null ||
+    isNaN(distanceKm)
+  ) {
+    return "";
+  }
+
+  const displayValue =
+    distanceKm < 1
+      ? `${Math.round(distanceKm * 1000)}m`
+      : `${distanceKm.toFixed(1)}km`;
+
+  return ` · <span class="discover-results-distance-inline"><i class="fa-solid fa-location-dot"></i>${displayValue} away</span>`;
+
+}
+
+// ======================================
 // SEARCH VENDORS
 // ======================================
 
@@ -2509,6 +2573,9 @@ function normalizeVendorResults(
         businessType:
           vendor.business_type || "",
 
+        distanceKm:
+          vendor.distanceKm,
+
         vendor
 
       };
@@ -2642,6 +2709,10 @@ function normalizeProductResults(
 
           product.vendor_logo_url || "",
 
+        distanceKm:
+
+          product.distanceKm,
+
         raw:
           product
 
@@ -2766,6 +2837,10 @@ function normalizeServiceResults(
         vendorLogo:
 
           service.vendor_logo_url || "",
+
+        distanceKm:
+
+          service.distanceKm,
 
         raw:
           service,
@@ -2942,6 +3017,7 @@ function renderSponsoredFeed(items) {
         <span>By ${vendorName}</span>
         ${badge}
       </div>
+      ${formatDistanceLabel(item.distanceKm)}
       <div class="discover-results-product-rating">
         <i class="fa-solid fa-star"></i>
         <span>${Number(rating || 0).toFixed(1)}</span>
@@ -3116,11 +3192,54 @@ document.addEventListener("DOMContentLoaded", () => {
       radiusValue.textContent = `${radiusSlider.value}km`;
       discoverResultsState.radius = Number(radiusSlider.value);
     });
+
+    // Re-search once the user releases the slider (not on every
+    // pixel of drag, which "input" would fire constantly) — only
+    // if distance search is actually enabled already.
+    radiusSlider.addEventListener("change", () => {
+      if (discoverResultsState.distanceEnabled) {
+        performMarketplaceSearch();
+      }
+    });
   }
 
   if (enableDistance) {
 
     enableDistance.checked = discoverResultsState.distanceEnabled;
+
+    function fetchFreshLocation(onDone) {
+
+      if (useLocationBtn) {
+        useLocationBtn.innerHTML = `<i class="fa-solid fa-location-crosshairs"></i> Detecting...`;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+
+        position => {
+          discoverResultsState.latitude = position.coords.latitude;
+          discoverResultsState.longitude = position.coords.longitude;
+
+          if (useLocationBtn) {
+            useLocationBtn.innerHTML = `<i class="fa-solid fa-circle-check"></i> Location Ready`;
+          }
+
+          if (onDone) onDone();
+        },
+
+        () => {
+          discoverResultsState.distanceEnabled = false;
+          enableDistance.checked = false;
+
+          if (useLocationBtn) {
+            useLocationBtn.innerHTML = `<i class="fa-solid fa-location-xmark"></i> Denied`;
+          }
+        },
+
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+
+      );
+
+    }
 
     enableDistance.addEventListener("change", () => {
 
@@ -3128,37 +3247,56 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (enableDistance.checked && navigator.geolocation) {
 
-        if (useLocationBtn) {
-          useLocationBtn.innerHTML = `<i class="fa-solid fa-location-crosshairs"></i> Detecting...`;
+        // Reuse an already-captured location instead of re-requesting
+        // fresh GPS every time this is toggled on — browser geolocation
+        // (especially WiFi/network-based, not true GPS) can genuinely
+        // drift between successive requests, which previously made
+        // results flicker between on/off toggles for no real reason.
+        // An explicit "Use Current Location" click still always
+        // refreshes it, for when the visitor has actually moved.
+        if (
+          discoverResultsState.latitude !== null &&
+          discoverResultsState.longitude !== null
+        ) {
+
+          if (useLocationBtn) {
+            useLocationBtn.innerHTML = `<i class="fa-solid fa-circle-check"></i> Location Ready`;
+          }
+
+          performMarketplaceSearch();
+
+          return;
+
         }
 
-        navigator.geolocation.getCurrentPosition(
+        fetchFreshLocation(performMarketplaceSearch);
 
-          position => {
-            discoverResultsState.latitude = position.coords.latitude;
-            discoverResultsState.longitude = position.coords.longitude;
+      } else {
 
-            if (useLocationBtn) {
-              useLocationBtn.innerHTML = `<i class="fa-solid fa-circle-check"></i> Location Ready`;
-            }
-          },
-
-          () => {
-            discoverResultsState.distanceEnabled = false;
-            enableDistance.checked = false;
-
-            if (useLocationBtn) {
-              useLocationBtn.innerHTML = `<i class="fa-solid fa-location-xmark"></i> Denied`;
-            }
-          },
-
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
-
-        );
+        // Unchecked — re-search immediately so results go back to
+        // unfiltered-by-distance right away, same instant feedback
+        // as turning it on.
+        performMarketplaceSearch();
 
       }
 
     });
+
+    if (useLocationBtn) {
+
+      useLocationBtn.addEventListener("click", () => {
+
+        if (!navigator.geolocation) return;
+
+        fetchFreshLocation(() => {
+          if (discoverResultsState.distanceEnabled) {
+            performMarketplaceSearch();
+          }
+        });
+
+      });
+
+    }
 
   }
 
