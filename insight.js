@@ -7,6 +7,7 @@ const insightSupabase = window.supabaseClient;
 const visitorId = window.visitorId;
 
 let currentVendorId = null;
+let currentVendorData = null;
 let insightPeriod = "This Month";
 let showAllKeywords = false;
 
@@ -20,11 +21,12 @@ async function loadCurrentVendor() {
 
   const { data: vendor } = await insightSupabase
     .from("vendors")
-    .select("id,name,plan_tier")
+    .select("*")
     .eq("auth_user_id", user.id)
     .single();
 
   currentVendorId = vendor?.id || null;
+  currentVendorData = vendor || null;
 }
 
 /* ===========================
@@ -702,71 +704,258 @@ async function syncPeriod(period) {
 }
 
 /* ===========================
-   GAUGE  (static — score fed from backend separately)
+   BUSINESS HEALTH SCORE (fully dynamic)
+   Computed from real vendor data — profile
+   completeness, verification, reviews, catalog
+   size, and sponsorship status. Replaces the
+   previous static/hardcoded health object.
 =========================== */
 
-const health = {
-  score: 84, max: 100, stars: 4, deltaPct: 12,
-  items: [
-    { label: "Profile Completeness", score: 20, max: 20 },
-    { label: "Verification",         score: 20, max: 20 },
-    { label: "Reviews",              score: 18, max: 20 },
-    { label: "Catalog",              score: 16, max: 20 },
-    { label: "Sponsorship",          score: 10, max: 20 }
-  ]
-};
+let currentHealthData = null;
 
-(function renderGauge() {
-  const svg = $('gaugeSvg');
-  const defs = svgEl('defs', {});
-  const grad = svgEl('linearGradient', { id: 'gaugeGradient', x1: '0%', y1: '0%', x2: '100%', y2: '0%' });
-  [['0%','#D93025'],['50%','#E6B800'],['100%','#1E8E3E']].forEach(([offset, color]) => {
-    grad.appendChild(svgEl('stop', { offset, 'stop-color': color }));
-  });
-  defs.appendChild(grad);
-  svg.insertBefore(defs, svg.firstChild);
+async function computeHealthScore(vendor) {
 
-  const fullLength = Math.PI * 90;
-  const pct = health.score / health.max;
-  $('gaugeFill').style.strokeDasharray = `${fullLength * pct} ${fullLength}`;
-  $('healthValue').textContent = health.score;
+  // 1. Profile Completeness (20 pts)
+  const profileDetails = {
+    logo: !!vendor.logo_url,
+    cover: !!vendor.cover_url,
+    description: !!(vendor.description && vendor.description.replace(/<[^>]*>/g, "").trim()),
+    hours: !!(vendor.open_time && vendor.close_time && vendor.business_days),
+    contact: !!((vendor.phone || vendor.whatsapp) && vendor.email)
+  };
 
-  const starsEl = $('starRow');
-  starsEl.textContent = '★'.repeat(health.stars) + '☆'.repeat(5 - health.stars);
-})();
+  const profileScore = Object.values(profileDetails).filter(Boolean).length * 4;
+
+  // 2. Verification (20 pts)
+  let verificationScore = 0;
+  if (vendor.verification_status === "blue") verificationScore = 20;
+  else if (vendor.verification_status === "gray") verificationScore = 12;
+
+  // 3. Reviews (20 pts) — 12 for rating quality, 8 for review volume
+  const rating = Number(vendor.average_rating || 0);
+  const reviewCount = Number(vendor.reviews_count || 0);
+  const reviewsScore = Math.round((rating / 5) * 12 + Math.min(reviewCount / 10, 1) * 8);
+
+  // 4. Catalog (20 pts) — scaled against a 6-listing healthy baseline
+  const { count: productCount } = await insightSupabase
+    .from("vendor_products")
+    .select("*", { count: "exact", head: true })
+    .eq("vendor_id", vendor.id);
+
+  const { count: serviceCount } = await insightSupabase
+    .from("vendor_services")
+    .select("*", { count: "exact", head: true })
+    .eq("vendor_id", vendor.id);
+
+  const totalListings = (productCount || 0) + (serviceCount || 0);
+  const catalogRequired = 6;
+  const catalogScore = Math.round(Math.min(totalListings / catalogRequired, 1) * 20);
+
+  // 5. Sponsorship (20 pts) — real is_sponsored flag for now;
+  // will be replaced by the real sponsorship module's own state
+  // once that's built.
+  const sponsorshipScore = vendor.is_sponsored ? 20 : 0;
+
+  const total = Math.min(100, profileScore + verificationScore + reviewsScore + catalogScore + sponsorshipScore);
+
+  return {
+    total,
+    items: [
+      { label: "Profile Completeness", score: profileScore, max: 20 },
+      { label: "Verification",         score: verificationScore, max: 20 },
+      { label: "Reviews",              score: reviewsScore, max: 20 },
+      { label: "Catalog",              score: catalogScore, max: 20 },
+      { label: "Sponsorship",          score: sponsorshipScore, max: 20 }
+    ],
+    profileDetails,
+    catalogDetails: { products: productCount || 0, services: serviceCount || 0, total: totalListings, required: catalogRequired },
+    reviewDetails: { rating, count: reviewCount }
+  };
+
+}
+
+function healthLabelFor(score) {
+  if (score >= 80) return "Excellent Visibility";
+  if (score >= 60) return "Good Visibility";
+  if (score >= 40) return "Fair Visibility";
+  return "Needs Improvement";
+}
+
+function renderRankingFactors(healthData) {
+
+  if (!currentVendorData || !healthData) return;
+
+  const sponsoredEl = $("rankFactorSponsored");
+  if (sponsoredEl) sponsoredEl.textContent = currentVendorData.is_sponsored ? "Yes" : "No";
+
+  const verificationEl = $("rankFactorVerification");
+  if (verificationEl) {
+    verificationEl.textContent =
+      currentVendorData.verification_status === "blue" ? "Fully Verified" :
+      currentVendorData.verification_status === "gray" ? "Partially Verified" :
+      "Not Verified";
+  }
+
+  const ratingEl = $("rankFactorRating");
+  if (ratingEl) ratingEl.textContent = `${healthData.reviewDetails.rating.toFixed(1)} / 5`;
+
+  const reviewsEl = $("rankFactorReviews");
+  if (reviewsEl) reviewsEl.textContent = healthData.reviewDetails.count;
+
+}
 
 /* ===========================
-   GROWTH COACH  (static config)
+   SPONSORSHIP CARD (honest interim state)
+   Reflects the real is_sponsored flag only —
+   no fake clicks/leads/expiry until the real
+   sponsorship module (purchase flow, tracked
+   duration, real click/lead attribution) is
+   built as its own dedicated piece of work.
 =========================== */
 
-const growthCoachData = {
-  profile: {
-    description: true, logo: true, coverImage: true,
-    businessVideo: false, contactInformation: true,
-    businessHours: true, socialLinks: false
-  },
-  verification: { score: 20, maxScore: 20, emailVerified: true, businessVerified: true },
-  catalog: {
-    score: 12, maxScore: 20, plan: "standard", businessType: "hybrid",
-    products: 3, services: 1, current: 4,
-    required: 6
-  },
-  reviews:     { score: 8,  maxScore: 20, thisMonth: 4, targetThisMonth: 10 },
-  sponsorship: {
-    score: 10, maxScore: 20, businessType: "hybrid",
-    businessSponsoredText: "No", productsSponsoredText: "Yes", servicesSponsoredText: "No"
+function renderSponsorshipCard(vendor) {
+
+  const badge = $("sponsorStateBadge");
+  const statusText = $("sponsorStatusText");
+  const actionBtn = $("sponsorActionBtn");
+
+  if (vendor.is_sponsored) {
+
+    if (badge) {
+      badge.textContent = "Active";
+      badge.classList.add("badge-active");
+    }
+
+    if (statusText) {
+      statusText.textContent = "Your business is currently sponsored on Spotlight.";
+    }
+
+    if (actionBtn) {
+      actionBtn.textContent = "Manage Sponsorship";
+    }
+
+  } else {
+
+    if (badge) {
+      badge.textContent = "Not Sponsored";
+      badge.classList.remove("badge-active");
+    }
+
+    if (statusText) {
+      statusText.textContent = "Sponsor your business to appear first in search results and reach more customers.";
+    }
+
+    if (actionBtn) {
+      actionBtn.textContent = "Sponsor Now";
+    }
+
   }
-};
 
-const coachItems = [
-  { title: 'Complete Profile',                   done: false, score: 14, maxScore: 20, impact: 'recommended', actionLabel: 'See Details' },
-  { title: 'Complete Business Verification',     done: true,  score: 20, maxScore: 20, impact: 'high',        actionLabel: 'See Details' },
-  { title: 'Add & Complete Products / Services', done: false, score: 12, maxScore: 20, impact: 'high',        actionLabel: 'See Details' },
-  { title: 'Get More Reviews',                   done: false, score: 8,  maxScore: 20, impact: 'recommended', actionLabel: 'See Details' },
-  { title: 'Sponsor Business / Products / Services', done: false, score: 10, maxScore: 20, impact: 'high', actionLabel: 'See Details', secondaryAction: 'Sponsor Now' }
-];
+}
 
-(function renderGrowthCoach() {
+async function renderGauge(vendor) {
+  currentHealthData = await computeHealthScore(vendor);
+
+  const svg = $('gaugeSvg');
+
+  if (!svg.querySelector('defs')) {
+    const defs = svgEl('defs', {});
+    const grad = svgEl('linearGradient', { id: 'gaugeGradient', x1: '0%', y1: '0%', x2: '100%', y2: '0%' });
+    [['0%','#D93025'],['50%','#E6B800'],['100%','#1E8E3E']].forEach(([offset, color]) => {
+      grad.appendChild(svgEl('stop', { offset, 'stop-color': color }));
+    });
+    defs.appendChild(grad);
+    svg.insertBefore(defs, svg.firstChild);
+  }
+
+  const fullLength = Math.PI * 90;
+  const pct = currentHealthData.total / 100;
+  $('gaugeFill').style.strokeDasharray = `${fullLength * pct} ${fullLength}`;
+  $('healthValue').textContent = currentHealthData.total;
+
+  const healthLabelEl = document.querySelector(".health-label");
+  if (healthLabelEl) healthLabelEl.textContent = healthLabelFor(currentHealthData.total);
+
+  const stars = Math.max(1, Math.min(5, Math.round(currentHealthData.total / 20)));
+  const starsEl = $('starRow');
+  starsEl.textContent = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+
+  // No historical snapshot exists yet to compute a genuine
+  // month-over-month delta — the previous "▲ 12%" was invented.
+  // Hide the delta line honestly until real history is tracked.
+  const deltaEl = document.querySelector(".health-delta");
+  if (deltaEl) deltaEl.style.display = "none";
+
+  // Populate the Health Score Breakdown modal from the same data
+  const modalScoreEl = document.querySelector(".health-modal-score");
+  if (modalScoreEl) modalScoreEl.textContent = `${currentHealthData.total} / 100`;
+
+  const modalItems = document.querySelectorAll("#healthModal .health-modal-item");
+  currentHealthData.items.forEach((item, i) => {
+    if (modalItems[i]) {
+      modalItems[i].querySelector("span").textContent = item.label;
+      modalItems[i].querySelector("strong").textContent = `${item.score}/${item.max}`;
+    }
+  });
+
+}
+
+/* ===========================
+   GROWTH COACH  (fully dynamic — derived from
+   the same health score data, so the two
+   sections can never disagree with each other)
+=========================== */
+
+function buildCoachItems(healthData, vendor) {
+  return [
+    {
+      title: 'Complete Profile',
+      done: healthData.items[0].score >= 20,
+      score: healthData.items[0].score,
+      maxScore: 20,
+      impact: healthData.items[0].score >= 20 ? null : 'recommended',
+      actionLabel: 'See Details'
+    },
+    {
+      title: 'Complete Business Verification',
+      done: healthData.items[1].score >= 20,
+      score: healthData.items[1].score,
+      maxScore: 20,
+      impact: healthData.items[1].score >= 20 ? null : 'high',
+      actionLabel: 'See Details'
+    },
+    {
+      title: 'Add & Complete Products / Services',
+      done: healthData.items[3].score >= 20,
+      score: healthData.items[3].score,
+      maxScore: 20,
+      impact: healthData.items[3].score >= 20 ? null : 'high',
+      actionLabel: 'See Details'
+    },
+    {
+      title: 'Get More Reviews',
+      done: healthData.items[2].score >= 20,
+      score: healthData.items[2].score,
+      maxScore: 20,
+      impact: healthData.items[2].score >= 20 ? null : 'recommended',
+      actionLabel: 'See Details'
+    },
+    {
+      title: 'Sponsor Business / Products / Services',
+      done: vendor.is_sponsored === true,
+      score: healthData.items[4].score,
+      maxScore: 20,
+      impact: vendor.is_sponsored ? null : 'high',
+      actionLabel: 'See Details',
+      secondaryAction: vendor.is_sponsored ? null : 'Sponsor Now'
+    }
+  ];
+}
+
+function renderGrowthCoach(healthData, vendor) {
+
+  const coachItems = buildCoachItems(healthData, vendor);
+
   $('coachList').innerHTML = coachItems.map((c, index) => `
     <div class="coach-item-wrap">
       <div class="coach-item">
@@ -788,9 +977,12 @@ const coachItems = [
     </div>
   `).join('');
 
-  const growthScore = coachItems.reduce((t, c) => t + c.score, 0);
-  $("coachProgressLabel").textContent = growthScore + "%";
-  $("coachProgressFill").style.width   = growthScore + "%";
+  // Growth Progress is now literally the same total as the Health
+  // Score, since both derive from the identical underlying data —
+  // previously these were two separate fake numbers that happened
+  // to both look plausible but had no real relationship.
+  $("coachProgressLabel").textContent = healthData.total + "%";
+  $("coachProgressFill").style.width   = healthData.total + "%";
 
   // Breakdown toggle
   const toggle = $("coachBreakdownToggle");
@@ -804,42 +996,45 @@ const coachItems = [
   }
 
   $("coachBreakdown").innerHTML = `
-    ${coachItems.map((c, i) => `
+    ${healthData.items.map(item => `
       <div class="coach-breakdown-row">
-        <span>${['Profile Completion','Verification','Products & Services','Reviews','Sponsorship'][i]}</span>
-        <span>${c.score}/${c.maxScore}</span>
+        <span>${item.label}</span>
+        <span>${item.score}/${item.max}</span>
       </div>`).join('')}
     <div class="coach-breakdown-total">
       <span>Growth Score</span>
-      <span>${growthScore}/100</span>
+      <span>${healthData.total}/100</span>
     </div>`;
 
-  // Detail expansion
+  // Detail expansion — built from the same real numbers
   const detailContent = [
     () => `
-      <div class="coach-detail-score">Current Score: ${coachItems[0].score}/${coachItems[0].maxScore}</div>
-      ${Object.entries(growthCoachData.profile).map(([k, v]) =>
-        `<div>${v ? '✓' : '✗'} ${k.replace(/([A-Z])/g,' $1').replace(/^./,s=>s.toUpperCase())}</div>`
-      ).join('')}`,
+      <div class="coach-detail-score">Current Score: ${healthData.items[0].score}/20</div>
+      <div>${healthData.profileDetails.logo ? '✓' : '✗'} Logo</div>
+      <div>${healthData.profileDetails.cover ? '✓' : '✗'} Cover Image</div>
+      <div>${healthData.profileDetails.description ? '✓' : '✗'} Business Description</div>
+      <div>${healthData.profileDetails.hours ? '✓' : '✗'} Business Hours</div>
+      <div>${healthData.profileDetails.contact ? '✓' : '✗'} Contact Information</div>`,
     () => `
-      <div class="coach-detail-score">Current Score: ${growthCoachData.verification.score}/${growthCoachData.verification.maxScore}</div>
-      <div>${growthCoachData.verification.emailVerified    ? '✓' : '✗'} Email Verified</div>
-      <div>${growthCoachData.verification.businessVerified ? '✓' : '✗'} Business Verified</div>`,
+      <div class="coach-detail-score">Current Score: ${healthData.items[1].score}/20</div>
+      <div>${vendor.verification_status && vendor.verification_status !== "none" ? '✓' : '✗'} Business Verified${
+        vendor.verification_status === "blue" ? " (Fully Verified)" :
+        vendor.verification_status === "gray" ? " (Partially Verified)" : ""
+      }</div>`,
     () => `
-      <div class="coach-detail-score">Current Score: ${growthCoachData.catalog.score}/${growthCoachData.catalog.maxScore}</div>
-      <div>Plan: ${growthCoachData.catalog.plan}</div>
-      <div>Products: ${growthCoachData.catalog.products} | Services: ${growthCoachData.catalog.services}</div>
-      <div>Current Listings: ${growthCoachData.catalog.current} / Required: ${growthCoachData.catalog.required}</div>
-      <div>${growthCoachData.catalog.required - growthCoachData.catalog.current} more listing(s) required</div>`,
+      <div class="coach-detail-score">Current Score: ${healthData.items[3].score}/20</div>
+      <div>Products: ${healthData.catalogDetails.products} | Services: ${healthData.catalogDetails.services}</div>
+      <div>Current Listings: ${healthData.catalogDetails.total} / Recommended: ${healthData.catalogDetails.required}</div>
+      ${healthData.catalogDetails.total < healthData.catalogDetails.required
+        ? `<div>${healthData.catalogDetails.required - healthData.catalogDetails.total} more listing(s) recommended</div>`
+        : `<div>You've met the recommended catalog size.</div>`}`,
     () => `
-      <div class="coach-detail-score">Current Score: ${growthCoachData.reviews.score}/${growthCoachData.reviews.maxScore}</div>
-      <div>This Month: ${growthCoachData.reviews.thisMonth} / Target: ${growthCoachData.reviews.targetThisMonth}</div>
-      <div>${growthCoachData.reviews.targetThisMonth - growthCoachData.reviews.thisMonth} more reviews required</div>`,
+      <div class="coach-detail-score">Current Score: ${healthData.items[2].score}/20</div>
+      <div>Average Rating: ${healthData.reviewDetails.rating.toFixed(1)} / 5</div>
+      <div>Total Reviews: ${healthData.reviewDetails.count}</div>`,
     () => `
-      <div class="coach-detail-score">Current Score: ${growthCoachData.sponsorship.score}/${growthCoachData.sponsorship.maxScore}</div>
-      <div>Business Sponsored: ${growthCoachData.sponsorship.businessSponsoredText}</div>
-      <div>Products Sponsored: ${growthCoachData.sponsorship.productsSponsoredText}</div>
-      <div>Services Sponsored: ${growthCoachData.sponsorship.servicesSponsoredText}</div>`
+      <div class="coach-detail-score">Current Score: ${healthData.items[4].score}/20</div>
+      <div>${vendor.is_sponsored ? 'Currently sponsored' : 'Not currently sponsored'}</div>`
   ];
 
   document.querySelectorAll(".coach-action").forEach(btn => {
@@ -853,7 +1048,8 @@ const coachItems = [
       if (hidden) details.innerHTML = detailContent[+index]();
     };
   });
-})();
+
+}
 
 /* ===========================
    RANKING CATEGORY MODAL
@@ -931,5 +1127,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Boot sequence — load vendor first, then render everything
   await loadCurrentVendor();
+
+  if (currentVendorData) {
+    await renderGauge(currentVendorData);
+    renderGrowthCoach(currentHealthData, currentVendorData);
+    renderRankingFactors(currentHealthData);
+    renderSponsorshipCard(currentVendorData);
+  }
+
   await syncPeriod("This Month");
 });
