@@ -167,6 +167,33 @@
     </div>
 
     <!-- ============================================================
+         PENDING SPONSORSHIPS (BANK TRANSFER) — finance roles only
+    ============================================================ -->
+    <div class="admin-section" data-roles="super_admin,admin,finance_admin">
+    <h1 class="verification-heading">Pending Sponsorships</h1>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Vendor</th>
+          <th>Type</th>
+          <th>Tier</th>
+          <th>Billing</th>
+          <th>Amount</th>
+          <th>Receipt</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+
+      <tbody id="sponsorshipsTable">
+        <tr>
+          <td colspan="7">Loading…</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <!-- ============================================================
          PENDING BADGE VERIFICATIONS — verification roles only
     ============================================================ -->
     <div class="admin-section" data-roles="super_admin,admin,verification_admin">
@@ -356,6 +383,46 @@
   </thead>
   <tbody id="paymentHistoryTable">
     <tr><td colspan="7">Loading…</td></tr>
+  </tbody>
+</table>
+    </div>
+
+    <!-- ============================================================
+         SPONSORSHIP HISTORY — finance roles only
+    ============================================================ -->
+    <div class="admin-section" data-roles="super_admin,admin,finance_admin">
+<h1 class="verification-heading">Sponsorship History</h1>
+
+<div class="review-history-controls">
+  <input
+    type="text"
+    id="sponsorshipHistorySearch"
+    placeholder="Search by vendor name..."
+    class="history-search"
+  />
+  <select id="sponsorshipHistoryFilter" class="history-filter">
+    <option value="all">All Statuses</option>
+    <option value="active">Active</option>
+    <option value="rejected">Rejected</option>
+    <option value="expired">Expired</option>
+  </select>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Vendor</th>
+      <th>Type</th>
+      <th>Tier</th>
+      <th>Billing</th>
+      <th>Amount</th>
+      <th>Expires</th>
+      <th>Status</th>
+      <th>Receipt</th>
+    </tr>
+  </thead>
+  <tbody id="sponsorshipHistoryTable">
+    <tr><td colspan="8">Loading…</td></tr>
   </tbody>
 </table>
     </div>

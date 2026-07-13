@@ -26,10 +26,10 @@ serve(async (req) => {
     });
   }
 
-  const { reference, sponsorship_id, auth_user_id } = await req.json();
-  console.log("DEBUG INPUT:", { reference, sponsorship_id, auth_user_id });
+  const { reference, sponsorship_ids, auth_user_id } = await req.json();
+  console.log("DEBUG INPUT:", { reference, sponsorship_ids, auth_user_id });
 
-  if (!reference || !sponsorship_id || !auth_user_id) {
+  if (!reference || !sponsorship_ids || !Array.isArray(sponsorship_ids) || sponsorship_ids.length === 0 || !auth_user_id) {
     return new Response("Missing data", {
       status: 400,
       headers: corsHeaders,
@@ -71,26 +71,27 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  // Prevent duplicate processing
-  const { data: existingSponsorship, error: fetchError } = await supabase
+  // Prevent duplicate processing — fetch all rows in this batch
+  const { data: existingSponsorships, error: fetchError } = await supabase
     .from("vendor_sponsorships")
     .select("id, payment_status, vendor_id, billing_cycle, sponsorship_type, target_id, tier")
-    .eq("id", sponsorship_id)
-    .single();
+    .in("id", sponsorship_ids);
 
   if (fetchError) {
-    console.error("Fetch sponsorship error:", fetchError);
+    console.error("Fetch sponsorships error:", fetchError);
   }
 
-  if (!existingSponsorship) {
-    console.error("No sponsorship found with id:", sponsorship_id);
+  if (!existingSponsorships || existingSponsorships.length === 0) {
+    console.error("No sponsorships found with ids:", sponsorship_ids);
     return new Response(
-      JSON.stringify({ message: "Sponsorship record not found" }),
+      JSON.stringify({ message: "Sponsorship records not found" }),
       { headers: corsHeaders }
     );
   }
 
-  if (existingSponsorship.payment_status === "active") {
+  const firstSponsorship = existingSponsorships[0];
+
+  if (firstSponsorship.payment_status === "active") {
     return new Response(
       JSON.stringify({ message: "Already processed" }),
       { headers: corsHeaders }
@@ -100,43 +101,43 @@ serve(async (req) => {
   const now = new Date();
 
   const expiry =
-    existingSponsorship.billing_cycle === "monthly"
+    firstSponsorship.billing_cycle === "monthly"
       ? new Date(new Date(now).setDate(now.getDate() + 30))
       : new Date(new Date(now).setDate(now.getDate() + 365));
 
-  const { data: updatedSponsorship, error: updateError } = await supabase
+  const { data: updatedSponsorships, error: updateError } = await supabase
     .from("vendor_sponsorships")
     .update({
       payment_status: "active",
       starts_at: now.toISOString(),
       expires_at: expiry.toISOString(),
     })
-    .eq("id", sponsorship_id)
+    .in("id", sponsorship_ids)
     .select();
 
   if (updateError) {
     console.error("Sponsorship update error:", updateError);
   }
 
-  if (!updatedSponsorship || updatedSponsorship.length === 0) {
-    console.error("No sponsorship matched id:", sponsorship_id);
+  if (!updatedSponsorships || updatedSponsorships.length === 0) {
+    console.error("No sponsorships matched ids:", sponsorship_ids);
   }
 
   // Send confirmation email — same pattern as subscription activation
   const { data: vendorData } = await supabase
     .from("vendors")
     .select("email, name")
-    .eq("id", existingSponsorship.vendor_id)
+    .eq("id", firstSponsorship.vendor_id)
     .single();
 
   if (vendorData?.email) {
     try {
       const typeLabel =
-        existingSponsorship.sponsorship_type === "business"
+        firstSponsorship.sponsorship_type === "business"
           ? "your business"
-          : existingSponsorship.sponsorship_type === "product"
-            ? "your product"
-            : "your service";
+          : firstSponsorship.sponsorship_type === "product"
+            ? (existingSponsorships.length > 1 ? `${existingSponsorships.length} products` : "your product")
+            : (existingSponsorships.length > 1 ? `${existingSponsorships.length} services` : "your service");
 
       await fetch(
         `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-email`,
@@ -150,7 +151,7 @@ serve(async (req) => {
           body: JSON.stringify({
             to: vendorData.email,
             subject: "Sponsorship Activated 🎉",
-            html: `<p>Your ${existingSponsorship.tier} sponsorship for ${typeLabel} is now active.</p>
+            html: `<p>Your ${firstSponsorship.tier} sponsorship for ${typeLabel} is now active.</p>
                    <p>It will run until ${expiry.toDateString()}.</p>`
           })
         }

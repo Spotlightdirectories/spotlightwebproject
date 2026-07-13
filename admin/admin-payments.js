@@ -424,6 +424,64 @@ if (error) {
     table.appendChild(tr);
   });
 }
+// -----------------------------
+// LOAD PENDING SPONSORSHIPS
+// -----------------------------
+const sponsorshipsTable = document.getElementById("sponsorshipsTable");
+
+if (sponsorshipsTable) {
+
+  const { data: sponsorships, error: sponsorshipsError } = await supabase
+    .from("vendor_sponsorships")
+    .select(`
+      id,
+      sponsorship_type,
+      tier,
+      billing_cycle,
+      amount_paid,
+      receipt_url,
+      payment_status,
+      vendors ( id, name, email )
+    `)
+    .eq("payment_method", "bank_transfer")
+    .eq("payment_status", "pending");
+
+  if (sponsorshipsError) {
+    sponsorshipsTable.innerHTML = `<tr><td colspan="7" class="empty-state-cell">${sponsorshipsError.message}</td></tr>`;
+  } else if (!sponsorships.length) {
+    sponsorshipsTable.innerHTML = `<tr><td colspan="7" class="empty-state-cell">✓ All caught up — no pending sponsorships.</td></tr>`;
+  } else {
+    sponsorshipsTable.innerHTML = "";
+
+    sponsorships.forEach(s => {
+
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>${sanitize(s.vendors?.name)}</td>
+        <td>${sanitize(s.sponsorship_type)}</td>
+        <td>${sanitize(s.tier)}</td>
+        <td>${sanitize(s.billing_cycle)}</td>
+        <td>₦${Number(s.amount_paid).toLocaleString()}</td>
+        <td>
+          ${
+            s.receipt_url
+              ? `<a href="#" onclick="viewSignedUrl('sponsorship-receipts','${sanitize(s.receipt_url)}');return false;">View</a>`
+              : "—"
+          }
+        </td>
+        <td>
+          <button class="approve-btn" data-sponsor-approve="${sanitize(s.id)}">Approve</button>
+          <button class="reject-btn" data-sponsor-reject="${sanitize(s.id)}">Reject</button>
+        </td>
+      `;
+
+      sponsorshipsTable.appendChild(tr);
+    });
+  }
+
+}
+
   // -----------------------------
 // LOAD BADGE VERIFICATIONS
 // -----------------------------
@@ -622,6 +680,14 @@ initCommissionSearch(commissions);
     await rejectPayment(e.target.dataset.reject, row);
   }
 
+  if (e.target.matches("[data-sponsor-approve]")) {
+    await approveSponsorship(e.target.dataset.sponsorApprove, row);
+  }
+
+  if (e.target.matches("[data-sponsor-reject]")) {
+    await rejectSponsorship(e.target.dataset.sponsorReject, row);
+  }
+
   if (e.target.matches("[data-revoke]")) {
     await revokeVerification(e.target.dataset.revoke, e.target.closest("tr"));
   }
@@ -653,8 +719,161 @@ initCommissionSearch(commissions);
   });
 
   // -----------------------------
-  // APPROVE
-  // -----------------------------
+// APPROVE SPONSORSHIP (bank transfer)
+// -----------------------------
+async function approveSponsorship(sponsorshipId, row) {
+
+  if (!confirm("Approve this sponsorship?")) return;
+
+  const approveBtn = document.querySelector(`[data-sponsor-approve="${sponsorshipId}"]`);
+  if (approveBtn) {
+    approveBtn.disabled = true;
+    approveBtn.textContent = "Processing...";
+  }
+
+  const { data: sponsorship, error } = await supabase
+    .from("vendor_sponsorships")
+    .select(`
+      id, vendor_id, sponsorship_type, tier, billing_cycle, payment_status,
+      vendors ( email, name )
+    `)
+    .eq("id", sponsorshipId)
+    .single();
+
+  if (error || !sponsorship) {
+    alert("Sponsorship not found.");
+    if (approveBtn) {
+      approveBtn.disabled = false;
+      approveBtn.textContent = "Approve";
+    }
+    return;
+  }
+
+  if (sponsorship.payment_status !== "pending") {
+    alert("This sponsorship is already processed.");
+    return;
+  }
+
+  const now = new Date();
+
+  const expiry =
+    sponsorship.billing_cycle === "monthly"
+      ? new Date(new Date(now).setDate(now.getDate() + 30))
+      : new Date(new Date(now).setDate(now.getDate() + 365));
+
+  const { error: updateError } = await supabase
+    .from("vendor_sponsorships")
+    .update({
+      payment_status: "active",
+      starts_at: now.toISOString(),
+      expires_at: expiry.toISOString()
+    })
+    .eq("id", sponsorshipId);
+
+  if (updateError) {
+    console.error("Sponsorship update failed:", updateError);
+    alert("Failed to update sponsorship record.");
+    if (approveBtn) {
+      approveBtn.disabled = false;
+      approveBtn.textContent = "Approve";
+    }
+    return;
+  }
+
+  const typeLabel =
+    sponsorship.sponsorship_type === "business" ? "your business"
+    : sponsorship.sponsorship_type === "product" ? "your product"
+    : "your service";
+
+  try {
+    await sendEmail({
+      to: sponsorship.vendors.email,
+      subject: "Sponsorship Approved 🎉",
+      html: `<p>Hi ${sanitize(sponsorship.vendors?.name) || ""},</p>
+             <p>Your <strong>${sanitize(sponsorship.tier)}</strong> sponsorship for ${typeLabel} has been approved and is now active.</p>
+             <p>It will run until ${expiry.toDateString()}.</p>`
+    });
+  } catch (err) {
+    console.error("Sponsorship approval email failed:", err);
+  }
+
+  alert("Sponsorship approved");
+
+  if (row) row.remove();
+}
+
+// -----------------------------
+// REJECT SPONSORSHIP (bank transfer)
+// -----------------------------
+async function rejectSponsorship(sponsorshipId, row) {
+
+  const reason = prompt("Reason for rejection?");
+  if (!reason) return;
+
+  const rejectBtn = document.querySelector(`[data-sponsor-reject="${sponsorshipId}"]`);
+  if (rejectBtn) {
+    rejectBtn.disabled = true;
+    rejectBtn.textContent = "Processing...";
+  }
+
+  const { data: sponsorship, error } = await supabase
+    .from("vendor_sponsorships")
+    .select(`
+      id, vendor_id, sponsorship_type, tier, payment_status,
+      vendors ( email, name )
+    `)
+    .eq("id", sponsorshipId)
+    .single();
+
+  if (error || !sponsorship) {
+    alert("Sponsorship not found.");
+    if (rejectBtn) {
+      rejectBtn.disabled = false;
+      rejectBtn.textContent = "Reject";
+    }
+    return;
+  }
+
+  if (sponsorship.payment_status !== "pending") {
+    alert("This sponsorship is already processed.");
+    return;
+  }
+
+  const { error: updateError } = await supabase
+    .from("vendor_sponsorships")
+    .update({ payment_status: "rejected" })
+    .eq("id", sponsorshipId);
+
+  if (updateError) {
+    console.error("Sponsorship rejection failed:", updateError);
+    alert("Failed to update sponsorship record.");
+    if (rejectBtn) {
+      rejectBtn.disabled = false;
+      rejectBtn.textContent = "Reject";
+    }
+    return;
+  }
+
+  try {
+    await sendEmail({
+      to: sponsorship.vendors.email,
+      subject: "Sponsorship Payment Could Not Be Verified",
+      html: `<p>Hi ${sanitize(sponsorship.vendors?.name) || ""},</p>
+             <p>We were unable to verify your sponsorship payment.</p>
+             <p><strong>Reason:</strong> ${sanitize(reason)}</p>`
+    });
+  } catch (err) {
+    console.error("Sponsorship rejection email failed:", err);
+  }
+
+  alert("Sponsorship rejected");
+
+  if (row) row.remove();
+}
+
+// -----------------------------
+// APPROVE
+// -----------------------------
     async function approvePayment(paymentId, row) {
 
      if (!confirm("Approve this payment?")) return;
@@ -1668,6 +1887,112 @@ function renderPaymentHistory(payments) {
 }
 
 loadPaymentHistory();
+
+// -----------------------------
+// SPONSORSHIP HISTORY
+// Shows all active and rejected sponsorships.
+// -----------------------------
+
+let allReviewedSponsorships = [];
+
+async function loadSponsorshipHistory() {
+  const historyTable = document.getElementById("sponsorshipHistoryTable");
+  if (!historyTable) return;
+
+  const { data: sponsorships, error } = await supabase
+    .from("vendor_sponsorships")
+    .select(`
+      id,
+      sponsorship_type,
+      tier,
+      billing_cycle,
+      amount_paid,
+      expires_at,
+      payment_status,
+      receipt_url,
+      vendors ( name )
+    `)
+    .eq("payment_method", "bank_transfer")
+    .in("payment_status", ["active", "rejected", "expired"])
+    .order("expires_at", { ascending: false });
+
+  if (error) {
+    historyTable.innerHTML = `<tr><td colspan="8">Failed to load sponsorship history.</td></tr>`;
+    return;
+  }
+
+  if (!sponsorships || !sponsorships.length) {
+    historyTable.innerHTML = `<tr><td colspan="8">No reviewed sponsorships yet.</td></tr>`;
+    return;
+  }
+
+  allReviewedSponsorships = sponsorships;
+  renderSponsorshipHistory(sponsorships);
+
+  const searchInput = document.getElementById("sponsorshipHistorySearch");
+  const statusFilter = document.getElementById("sponsorshipHistoryFilter");
+
+  function applyFilters() {
+    const searchTerm = (searchInput?.value || "").toLowerCase().trim();
+    const statusValue = statusFilter?.value || "all";
+    const filtered = allReviewedSponsorships.filter(s => {
+      const nameMatch = (s.vendors?.name || "").toLowerCase().includes(searchTerm);
+      const statusMatch = statusValue === "all" || s.payment_status === statusValue;
+      return nameMatch && statusMatch;
+    });
+    renderSponsorshipHistory(filtered);
+  }
+
+  if (searchInput) searchInput.addEventListener("input", applyFilters);
+  if (statusFilter) statusFilter.addEventListener("change", applyFilters);
+}
+
+function renderSponsorshipHistory(sponsorships) {
+  const historyTable = document.getElementById("sponsorshipHistoryTable");
+  if (!historyTable) return;
+
+  if (!sponsorships.length) {
+    historyTable.innerHTML = `<tr><td colspan="8">No results found.</td></tr>`;
+    return;
+  }
+
+  historyTable.innerHTML = "";
+
+  sponsorships.forEach(s => {
+    const tr = document.createElement("tr");
+
+    const expiresDisplay = s.expires_at
+      ? new Date(s.expires_at).toLocaleDateString()
+      : "—";
+
+    const statusClass = s.payment_status === "active"
+      ? "status-approved"
+      : s.payment_status === "expired"
+        ? "status-revoked"
+        : "status-rejected";
+
+    const receiptLink = s.receipt_url
+      ? `<a href="#"
+           onclick="viewSignedUrl('sponsorship-receipts','${s.receipt_url}');return false;"
+           style="color:#2563eb;text-decoration:underline;cursor:pointer;">View Receipt</a>`
+      : "—";
+
+    tr.innerHTML = `
+      <td>${sanitize(s.vendors?.name)}</td>
+      <td>${sanitize(s.sponsorship_type)}</td>
+      <td>${sanitize(s.tier)}</td>
+      <td>${sanitize(s.billing_cycle)}</td>
+      <td>₦${Number(s.amount_paid).toLocaleString()}</td>
+      <td>${expiresDisplay}</td>
+      <td><span class="status-badge ${statusClass}">${sanitize(s.payment_status)}</span></td>
+      <td>${receiptLink}</td>
+    `;
+
+    historyTable.appendChild(tr);
+  });
+}
+
+loadSponsorshipHistory();
 
 // -----------------------------
 // VERIFICATION HISTORY

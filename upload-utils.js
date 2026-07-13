@@ -11,10 +11,11 @@
 //   const { path, publicUrl } = await uploadVendorFile(file, "product");
 //
 // Categories: "product", "service", "gallery", "cover", "logo",
-// "verification", "receipt"
+// "verification", "receipt", "sponsorship_receipt"
 //
-// publicUrl is null for "verification" and "receipt" — those buckets
-// are private, so only `path` is meaningful for them.
+// publicUrl is null for "verification", "receipt", and
+// "sponsorship_receipt" — those buckets are private, so only
+// `path` is meaningful for them.
 //
 // Throws an Error with a user-friendly message if validation or
 // upload fails — callers should wrap calls in try/catch.

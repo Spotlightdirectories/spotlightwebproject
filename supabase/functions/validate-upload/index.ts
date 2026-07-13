@@ -105,6 +105,13 @@ const RULES: Record<string, Rule> = {
     folder: "bank-receipts",
     isPublic: false,
   },
+  sponsorship_receipt: {
+    allowedTypes: ["image/jpeg", "image/png", "application/pdf"],
+    maxBytes: 300 * 1024,
+    bucket: "sponsorship-receipts",
+    folder: "bank-receipts",
+    isPublic: false,
+  },
 };
 
 // ===============================================================
