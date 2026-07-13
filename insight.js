@@ -8,6 +8,7 @@ const visitorId = window.visitorId;
 
 let currentVendorId = null;
 let currentVendorData = null;
+let currentBusinessSponsorship = null; // real active business-type row from vendor_sponsorships, or null
 let insightPeriod = "This Month";
 let showAllKeywords = false;
 
@@ -27,6 +28,27 @@ async function loadCurrentVendor() {
 
   currentVendorId = vendor?.id || null;
   currentVendorData = vendor || null;
+
+  // Real sponsorship state — vendor.is_sponsored is an old,
+  // disconnected column that nothing in the real sponsorship system
+  // writes to. The actual source of truth is an active row here.
+  if (currentVendorId) {
+
+    const { data: sponsorship } = await insightSupabase
+      .from("vendor_sponsorships")
+      .select("tier, expires_at, billing_cycle")
+      .eq("vendor_id", currentVendorId)
+      .eq("sponsorship_type", "business")
+      .eq("payment_status", "active")
+      .gt("expires_at", new Date().toISOString())
+      .order("expires_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    currentBusinessSponsorship = sponsorship || null;
+
+  }
+
 }
 
 /* ===========================
@@ -432,11 +454,20 @@ async function renderKeywords() {
   // search_keyword is the actual column name in analytics_events
   const records = await fetchEvents("search_keyword", "search_impression");
 
+  // Normalize case for grouping — "Professional Services" and
+  // "professional services" are the same search and should be
+  // counted together, not split into two separate rows. Displayed
+  // using a consistent Title Case regardless of how it was typed.
   const termMap = {};
+  const displayMap = {};
   records.forEach(r => {
-    const kw = (r.search_keyword || "").trim();
-    if (!kw) return;
-    termMap[kw] = (termMap[kw] || 0) + 1;
+    const raw = (r.search_keyword || "").trim();
+    if (!raw) return;
+    const key = raw.toLowerCase();
+    termMap[key] = (termMap[key] || 0) + 1;
+    if (!displayMap[key]) {
+      displayMap[key] = raw.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+    }
   });
 
   // total = events that had a keyword (not all records, to keep % meaningful)
@@ -444,8 +475,8 @@ async function renderKeywords() {
 
   const sorted = Object.entries(termMap)
     .sort((a, b) => b[1] - a[1])
-    .map(([term, searches]) => ({
-      term,
+    .map(([key, searches]) => ({
+      term: displayMap[key],
       searches,
       pct: Math.round((searches / keyworded) * 100)
     }));
@@ -500,28 +531,32 @@ async function renderCatalog() {
   const { currentStart } = getPeriodRanges();
 
   // Fetch product views — join vendor_products to get the name
-  const { data: productEvents } = await insightSupabase
+  const { data: productEvents, error: productEventsError } = await insightSupabase
     .from("analytics_events")
-    .select("product_id, vendor_products(id, name)")
+    .select("product_id, vendor_products(id, product_name)")
     .eq("vendor_id", currentVendorId)
     .eq("event_type", "product_view")
     .not("product_id", "is", null)
     .gte("created_at", currentStart.toISOString());
 
+  if (productEventsError) console.error("Catalog product query error:", productEventsError);
+
   // Fetch service views — join vendor_services to get the name
-  const { data: serviceEvents } = await insightSupabase
+  const { data: serviceEvents, error: serviceEventsError } = await insightSupabase
     .from("analytics_events")
-    .select("service_id, vendor_services(id, name)")
+    .select("service_id, vendor_services(id, service_name)")
     .eq("vendor_id", currentVendorId)
     .eq("event_type", "service_view")
     .not("service_id", "is", null)
     .gte("created_at", currentStart.toISOString());
 
+  if (serviceEventsError) console.error("Catalog service query error:", serviceEventsError);
+
   // Aggregate product views by product_id
   const productMap = {};
   (productEvents || []).forEach(r => {
     const id   = r.product_id;
-    const name = r.vendor_products?.name || `Product ${id?.slice(0,8)}`;
+    const name = r.vendor_products?.product_name || `Product ${id?.slice(0,8)}`;
     if (!productMap[id]) productMap[id] = { name, views: 0 };
     productMap[id].views++;
   });
@@ -530,7 +565,7 @@ async function renderCatalog() {
   const serviceMap = {};
   (serviceEvents || []).forEach(r => {
     const id   = r.service_id;
-    const name = r.vendor_services?.name || `Service ${id?.slice(0,8)}`;
+    const name = r.vendor_services?.service_name || `Service ${id?.slice(0,8)}`;
     if (!serviceMap[id]) serviceMap[id] = { name, views: 0 };
     serviceMap[id].views++;
   });
@@ -569,7 +604,7 @@ function renderRankList(id, items) {
 =========================== */
 
 let selectedRankingCategory    = "Professional Services";
-let selectedRankingSubcategory = "Accountant";
+let selectedRankingSubcategory = "Accountant / Auditor";
 
 async function renderRanking() {
   if (!currentVendorId) return;
@@ -751,10 +786,10 @@ async function computeHealthScore(vendor) {
   const catalogRequired = 6;
   const catalogScore = Math.round(Math.min(totalListings / catalogRequired, 1) * 20);
 
-  // 5. Sponsorship (20 pts) — real is_sponsored flag for now;
-  // will be replaced by the real sponsorship module's own state
-  // once that's built.
-  const sponsorshipScore = vendor.is_sponsored ? 20 : 0;
+  // 5. Sponsorship (20 pts) — real active business sponsorship,
+  // read from vendor_sponsorships (the actual source of truth),
+  // not the old, disconnected vendors.is_sponsored column.
+  const sponsorshipScore = currentBusinessSponsorship ? 20 : 0;
 
   const total = Math.min(100, profileScore + verificationScore + reviewsScore + catalogScore + sponsorshipScore);
 
@@ -786,7 +821,7 @@ function renderRankingFactors(healthData) {
   if (!currentVendorData || !healthData) return;
 
   const sponsoredEl = $("rankFactorSponsored");
-  if (sponsoredEl) sponsoredEl.textContent = currentVendorData.is_sponsored ? "Yes" : "No";
+  if (sponsoredEl) sponsoredEl.textContent = currentBusinessSponsorship ? `Yes (${currentBusinessSponsorship.tier})` : "No";
 
   const verificationEl = $("rankFactorVerification");
   if (verificationEl) {
@@ -818,8 +853,14 @@ function renderSponsorshipCard(vendor) {
   const badge = $("sponsorStateBadge");
   const statusText = $("sponsorStatusText");
   const actionBtn = $("sponsorActionBtn");
+  const countdownBox = $("sponsorCountdownBox");
+  const daysLeftEl = $("sponsorDaysLeft");
 
-  if (vendor.is_sponsored) {
+  if (actionBtn) {
+    actionBtn.onclick = () => { window.location.href = "getsponsored.html"; };
+  }
+
+  if (currentBusinessSponsorship) {
 
     if (badge) {
       badge.textContent = "Active";
@@ -827,11 +868,28 @@ function renderSponsorshipCard(vendor) {
     }
 
     if (statusText) {
-      statusText.textContent = "Your business is currently sponsored on Spotlight.";
+      const expiryDate = new Date(currentBusinessSponsorship.expires_at).toLocaleDateString();
+      statusText.textContent = `Your business is sponsored at ${currentBusinessSponsorship.tier} tier, active until ${expiryDate}.`;
     }
 
     if (actionBtn) {
       actionBtn.textContent = "Manage Sponsorship";
+    }
+
+    // Real countdown, same spirit as the free-trial countdown —
+    // warm gold styling normally, escalating to red when only a
+    // few days remain, so a lapsing sponsorship is hard to miss.
+    if (countdownBox && daysLeftEl) {
+
+      const now = new Date();
+      const expiry = new Date(currentBusinessSponsorship.expires_at);
+      const daysLeft = Math.max(0, Math.ceil((expiry - now) / (1000 * 60 * 60 * 24)));
+
+      daysLeftEl.textContent = daysLeft === 1 ? "1 Day Left" : `${daysLeft} Days Left`;
+
+      countdownBox.classList.toggle("urgent", daysLeft <= 7);
+      countdownBox.classList.remove("hidden");
+
     }
 
   } else {
@@ -847,6 +905,10 @@ function renderSponsorshipCard(vendor) {
 
     if (actionBtn) {
       actionBtn.textContent = "Sponsor Now";
+    }
+
+    if (countdownBox) {
+      countdownBox.classList.add("hidden");
     }
 
   }
@@ -942,12 +1004,12 @@ function buildCoachItems(healthData, vendor) {
     },
     {
       title: 'Sponsor Business / Products / Services',
-      done: vendor.is_sponsored === true,
+      done: !!currentBusinessSponsorship,
       score: healthData.items[4].score,
       maxScore: 20,
-      impact: vendor.is_sponsored ? null : 'high',
+      impact: currentBusinessSponsorship ? null : 'high',
       actionLabel: 'See Details',
-      secondaryAction: vendor.is_sponsored ? null : 'Sponsor Now'
+      secondaryAction: currentBusinessSponsorship ? null : 'Sponsor Now'
     }
   ];
 }
@@ -1034,7 +1096,7 @@ function renderGrowthCoach(healthData, vendor) {
       <div>Total Reviews: ${healthData.reviewDetails.count}</div>`,
     () => `
       <div class="coach-detail-score">Current Score: ${healthData.items[4].score}/20</div>
-      <div>${vendor.is_sponsored ? 'Currently sponsored' : 'Not currently sponsored'}</div>`
+      <div>${currentBusinessSponsorship ? `Currently sponsored at ${currentBusinessSponsorship.tier} tier` : 'Not currently sponsored'}</div>`
   ];
 
   document.querySelectorAll(".coach-action").forEach(btn => {
@@ -1049,6 +1111,10 @@ function renderGrowthCoach(healthData, vendor) {
     };
   });
 
+  document.querySelectorAll(".sponsor-action").forEach(btn => {
+    btn.onclick = () => { window.location.href = "getsponsored.html"; };
+  });
+
 }
 
 /* ===========================
@@ -1056,7 +1122,7 @@ function renderGrowthCoach(healthData, vendor) {
 =========================== */
 
 const rankingCategoryMap = {
-  "Professional Services": ["Accountant/Auditor","Tax Consultant","Lawyer","Architect"],
+  "Professional Services": ["Accountant / Auditor","Tax Consultant","Lawyer","Architect"],
   "Fashion & Tailoring":   ["Fashion Designer","Tailor","Makeup Artist","Barber"],
   "Local Food & Canteens": ["Restaurant","Caterer","Bakery","Food Vendor"],
   "Digital & Tech Services":["Web Designer","Graphic Designer","Software Developer","Digital Marketer"],

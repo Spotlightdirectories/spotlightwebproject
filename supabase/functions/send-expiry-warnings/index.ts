@@ -213,6 +213,60 @@ function subscriptionExpiryWarningHtml(vendorName: string, plan: string, expires
 }
 
 // ------------------------------------------------------------
+// SPONSORSHIP-AT-RISK WARNING TEMPLATE
+// Sent when a vendor's subscription is about to expire while
+// they still have an active sponsorship running past that date —
+// the sponsorship becomes worthless the moment the listing itself
+// disappears from search.
+// ------------------------------------------------------------
+function sponsorshipRiskWarningHtml(vendorName: string, plan: string, subExpiresAt: string, sponsorshipTier: string, sponsorshipType: string, sponsorshipExpiresAt: string): string {
+  const planDisplay = plan ? plan.charAt(0).toUpperCase() + plan.slice(1) : "Current";
+  const subExpiryDisplay = new Date(subExpiresAt).toLocaleDateString("en-NG", {
+    day: "numeric", month: "long", year: "numeric"
+  });
+  const sponsorshipExpiryDisplay = new Date(sponsorshipExpiresAt).toLocaleDateString("en-NG", {
+    day: "numeric", month: "long", year: "numeric"
+  });
+  const tierDisplay = sponsorshipTier ? sponsorshipTier.charAt(0).toUpperCase() + sponsorshipTier.slice(1) : "";
+  const typeDisplay = sponsorshipType === "business" ? "Business" : sponsorshipType === "product" ? "Product" : "Service";
+
+  const body = `
+    <h1 style="margin:0 0 16px;font-size:26px;font-weight:700;color:#0f172a;line-height:1.2;">
+      Your Sponsorship Is At Risk
+    </h1>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">
+      Hello${vendorName ? " " + vendorName : ""},
+    </p>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">
+      Your <strong>${planDisplay} Plan</strong> subscription expires on
+      <strong>${subExpiryDisplay}</strong> — but your <strong>${tierDisplay} ${typeDisplay} Sponsorship</strong>
+      is still active until <strong>${sponsorshipExpiryDisplay}</strong>.
+    </p>
+    ${infoTable(
+      infoRow("Subscription Expires", subExpiryDisplay) +
+      infoRow("Sponsorship Type", `${tierDisplay} ${typeDisplay}`) +
+      infoRow("Sponsorship Runs Until", sponsorshipExpiryDisplay)
+    )}
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">
+      If your subscription expires, your entire listing is removed from search —
+      which means your sponsorship will have no platform to run on for the remainder
+      of its term. Renewing your subscription keeps both your listing and your
+      sponsorship working as intended.
+    </p>
+    ${ctaButton("Renew My Subscription", "https://spotlightdirectories.com/getlisted.html")}
+    ${alertBox(
+      "This is separate from your sponsorship payment — your subscription and sponsorship are billed and tracked independently, and both need to stay active for your sponsorship to be worth anything.",
+      "warning"
+    )}
+  `;
+
+  return base(
+    `Your subscription expires ${subExpiryDisplay}, but your sponsorship runs until ${sponsorshipExpiryDisplay}. Renew now to avoid wasting it.`,
+    body
+  );
+}
+
+// ------------------------------------------------------------
 // SEND EMAIL VIA RESEND
 // ------------------------------------------------------------
 async function sendEmail(to: string, subject: string, html: string, resendKey: string) {
@@ -338,11 +392,72 @@ serve(async () => {
       }
     }
 
+    // --------------------------------------------------------
+    // SPONSORSHIP-AT-RISK WARNINGS
+    // Active paid vendors whose subscription expires in 6-8 days
+    // AND who have an active sponsorship running past that date.
+    // --------------------------------------------------------
+    let sponsorshipRiskSent = 0;
+
+    const { data: atRiskVendors } = await supabase
+      .from("vendors")
+      .select("id, name, email, plan_tier, expires_at")
+      .eq("subscription_status", "active")
+      .not("expires_at", "is", null)
+      .gte("expires_at", new Date(now.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString())
+      .lte("expires_at", new Date(now.getTime() + 8 * 24 * 60 * 60 * 1000).toISOString());
+
+    if (atRiskVendors) {
+
+      for (const vendor of atRiskVendors) {
+
+        const { data: riskSponsorship } = await supabase
+          .from("vendor_sponsorships")
+          .select("id, tier, sponsorship_type, expires_at, subscription_risk_warning_sent")
+          .eq("vendor_id", vendor.id)
+          .eq("payment_status", "active")
+          .eq("subscription_risk_warning_sent", false)
+          .gt("expires_at", vendor.expires_at)
+          .order("expires_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (!riskSponsorship) continue;
+
+        const html = sponsorshipRiskWarningHtml(
+          vendor.name || "",
+          vendor.plan_tier || "",
+          vendor.expires_at,
+          riskSponsorship.tier,
+          riskSponsorship.sponsorship_type,
+          riskSponsorship.expires_at
+        );
+
+        const sent = await sendEmail(
+          vendor.email,
+          `Your Sponsorship Is At Risk — Subscription Expiring Soon`,
+          html,
+          RESEND_API_KEY
+        );
+
+        if (sent) {
+          await supabase
+            .from("vendor_sponsorships")
+            .update({ subscription_risk_warning_sent: true })
+            .eq("id", riskSponsorship.id);
+          sponsorshipRiskSent++;
+        }
+
+      }
+
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         trial_warnings_sent: trialSent,
-        subscription_warnings_sent: subscriptionSent
+        subscription_warnings_sent: subscriptionSent,
+        sponsorship_risk_warnings_sent: sponsorshipRiskSent
       }),
       {
         status: 200,

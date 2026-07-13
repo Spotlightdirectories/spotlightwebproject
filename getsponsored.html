@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sponsor Your Business | Spotlight</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="navbar.css">
+  <link rel="stylesheet" href="getsponsored.css">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <link rel="icon" type="image/png" sizes="48x48" href="/images/favicon-48.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="/images/favicon-64.png">
+  <link rel="apple-touch-icon" href="/images/favicon-180.png">
+</head>
+
+<body>
+
+<header class="navbar">
+  <div class="logo-left">
+    <a href="index">
+      <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg">
+    </a>
+    <a href="index" class="home">Home</a>
+  </div>
+
+  <nav>
+    <button class="menu-open hide-desktop" aria-label="Open menu">
+      <img src="images/hbopen.png" alt="Open menu" width="32" height="32">
+    </button>
+
+    <ul class="nav-links">
+      <li class="menu-close">
+        <button class="xclose" aria-label="Close menu">
+          <img src="images/xclose.png" alt="Close menu" width="32" height="32">
+        </button>
+      </li>
+      <li><a href="discover">Discover</a></li>
+      <li><a href="vendordashboard">Dashboard</a></li>
+      <li id="authButton">
+        <a href="login" id="authBtn" class="nav-login-btn">Log in</a>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<main class="gs-page">
+
+  <section class="gs-hero">
+    <h1>Sponsor Your Business</h1>
+    <p>Get seen first. Sponsored listings appear ahead of everyone else in search — the higher the tier, the stronger the placement.</p>
+  </section>
+
+  <section class="gs-how">
+    <h2>How It Works</h2>
+    <div class="gs-how-steps">
+      <div class="gs-how-step">
+        <div class="gs-how-num">1</div>
+        <div>
+          <h3>Choose what to sponsor</h3>
+          <p>Your whole Business, a specific Product, or a Service.</p>
+        </div>
+      </div>
+      <div class="gs-how-step">
+        <div class="gs-how-num">2</div>
+        <div>
+          <h3>Pick a tier</h3>
+          <p>Higher tiers get stronger placement and cover more items.</p>
+        </div>
+      </div>
+      <div class="gs-how-step">
+        <div class="gs-how-num">3</div>
+        <div>
+          <h3>Pay</h3>
+          <p>Instantly via card, or by bank transfer with receipt upload.</p>
+        </div>
+      </div>
+      <div class="gs-how-step">
+        <div class="gs-how-num">4</div>
+        <div>
+          <h3>Go live</h3>
+          <p>Appear boosted in search the moment payment is confirmed.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="gsLoadingState" class="gs-loading">
+    Loading your account details...
+  </div>
+
+  <div id="gsCurrentSponsorships" class="gs-current-sponsorships hidden">
+    <h2>Your Current Sponsorships</h2>
+    <div id="gsCurrentSponsorshipsList" class="gs-current-list"></div>
+  </div>
+
+  <div id="gsMainContent" class="gs-main hidden">
+
+    <section class="gs-type-tabs" id="gsTypeTabs">
+      <!-- tabs injected by JS, only for what this vendor actually sells -->
+    </section>
+
+    <section id="gsBusinessNote" class="gs-business-note hidden">
+      <i class="fa-solid fa-circle-info"></i>
+      <span id="gsBusinessNoteText"></span>
+    </section>
+
+    <section class="gs-billing-toggle">
+      <button type="button" class="gs-billing-btn active" data-cycle="monthly">Monthly</button>
+      <button type="button" class="gs-billing-btn" data-cycle="yearly">Yearly <span class="gs-save-badge">Save ~25%</span></button>
+    </section>
+
+    <section class="gs-tier-grid" id="gsTierGrid">
+      <!-- tier cards injected by JS -->
+    </section>
+
+    <section id="gsItemPicker" class="gs-item-picker hidden">
+      <h3 id="gsItemPickerTitle">Select items to sponsor</h3>
+      <p class="gs-item-picker-note" id="gsItemPickerNote"></p>
+      <div id="gsItemList" class="gs-item-list"></div>
+    </section>
+
+    <section id="gsCheckoutSummary" class="gs-checkout-summary hidden">
+      <div class="gs-summary-row">
+        <span>Sponsoring</span>
+        <strong id="gsSummaryTarget"></strong>
+      </div>
+      <div class="gs-summary-row">
+        <span>Tier</span>
+        <strong id="gsSummaryTier"></strong>
+      </div>
+      <div class="gs-summary-row gs-summary-total">
+        <span>Total</span>
+        <strong id="gsSummaryTotal"></strong>
+      </div>
+
+      <div class="gs-payment-methods">
+        <button type="button" id="gsPayOnlineBtn" class="gs-pay-btn gs-pay-online">
+          <i class="fa-solid fa-credit-card"></i> Pay Online (Card)
+        </button>
+        <button type="button" id="gsPayBankBtn" class="gs-pay-btn gs-pay-bank">
+          <i class="fa-solid fa-building-columns"></i> Pay by Bank Transfer
+        </button>
+      </div>
+
+      <div id="gsBankSection" class="gs-bank-section hidden">
+        <p>Transfer the total amount to our account, then upload your receipt below. Your sponsorship goes live once an admin confirms it (usually within a few hours).</p>
+        <input type="file" id="gsReceiptFile" accept="image/*,.pdf">
+        <button type="button" id="gsSubmitReceiptBtn" class="gs-submit-receipt-btn">Submit Receipt</button>
+      </div>
+    </section>
+
+  </div>
+
+  <div id="gsEmptyState" class="gs-empty-state hidden">
+    <i class="fa-solid fa-circle-exclamation"></i>
+    <p>Sponsorship isn't available on the Free plan. Upgrade your subscription to unlock sponsorship.</p>
+    <a href="getlisted" class="gs-upgrade-link">View Plans</a>
+  </div>
+
+</main>
+
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="upload-utils.js"></script>
+<script src="getsponsored.js"></script>
+
+</body>
+</html>

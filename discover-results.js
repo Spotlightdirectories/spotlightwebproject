@@ -1308,6 +1308,12 @@ vendor.category ||
 
 </span>
 
+${
+vendor.sponsored
+? `<p class="discover-results-product-sponsored">Sponsored</p>`
+: ""
+}
+
 <div class="discover-results-actions">
 
 <button
@@ -1987,6 +1993,12 @@ service.vendorCategory ||
 
 </span>
 
+${
+service.sponsored
+? `<p class="discover-results-product-sponsored">Sponsored</p>`
+: ""
+}
+
 <div class="discover-results-actions">
 
 <button
@@ -2347,159 +2359,24 @@ function formatDistanceInline(distanceKm) {
 async function searchVendors() {
 
   const keyword =
-
     discoverResultsState.keyword.trim();
 
-  let query =
-
-    window.supabaseClient
-
-      .from("vendors")
-
-      .select("*")
-
-      .eq(
-        "account_status",
-        "active"
-      );
-
-  if (keyword) {
-
-    query =
-
-      query.or(
-
-        "name.ilike.%" +
-
-        keyword +
-
-        "%," +
-
-        "category.ilike.%" +
-
-        keyword +
-
-        "%," +
-
-        "subcategory.ilike.%" +
-
-        keyword +
-
-        "%," +
-
-        "description.ilike.%" +
-
-        keyword +
-
-        "%"
-
-      );
-
-  }
-
-  if (
-
-    discoverResultsState.category
-
-  ) {
-
-    query =
-
-      query.eq(
-
-        "category",
-
-        discoverResultsState.category
-
-      );
-
-  }
-
-  if (
-
-    discoverResultsState.subcategory
-
-  ) {
-
-    query =
-
-      query.eq(
-
-        "subcategory",
-
-        discoverResultsState.subcategory
-
-      );
-
-  }
-
-  if (
-
-    discoverResultsState.state
-
-  ) {
-
-    query =
-
-      query.eq(
-
-        "state",
-
-        discoverResultsState.state
-
-      );
-
-  }
-
-  if (
-
-    discoverResultsState.lga
-
-  ) {
-
-    query =
-
-      query.eq(
-
-        "lga",
-
-        discoverResultsState.lga
-
-      );
-
-  }
-
-  if (
-
-    discoverResultsState.verified
-
-  ) {
-
-    query =
-
-      query.neq(
-
-        "verification_status",
-
-        "none"
-
-      );
-
-  }
-
-  const {
-
-    data,
-
-    error
-
-  } =
-
-    await query;
+  const { data, error } =
+    await window.supabaseClient.rpc(
+      "search_vendors",
+      {
+        p_keyword: keyword || null,
+        p_category: discoverResultsState.category || null,
+        p_subcategory: discoverResultsState.subcategory || null,
+        p_state: discoverResultsState.state || null,
+        p_lga: discoverResultsState.lga || null,
+        p_verified_only: discoverResultsState.verified
+      }
+    );
 
   if (error) {
 
-    console.error(error);
+    console.error("search_vendors error:", error);
 
     return [];
 

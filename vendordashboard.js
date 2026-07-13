@@ -3675,6 +3675,98 @@ if (managePaymentMethodBtn) {
 }
 
 /* ========================= */
+/* SPONSORSHIP HISTORY */
+/* Own section below Subscription — sponsorship and subscription
+   expiry dates are tracked completely independently. */
+/* ========================= */
+
+const sponsorshipHistoryList =
+  document.getElementById(
+    "sponsorshipHistoryList"
+  );
+
+const vdSponsorNowBtn =
+  document.getElementById(
+    "vdSponsorNowBtn"
+  );
+
+if (vdSponsorNowBtn) {
+
+  vdSponsorNowBtn.addEventListener(
+    "click",
+    () => {
+      window.location.href = "getsponsored.html";
+    }
+  );
+
+}
+
+if (sponsorshipHistoryList) {
+
+  const { data: sponsorships, error: sponsorshipsError } =
+    await supabase
+      .from("vendor_sponsorships")
+      .select(`
+        sponsorship_type,
+        target_id,
+        tier,
+        billing_cycle,
+        payment_status,
+        starts_at,
+        expires_at
+      `)
+      .eq("vendor_id", vendor.id)
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+  sponsorshipHistoryList.innerHTML = "";
+
+  if (sponsorshipsError || !sponsorships || !sponsorships.length) {
+
+    sponsorshipHistoryList.innerHTML = `
+      <div class="vd-history-row">
+        <span>No sponsorships yet</span>
+        <strong>—</strong>
+      </div>
+    `;
+
+  } else {
+
+    sponsorships.forEach(s => {
+
+      const startDisplay = s.starts_at
+        ? new Date(s.starts_at).toLocaleDateString()
+        : "—";
+
+      const endDisplay = s.expires_at
+        ? new Date(s.expires_at).toLocaleDateString()
+        : "—";
+
+      const tierLabel = s.tier
+        ? s.tier.charAt(0).toUpperCase() + s.tier.slice(1)
+        : "—";
+
+      const typeLabel = s.sponsorship_type
+        ? s.sponsorship_type.charAt(0).toUpperCase() + s.sponsorship_type.slice(1)
+        : "—";
+
+      const row = document.createElement("div");
+      row.className = "vd-history-row";
+
+      row.innerHTML = `
+        <span>${tierLabel} ${typeLabel} — ${s.billing_cycle || "—"} · ${startDisplay} to ${endDisplay}</span>
+        <strong>${(s.payment_status || "—").toUpperCase()}</strong>
+      `;
+
+      sponsorshipHistoryList.appendChild(row);
+
+    });
+
+  }
+
+}
+
+/* ========================= */
 /* VERIFICATION SECTION */
 /* ========================= */
 
