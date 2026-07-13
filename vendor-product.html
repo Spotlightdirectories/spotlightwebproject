@@ -11,28 +11,24 @@
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-<!-- ✅ UPDATED FAVICONS -->
-<link rel="icon" type="image/png" sizes="48x48" href="/images/favicon-48.png">
-<link rel="icon" type="image/png" sizes="64x64" href="/images/favicon-64.png">
-<link rel="apple-touch-icon" href="/images/favicon-180.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="/images/favicon-48.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="/images/favicon-64.png">
+  <link rel="apple-touch-icon" href="/images/favicon-180.png">
 
-<!-- ✅ STRUCTURED DATA (GOOGLE LOGO CONTROL) -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "Spotlight Directories",
-  "url": "https://spotlightdirectories.com",
-  "logo": "https://spotlightdirectories.com/images/spotlightlogo-512.png"
-}
-</script>
-
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Spotlight Directories",
+    "url": "https://spotlightdirectories.com",
+    "logo": "https://spotlightdirectories.com/images/spotlightlogo-512.png"
+  }
+  </script>
 </head>
 
 <body>
 
-   <header class="navbar">
-
+<header class="navbar">
   <div class="logo-left">
     <a href="index">
       <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg">
@@ -40,165 +36,102 @@
     <a href="index" class="home">Home</a>
   </div>
 
- </header>
+  <nav>
+    <button class="menu-open hide-desktop" aria-label="Open menu">
+      <img src="images/hbopen.png" alt="Open menu" width="32" height="32">
+    </button>
 
+    <ul class="nav-links">
+      <li class="menu-close">
+        <button class="xclose" aria-label="Close menu">
+          <img src="images/xclose.png" alt="Close menu" width="32" height="32">
+        </button>
+      </li>
+      <li><a href="discover">Discover</a></li>
+      <li><a href="getlisted">Get Listed</a></li>
+      <li><a href="contact-us">Contact Us</a></li>
+      <li id="authButton">
+        <a href="login" id="authBtn" class="nav-login-btn">Log in</a>
+      </li>
+    </ul>
+  </nav>
+</header>
 
-<main class="product-page">
- <a id="backToVendor" class="back-link">View Vendor Profile</a>
+<main class="vp-page">
 
-  <div class="product-container">
+  <a id="backToVendor" class="vp-vendor-link">
+    <i class="fa-solid fa-store"></i>
+    View Vendor Profile
+  </a>
 
-  <div class="product-media">
+  <div class="vp-container">
 
-<div class="product-image-wrap">
+    <div class="vp-media">
 
-  <img
-    id="productImage"
-    alt="Product image"
-  >
+      <div class="vp-image-wrap">
+        <img id="productImage" alt="" class="vp-loading-img">
+      </div>
 
-</div>
+      <div id="productThumbnails" class="vp-thumbnails">
+        <img id="secondaryProductImage" class="vp-thumbnail hidden" alt="Secondary product image">
+        <img id="tertiaryProductImage" class="vp-thumbnail hidden" alt="Third product image">
+      </div>
 
-<div
-  id="productThumbnails"
-  class="product-thumbnails"
->
+    </div>
 
-  <img
-    id="secondaryProductImage"
-    class="thumbnail-image hidden"
-    alt="Secondary product image"
-  >
+    <div class="vp-info">
 
-  <img
-    id="tertiaryProductImage"
-    class="thumbnail-image hidden"
-    alt="Third product image"
-  >
+      <h1 id="productTitle"></h1>
 
-</div>
+      <p id="productPrice" class="vp-price"></p>
 
-</div>
+      <div id="productVendorMeta" class="vp-vendor-meta"></div>
 
-<div class="product-info">
+      <div id="productKeyDetails" class="vp-key-details hidden">
+        <h3>Key Details</h3>
+        <ul id="keyDetailsList"></ul>
+      </div>
 
-  <h1 id="productTitle"></h1>
+      <p id="productDescription" class="vp-description"></p>
 
-  <p
-    id="productPrice"
-    class="product-price"
-  ></p>
+      <div class="vp-actions">
 
-  <div
-    id="productVendorMeta"
-    class="product-vendor-meta"
-  ></div>
+        <a id="contactVendorBtn" class="vp-action-btn vp-whatsapp-btn" target="_blank">
+          <span class="vp-btn-inner">
+            <i class="fab fa-whatsapp"></i>
+            <span>Chat Vendor</span>
+          </span>
+        </a>
 
-  <div
-    id="productKeyDetails"
-    class="product-key-details hidden"
-  >
+        <a id="callVendorBtn" class="vp-action-btn vp-call-btn">
+          <span class="vp-btn-inner">
+            <i class="fas fa-phone"></i>
+            <span>Call Vendor</span>
+          </span>
+        </a>
 
-    <h3>
-      Key Details
-    </h3>
+        <a id="shareProductBtn" class="vp-action-btn vp-share-btn">
+          <span class="vp-btn-inner">
+            <i class="fas fa-share-nodes"></i>
+            <span>Share Product</span>
+          </span>
+        </a>
 
-    <ul
-      id="keyDetailsList"
-    ></ul>
+      </div>
+
+    </div>
 
   </div>
 
-  <p
-    id="productDescription"
-    class="product-description"
-  ></p>
+  <section class="vp-more-section" style="display:none;">
+    <h2>More Products From This Vendor</h2>
+    <div id="moreProductsGrid" class="vp-card-grid"></div>
+  </section>
 
-<div
-  class="product-actions"
->
-
-<a
-  id="contactVendorBtn"
-  class="action-btn whatsapp-btn"
-  target="_blank"
->
-
-  <span class="btn-inner">
-
-    <i class="fab fa-whatsapp"></i>
-
-    <span>Chat Vendor</span>
-
-  </span>
-
-</a>
-
-<a
-  id="callVendorBtn"
-  class="action-btn call-btn"
->
-
-  <span class="btn-inner">
-
-    <i class="fas fa-phone"></i>
-
-    <span>Call Vendor</span>
-
-  </span>
-
-</a>
-
-<a
-  id="shareProductBtn"
-  class="action-btn share-btn"
->
-
-  <span class="btn-inner">
-
-    <i class="fas fa-share-nodes"></i>
-
-    <span>Share Product</span>
-
-  </span>
-
-</a>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<section class="more-products">
-
-  <h2>
-    More Products From This Vendor
-  </h2>
-
-  <div
-    id="moreProductsGrid"
-    class="more-products-grid"
-  ></div>
-
-</section>
-
-<section class="similar-products">
-
-  <h2>
-
-    Similar Products From Other Vendors
-
-  </h2>
-
-  <div
-    id="similarProductsGrid"
-    class="more-products-grid"
-  ></div>
-
-</section>
+  <section class="vp-similar-section" style="display:none;">
+    <h2>Similar Products From Other Vendors</h2>
+    <div id="similarProductsGrid" class="vp-card-grid"></div>
+  </section>
 
 </main>
 

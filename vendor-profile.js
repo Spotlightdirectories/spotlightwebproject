@@ -4,6 +4,38 @@ document.addEventListener("DOMContentLoaded", async () => {
   const supabase = window.supabaseClient;
 
   // ===============================
+  // NAVBAR (mobile menu + auth button, same pattern as other pages)
+  // ===============================
+  const menuOpenBtn = document.querySelector(".menu-open");
+  const menuCloseBtn = document.querySelector(".xclose");
+  const navLinks = document.querySelector(".nav-links");
+
+  if (menuOpenBtn && navLinks) {
+    menuOpenBtn.addEventListener("click", () => navLinks.classList.add("open"));
+  }
+  if (menuCloseBtn && navLinks) {
+    menuCloseBtn.addEventListener("click", () => navLinks.classList.remove("open"));
+  }
+
+  const navAuthBtn = document.getElementById("authBtn");
+  if (navAuthBtn && supabase) {
+    function updateNavAuthBtn(user) {
+      navAuthBtn.textContent = user ? "Log out" : "Log in";
+      navAuthBtn.href = user ? "#" : "login";
+    }
+    supabase.auth.onAuthStateChange((event, session) => updateNavAuthBtn(session?.user || null));
+    supabase.auth.getSession().then(({ data: { session } }) => updateNavAuthBtn(session?.user || null));
+    navAuthBtn.addEventListener("click", async (e) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        e.preventDefault();
+        await supabase.auth.signOut();
+        window.location.reload();
+      }
+    });
+  }
+
+  // ===============================
   // RESOLVE CURRENT USER
   // ===============================
   const {
@@ -202,9 +234,17 @@ if (videoInput) {
 
     videoInput.disabled = true;
 
+    const videoUploadLabel = document.querySelector('label[for="videoInput"]');
+    const setVideoStatus = (text) => {
+      if (videoUploadLabel) videoUploadLabel.textContent = text;
+    };
+
+    setVideoStatus("⏳ Checking video...");
+
     if (file.type !== "video/mp4") {
      alert("Only MP4 videos are allowed.");
      videoInput.disabled = false;
+     setVideoStatus("Upload Video");
      return;
     }
 
@@ -213,12 +253,14 @@ if (videoInput) {
     if (!limits.allowed) {
       alert("Your current plan does not allow video upload.");
       videoInput.disabled = false;
+      setVideoStatus("Upload Video");
       return;
     }
 
     if (file.size > limits.maxSize) {
       alert("Video file exceeds the maximum size allowed for your plan.");
       videoInput.disabled = false;
+      setVideoStatus("Upload Video");
       return;
     }
 
@@ -234,6 +276,7 @@ await new Promise((resolve) => {
 if (video.duration > limits.maxDuration) {
   alert("Video duration exceeds the maximum allowed for your plan.");
   videoInput.disabled = false;
+  setVideoStatus("Upload Video");
   return;
 }
 
@@ -246,6 +289,7 @@ const videoShortSide = Math.min(video.videoWidth, video.videoHeight);
 if (videoLongSide > 1280 || videoShortSide > 720) {
   alert("Video resolution must be 720p or lower. Please lower your phone's recording quality and try again.");
   videoInput.disabled = false;
+  setVideoStatus("Upload Video");
   return;
 }
 
@@ -282,6 +326,8 @@ if (existingVideos && existingVideos.length > 0) {
    const videoFileName = `video-${Date.now()}.mp4`;
    const videoPath = `${vendor.id}/video/${videoFileName}`;
 
+   setVideoStatus("⏳ Uploading video...");
+
    const { error: uploadError } = await supabase.storage
      .from("vendor-videos")
      .upload(videoPath, file);
@@ -290,6 +336,7 @@ if (existingVideos && existingVideos.length > 0) {
      console.error("Video upload error:", uploadError.message);
      alert("Video upload failed.");
      videoInput.disabled = false;
+     setVideoStatus("Upload Video");
      return;
    }
 
@@ -309,12 +356,14 @@ const { error: videoDbError } = await supabase
 if (videoDbError) {
   console.error("Video DB error:", videoDbError.message);
   videoInput.disabled = false;
+  setVideoStatus("Upload Video");
   return;
 }
 
 await loadVideo();
 videoInput.value = "";
 videoInput.disabled = false;
+setVideoStatus("Upload Video");
 
   });
 
@@ -1677,6 +1726,10 @@ const {
   error
 } = await query;
 
+if (error) {
+  console.error("Reviews load error:", error.message);
+}
+
   const reviewsList =
   document.getElementById(
     "reviewsList"
@@ -1688,6 +1741,19 @@ if (
 
   reviewsList.innerHTML =
     "";
+
+  if (error) {
+
+    reviewsList.innerHTML =
+      `
+      <div class="no-reviews-message">
+        Couldn't load reviews right now. Please try again shortly.
+      </div>
+      `;
+
+    return;
+
+  }
 
   if (
     !reviews ||
@@ -1838,140 +1904,25 @@ async function loadSimilarBusinesses(
   const {
     data: businesses,
     error
-  } = await supabase
-    .from(
-      "vendors"
-    )
-    .select(
-      `
-      id,
-      slug,
-      name,
-      logo_url,
-      category,
-      average_rating,
-      reviews_count,
-      verification_status,
-      is_sponsored
-      `
-    )
-    .eq(
-      "category",
-      vendor.category
-    )
-    .eq(
-      "account_status",
-      "active"
-    )
-
-    .eq(
-  "onboarding_completed",
-  true
-)
-.eq(
-  "public_listing_accepted",
-  true
-)
-.eq(
-  "subscription_status",
-  "active"
-)
-
-    .neq(
-      "id",
-      vendor.id
-    );
+  } = await supabase.rpc(
+    "get_similar_businesses",
+    {
+      p_exclude_vendor_id: vendor.id,
+      p_target_category: vendor.category,
+      p_limit: 6
+    }
+  );
 
   if (
   error ||
   !businesses
 ) {
 
+  console.error("Similar businesses error:", error?.message);
+
   return;
 
 }
-
-businesses.sort(
-  (
-    a,
-    b
-  ) => {
-
-    const getRank =
-      vendor => {
-
-        if (
-          vendor.is_sponsored
-        ) {
-          return 1;
-        }
-
-        if (
-          vendor.verification_status ===
-          "blue"
-        ) {
-          return 2;
-        }
-
-        if (
-          vendor.verification_status ===
-          "gray"
-        ) {
-          return 3;
-        }
-
-        return 4;
-
-      };
-
-    const rankA =
-      getRank(a);
-
-    const rankB =
-      getRank(b);
-
-    if (
-      rankA !== rankB
-    ) {
-
-      return (
-        rankA -
-        rankB
-      );
-
-    }
-
-    if (
-      Number(
-        b.average_rating || 0
-      ) !==
-      Number(
-        a.average_rating || 0
-      )
-    ) {
-
-      return (
-        Number(
-          b.average_rating || 0
-        ) -
-        Number(
-          a.average_rating || 0
-        )
-      );
-
-    }
-
-    return (
-      Number(
-        b.reviews_count || 0
-      ) -
-      Number(
-        a.reviews_count || 0
-      )
-    );
-
-  }
-);
 
 const similarBusinessesList =
   document.getElementById(
@@ -1990,7 +1941,6 @@ similarBusinessesList.innerHTML =
   "";
 
 businesses
-  .slice(0, 6)
   .forEach(
     business => {
 
@@ -2300,6 +2250,25 @@ if (socialLimit === 0) {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Client-side size pre-check — instant feedback instead of
+    // silently converting the whole file to base64 and uploading it
+    // over the network before the server eventually rejects it.
+    const maxCoverSize = 1 * 1024 * 1024;
+
+    if (file.size > maxCoverSize) {
+      alert("Cover image must be 1MB or smaller. Please choose a smaller file.");
+      coverInput.value = "";
+      return;
+    }
+
+    // Visible feedback while the upload is actually in flight —
+    // there was previously no indication anything was happening
+    // during this network round-trip.
+    if (coverLabel) {
+      coverLabel.style.pointerEvents = "none";
+      coverLabel.firstChild.textContent = "⏳ Uploading...";
+    }
+
     if (vendor.cover_url) {
 
       const oldPath =
@@ -2321,6 +2290,10 @@ if (socialLimit === 0) {
       console.error("Cover Upload Error:", err.message);
       alert(err.message || "Cover upload failed.");
       coverInput.value = "";
+      if (coverLabel) {
+        coverLabel.firstChild.textContent = "📷";
+        coverLabel.style.pointerEvents = "";
+      }
       return;
     }
 
@@ -2336,6 +2309,11 @@ if (socialLimit === 0) {
     renderBranding();
 
     coverInput.value = "";
+
+    if (coverLabel) {
+      coverLabel.firstChild.textContent = "📷";
+      coverLabel.style.pointerEvents = "";
+    }
 
   });
 
@@ -2437,6 +2415,20 @@ if (logoInput) {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Same client-side size pre-check as cover — instant feedback.
+    const maxLogoSize = 1 * 1024 * 1024;
+
+    if (file.size > maxLogoSize) {
+      alert("Logo image must be 1MB or smaller. Please choose a smaller file.");
+      logoInput.value = "";
+      return;
+    }
+
+    if (logoLabel) {
+      logoLabel.style.pointerEvents = "none";
+      logoLabel.firstChild.textContent = "⏳";
+    }
+
     if (vendor.logo_url) {
 
       const oldPath = vendor.logo_url.split("/vendor-branding/")[1];
@@ -2456,6 +2448,11 @@ if (logoInput) {
     } catch (err) {
       console.error("Logo Upload Error:", err.message);
       alert(err.message || "Logo upload failed.");
+      logoInput.value = "";
+      if (logoLabel) {
+        logoLabel.firstChild.textContent = "📷";
+        logoLabel.style.pointerEvents = "";
+      }
       return;
     }
 
@@ -2467,6 +2464,13 @@ if (logoInput) {
     vendor.logo_url = uploadResult.publicUrl;
 
     renderBranding();
+
+    logoInput.value = "";
+
+    if (logoLabel) {
+      logoLabel.firstChild.textContent = "📷";
+      logoLabel.style.pointerEvents = "";
+    }
 
   });
 

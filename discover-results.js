@@ -2838,6 +2838,10 @@ function normalizeServiceResults(
 
           service.vendor_logo_url || "",
 
+        startingPrice:
+
+          service.starting_price,
+
         distanceKm:
 
           service.distanceKm,
@@ -3002,6 +3006,7 @@ function renderSponsoredFeed(items) {
     const rating = isProduct || isService ? item.vendorRating : item.rating;
     const reviews = isProduct || isService ? item.vendorReviews : item.reviews;
     const verification = isProduct || isService ? item.vendorVerification : item.verificationStatus;
+    const price = isProduct ? item.price : isService ? item.startingPrice : null;
 
     const badge =
       verification === "blue"
@@ -3013,6 +3018,11 @@ function renderSponsoredFeed(items) {
     card.innerHTML = `
       <img src="${image}" class="discover-results-product-image" alt="${name}">
       <h3 class="discover-results-product-title">${name}</h3>
+      ${
+        price
+          ? `<p class="discover-results-product-price">${isService ? '<span class="discover-results-startingfrom-label">Starting From</span> ' : ""}₦${Number(price).toLocaleString()}</p>`
+          : ""
+      }
       <div class="discover-results-product-vendor">
         <span>By ${vendorName}</span>
         ${badge}
@@ -3183,6 +3193,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (overlay) overlay.addEventListener("click", closeDrawer);
 
   const enableDistance = document.getElementById("discoverResultsEnableDistanceSearch");
+  const distanceCard = document.querySelector(".discover-results-distance-card");
   const radiusSlider = document.getElementById("discoverResultsRadiusSlider");
   const radiusValue = document.getElementById("discoverResultsRadiusValue");
   const useLocationBtn = document.getElementById("discoverResultsUseLocationBtn");
@@ -3206,6 +3217,10 @@ document.addEventListener("DOMContentLoaded", () => {
   if (enableDistance) {
 
     enableDistance.checked = discoverResultsState.distanceEnabled;
+
+    if (distanceCard) {
+      distanceCard.classList.toggle("distance-enabled", enableDistance.checked);
+    }
 
     function fetchFreshLocation(onDone) {
 
@@ -3245,30 +3260,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
       discoverResultsState.distanceEnabled = enableDistance.checked;
 
+      if (distanceCard) {
+        distanceCard.classList.toggle("distance-enabled", enableDistance.checked);
+      }
+
       if (enableDistance.checked && navigator.geolocation) {
 
-        // Reuse an already-captured location instead of re-requesting
-        // fresh GPS every time this is toggled on — browser geolocation
-        // (especially WiFi/network-based, not true GPS) can genuinely
-        // drift between successive requests, which previously made
-        // results flicker between on/off toggles for no real reason.
-        // An explicit "Use Current Location" click still always
-        // refreshes it, for when the visitor has actually moved.
-        if (
-          discoverResultsState.latitude !== null &&
-          discoverResultsState.longitude !== null
-        ) {
-
-          if (useLocationBtn) {
-            useLocationBtn.innerHTML = `<i class="fa-solid fa-circle-check"></i> Location Ready`;
-          }
-
-          performMarketplaceSearch();
-
-          return;
-
-        }
-
+        // Always fetch a fresh location on every toggle-on, rather
+        // than reusing a cached one. An earlier version of this tried
+        // to cache the location to avoid GPS drift between two
+        // consecutive toggles — but that caused a worse problem: a
+        // stale location from an earlier, unrelated test in the same
+        // page session could silently get reused for a completely
+        // different test, making correct nearby results vanish for no
+        // visible reason. Minor GPS jitter (a few hundred metres) is
+        // a much smaller, more acceptable tradeoff than comparing
+        // against a genuinely wrong, stale position.
         fetchFreshLocation(performMarketplaceSearch);
 
       } else {

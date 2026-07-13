@@ -718,6 +718,51 @@ function renderTrendingSearches() {
 }
 
 /* ========================= */
+/* LOAD TRENDING SEARCHES (real data) */
+/* Replaces the hardcoded list with actual
+   popular searches from analytics_events,
+   falling back to the starter list only when
+   there isn't enough real search data yet
+   (e.g. a brand-new deployment). */
+/* ========================= */
+
+async function loadTrendingKeywords() {
+
+  try {
+
+    const { data, error } =
+      await supabase.rpc(
+        "get_trending_searches",
+        { p_limit: 15 }
+      );
+
+    if (
+      !error &&
+      data &&
+      data.length >= 5
+    ) {
+
+      trendingKeywords =
+        data.map(
+          row => row.keyword
+        );
+
+    }
+
+  } catch (err) {
+
+    console.error(
+      "Trending searches load error:",
+      err
+    );
+
+  }
+
+  renderTrendingSearches();
+
+}
+
+/* ========================= */
 /* TRENDING SEARCHES LIST */
 /* ========================= */
 
@@ -726,7 +771,7 @@ const discoverTrendingTags =
     "discoverTrendingTags"
   );
 
-const trendingKeywords = [
+let trendingKeywords = [
 
   "Plumber Near Me",
   "POS Agent",
@@ -1522,6 +1567,32 @@ if (
           vendorCard
         );
 
+        // Card wasn't clickable before — only the small "Review"
+        // and "Profile" buttons inside it worked. Now the whole
+        // card navigates to the vendor's profile, while clicks on
+        // those two buttons still do their own specific thing
+        // (handled by the document-level delegated listeners below)
+        // rather than also triggering this navigation.
+        vendorCard.style.cursor = "pointer";
+
+        vendorCard.addEventListener(
+          "click",
+          event => {
+
+            if (
+              event.target.closest(".review-trigger-btn") ||
+              event.target.closest(".view-profile-btn")
+            ) {
+              return;
+            }
+
+            if (vendor.slug) {
+              window.location.href = `vendor-profile.html?slug=${encodeURIComponent(vendor.slug)}`;
+            }
+
+          }
+        );
+
       }
     );
 
@@ -1623,7 +1694,7 @@ function renderRecentSearches() {
 
 }
 
-renderTrendingSearches();
+loadTrendingKeywords();
 
 loadSponsoredVendors();
 

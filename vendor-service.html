@@ -3,10 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Service Details | Spotlight</title>
-  <meta
-  name="description"
-  content="Find trusted local services on Spotlight Directories."
->
+  <meta name="description" content="Find trusted local services on Spotlight Directories.">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="theme.css">
@@ -15,28 +12,24 @@
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-<!-- ✅ UPDATED FAVICONS -->
-<link rel="icon" type="image/png" sizes="48x48" href="/images/favicon-48.png">
-<link rel="icon" type="image/png" sizes="64x64" href="/images/favicon-64.png">
-<link rel="apple-touch-icon" href="/images/favicon-180.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="/images/favicon-48.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="/images/favicon-64.png">
+  <link rel="apple-touch-icon" href="/images/favicon-180.png">
 
-<!-- ✅ STRUCTURED DATA (GOOGLE LOGO CONTROL) -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "Spotlight Directories",
-  "url": "https://spotlightdirectories.com",
-  "logo": "https://spotlightdirectories.com/images/spotlightlogo-512.png"
-}
-</script>
-
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Spotlight Directories",
+    "url": "https://spotlightdirectories.com",
+    "logo": "https://spotlightdirectories.com/images/spotlightlogo-512.png"
+  }
+  </script>
 </head>
 
 <body>
 
-   <header class="navbar">
-
+<header class="navbar">
   <div class="logo-left">
     <a href="index">
       <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg">
@@ -44,144 +37,94 @@
     <a href="index" class="home">Home</a>
   </div>
 
- </header>
+  <nav>
+    <button class="menu-open hide-desktop" aria-label="Open menu">
+      <img src="images/hbopen.png" alt="Open menu" width="32" height="32">
+    </button>
 
+    <ul class="nav-links">
+      <li class="menu-close">
+        <button class="xclose" aria-label="Close menu">
+          <img src="images/xclose.png" alt="Close menu" width="32" height="32">
+        </button>
+      </li>
+      <li><a href="discover">Discover</a></li>
+      <li><a href="getlisted">Get Listed</a></li>
+      <li><a href="contact-us">Contact Us</a></li>
+      <li id="authButton">
+        <a href="login" id="authBtn" class="nav-login-btn">Log in</a>
+      </li>
+    </ul>
+  </nav>
+</header>
 
-<main class="product-page">
- <a id="backToVendor" class="back-link">View Vendor Profile</a>
+<main class="vs-page">
 
-  <div class="product-container">
+  <a id="backToVendor" class="vs-vendor-link">
+    <i class="fa-solid fa-store"></i>
+    View Vendor Profile
+  </a>
 
-  <div class="product-media">
+  <div class="vs-container">
 
-<div class="product-image-wrap">
+    <div class="vs-media">
+      <div class="vs-image-wrap">
+        <img id="productImage" alt="" class="vs-loading-img">
+      </div>
 
-  <img
-    id="productImage"
-    alt="Product image"
-  >
+      <div id="productThumbnails" class="vs-thumbnails">
+        <img id="secondaryProductImage" class="vs-thumbnail hidden" alt="Secondary service image">
+      </div>
+    </div>
 
-</div>
+    <div class="vs-info">
 
-<div
-  id="productThumbnails"
-  class="product-thumbnails"
->
+      <h1 id="productTitle"></h1>
 
-  <img
-    id="secondaryProductImage"
-    class="thumbnail-image hidden"
-    alt="Secondary product image"
-  >
+      <p id="productPrice" class="vs-price"></p>
 
-</div>
+      <div id="productVendorMeta" class="vs-vendor-meta"></div>
 
-</div>
+      <div id="productDescription" class="vs-description"></div>
 
-<div class="product-info">
+      <div class="vs-actions">
 
-  <h1 id="productTitle"></h1>
+        <a id="contactVendorBtn" class="vs-action-btn vs-whatsapp-btn" target="_blank">
+          <span class="vs-btn-inner">
+            <i class="fab fa-whatsapp"></i>
+            <span>Chat Vendor</span>
+          </span>
+        </a>
 
-  <p
-    id="productPrice"
-    class="product-price"
-  ></p>
+        <a id="callVendorBtn" class="vs-action-btn vs-call-btn">
+          <span class="vs-btn-inner">
+            <i class="fas fa-phone"></i>
+            <span>Call Vendor</span>
+          </span>
+        </a>
 
-  <div
-    id="productVendorMeta"
-    class="product-vendor-meta"
-  ></div>
+        <a id="shareProductBtn" class="vs-action-btn vs-share-btn">
+          <span class="vs-btn-inner">
+            <i class="fas fa-share-nodes"></i>
+            <span>Share Service</span>
+          </span>
+        </a>
 
-  <p
-    id="productDescription"
-    class="product-description"
-  ></p>
+      </div>
 
-<div
-  class="product-actions"
->
+    </div>
 
-<a
-  id="contactVendorBtn"
-  class="action-btn whatsapp-btn"
-  target="_blank"
->
+  </div>
 
-  <span class="btn-inner">
+  <section class="vs-more-section" style="display:none;">
+    <h2>More Services From This Vendor</h2>
+    <div id="moreProductsGrid" class="vs-card-grid"></div>
+  </section>
 
-    <i class="fab fa-whatsapp"></i>
-
-    <span>Chat Vendor</span>
-
-  </span>
-
-</a>
-
-<a
-  id="callVendorBtn"
-  class="action-btn call-btn"
->
-
-  <span class="btn-inner">
-
-    <i class="fas fa-phone"></i>
-
-    <span>Call Vendor</span>
-
-  </span>
-
-</a>
-
-<a
-  id="shareProductBtn"
-  class="action-btn share-btn"
->
-
-  <span class="btn-inner">
-
-    <i class="fas fa-share-nodes"></i>
-
-    <span>Share Service</span>
-
-  </span>
-
-</a>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<section class="more-products">
-
-  <h2>
-    More Services From This Vendor
-  </h2>
-
-  <div
-    id="moreProductsGrid"
-    class="more-products-grid"
-  ></div>
-
-</section>
-
-<section class="similar-products">
-
-  <h2>
-
-    Similar Services From Other Vendors
-
-  </h2>
-
-  <div
-    id="similarProductsGrid"
-    class="more-products-grid"
-  ></div>
-
-</section>
+  <section class="vs-similar-section" style="display:none;">
+    <h2>Similar Services From Other Vendors</h2>
+    <div id="similarProductsGrid" class="vs-card-grid"></div>
+  </section>
 
 </main>
 

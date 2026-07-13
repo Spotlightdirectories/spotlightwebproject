@@ -758,6 +758,16 @@ input:checked
 
 }
 
+.discover-results-startingfrom-label {
+
+  font-size: 10px;
+
+  font-weight: 600;
+
+  color: #94a3b8;
+
+}
+
 .discover-results-distance-label {
 
   display: flex;
@@ -1288,11 +1298,53 @@ input:checked
 
 }
 
+.discover-results-distance-toggle input {
+
+  display: none;
+
+}
+
 .discover-results-distance-checkbox {
 
-  width: 18px;
+  width: 22px;
 
-  height: 18px;
+  height: 22px;
+
+  border: 2px solid #9ca3af;
+
+  border-radius: 6px;
+
+  position: relative;
+
+  background: #ffffff;
+
+}
+
+.discover-results-distance-toggle input:checked + .discover-results-distance-checkbox {
+
+  background: #000000;
+
+  border-color: #000000;
+
+}
+
+.discover-results-distance-toggle input:checked + .discover-results-distance-checkbox::after {
+
+  content: "✓";
+
+  position: absolute;
+
+  top: 50%;
+
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  color: #ffffff;
 
 }
 
@@ -1300,9 +1352,9 @@ input:checked
 
   border: none;
 
-  background: #000000;
+  background: #dcfce7;
 
-  color: #ffffff;
+  color: #166534;
 
   font-size: 12px;
 
@@ -1320,6 +1372,16 @@ input:checked
 
   gap: 6px;
 
+  transition: opacity 0.2s ease;
+
+  white-space: nowrap;
+
+}
+
+.discover-results-location-btn:hover {
+
+  opacity: 0.8;
+
 }
 
 .discover-results-distance-slider-wrap {
@@ -1331,6 +1393,36 @@ input:checked
 .discover-results-distance-slider {
 
   width: 100%;
+
+  appearance: none;
+
+  -webkit-appearance: none;
+
+  height: 6px;
+
+  border-radius: 999px;
+
+  background: #dbeafe;
+
+  outline: none;
+
+}
+
+.discover-results-distance-slider::-webkit-slider-thumb {
+
+  appearance: none;
+
+  -webkit-appearance: none;
+
+  width: 20px;
+
+  height: 20px;
+
+  border-radius: 50%;
+
+  background: #0047ab;
+
+  cursor: pointer;
 
 }
 
@@ -1345,6 +1437,20 @@ input:checked
   color: #64748b;
 
   margin-top: 4px;
+
+}
+
+.discover-results-distance-card:not(.distance-enabled) .discover-results-distance-slider-wrap {
+
+  opacity: 0.45;
+
+  pointer-events: none;
+
+}
+
+.discover-results-distance-card:not(.distance-enabled) .discover-results-location-btn {
+
+  opacity: 0.5;
 
 }
 
