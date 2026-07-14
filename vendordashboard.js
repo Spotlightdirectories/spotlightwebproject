@@ -3665,8 +3665,12 @@ if (managePaymentMethodBtn) {
       "click",
       () => {
 
+        // Honest, accurate explanation of how billing actually works
+        // here — per-transaction Paystack checkout each cycle, not a
+        // stored card. Previously this was just a placeholder alert
+        // that never explained anything real.
         alert(
-          "Payment method management will be connected later."
+          "Spotlight doesn't store a card on file — your subscription is billed via a secure one-time payment each cycle. You'll be prompted to pay again shortly before your next billing date, and can pay by card or bank transfer at that time."
         );
 
       }

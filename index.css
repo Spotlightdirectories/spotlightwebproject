@@ -49,7 +49,11 @@ main {
 
 .ld-btn-primary {
   background: var(--color-dark);
-  color: var(--color-text-inverse);
+  /* Fixed white, not var(--color-text-inverse) — that token flips to
+     BLACK in dark mode (meant for text on light elements), but this
+     button's background is always the fixed brand black regardless
+     of theme, so its text must always stay white to match. */
+  color: #ffffff;
 }
 
 .ld-btn-primary:hover {
