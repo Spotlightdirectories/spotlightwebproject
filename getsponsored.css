@@ -137,6 +137,17 @@ body {
   color: #6b7280;
 }
 
+.gs-current-rank,
+.gs-current-views {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.gs-current-rank strong {
+  color: #111111;
+}
+
 .gs-current-badge {
   background: #16a34a;
   font-size: 11px;
@@ -284,27 +295,11 @@ body {
   color: #6b7280;
 }
 
-.gs-tier-card.locked {
-  opacity: 0.55;
-  cursor: not-allowed;
-  position: relative;
-}
-
-.gs-tier-card.locked:hover {
-  border-color: #e5e7eb;
-  transform: none;
-}
-
-.gs-tier-lock-note {
-  font-size: 11px;
-  font-weight: 700;
-  color: #dc2626;
+.gs-tier-note {
+  font-size: 10px;
+  font-weight: 600;
+  color: #6b7280;
   margin-top: 8px;
-}
-
-.gs-tier-lock-note a {
-  color: #dc2626;
-  text-decoration: underline;
 }
 
 /* ITEM PICKER */

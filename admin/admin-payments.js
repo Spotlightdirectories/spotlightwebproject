@@ -1,5 +1,30 @@
+console.log("admin-payments.js BUILD-CHECK-2026-07-14-C loaded");
+
 document.addEventListener("DOMContentLoaded", async () => {
   const supabase = window.supabaseClient;
+
+  // Declared here (not further down) so they exist before
+  // loadStaffAuditLog() can possibly need them — previously these
+  // sat near the end of the file, which raced against this function's
+  // own database call and intermittently crashed with a
+  // "Cannot access before initialization" error.
+  let allStaffAuditEntries = [];
+  const auditActionLabels = {
+    invited: "Invited",
+    assigned_role: "Assigned Role",
+    claimed_invitation: "Claimed Invitation",
+    revoked_role: "Revoked Role",
+    revoked_invitation: "Revoked Invitation"
+  };
+  const STAFF_AUDIT_PAGE_SIZE = 5;
+  let staffAuditRenderEntries = [];
+  let staffAuditExpanded = false;
+
+  const SECURITY_LOG_PAGE_SIZE = 5;
+  let securityLogAllEntries = [];
+  let securityLogRenderEntries = [];
+  let securityLogExpanded = false;
+
   const table = document.getElementById("paymentsTable");
   const verificationTable = document.getElementById("verificationsTable");
   const partnersTable = document.getElementById("partnersTable");
@@ -131,6 +156,83 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadAdminStaff();
     loadPendingInvitations();
     loadStaffAuditLog();
+    loadSecurityLog();
+
+    const staffAuditSeeMoreBtn = document.getElementById("staffAuditSeeMoreBtn");
+    if (staffAuditSeeMoreBtn) {
+      staffAuditSeeMoreBtn.addEventListener("click", () => {
+        staffAuditExpanded = !staffAuditExpanded;
+        renderStaffAuditRows();
+      });
+    }
+
+    const securityLogSeeMoreBtn = document.getElementById("securityLogSeeMoreBtn");
+    if (securityLogSeeMoreBtn) {
+      securityLogSeeMoreBtn.addEventListener("click", () => {
+        securityLogExpanded = !securityLogExpanded;
+        renderSecurityLogRows();
+      });
+    }
+
+    // Load the tamper-proof, database-level security log (audit_log
+    // table, populated automatically by DB triggers — separate from
+    // the app-level admin_audit_log above).
+    async function loadSecurityLog() {
+      const logTable = document.getElementById("securityLogTable");
+      if (!logTable) return;
+
+      let entries, error;
+      try {
+        const result = await supabase
+          .from("audit_log")
+          .select("id, table_name, action, row_id, actor_email, old_data, new_data, created_at")
+          .order("created_at", { ascending: false })
+          .limit(200);
+        entries = result.data;
+        error = result.error;
+      } catch (thrownErr) {
+        console.error("Security log threw:", thrownErr);
+        logTable.innerHTML = `<tr><td colspan="5">Error: ${sanitize(thrownErr.message || String(thrownErr))}</td></tr>`;
+        return;
+      }
+
+      if (error) {
+        console.error("Security log query error:", error);
+        logTable.innerHTML = `<tr><td colspan="5">Failed to load security log: ${sanitize(error.message)}</td></tr>`;
+        return;
+      }
+
+      if (!entries || !entries.length) {
+        logTable.innerHTML = `<tr><td colspan="5">No activity recorded yet.</td></tr>`;
+        return;
+      }
+
+      securityLogAllEntries = entries;
+      renderSecurityLog(entries);
+
+      const searchInput = document.getElementById("securityLogSearch");
+      const tableFilter = document.getElementById("securityLogTableFilter");
+      const actionFilter = document.getElementById("securityLogActionFilter");
+
+      function applyFilters() {
+        const searchTerm = (searchInput?.value || "").toLowerCase().trim();
+        const tableValue = tableFilter?.value || "all";
+        const actionValue = actionFilter?.value || "all";
+
+        const filtered = securityLogAllEntries.filter(e => {
+          const emailMatch = (e.actor_email || "").toLowerCase().includes(searchTerm);
+          const tableMatch = tableValue === "all" || e.table_name === tableValue;
+          const actionMatch = actionValue === "all" || e.action === actionValue;
+          return emailMatch && tableMatch && actionMatch;
+        });
+
+        renderSecurityLog(filtered);
+      }
+
+      if (searchInput) searchInput.addEventListener("input", applyFilters);
+      if (tableFilter) tableFilter.addEventListener("change", applyFilters);
+      if (actionFilter) actionFilter.addEventListener("change", applyFilters);
+    }
 
     // Load pending invitations (people invited but not yet logged in)
     async function loadPendingInvitations() {
@@ -179,13 +281,25 @@ document.addEventListener("DOMContentLoaded", async () => {
       const auditTable = document.getElementById("staffAuditLogTable");
       if (!auditTable) return;
 
-      const { data: entries, error } = await supabase
-        .from("admin_audit_log")
-        .select("id, actor_email, action, target_email, role, details, created_at")
-        .order("created_at", { ascending: false });
+      let entries, error;
+      try {
+        const result = await supabase
+          .from("admin_audit_log")
+          .select("id, actor_email, action, target_email, role, details, created_at")
+          .order("created_at", { ascending: false });
+        entries = result.data;
+        error = result.error;
+      } catch (thrownErr) {
+        // Surfaces the exact JS error on the page itself, so this never
+        // hangs on "Loading…" again without telling us why.
+        console.error("Staff audit log threw:", thrownErr);
+        auditTable.innerHTML = `<tr><td colspan="6">Error: ${sanitize(thrownErr.message || String(thrownErr))}</td></tr>`;
+        return;
+      }
 
       if (error) {
-        auditTable.innerHTML = `<tr><td colspan="6">Failed to load audit log.</td></tr>`;
+        console.error("Staff audit log query error:", error);
+        auditTable.innerHTML = `<tr><td colspan="6">Failed to load audit log: ${sanitize(error.message)}</td></tr>`;
         return;
       }
 
@@ -435,6 +549,7 @@ if (sponsorshipsTable) {
     .from("vendor_sponsorships")
     .select(`
       id,
+      batch_id,
       sponsorship_type,
       tier,
       billing_cycle,
@@ -456,6 +571,7 @@ if (sponsorshipsTable) {
     sponsorships.forEach(s => {
 
       const tr = document.createElement("tr");
+      if (s.batch_id) tr.dataset.batchId = s.batch_id;
 
       tr.innerHTML = `
         <td>${sanitize(s.vendors?.name)}</td>
@@ -473,6 +589,7 @@ if (sponsorshipsTable) {
         <td>
           <button class="approve-btn" data-sponsor-approve="${sanitize(s.id)}">Approve</button>
           <button class="reject-btn" data-sponsor-reject="${sanitize(s.id)}">Reject</button>
+          <button class="reject-btn" style="background:#64748b;" data-sponsor-delete="${sanitize(s.id)}">Delete</button>
         </td>
       `;
 
@@ -688,6 +805,10 @@ initCommissionSearch(commissions);
     await rejectSponsorship(e.target.dataset.sponsorReject, row);
   }
 
+  if (e.target.matches("[data-sponsor-delete]")) {
+    await deleteSponsorship(e.target.dataset.sponsorDelete, row);
+  }
+
   if (e.target.matches("[data-revoke]")) {
     await revokeVerification(e.target.dataset.revoke, e.target.closest("tr"));
   }
@@ -720,10 +841,14 @@ initCommissionSearch(commissions);
 
   // -----------------------------
 // APPROVE SPONSORSHIP (bank transfer)
+// Acts on the WHOLE batch (every row from the same checkout), not
+// just the row clicked — so a single payment covering several items
+// is approved or rejected as one atomic decision, never left partly
+// approved and partly pending.
 // -----------------------------
 async function approveSponsorship(sponsorshipId, row) {
 
-  if (!confirm("Approve this sponsorship?")) return;
+  if (!confirm("Approve this sponsorship? If it was part of a bundle purchase, every item in that same purchase will be approved together.")) return;
 
   const approveBtn = document.querySelector(`[data-sponsor-approve="${sponsorshipId}"]`);
   if (approveBtn) {
@@ -734,7 +859,7 @@ async function approveSponsorship(sponsorshipId, row) {
   const { data: sponsorship, error } = await supabase
     .from("vendor_sponsorships")
     .select(`
-      id, vendor_id, sponsorship_type, tier, billing_cycle, payment_status,
+      id, vendor_id, batch_id, sponsorship_type, tier, billing_cycle, payment_status,
       vendors ( email, name )
     `)
     .eq("id", sponsorshipId)
@@ -761,14 +886,21 @@ async function approveSponsorship(sponsorshipId, row) {
       ? new Date(new Date(now).setDate(now.getDate() + 30))
       : new Date(new Date(now).setDate(now.getDate() + 365));
 
-  const { error: updateError } = await supabase
+  // Find every sibling row from the same purchase (same batch_id) so
+  // the whole bundle moves together. Legacy rows with no batch_id
+  // (created before this existed) just act on themselves.
+  const batchQuery = supabase
     .from("vendor_sponsorships")
     .update({
       payment_status: "active",
       starts_at: now.toISOString(),
       expires_at: expiry.toISOString()
     })
-    .eq("id", sponsorshipId);
+    .eq("payment_status", "pending");
+
+  const { error: updateError } = sponsorship.batch_id
+    ? await batchQuery.eq("batch_id", sponsorship.batch_id)
+    : await batchQuery.eq("id", sponsorshipId);
 
   if (updateError) {
     console.error("Sponsorship update failed:", updateError);
@@ -782,8 +914,8 @@ async function approveSponsorship(sponsorshipId, row) {
 
   const typeLabel =
     sponsorship.sponsorship_type === "business" ? "your business"
-    : sponsorship.sponsorship_type === "product" ? "your product"
-    : "your service";
+    : sponsorship.sponsorship_type === "product" ? "your product(s)"
+    : "your service(s)";
 
   try {
     await sendEmail({
@@ -799,15 +931,24 @@ async function approveSponsorship(sponsorshipId, row) {
 
   alert("Sponsorship approved");
 
+  // Remove every row from this batch from the visible table, not just
+  // the one clicked, since they're all now approved together.
+  if (sponsorship.batch_id) {
+    document.querySelectorAll(`[data-sponsor-approve]`).forEach(btn => {
+      const btnRow = btn.closest("tr");
+      if (btnRow && btnRow.dataset.batchId === sponsorship.batch_id) btnRow.remove();
+    });
+  }
   if (row) row.remove();
 }
 
 // -----------------------------
 // REJECT SPONSORSHIP (bank transfer)
+// Same batch-wide behavior as approval, above.
 // -----------------------------
 async function rejectSponsorship(sponsorshipId, row) {
 
-  const reason = prompt("Reason for rejection?");
+  const reason = prompt("Reason for rejection? If this was part of a bundle purchase, every item in that same purchase will be rejected together.");
   if (!reason) return;
 
   const rejectBtn = document.querySelector(`[data-sponsor-reject="${sponsorshipId}"]`);
@@ -819,7 +960,7 @@ async function rejectSponsorship(sponsorshipId, row) {
   const { data: sponsorship, error } = await supabase
     .from("vendor_sponsorships")
     .select(`
-      id, vendor_id, sponsorship_type, tier, payment_status,
+      id, vendor_id, batch_id, sponsorship_type, tier, payment_status,
       vendors ( email, name )
     `)
     .eq("id", sponsorshipId)
@@ -839,10 +980,14 @@ async function rejectSponsorship(sponsorshipId, row) {
     return;
   }
 
-  const { error: updateError } = await supabase
+  const batchQuery = supabase
     .from("vendor_sponsorships")
     .update({ payment_status: "rejected" })
-    .eq("id", sponsorshipId);
+    .eq("payment_status", "pending");
+
+  const { error: updateError } = sponsorship.batch_id
+    ? await batchQuery.eq("batch_id", sponsorship.batch_id)
+    : await batchQuery.eq("id", sponsorshipId);
 
   if (updateError) {
     console.error("Sponsorship rejection failed:", updateError);
@@ -868,6 +1013,46 @@ async function rejectSponsorship(sponsorshipId, row) {
 
   alert("Sponsorship rejected");
 
+  if (sponsorship.batch_id) {
+    document.querySelectorAll(`[data-sponsor-reject]`).forEach(btn => {
+      const btnRow = btn.closest("tr");
+      if (btnRow && btnRow.dataset.batchId === sponsorship.batch_id) btnRow.remove();
+    });
+  }
+  if (row) row.remove();
+}
+
+// -----------------------------
+// DELETE SPONSORSHIP (admin cleanup — e.g. test/orphan rows)
+// Only removes the ONE row clicked, not the whole batch — deletion
+// is meant for cleaning up individual stray test data, not for
+// undoing a real bundle purchase (use Reject for that).
+// -----------------------------
+async function deleteSponsorship(sponsorshipId, row) {
+
+  if (!confirm("Delete this sponsorship record? This cannot be undone. Only this one row will be removed, not any related items from the same purchase.")) return;
+
+  const deleteBtn = document.querySelector(`[data-sponsor-delete="${sponsorshipId}"]`);
+  if (deleteBtn) {
+    deleteBtn.disabled = true;
+    deleteBtn.textContent = "Deleting...";
+  }
+
+  const { error } = await supabase
+    .from("vendor_sponsorships")
+    .delete()
+    .eq("id", sponsorshipId);
+
+  if (error) {
+    alert("Failed to delete: " + error.message);
+    if (deleteBtn) {
+      deleteBtn.disabled = false;
+      deleteBtn.textContent = "Delete";
+    }
+    return;
+  }
+
+  alert("Sponsorship record deleted");
   if (row) row.remove();
 }
 
@@ -1589,30 +1774,34 @@ async function payPartner(partnerId) {
 // Permanent record of admin invite/assign/revoke actions.
 // Never altered or deleted, even after the underlying invitation
 // or account is cleaned up — this is history, not a working record.
+// (Variable declarations for this section now live at the top of
+// the DOMContentLoaded callback — see note there.)
 // -----------------------------
 
-let allStaffAuditEntries = [];
-
-const auditActionLabels = {
-  invited: "Invited",
-  assigned_role: "Assigned Role",
-  claimed_invitation: "Claimed Invitation",
-  revoked_role: "Revoked Role",
-  revoked_invitation: "Revoked Invitation"
-};
-
 function renderStaffAuditLog(entries) {
+  staffAuditRenderEntries = entries;
+  staffAuditExpanded = false;
+  renderStaffAuditRows();
+}
+
+function renderStaffAuditRows() {
   const auditTable = document.getElementById("staffAuditLogTable");
+  const seeMoreBtn = document.getElementById("staffAuditSeeMoreBtn");
   if (!auditTable) return;
+
+  const entries = staffAuditRenderEntries;
 
   if (!entries.length) {
     auditTable.innerHTML = `<tr><td colspan="6">No results found.</td></tr>`;
+    if (seeMoreBtn) seeMoreBtn.style.display = "none";
     return;
   }
 
+  const visibleEntries = staffAuditExpanded ? entries : entries.slice(0, STAFF_AUDIT_PAGE_SIZE);
+
   auditTable.innerHTML = "";
 
-  entries.forEach(e => {
+  visibleEntries.forEach(e => {
     const tr = document.createElement("tr");
     const when = e.created_at
       ? new Date(e.created_at).toLocaleString()
@@ -1630,6 +1819,85 @@ function renderStaffAuditLog(entries) {
     `;
     auditTable.appendChild(tr);
   });
+
+  if (seeMoreBtn) {
+    const remaining = entries.length - STAFF_AUDIT_PAGE_SIZE;
+    if (remaining > 0) {
+      seeMoreBtn.style.display = "inline-block";
+      seeMoreBtn.textContent = staffAuditExpanded
+        ? "See less"
+        : `See more (${remaining} older)`;
+    } else {
+      seeMoreBtn.style.display = "none";
+    }
+  }
+}
+
+// -----------------------------
+// SECURITY LOG
+// Renders the tamper-proof, database-trigger-driven audit_log table.
+// Same collapse pattern as Staff Activity History above.
+// -----------------------------
+const securityLogTableLabels = {
+  user_roles: "User Roles",
+  admin_invitations: "Admin Invitations",
+  vendor_payments: "Vendor Payments",
+  vendor_sponsorships: "Vendor Sponsorships",
+  commissions: "Commissions",
+  vendors: "Vendors",
+  "auth.users": "Accounts"
+};
+
+function renderSecurityLog(entries) {
+  securityLogRenderEntries = entries;
+  securityLogExpanded = false;
+  renderSecurityLogRows();
+}
+
+function renderSecurityLogRows() {
+  const logTable = document.getElementById("securityLogTable");
+  const seeMoreBtn = document.getElementById("securityLogSeeMoreBtn");
+  if (!logTable) return;
+
+  const entries = securityLogRenderEntries;
+
+  if (!entries.length) {
+    logTable.innerHTML = `<tr><td colspan="5">No results found.</td></tr>`;
+    if (seeMoreBtn) seeMoreBtn.style.display = "none";
+    return;
+  }
+
+  const visibleEntries = securityLogExpanded ? entries : entries.slice(0, SECURITY_LOG_PAGE_SIZE);
+
+  logTable.innerHTML = "";
+
+  visibleEntries.forEach(e => {
+    const tr = document.createElement("tr");
+    const when = e.created_at ? new Date(e.created_at).toLocaleString() : "—";
+    const tableDisplay = securityLogTableLabels[e.table_name] || e.table_name;
+    const actorDisplay = e.actor_email || "System (no admin session)";
+
+    securityLogEntriesById[e.id] = e;
+
+    tr.innerHTML = `
+      <td>${when}</td>
+      <td>${sanitize(tableDisplay)}</td>
+      <td>${sanitize(e.action)}</td>
+      <td>${sanitize(actorDisplay)}</td>
+      <td><button class="reject-btn" style="background:#64748b;padding:4px 10px;" onclick="viewAuditDetails('${e.id}')">View</button></td>
+    `;
+    logTable.appendChild(tr);
+  });
+
+  if (seeMoreBtn) {
+    const remaining = entries.length - SECURITY_LOG_PAGE_SIZE;
+    if (remaining > 0) {
+      seeMoreBtn.style.display = "inline-block";
+      seeMoreBtn.textContent = securityLogExpanded ? "See less" : `See more (${remaining} older)`;
+    } else {
+      seeMoreBtn.style.display = "none";
+    }
+  }
 }
 
 // -----------------------------
@@ -2115,6 +2383,39 @@ function renderVerificationHistory(verifications) {
 loadVerificationHistory();
 
 });
+
+// -----------------------------
+// VIEW SECURITY LOG DETAILS
+// Defined OUTSIDE DOMContentLoaded so it is globally accessible from
+// the onclick in the Security Log table. Looks up the full entry
+// (including old/new row data) from the map built while rendering.
+// -----------------------------
+const securityLogEntriesById = {};
+
+function viewAuditDetails(entryId) {
+  const entry = securityLogEntriesById[entryId];
+  if (!entry) {
+    alert("Details not found — try refreshing the Security Log.");
+    return;
+  }
+
+  const lines = [
+    `Table: ${entry.table_name}`,
+    `Action: ${entry.action}`,
+    `When: ${entry.created_at ? new Date(entry.created_at).toLocaleString() : "—"}`,
+    `Actor: ${entry.actor_email || "System (no admin session)"}`,
+    `Row ID: ${entry.row_id || "—"}`
+  ];
+
+  if (entry.old_data) {
+    lines.push("", "Before:", JSON.stringify(entry.old_data, null, 2));
+  }
+  if (entry.new_data) {
+    lines.push("", "After:", JSON.stringify(entry.new_data, null, 2));
+  }
+
+  alert(lines.join("\n"));
+}
 
 // -----------------------------
 // SANITIZE — XSS PROTECTION

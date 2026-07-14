@@ -73,7 +73,8 @@
       </div>
 
       <!-- Current admin staff list -->
-      <table style="margin-top:16px;">
+      <h2 style="margin-top:24px;font-size:16px;">Assigned Admin Staff</h2>
+      <table style="margin-top:8px;">
         <thead>
           <tr>
             <th>Email</th>
@@ -138,6 +139,61 @@
           <tr><td colspan="6">Loading…</td></tr>
         </tbody>
       </table>
+      <button id="staffAuditSeeMoreBtn" class="section-note" style="display:none;background:none;border:none;color:#2563eb;text-decoration:underline;cursor:pointer;margin-top:8px;padding:0;">See more</button>
+    </div>
+
+    <!-- ============================================================
+         SECURITY LOG — super_admin only
+         Tamper-proof, database-level record of every change to
+         sensitive tables (roles, invitations, payments, sponsorships,
+         commissions, vendors, and account creation/deletion), captured
+         automatically by database triggers — not dependent on any
+         button being clicked in the app.
+    ============================================================ -->
+    <div class="admin-section" data-roles="super_admin">
+      <h1 class="admin-section-heading super-admin-heading">
+        <i class="fa-solid fa-shield-halved"></i> Security Log
+      </h1>
+      <p class="section-note">A permanent, tamper-proof record of every change to sensitive data — captured automatically at the database level, so it can't be bypassed by going around the admin dashboard. "System" means the change happened without a logged-in admin session (e.g. a direct database action).</p>
+      <div class="review-history-controls">
+        <input
+          type="text"
+          id="securityLogSearch"
+          placeholder="Search by actor email..."
+          class="history-search"
+        />
+        <select id="securityLogTableFilter" class="history-filter">
+          <option value="all">All Tables</option>
+          <option value="user_roles">User Roles</option>
+          <option value="admin_invitations">Admin Invitations</option>
+          <option value="vendor_payments">Vendor Payments</option>
+          <option value="vendor_sponsorships">Vendor Sponsorships</option>
+          <option value="commissions">Commissions</option>
+          <option value="vendors">Vendors</option>
+          <option value="auth.users">Accounts (auth.users)</option>
+        </select>
+        <select id="securityLogActionFilter" class="history-filter">
+          <option value="all">All Actions</option>
+          <option value="INSERT">Insert</option>
+          <option value="UPDATE">Update</option>
+          <option value="DELETE">Delete</option>
+        </select>
+      </div>
+      <table style="margin-top:8px;">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Table</th>
+            <th>Action</th>
+            <th>Actor</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody id="securityLogTable">
+          <tr><td colspan="5">Loading…</td></tr>
+        </tbody>
+      </table>
+      <button id="securityLogSeeMoreBtn" class="section-note" style="display:none;background:none;border:none;color:#2563eb;text-decoration:underline;cursor:pointer;margin-top:8px;padding:0;">See more</button>
     </div>
 
     <!-- ============================================================

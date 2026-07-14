@@ -47,11 +47,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const PLAN_MULTIPLIER = { standard: 1, enterprise: 1.5, elite: 2 };
 
-  // Matches the exact catalog limits in vendordashboard.js — a
-  // sponsorship tier covering more items than the vendor's plan
-  // even allows would always be partially wasted money.
-  const CATALOG_LIMITS = { free: 1, standard: 6, enterprise: 12, elite: 24, custom: Infinity };
-
   const TIER_LABELS = {
     standard: "Standard", silver: "Silver", gold: "Gold",
     platinum: "Platinum", diamond: "Diamond"
@@ -171,7 +166,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const { data: activeSponsorships } = await supabase
       .from("vendor_sponsorships")
-      .select("sponsorship_type, target_id, tier, billing_cycle, expires_at")
+      .select("sponsorship_type, target_id, tier, billing_cycle, expires_at, starts_at")
       .eq("vendor_id", vendor.id)
       .eq("payment_status", "active")
       .gt("expires_at", new Date().toISOString())
@@ -182,7 +177,82 @@ document.addEventListener("DOMContentLoaded", async () => {
     const container = document.getElementById("gsCurrentSponsorships");
     const list = document.getElementById("gsCurrentSponsorshipsList");
 
-    list.innerHTML = activeSponsorships.map(s => {
+    // Real rank position, computed from the exact same ordering the
+    // live search results use (get_product_rank/get_service_rank/
+    // get_vendor_rank mirror search_products/search_services/
+    // search_vendors exactly) — not an approximation.
+    async function getRealRank(s) {
+      try {
+        if (s.sponsorship_type === "product") {
+          const { data } = await supabase.rpc("get_product_rank", { p_product_id: s.target_id });
+          return data?.[0] || null;
+        }
+        if (s.sponsorship_type === "service") {
+          const { data } = await supabase.rpc("get_service_rank", { p_service_id: s.target_id });
+          return data?.[0] || null;
+        }
+        if (s.sponsorship_type === "business") {
+          const { data } = await supabase.rpc("get_vendor_rank", { p_vendor_id: vendor.id });
+          return data?.[0] || null;
+        }
+      } catch (err) {
+        console.error("Rank lookup failed:", err);
+      }
+      return null;
+    }
+
+    // Honest before/after view comparison using real analytics_events
+    // — compares equal-length windows immediately before and after
+    // the sponsorship's start date. No comparison shown if it hasn't
+    // been active long enough for the numbers to mean anything yet.
+    async function getViewComparison(s) {
+      if (!s.starts_at) return null;
+
+      const startDate = new Date(s.starts_at);
+      const now = new Date();
+      const daysElapsed = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+
+      if (daysElapsed < 1) return null; // too soon to mean anything
+
+      const windowDays = Math.min(14, daysElapsed);
+      const windowMs = windowDays * 24 * 60 * 60 * 1000;
+
+      const beforeStart = new Date(startDate.getTime() - windowMs);
+      const afterEnd = new Date(Math.min(startDate.getTime() + windowMs, now.getTime()));
+
+      const eventType = s.sponsorship_type === "business" ? "profile_view"
+        : s.sponsorship_type === "product" ? "product_view"
+        : "service_view";
+
+      const idColumn = s.sponsorship_type === "product" ? "product_id"
+        : s.sponsorship_type === "service" ? "service_id"
+        : null;
+
+      function buildQuery(from, to) {
+        let q = supabase
+          .from("analytics_events")
+          .select("*", { count: "exact", head: true })
+          .eq("vendor_id", vendor.id)
+          .eq("event_type", eventType)
+          .gte("created_at", from.toISOString())
+          .lt("created_at", to.toISOString());
+        if (idColumn) q = q.eq(idColumn, s.target_id);
+        return q;
+      }
+
+      try {
+        const [{ count: beforeCount }, { count: afterCount }] = await Promise.all([
+          buildQuery(beforeStart, startDate),
+          buildQuery(startDate, afterEnd)
+        ]);
+        return { before: beforeCount || 0, after: afterCount || 0, windowDays };
+      } catch (err) {
+        console.error("View comparison failed:", err);
+        return null;
+      }
+    }
+
+    const itemsHtml = await Promise.all(activeSponsorships.map(async s => {
 
       let targetLabel;
 
@@ -196,11 +266,37 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const expiryDate = new Date(s.expires_at).toLocaleDateString();
 
+      const [rank, viewComparison] = await Promise.all([
+        getRealRank(s),
+        getViewComparison(s)
+      ]);
+
+      let rankHtml = "";
+      if (rank && rank.total_count) {
+        rankHtml = `<div class="gs-current-rank">Currently ranked <strong>#${rank.rank_position}</strong> of ${rank.total_count} in its category</div>`;
+      }
+
+      let viewsHtml = "";
+      if (viewComparison) {
+        const { before, after, windowDays } = viewComparison;
+        if (before === 0 && after === 0) {
+          viewsHtml = `<div class="gs-current-views">No views recorded in the ${windowDays}-day window before or after sponsorship started.</div>`;
+        } else {
+          const change = before === 0 ? null : Math.round(((after - before) / before) * 100);
+          const changeLabel = change === null
+            ? (after > 0 ? "new views since sponsoring" : "no change yet")
+            : `${change >= 0 ? "+" : ""}${change}% vs. the ${windowDays} days before`;
+          viewsHtml = `<div class="gs-current-views">${after} view${after === 1 ? "" : "s"} in the ${windowDays} days since sponsoring (${changeLabel})</div>`;
+        }
+      }
+
       return `
         <div class="gs-current-item">
           <div>
             <strong>${TIER_LABELS[s.tier]} ${s.sponsorship_type}</strong>
             <span> — ${targetLabel}</span>
+            ${rankHtml}
+            ${viewsHtml}
           </div>
           <div>
             <span>Until ${expiryDate}</span>
@@ -208,8 +304,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
         </div>
       `;
+    }));
 
-    }).join("");
+    list.innerHTML = itemsHtml.join("");
 
     container.classList.remove("hidden");
 
@@ -221,11 +318,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   function updateBusinessNote() {
     const note = document.getElementById("gsBusinessNote");
     const noteText = document.getElementById("gsBusinessNoteText");
+    const singleItemNote = document.getElementById("gsSingleItemNote");
+
     if (selectedType === "business") {
       note.classList.remove("hidden");
       noteText.textContent = `Business sponsorship pricing is scaled to your ${vendor.plan_tier} subscription plan, and automatically covers your vendor card and every product/service you sell.`;
+      if (singleItemNote) singleItemNote.classList.add("hidden");
     } else {
       note.classList.add("hidden");
+      // Visible as soon as the Products/Services tab is chosen —
+      // before any tier is even clicked — so a vendor with just one
+      // item to boost sees this option immediately, not buried a
+      // step later inside the item picker.
+      if (singleItemNote) singleItemNote.classList.remove("hidden");
     }
   }
 
@@ -248,35 +353,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     const grid = document.getElementById("gsTierGrid");
     const tiers = selectedType === "business" ? BUSINESS_TIERS_STANDARD_PLAN : PRODUCT_SERVICE_TIERS;
 
-    // A tier covering more items than the vendor's plan even allows
-    // is locked, with an upgrade prompt — doesn't apply to Business
-    // sponsorship, which isn't tied to an item count.
-    const catalogLimit = CATALOG_LIMITS[vendor.plan_tier] ?? 0;
+    // How many products/services this vendor actually has right now —
+    // used only for an informational note below, never to block a
+    // tier. A vendor can always sponsor just 1 item at any tier for
+    // that tier's full boost strength, even with a small catalog; the
+    // only real consequence of a tier's item count exceeding their
+    // catalog is that some slots go unused, which is their choice to
+    // make, not something to lock them out of.
+    const actualCatalogSize = selectedType === "product" ? vendorProducts.length
+      : selectedType === "service" ? vendorServices.length
+      : Infinity;
 
     grid.innerHTML = tiers.map(t => {
       const price = getTierPrice(t);
-      const isLocked = selectedType !== "business" && t.items > catalogLimit;
+      const exceedsCatalog = selectedType !== "business" && t.items > actualCatalogSize;
 
       return `
-        <div class="gs-tier-card ${selectedTier === t.tier ? "selected" : ""} ${isLocked ? "locked" : ""}" data-tier="${t.tier}" data-locked="${isLocked}">
+        <div class="gs-tier-card ${selectedTier === t.tier ? "selected" : ""}" data-tier="${t.tier}">
           <div class="gs-tier-name">${TIER_LABELS[t.tier]}</div>
           ${t.items ? `<div class="gs-tier-items">${t.items} item${t.items > 1 ? "s" : ""}</div>` : `<div class="gs-tier-items">Whole business</div>`}
           <div class="gs-tier-price">\u20a6${price.toLocaleString()}<br><small>/${selectedCycle === "monthly" ? "mo" : "yr"}</small></div>
-          ${isLocked ? `<div class="gs-tier-lock-note">Needs a bigger catalog — <a href="getlisted.html">Upgrade Plan</a></div>` : ""}
+          ${exceedsCatalog ? `<div class="gs-tier-note">You have ${actualCatalogSize} — sponsor 1 for the same boost</div>` : ""}
         </div>
       `;
     }).join("");
 
     grid.querySelectorAll(".gs-tier-card").forEach(card => {
-      card.addEventListener("click", (e) => {
-
-        if (card.dataset.locked === "true") {
-          if (e.target.tagName !== "A") {
-            alert(`Your current plan (${vendor.plan_tier}) only supports up to ${catalogLimit} products/services, so this tier's slots couldn't all be used. Upgrade your plan to unlock it.`);
-          }
-          return;
-        }
-
+      card.addEventListener("click", () => {
         selectedTier = card.dataset.tier;
         selectedItemIds = [];
         renderTierGrid();
@@ -304,7 +407,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const items = selectedType === "product" ? vendorProducts : vendorServices;
 
     title.textContent = `Select up to ${maxItems} ${selectedType}${maxItems > 1 ? "s" : ""} to sponsor`;
-    note.textContent = `You picked the ${TIER_LABELS[selectedTier]} tier, which covers ${maxItems} item${maxItems > 1 ? "s" : ""}.`;
+    note.textContent = maxItems > 1
+      ? `The ${TIER_LABELS[selectedTier]} tier gives every item you pick the same strong visibility boost, and covers up to ${maxItems} items. You don't have to use all the slots — even sponsoring just 1 item at this tier gives it the full ${TIER_LABELS[selectedTier]} boost, at the same price.`
+      : `You picked the ${TIER_LABELS[selectedTier]} tier, which covers 1 item.`;
 
     list.innerHTML = items.map(item => {
       const name = selectedType === "product" ? item.product_name : item.service_name;
@@ -394,6 +499,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const targetIds = selectedType === "business" ? [null] : selectedItemIds;
 
+    // All rows from this one checkout share a batch_id, so a single
+    // payment covering multiple items (e.g. 3 sponsored products) can
+    // be approved or rejected as one atomic decision later, instead of
+    // each row being judged independently.
+    const batchId = crypto.randomUUID();
+
     // Each row records the same total price paid for the whole
     // purchase — the total charged is unitPrice regardless of how
     // many items it covers (bundle pricing, not per-item
@@ -406,7 +517,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       billing_cycle: selectedCycle,
       amount_paid: unitPrice,
       payment_method: paymentMethod,
-      payment_status: "pending"
+      payment_status: "pending",
+      batch_id: batchId
     }));
 
     const { data, error } = await supabase
