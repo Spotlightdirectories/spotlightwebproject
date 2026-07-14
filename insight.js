@@ -9,6 +9,7 @@ const visitorId = window.visitorId;
 let currentVendorId = null;
 let currentVendorData = null;
 let currentBusinessSponsorship = null; // real active business-type row from vendor_sponsorships, or null
+let allActiveSponsorships = []; // every active row (business + product + service), for cases with multiple different expiry dates
 let insightPeriod = "This Month";
 let showAllKeywords = false;
 
@@ -17,8 +18,17 @@ let showAllKeywords = false;
 =========================== */
 
 async function loadCurrentVendor() {
-  const { data: { user } } = await insightSupabase.auth.getUser();
-  if (!user) return;
+  const { data, error } = await insightSupabase.auth.getUser();
+
+  // No session (expired or never logged in) — send to login instead
+  // of silently leaving the page frozen on stale/hardcoded defaults
+  // with no explanation, which is what happened here before.
+  if (error || !data?.user) {
+    window.location.replace("login.html");
+    return;
+  }
+
+  const user = data.user;
 
   const { data: vendor } = await insightSupabase
     .from("vendors")
@@ -31,21 +41,24 @@ async function loadCurrentVendor() {
 
   // Real sponsorship state — vendor.is_sponsored is an old,
   // disconnected column that nothing in the real sponsorship system
-  // writes to. The actual source of truth is an active row here.
+  // writes to. The actual source of truth is the active rows here.
   if (currentVendorId) {
 
-    const { data: sponsorship } = await insightSupabase
+    // ALL active sponsorships, any type — a vendor can have several
+    // at once (e.g. 4 sponsored products + 1 sponsored business),
+    // each with its own expiry date. Needed so the dashboard reflects
+    // reality instead of only ever looking at the business-type row.
+    const { data: allSponsorships } = await insightSupabase
       .from("vendor_sponsorships")
-      .select("tier, expires_at, billing_cycle")
+      .select("sponsorship_type, target_id, tier, expires_at, billing_cycle")
       .eq("vendor_id", currentVendorId)
-      .eq("sponsorship_type", "business")
       .eq("payment_status", "active")
       .gt("expires_at", new Date().toISOString())
-      .order("expires_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .order("expires_at", { ascending: true });
 
-    currentBusinessSponsorship = sponsorship || null;
+    allActiveSponsorships = allSponsorships || [];
+
+    currentBusinessSponsorship = allActiveSponsorships.find(s => s.sponsorship_type === "business") || null;
 
   }
 
@@ -687,7 +700,11 @@ function _applyRankingUI({ current, sponsored, category, totalPeers = 50 }) {
   const dot = $("rankCurrentDot");
   if (dot && typeof current === "number") {
     const maxRank = Math.max(totalPeers, 50);
-    const pct = Math.min(100, (current / maxRank) * 100);
+    const rawPct = (current / maxRank) * 100;
+    // Clamp within the line's own track (not the outer container),
+    // now that the dot is positioned relative to .rank-line itself —
+    // keeps it visually clear of both end labels at any rank.
+    const pct = Math.max(2, Math.min(98, rawPct));
     dot.style.left = `${pct}%`;
   }
 }
@@ -786,10 +803,13 @@ async function computeHealthScore(vendor) {
   const catalogRequired = 6;
   const catalogScore = Math.round(Math.min(totalListings / catalogRequired, 1) * 20);
 
-  // 5. Sponsorship (20 pts) — real active business sponsorship,
-  // read from vendor_sponsorships (the actual source of truth),
-  // not the old, disconnected vendors.is_sponsored column.
-  const sponsorshipScore = currentBusinessSponsorship ? 20 : 0;
+  // 5. Sponsorship (20 pts) — any real active sponsorship (business,
+  // product, or service), read from vendor_sponsorships (the actual
+  // source of truth), not the old, disconnected vendors.is_sponsored
+  // column. Previously this only checked business-type sponsorship,
+  // so a vendor sponsoring several products but not their business
+  // incorrectly scored 0 here.
+  const sponsorshipScore = allActiveSponsorships.length > 0 ? 20 : 0;
 
   const total = Math.min(100, profileScore + verificationScore + reviewsScore + catalogScore + sponsorshipScore);
 
@@ -855,37 +875,55 @@ function renderSponsorshipCard(vendor) {
   const actionBtn = $("sponsorActionBtn");
   const countdownBox = $("sponsorCountdownBox");
   const daysLeftEl = $("sponsorDaysLeft");
+  const countdownLabelEl = document.querySelector(".sponsor-countdown-label");
 
   if (actionBtn) {
     actionBtn.onclick = () => { window.location.href = "getsponsored.html"; };
   }
 
-  if (currentBusinessSponsorship) {
+  if (allActiveSponsorships.length > 0) {
 
     if (badge) {
       badge.textContent = "Active";
       badge.classList.add("badge-active");
     }
 
+    // The nearest-expiring sponsorship is the one that actually needs
+    // attention soonest — shown by design, not just whichever is
+    // business-type, since a vendor can have several active at once
+    // with different expiry dates.
+    const nearest = allActiveSponsorships[0]; // already sorted soonest-first
+    const othersCount = allActiveSponsorships.length - 1;
+
     if (statusText) {
-      const expiryDate = new Date(currentBusinessSponsorship.expires_at).toLocaleDateString();
-      statusText.textContent = `Your business is sponsored at ${currentBusinessSponsorship.tier} tier, active until ${expiryDate}.`;
+      const typeLabel = nearest.sponsorship_type === "business" ? "your business"
+        : nearest.sponsorship_type === "product" ? "a product"
+        : "a service";
+      const expiryDate = new Date(nearest.expires_at).toLocaleDateString();
+      const othersNote = othersCount > 0
+        ? ` You also have ${othersCount} other active sponsorship${othersCount > 1 ? "s" : ""} — see full details in Sponsorship History on your dashboard.`
+        : "";
+      statusText.textContent = `${nearest.tier.charAt(0).toUpperCase() + nearest.tier.slice(1)}-tier sponsorship on ${typeLabel} is active until ${expiryDate}.${othersNote}`;
     }
 
     if (actionBtn) {
       actionBtn.textContent = "Manage Sponsorship";
     }
 
-    // Real countdown, same spirit as the free-trial countdown —
-    // warm gold styling normally, escalating to red when only a
-    // few days remain, so a lapsing sponsorship is hard to miss.
+    // Real countdown to whichever active sponsorship expires soonest
+    // — same spirit as the free-trial countdown, warm gold normally,
+    // escalating to red when only a few days remain.
     if (countdownBox && daysLeftEl) {
 
       const now = new Date();
-      const expiry = new Date(currentBusinessSponsorship.expires_at);
+      const expiry = new Date(nearest.expires_at);
       const daysLeft = Math.max(0, Math.ceil((expiry - now) / (1000 * 60 * 60 * 24)));
 
       daysLeftEl.textContent = daysLeft === 1 ? "1 Day Left" : `${daysLeft} Days Left`;
+
+      if (countdownLabelEl) {
+        countdownLabelEl.textContent = othersCount > 0 ? "NEAREST SPONSORSHIP EXPIRES IN" : "SPONSORSHIP EXPIRES IN";
+      }
 
       countdownBox.classList.toggle("urgent", daysLeft <= 7);
       countdownBox.classList.remove("hidden");
@@ -1004,12 +1042,12 @@ function buildCoachItems(healthData, vendor) {
     },
     {
       title: 'Sponsor Business / Products / Services',
-      done: !!currentBusinessSponsorship,
+      done: allActiveSponsorships.length > 0,
       score: healthData.items[4].score,
       maxScore: 20,
-      impact: currentBusinessSponsorship ? null : 'high',
+      impact: allActiveSponsorships.length > 0 ? null : 'high',
       actionLabel: 'See Details',
-      secondaryAction: currentBusinessSponsorship ? null : 'Sponsor Now'
+      secondaryAction: allActiveSponsorships.length > 0 ? null : 'Sponsor Now'
     }
   ];
 }
@@ -1096,7 +1134,7 @@ function renderGrowthCoach(healthData, vendor) {
       <div>Total Reviews: ${healthData.reviewDetails.count}</div>`,
     () => `
       <div class="coach-detail-score">Current Score: ${healthData.items[4].score}/20</div>
-      <div>${currentBusinessSponsorship ? `Currently sponsored at ${currentBusinessSponsorship.tier} tier` : 'Not currently sponsored'}</div>`
+      <div>${allActiveSponsorships.length > 0 ? `Currently sponsoring ${allActiveSponsorships.length} item${allActiveSponsorships.length > 1 ? "s" : ""} (business/product/service combined)` : 'Not currently sponsoring anything'}</div>`
   ];
 
   document.querySelectorAll(".coach-action").forEach(btn => {

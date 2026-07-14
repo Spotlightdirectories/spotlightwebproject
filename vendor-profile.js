@@ -126,15 +126,17 @@ const isOwner =
 if (!isOwner) {
 
 
-const result =
-  await supabase
-    .from("analytics_events")
-    .insert({
+try {
+  await window.logAnalyticsEvent(supabase, {
       vendor_id: vendor.id,
       event_type: "profile_view",
       visitor_id: window.visitorId
-    })
-    .select();
+    });
+} catch (analyticsErr) {
+  // Never let a logging failure stop the actual profile from
+  // rendering — this must be non-fatal, always.
+  console.error("Profile view analytics error:", analyticsErr);
+}
 
 }
 
@@ -805,13 +807,15 @@ if (whatsapp) {
       "click",
       async () => {
 
-await supabase
-  .from("analytics_events")
-  .insert({
+try {
+  await window.logAnalyticsEvent(supabase, {
     vendor_id: vendor.id,
     event_type: "whatsapp_click",
     visitor_id: window.visitorId
   });
+} catch (analyticsErr) {
+  console.error("WhatsApp click analytics error:", analyticsErr);
+}
 
       }
     );
@@ -845,13 +849,15 @@ if (callLink) {
       "click",
       async () => {
 
-        await supabase
-          .from("analytics_events")
-          .insert({
-            vendor_id: vendor.id,
-            event_type: "phone_click",
-            visitor_id: window.visitorId
-          });
+        try {
+            await window.logAnalyticsEvent(supabase, {
+              vendor_id: vendor.id,
+              event_type: "phone_click",
+              visitor_id: window.visitorId
+            });
+          } catch (analyticsErr) {
+            console.error("Phone click analytics error:", analyticsErr);
+          }
 
       }
     );
@@ -897,13 +903,15 @@ if (map) {
     "click",
     async () => {
 
-      await supabase
-        .from("analytics_events")
-        .insert({
-          vendor_id: vendor.id,
-          event_type: "direction_click",
-          visitor_id: window.visitorId
-        });
+      try {
+          await window.logAnalyticsEvent(supabase, {
+            vendor_id: vendor.id,
+            event_type: "direction_click",
+            visitor_id: window.visitorId
+          });
+        } catch (analyticsErr) {
+          console.error("Direction click analytics error:", analyticsErr);
+        }
 
     }
   );
@@ -923,14 +931,15 @@ if (catalogBtn) {
 
   catalogBtn.onclick = async function () {
 
-const result =
-  await supabase
-    .from("analytics_events")
-    .insert({
+try {
+  await window.logAnalyticsEvent(supabase, {
       vendor_id: vendor.id,
       event_type: "catalog_visit",
       visitor_id: window.visitorId
     });
+} catch (analyticsErr) {
+  console.error("Catalog visit analytics error:", analyticsErr);
+}
 
       document
         .getElementById("mediaSection")
@@ -1639,13 +1648,15 @@ loadVideo();
   "click",
   async () => {
 
-    await supabase
-      .from("analytics_events")
-      .insert({
+    try {
+      await window.logAnalyticsEvent(supabase, {
         vendor_id: vendor.id,
         event_type: "external_visit",
         visitor_id: window.visitorId
       });
+    } catch (analyticsErr) {
+      console.error("External visit analytics error:", analyticsErr);
+    }
 
   }
 );

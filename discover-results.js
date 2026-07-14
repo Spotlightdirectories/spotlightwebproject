@@ -741,6 +741,20 @@ const displayResults =
 
 const searchImpressions = [];
 
+// Guarded: if the location helper isn't available for any reason
+// (e.g. this page hasn't picked up the latest analytics-utils.js),
+// this must NEVER throw and take down the entire search results
+// render with it — location data is a nice-to-have, not something
+// search results should ever depend on.
+let visitorLocation = { state: null, city: null };
+try {
+  if (typeof window.resolveVisitorLocation === "function") {
+    visitorLocation = await window.resolveVisitorLocation();
+  }
+} catch (locationErr) {
+  console.error("Visitor location resolution failed (non-fatal):", locationErr);
+}
+
 displayResults.vendors.forEach(
   vendor => {
 
@@ -750,7 +764,9 @@ displayResults.vendors.forEach(
       search_keyword:
         discoverResultsState.keyword,
       visitor_id:
-        window.visitorId
+        window.visitorId,
+      visitor_state: visitorLocation.state,
+      visitor_lga: visitorLocation.city
     });
 
   }
@@ -766,7 +782,9 @@ displayResults.products.forEach(
       search_keyword:
         discoverResultsState.keyword,
       visitor_id:
-        window.visitorId
+        window.visitorId,
+      visitor_state: visitorLocation.state,
+      visitor_lga: visitorLocation.city
     });
 
   }
@@ -782,7 +800,9 @@ displayResults.services.forEach(
       search_keyword:
         discoverResultsState.keyword,
       visitor_id:
-        window.visitorId
+        window.visitorId,
+      visitor_state: visitorLocation.state,
+      visitor_lga: visitorLocation.city
     });
 
   }

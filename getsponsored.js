@@ -30,11 +30,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   // APPROVED PRICING (from the pricing workbook Cyril approved)
   // -----------------------------
   const PRODUCT_SERVICE_TIERS = [
-    { tier: "standard", items: 1,  monthly: 2000 },
-    { tier: "silver",   items: 3,  monthly: 5000 },
-    { tier: "gold",     items: 5,  monthly: 8000 },
-    { tier: "platinum", items: 8,  monthly: 12000 },
-    { tier: "diamond",  items: 12, monthly: 16000 }
+    { tier: "standard", items: 1,  monthly: 2000,  singleMonthly: 2000 },
+    { tier: "silver",   items: 3,  monthly: 5000,  singleMonthly: 2500 },
+    { tier: "gold",     items: 5,  monthly: 8000,  singleMonthly: 4000 },
+    { tier: "platinum", items: 8,  monthly: 12000, singleMonthly: 6000 },
+    { tier: "diamond",  items: 12, monthly: 16000, singleMonthly: 8000 }
   ];
 
   const BUSINESS_TIERS_STANDARD_PLAN = [
@@ -346,6 +346,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     return selectedCycle === "monthly" ? monthly : yearlyOf(monthly);
   }
 
+  // Products/Services only: the actual price charged depends on how
+  // many items were selected, not just the tier — sponsoring exactly
+  // 1 item uses the tier's single-item price (half the bundle price),
+  // sponsoring 2 or more uses the full bundle price. Business
+  // sponsorship has no per-item concept, so it always uses getTierPrice.
+  function getEffectivePrice(tierConfig, itemCount) {
+    const monthly = itemCount === 1 ? tierConfig.singleMonthly : tierConfig.monthly;
+    return selectedCycle === "monthly" ? monthly : yearlyOf(monthly);
+  }
+
   // -----------------------------
   // RENDER TIER GRID
   // -----------------------------
@@ -368,11 +378,32 @@ document.addEventListener("DOMContentLoaded", async () => {
       const price = getTierPrice(t);
       const exceedsCatalog = selectedType !== "business" && t.items > actualCatalogSize;
 
+      // Products/Services show BOTH prices explicitly — the full
+      // bundle price and the single-item price — so the vendor makes
+      // an informed choice up front, before picking any items, rather
+      // than discovering the single-item option buried later.
+      let priceBlock;
+      if (selectedType === "business" || t.items === 1) {
+        priceBlock = `<div class="gs-tier-price">\u20a6${price.toLocaleString()}<br><small>/${selectedCycle === "monthly" ? "mo" : "yr"}</small></div>`;
+      } else {
+        const singlePrice = getEffectivePrice(t, 1);
+        priceBlock = `
+          <div class="gs-tier-price-option">
+            <span class="gs-tier-price-label">Up to ${t.items} items</span>
+            <span class="gs-tier-price-amount">\u20a6${price.toLocaleString()}<small>/${selectedCycle === "monthly" ? "mo" : "yr"}</small></span>
+          </div>
+          <div class="gs-tier-price-option gs-tier-price-single">
+            <span class="gs-tier-price-label">Just 1 item</span>
+            <span class="gs-tier-price-amount">\u20a6${singlePrice.toLocaleString()}<small>/${selectedCycle === "monthly" ? "mo" : "yr"}</small></span>
+          </div>
+        `;
+      }
+
       return `
         <div class="gs-tier-card ${selectedTier === t.tier ? "selected" : ""}" data-tier="${t.tier}">
           <div class="gs-tier-name">${TIER_LABELS[t.tier]}</div>
-          ${t.items ? `<div class="gs-tier-items">${t.items} item${t.items > 1 ? "s" : ""}</div>` : `<div class="gs-tier-items">Whole business</div>`}
-          <div class="gs-tier-price">\u20a6${price.toLocaleString()}<br><small>/${selectedCycle === "monthly" ? "mo" : "yr"}</small></div>
+          ${t.items ? `<div class="gs-tier-items">${t.items} item${t.items > 1 ? "s" : ""} max</div>` : `<div class="gs-tier-items">Whole business</div>`}
+          ${priceBlock}
           ${exceedsCatalog ? `<div class="gs-tier-note">You have ${actualCatalogSize} — sponsor 1 for the same boost</div>` : ""}
         </div>
       `;
@@ -406,10 +437,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     const maxItems = tierConfig.items;
     const items = selectedType === "product" ? vendorProducts : vendorServices;
 
+    const singlePrice = getEffectivePrice(tierConfig, 1);
+    const bundlePrice = getEffectivePrice(tierConfig, 2);
+
     title.textContent = `Select up to ${maxItems} ${selectedType}${maxItems > 1 ? "s" : ""} to sponsor`;
     note.textContent = maxItems > 1
-      ? `The ${TIER_LABELS[selectedTier]} tier gives every item you pick the same strong visibility boost, and covers up to ${maxItems} items. You don't have to use all the slots — even sponsoring just 1 item at this tier gives it the full ${TIER_LABELS[selectedTier]} boost, at the same price.`
-      : `You picked the ${TIER_LABELS[selectedTier]} tier, which covers 1 item.`;
+      ? `Pick just 1 item and you'll pay \u20a6${singlePrice.toLocaleString()}/${selectedCycle === "monthly" ? "mo" : "yr"} for the full ${TIER_LABELS[selectedTier]} boost. Pick 2 or more (up to ${maxItems}) and the price becomes the bundle rate, \u20a6${bundlePrice.toLocaleString()}/${selectedCycle === "monthly" ? "mo" : "yr"}, covering all of them. The boost strength is identical either way — only the price and item count differ.`
+      : `You picked the ${TIER_LABELS[selectedTier]} tier, which covers 1 item at \u20a6${singlePrice.toLocaleString()}/${selectedCycle === "monthly" ? "mo" : "yr"}.`;
 
     list.innerHTML = items.map(item => {
       const name = selectedType === "product" ? item.product_name : item.service_name;
@@ -465,7 +499,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const tierConfig = (selectedType === "business" ? BUSINESS_TIERS_STANDARD_PLAN : PRODUCT_SERVICE_TIERS)
       .find(t => t.tier === selectedTier);
 
-    const unitPrice = getTierPrice(tierConfig);
+    const unitPrice = selectedType === "business"
+      ? getTierPrice(tierConfig)
+      : getEffectivePrice(tierConfig, selectedItemIds.length);
 
     let targetLabel;
     if (selectedType === "business") {
@@ -480,7 +516,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     document.getElementById("gsSummaryTarget").textContent = targetLabel;
-    document.getElementById("gsSummaryTier").textContent = `${TIER_LABELS[selectedTier]} (${selectedCycle === "monthly" ? "Monthly" : "Yearly"})`;
+    document.getElementById("gsSummaryTier").textContent = `${TIER_LABELS[selectedTier]}${selectedType !== "business" ? (selectedItemIds.length === 1 ? " — single item price" : " — bundle price") : ""} (${selectedCycle === "monthly" ? "Monthly" : "Yearly"})`;
     document.getElementById("gsSummaryTotal").textContent = `\u20a6${unitPrice.toLocaleString()}`;
 
     summary.classList.remove("hidden");
@@ -495,9 +531,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const tierConfig = (selectedType === "business" ? BUSINESS_TIERS_STANDARD_PLAN : PRODUCT_SERVICE_TIERS)
       .find(t => t.tier === selectedTier);
 
-    const unitPrice = getTierPrice(tierConfig);
-
     const targetIds = selectedType === "business" ? [null] : selectedItemIds;
+
+    const unitPrice = selectedType === "business"
+      ? getTierPrice(tierConfig)
+      : getEffectivePrice(tierConfig, targetIds.length);
 
     // All rows from this one checkout share a batch_id, so a single
     // payment covering multiple items (e.g. 3 sponsored products) can
@@ -540,7 +578,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const tierConfig = (selectedType === "business" ? BUSINESS_TIERS_STANDARD_PLAN : PRODUCT_SERVICE_TIERS)
       .find(t => t.tier === selectedTier);
-    const unitPrice = getTierPrice(tierConfig);
+    const targetIds = selectedType === "business" ? [null] : selectedItemIds;
+    const unitPrice = selectedType === "business"
+      ? getTierPrice(tierConfig)
+      : getEffectivePrice(tierConfig, targetIds.length);
 
     let sponsorshipIds;
 

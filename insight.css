@@ -826,7 +826,7 @@ background:#f5f5f5;
 
 .rank-scale{position:relative;height:46px;margin:22px 0}
 .rank-line{position:absolute;left:48px;right:78px;top:10px;height:2px;background:#d6d6d6}
-.rank-current-dot{position:absolute;left:48%;top:6px;width:8px;height:8px;border-radius:50%;background:#8430CE}
+.rank-current-dot{position:absolute;left:48%;top:-3px;width:8px;height:8px;border-radius:50%;background:#8430CE;transform:translateX(-50%)}
 .rank-left-label{position:absolute;left:0;top:0;font-size:13px;font-weight:600}
 .rank-current-label{position:absolute;left:48%;top:18px;transform:translateX(-50%);font-size:13px;font-weight:700;color:#8430CE}
 .rank-right-label{position:absolute;right:0;top:0;font-size:13px;font-weight:700;color:#1E8E3E}

@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   try {
-    await supabase.from("analytics_events").insert({
+    await window.logAnalyticsEvent(supabase, {
       vendor_id: data.vendor_id,
       product_id: data.id,
       event_type: "product_view",
