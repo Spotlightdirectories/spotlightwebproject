@@ -246,16 +246,6 @@ document
           }
         ]);
 
-      await reviewsSupabase
-  .from("analytics_events")
-  .insert({
-    vendor_id:
-      vendorId,
-    event_type:
-      "review_submitted",
-      visitor_id: window.visitorId
-  });
-
       if (error) {
 
         console.error(
@@ -269,6 +259,19 @@ document
         return;
 
       }
+
+      // Only log this AFTER confirming the review itself actually
+      // saved — previously this fired unconditionally, so a failed
+      // submission was still recorded as a successful one.
+      await reviewsSupabase
+  .from("analytics_events")
+  .insert({
+    vendor_id:
+      vendorId,
+    event_type:
+      "review_submitted",
+      visitor_id: window.visitorId
+  });
 
 alert(
   "Review submitted successfully."

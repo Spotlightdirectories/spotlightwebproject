@@ -1388,6 +1388,14 @@ const searchKeyword =
           : ""
       );
 
+// PostgREST's filter syntax treats these characters as structural
+// (comma separates conditions in .or(), period separates
+// column.operator.value, parentheses group logic) — stripping them
+// before building the raw filter string below prevents a crafted
+// search term from altering what the query actually matches. This
+// keyword is still used normally for the ilike pattern match itself.
+const safeSearchKeyword = searchKeyword.replace(/[,.()* ]/g, m => m === " " ? " " : "");
+
   try {
 
 let sponsoredQuery =
@@ -1419,11 +1427,11 @@ let sponsoredQuery =
       "active"
     );
 
-if (searchKeyword) {
+if (safeSearchKeyword) {
 
   sponsoredQuery =
     sponsoredQuery.or(
-      `subcategory.ilike.%${searchKeyword}%,category.ilike.%${searchKeyword}%`
+      `subcategory.ilike.%${safeSearchKeyword}%,category.ilike.%${safeSearchKeyword}%`
     );
 
 }

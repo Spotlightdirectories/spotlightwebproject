@@ -153,7 +153,14 @@ async function fetchEvents(fields, eventType = null) {
     .from("analytics_events")
     .select(fields)
     .eq("vendor_id", currentVendorId)
-    .gte("created_at", currentStart.toISOString());
+    .gte("created_at", currentStart.toISOString())
+    // Supabase caps any query at 1000 rows by default. Without an
+    // explicit order, an active vendor with over 1000 events in the
+    // period could have that cap silently exclude the newest rows —
+    // which is exactly what hid the just-fixed location data. Newest
+    // first ensures a truncated result still reflects current reality.
+    .order("created_at", { ascending: false })
+    .limit(5000);
 
   if (eventType) query = query.eq("event_type", eventType);
 
@@ -406,9 +413,28 @@ async function renderLeadGeneration() {
 async function renderAudience() {
   if (!currentVendorId) return;
 
+  const { currentStart } = getPeriodRanges();
+
   // Fetch all events in period — use visitor_state as primary grouping,
   // visitor_lga as secondary detail. Count unique visitors per state.
   const records = await fetchEvents("visitor_id,visitor_state,visitor_lga");
+
+  // True total via a separate exact count — not records.length, since
+  // fetchEvents() is capped (even generously at 5000) and a very
+  // active vendor's real total could exceed that. The breakdown
+  // below is still computed from the sample, but the headline number
+  // should reflect reality even if the sample can't include every row.
+  let total = records.length;
+  try {
+    const { count } = await insightSupabase
+      .from("analytics_events")
+      .select("*", { count: "exact", head: true })
+      .eq("vendor_id", currentVendorId)
+      .gte("created_at", currentStart.toISOString());
+    if (typeof count === "number") total = count;
+  } catch (err) {
+    console.error("Audience total count error:", err);
+  }
 
   // Count by state (primary audience breakdown)
   const stateMap = {};
@@ -417,7 +443,7 @@ async function renderAudience() {
     stateMap[state] = (stateMap[state] || 0) + 1;
   });
 
-  const total = records.length;
+  const sampleSize = records.length;
   const sorted = Object.entries(stateMap).sort((a, b) => b[1] - a[1]);
 
   const dotClasses = ["dot-red","dot-blue","dot-green","dot-gold","dot-purple","dot-gray"];
@@ -428,11 +454,11 @@ async function renderAudience() {
     ...top5.map(([state, count], i) => ({
       city: state,   // reuse city label for display
       count,
-      pct: total ? Math.round((count / total) * 100) : 0,
+      pct: sampleSize ? Math.round((count / sampleSize) * 100) : 0,
       cls: dotClasses[i]
     })),
     ...(othersCount > 0
-      ? [{ city: "Others", count: othersCount, pct: total ? Math.round((othersCount / total) * 100) : 0, cls: "dot-gray" }]
+      ? [{ city: "Others", count: othersCount, pct: sampleSize ? Math.round((othersCount / sampleSize) * 100) : 0, cls: "dot-gray" }]
       : [])
   ];
 
@@ -922,7 +948,7 @@ function renderSponsorshipCard(vendor) {
       daysLeftEl.textContent = daysLeft === 1 ? "1 Day Left" : `${daysLeft} Days Left`;
 
       if (countdownLabelEl) {
-        countdownLabelEl.textContent = othersCount > 0 ? "NEAREST SPONSORSHIP EXPIRES IN" : "SPONSORSHIP EXPIRES IN";
+        countdownLabelEl.textContent = othersCount > 0 ? "NEAREST SPONSORSHIP EXPIRES SOON" : "SPONSORSHIP EXPIRES IN";
       }
 
       countdownBox.classList.toggle("urgent", daysLeft <= 7);

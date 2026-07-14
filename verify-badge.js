@@ -1,6 +1,20 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const supabase = window.supabaseClient;
 
+  // Declare all DOM elements first — moved ahead of every early-exit
+  // check below (badge type, auth, vendor lookup), since several of
+  // those paths need to show a message via verifyMsg before returning.
+  // Previously verifyMsg was used in the vendor-lookup-failure branch
+  // before it was ever declared, which would throw "Cannot access
+  // 'verifyMsg' before initialization" instead of showing the message.
+  const verifyMsg = document.getElementById("verifyMsg");
+  const form = document.getElementById("verificationForm");
+  const badgeTitle = document.getElementById("badgeTitle");
+  const badgeRequirements = document.getElementById("badgeRequirements");
+  const applicantNameField = document.getElementById("applicantName");
+  const grayOnly = document.querySelectorAll(".gray-only");
+  const blueOnly = document.querySelectorAll(".blue-only");
+
   const badgeType = localStorage.getItem("pendingBadgeType");
 
   if (!badgeType) {
@@ -22,20 +36,11 @@ document.addEventListener("DOMContentLoaded", async () => {
      .single();
 
   if (vendorLookupError || !vendorRow) {
-      verifyMsg.textContent = "Vendor record not found.";
+      if (verifyMsg) verifyMsg.textContent = "Vendor record not found.";
       return;
    }
 
   const vendorId = vendorRow.id;
-
-  // Declare all DOM elements first
-  const verifyMsg = document.getElementById("verifyMsg");
-  const form = document.getElementById("verificationForm");
-  const badgeTitle = document.getElementById("badgeTitle");
-  const badgeRequirements = document.getElementById("badgeRequirements");
-  const applicantNameField = document.getElementById("applicantName");
-  const grayOnly = document.querySelectorAll(".gray-only");
-  const blueOnly = document.querySelectorAll(".blue-only");
 
   // Set email field from auth
   const emailField = document.getElementById("email");

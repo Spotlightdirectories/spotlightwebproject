@@ -1,6 +1,26 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// -----------------------------------------------------------------
+// PRICING TABLE — must exactly mirror getAmountInKobo() in
+// payment.js (same table used in verify-paystack-payment). Lets this
+// webhook — the actual PRIMARY activation path — independently
+// verify what a payment should have cost, instead of trusting
+// whatever amount was charged.
+// -----------------------------------------------------------------
+const PLAN_PRICES_KOBO: Record<string, Record<string, number>> = {
+  standard: { monthly: 299800, yearly: 2698200 },
+  enterprise: { monthly: 1260000, yearly: 11340000 },
+  elite: { monthly: 2240000, yearly: 20160000 },
+};
+
+function getExpectedKobo(plan: string, billingType: string): number {
+  const normalizedPlan = (plan || "").toLowerCase();
+  const planPrices = PLAN_PRICES_KOBO[normalizedPlan];
+  if (!planPrices) return 0;
+  return planPrices[billingType] ?? planPrices.monthly ?? 0;
+}
+
 serve(async (req) => {
 
   // 🔓 CORS HEADERS
@@ -117,6 +137,45 @@ if (payment.status !== "pending") {
 }
 
 const now = new Date().toISOString();
+
+// -----------------------------------------------------------------
+// SERVER-SIDE PRICE CHECK — same fix as verify-paystack-payment,
+// applied here too since this webhook is the actual primary
+// activation path (per the comment in verify-paystack-payment) —
+// fixing only that function would leave this one still trusting
+// whatever amount Paystack reports.
+// -----------------------------------------------------------------
+const expectedKobo = getExpectedKobo(payment.plan, payment.billing_type);
+const actualKobo = verifyData.data.amount;
+
+if (expectedKobo > 0 && actualKobo !== expectedKobo) {
+  console.error(
+    "PRICE MISMATCH (webhook) — refusing to activate.",
+    {
+      payment_id: payment.id,
+      plan: payment.plan,
+      billing_type: payment.billing_type,
+      expectedKobo,
+      actualKobo,
+      reference,
+    }
+  );
+  // Left as "pending" deliberately — not auto-confirmed — so an
+  // admin can review a genuine mismatch rather than it silently
+  // activating. Still logs the webhook receipt for the audit trail.
+  await supabase
+    .from("vendor_payments")
+    .update({
+      webhook_event: event,
+      webhook_received_at: new Date().toISOString()
+    })
+    .eq("id", payment.id);
+
+  return new Response(
+    JSON.stringify({ success: false, error: "Amount mismatch — flagged for manual review" }),
+    { status: 400, headers: corsHeaders }
+  );
+}
 
 const expiry =
   payment.billing_type === "monthly"

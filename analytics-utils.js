@@ -38,7 +38,12 @@ window.resolveVisitorLocation = async function () {
   const cached = sessionStorage.getItem("visitor_location");
   if (cached) {
     try {
-      return JSON.parse(cached);
+      const parsed = JSON.parse(cached);
+      // Only trust a cached SUCCESS. A cached failure (state: null)
+      // must not block a retry on the next page load — otherwise a
+      // real fix (like this one) can never take effect until the
+      // browser tab is closed and sessionStorage clears itself.
+      if (parsed.state) return parsed;
     } catch {
       // fall through and re-resolve if the cached value is corrupt
     }
@@ -47,23 +52,33 @@ window.resolveVisitorLocation = async function () {
   let location = { state: null, city: null };
 
   try {
-    const response = await fetch(
-      "https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/resolve-visitor-location",
-      {
-        method: "GET",
-        headers: { "apikey": window.SUPABASE_ANON_KEY }
-      }
+    // Uses the same supabase.functions.invoke() pattern already used
+    // elsewhere in this codebase (e.g. verify-paystack-sponsorship) —
+    // it automatically attaches the correct Authorization header,
+    // unlike a raw fetch() which was sending apikey only and getting
+    // rejected with 401 by the Edge Function gateway before ever
+    // reaching the function's own code.
+    const { data, error } = await window.supabaseClient.functions.invoke(
+      "resolve-visitor-location",
+      { method: "GET" }
     );
 
-    if (response.ok) {
-      const data = await response.json();
+    if (!error && data) {
       location = { state: data.state || null, city: data.city || null };
+    } else if (error) {
+      console.error("Visitor location resolution error:", error);
     }
   } catch (err) {
     console.error("Visitor location resolution failed:", err);
   }
 
-  sessionStorage.setItem("visitor_location", JSON.stringify(location));
+  // Only cache a real success. A failed lookup is left uncached so
+  // the very next event on this visit gets a fresh attempt instead
+  // of being stuck on "Unknown" for the rest of the browser session.
+  if (location.state) {
+    sessionStorage.setItem("visitor_location", JSON.stringify(location));
+  }
+
   return location;
 
 };

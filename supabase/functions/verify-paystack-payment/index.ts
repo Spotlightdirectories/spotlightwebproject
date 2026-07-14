@@ -1,6 +1,27 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// -----------------------------------------------------------------
+// PRICING TABLE — must exactly mirror getAmountInKobo() in
+// payment.js. Exists here so the server can independently verify
+// what a payment SHOULD have cost, rather than trusting whatever
+// amount the browser sent to Paystack. Already expressed in kobo,
+// matching payment.js's own values directly (no naira conversion
+// needed here, unlike the sponsorship pricing table).
+// -----------------------------------------------------------------
+const PLAN_PRICES_KOBO: Record<string, Record<string, number>> = {
+  standard: { monthly: 299800, yearly: 2698200 },
+  enterprise: { monthly: 1260000, yearly: 11340000 },
+  elite: { monthly: 2240000, yearly: 20160000 },
+};
+
+function getExpectedKobo(plan: string, billingType: string): number {
+  const normalizedPlan = (plan || "").toLowerCase();
+  const planPrices = PLAN_PRICES_KOBO[normalizedPlan];
+  if (!planPrices) return 0;
+  return planPrices[billingType] ?? planPrices.monthly ?? 0;
+}
+
 serve(async (req) => {
 
   console.log("EDGE FUNCTION HIT");
@@ -105,6 +126,40 @@ if (existingPayment.status === "confirmed") {
   return new Response(
     JSON.stringify({ message: "Already processed" }),
     { headers: corsHeaders }
+  );
+}
+
+// -----------------------------------------------------------------
+// SERVER-SIDE PRICE CHECK — the actual security fix.
+// Independently recompute what this payment SHOULD have cost, using
+// the same pricing rules as payment.js, and compare it to what
+// Paystack actually confirms was charged. The browser's number is
+// never trusted on its own.
+// -----------------------------------------------------------------
+const expectedKobo = getExpectedKobo(existingPayment.plan, existingPayment.billing_type);
+const actualKobo = verifyJson.data.amount;
+
+if (expectedKobo > 0 && actualKobo !== expectedKobo) {
+  console.error(
+    "PRICE MISMATCH — refusing to activate.",
+    {
+      payment_id,
+      plan: existingPayment.plan,
+      billing_type: existingPayment.billing_type,
+      expectedKobo,
+      actualKobo,
+      reference,
+    }
+  );
+  // Left as-is deliberately — not auto-confirmed — so an admin can
+  // review a genuine mismatch. The vendor was already charged
+  // whatever they were charged; a human should look at this specific
+  // case before anything else happens to it.
+  return new Response(
+    JSON.stringify({
+      message: "Payment amount does not match the expected price for this plan. This has been flagged for manual review."
+    }),
+    { status: 400, headers: corsHeaders }
   );
 }
 

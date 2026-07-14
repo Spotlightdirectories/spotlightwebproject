@@ -139,6 +139,28 @@
 
     <button id="downloadStatementBtn">Download Statement (CSV)</button>
 
+    <div class="review-history-controls">
+      <input
+        type="text"
+        id="commissionSearch"
+        placeholder="Search by vendor name..."
+        class="history-search"
+      />
+      <select id="commissionTypeFilter" class="history-filter">
+        <option value="all">All Types</option>
+        <option value="vendor">Paid Vendor</option>
+        <option value="free_vendor">Free Vendor</option>
+        <option value="override">Override</option>
+        <option value="bonus">Bonus</option>
+      </select>
+      <select id="commissionStatusFilter" class="history-filter">
+        <option value="all">All Statuses</option>
+        <option value="pending">Pending</option>
+        <option value="available">Available</option>
+        <option value="paid">Paid</option>
+      </select>
+    </div>
+
     <table>
       <thead>
         <tr>
@@ -157,6 +179,7 @@
         </tr>
       </tbody>
     </table>
+    <button id="commissionSeeMoreBtn" class="section-note" style="display:none;background:none;border:none;color:#2563eb;text-decoration:underline;cursor:pointer;margin-top:8px;padding:0;">See more</button>
 
     <!-- ========================= -->
     <!-- DOWNLINE -->

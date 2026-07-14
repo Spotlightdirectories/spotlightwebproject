@@ -148,13 +148,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       try {
-        await supabase.functions.invoke("send-email", {
-          body: {
-            template: "partnerApplicationReceived",
-            to: email,
-            data: { name }
+        await fetch(
+          "https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/send-email",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "apikey": window.SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify({
+              to: email,
+              subject: "Application Received",
+              html: EmailTemplates.partnerApplicationReceived({ partnerName: name })
+            })
           }
-        });
+        );
       } catch (err) {
         console.error("Application received email error:", err.message);
       }

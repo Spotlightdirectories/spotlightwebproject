@@ -491,30 +491,105 @@ if (referredPartnersEl) {
       if (c.type === "free_vendor") freeVendorTotal += amount;
       if (c.type === "override") overrideTotal += amount;
       if (c.type === "bonus") bonusTotal += amount;
-
-      // STATUS CLASS
-      let statusClass = `status-${c.status}`;
-
-      // TYPE LABEL
-      let typeLabel = "—";
-      if (c.type === "vendor") typeLabel = "Paid Vendor";
-      if (c.type === "free_vendor") typeLabel = "Free Vendor";
-      if (c.type === "override") typeLabel = "Override";
-      if (c.type === "bonus") typeLabel = "Bonus";
-
-      const tr = document.createElement("tr");
-
-      tr.innerHTML = `
-        <td>${c.vendors?.name || "—"}</td>
-        <td>${c.vendors?.plan_tier || "—"}</td>
-        <td>${typeLabel}</td>
-        <td>₦${amount.toLocaleString()}</td>
-        <td class="${statusClass}">${c.status}</td>
-        <td>${new Date(c.created_at).toLocaleDateString()}</td>
-      `;
-
-      table.appendChild(tr);
     });
+
+    // ===============================
+    // SEARCH / FILTER / COLLAPSE
+    // Same pattern as the admin dashboard's history tables — shows
+    // the 10 most recent by default, with search by vendor name and
+    // filters by type/status, and a See more/See less toggle for
+    // the rest.
+    // ===============================
+    const COMMISSION_PAGE_SIZE = 10;
+    let commissionExpanded = false;
+
+    const commissionSearchInput = document.getElementById("commissionSearch");
+    const commissionTypeFilter = document.getElementById("commissionTypeFilter");
+    const commissionStatusFilter = document.getElementById("commissionStatusFilter");
+    const commissionSeeMoreBtn = document.getElementById("commissionSeeMoreBtn");
+
+    function getFilteredCommissions() {
+      const searchTerm = (commissionSearchInput?.value || "").toLowerCase().trim();
+      const typeValue = commissionTypeFilter?.value || "all";
+      const statusValue = commissionStatusFilter?.value || "all";
+
+      return commissions.filter(c => {
+        const nameMatch = (c.vendors?.name || "").toLowerCase().includes(searchTerm);
+        const typeMatch = typeValue === "all" || c.type === typeValue;
+        const statusMatch = statusValue === "all" || c.status === statusValue;
+        return nameMatch && typeMatch && statusMatch;
+      });
+    }
+
+    function renderCommissionRows(list) {
+      table.innerHTML = "";
+
+      if (!list.length) {
+        table.innerHTML = `<tr><td colspan="6">No results found.</td></tr>`;
+        if (commissionSeeMoreBtn) commissionSeeMoreBtn.style.display = "none";
+        return;
+      }
+
+      const visible = commissionExpanded ? list : list.slice(0, COMMISSION_PAGE_SIZE);
+
+      visible.forEach(c => {
+        const amount = Number(c.amount) / 100;
+
+        let statusClass = `status-${c.status}`;
+
+        let typeLabel = "—";
+        if (c.type === "vendor") typeLabel = "Paid Vendor";
+        if (c.type === "free_vendor") typeLabel = "Free Vendor";
+        if (c.type === "override") typeLabel = "Override";
+        if (c.type === "bonus") typeLabel = "Bonus";
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>${c.vendors?.name || "—"}</td>
+          <td>${c.vendors?.plan_tier || "—"}</td>
+          <td>${typeLabel}</td>
+          <td>₦${amount.toLocaleString()}</td>
+          <td class="${statusClass}">${c.status}</td>
+          <td>${new Date(c.created_at).toLocaleDateString()}</td>
+        `;
+
+        table.appendChild(tr);
+      });
+
+      if (commissionSeeMoreBtn) {
+        const remaining = list.length - COMMISSION_PAGE_SIZE;
+        if (remaining > 0) {
+          commissionSeeMoreBtn.style.display = "inline-block";
+          commissionSeeMoreBtn.textContent = commissionExpanded ? "See less" : `See more (${remaining} older)`;
+        } else {
+          commissionSeeMoreBtn.style.display = "none";
+        }
+      }
+    }
+
+    function applyCommissionFiltersAndRender() {
+      renderCommissionRows(getFilteredCommissions());
+    }
+
+    if (commissionSearchInput) commissionSearchInput.addEventListener("input", () => {
+      commissionExpanded = false;
+      applyCommissionFiltersAndRender();
+    });
+    if (commissionTypeFilter) commissionTypeFilter.addEventListener("change", () => {
+      commissionExpanded = false;
+      applyCommissionFiltersAndRender();
+    });
+    if (commissionStatusFilter) commissionStatusFilter.addEventListener("change", () => {
+      commissionExpanded = false;
+      applyCommissionFiltersAndRender();
+    });
+    if (commissionSeeMoreBtn) commissionSeeMoreBtn.addEventListener("click", () => {
+      commissionExpanded = !commissionExpanded;
+      applyCommissionFiltersAndRender();
+    });
+
+    applyCommissionFiltersAndRender();
 
     // ===============================
     // MONTHLY PROGRESS + BONUS STATUS
