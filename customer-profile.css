@@ -1,0 +1,180 @@
+body{
+font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+background:#f9fafb;
+color:#111;
+margin:0;
+padding:0;
+}
+
+.cp-page{
+max-width:720px;
+margin:100px auto 40px;
+padding:0 16px;
+}
+
+.cp-header{
+margin-bottom:20px;
+}
+
+.cp-header h1{
+margin:0 0 4px;
+}
+
+.cp-email{
+color:#6b7280;
+font-size:0.9rem;
+margin:0;
+}
+
+.cp-vendor-switch{
+display:flex;
+align-items:center;
+gap:10px;
+background:#fff7ed;
+border:1px solid #fdba74;
+color:#7c2d12;
+padding:12px 16px;
+border-radius:10px;
+margin-bottom:24px;
+font-size:0.9rem;
+flex-wrap:wrap;
+}
+
+.cp-vendor-switch a{
+margin-left:auto;
+color:#7c2d12;
+font-weight:700;
+text-decoration:underline;
+}
+
+.cp-section{
+background:#fff;
+border-radius:12px;
+padding:20px;
+margin-bottom:20px;
+box-shadow:0 6px 18px rgba(0,0,0,0.05);
+}
+
+.cp-section h2{
+margin:0 0 6px;
+font-size:1.1rem;
+}
+
+.cp-note{
+font-size:0.8rem;
+color:#6b7280;
+margin:0 0 14px;
+}
+
+.cp-empty{
+color:#6b7280;
+font-size:0.9rem;
+}
+
+.cp-favorites-list{
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+
+.cp-favorite-card{
+display:flex;
+align-items:center;
+gap:12px;
+text-decoration:none;
+color:inherit;
+padding:10px;
+border-radius:8px;
+transition:background 0.15s ease;
+}
+
+.cp-favorite-card:hover{
+background:#f3f4f6;
+}
+
+.cp-favorite-card img{
+width:48px;
+height:48px;
+border-radius:8px;
+object-fit:cover;
+}
+
+.cp-favorite-card div{
+display:flex;
+flex-direction:column;
+gap:2px;
+}
+
+.cp-favorite-card strong{
+font-size:0.95rem;
+}
+
+.cp-favorite-card span{
+font-size:0.8rem;
+color:#6b7280;
+}
+
+.cp-favorite-rating{
+color:#e6c200 !important;
+}
+
+.cp-favorite-rating i{
+color:#e6c200;
+}
+
+.cp-reviews-list{
+display:flex;
+flex-direction:column;
+gap:14px;
+}
+
+.cp-review-row{
+border-bottom:1px solid #eee;
+padding-bottom:12px;
+}
+
+.cp-review-row:last-child{
+border-bottom:none;
+padding-bottom:0;
+}
+
+.cp-review-top{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:4px;
+}
+
+.cp-review-stars{
+color:#e6c200;
+font-size:0.9rem;
+}
+
+.cp-review-row p{
+margin:4px 0;
+font-size:0.9rem;
+color:#333;
+}
+
+.cp-review-date{
+font-size:0.75rem;
+color:#9ca3af;
+}
+
+.cp-logout-btn{
+background:#f3f4f6;
+border:none;
+padding:10px 16px;
+border-radius:8px;
+font-size:0.85rem;
+cursor:pointer;
+margin-top:8px;
+}
+
+.cp-logout-btn:hover{
+background:#e5e7eb;
+}
+
+.hidden{
+display:none !important;
+}

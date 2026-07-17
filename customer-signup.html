@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Create Customer Account | Spotlight</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="navbar.css">
+<link rel="stylesheet" href="auth.css">
+
+<!-- Scoped to this page only — auth.css's shared body flex-centering
+     is also used by vendor auth pages with no navbar, so this
+     clearance fix lives here instead of in the shared file. -->
+<style>
+  body { padding-top: 90px; }
+</style>
+
+<link rel="icon" href="images/favicon.ico" type="image/x-icon" />
+</head>
+<body>
+
+<header class="navbar">
+  <div class="logo-left">
+    <a href="index">
+      <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg">
+    </a>
+    <a href="index" class="home">Home</a>
+  </div>
+
+  <nav>
+    <button class="menu-open hide-desktop" aria-label="Open menu">
+      <img src="images/hbopen.png" alt="Open menu" width="32" height="32">
+    </button>
+
+    <ul class="nav-links">
+      <li class="menu-close">
+        <button class="xclose" aria-label="Close menu">
+          <img src="images/xclose.png" alt="Close menu" width="32" height="32">
+        </button>
+      </li>
+      <li><a href="discover">Discover</a></li>
+      <li><a href="contact-us">Contact Us</a></li>
+      <li id="authButton">
+        <a href="customer-login" class="nav-login-btn">Log in</a>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<div class="auth-container">
+  <div class="auth-card">
+
+    <div class="auth-header">
+      <h1>Create your account</h1>
+      <p>Save your favorite vendors and manage your reviews in one place.</p>
+    </div>
+
+    <div id="authError" class="auth-error"></div>
+
+    <form id="customerSignupForm">
+
+      <div class="form-group">
+        <label for="fullName">Full name</label>
+        <input type="text" id="fullName" required />
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" required />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" minlength="6" required />
+      </div>
+
+      <button type="submit" class="primary-btn" id="signupBtn">Create Account</button>
+
+    </form>
+
+    <div id="signupConfirmation" class="auth-confirmation hidden">
+      <h3>Check your email</h3>
+      <p>We've sent a confirmation link to your email address. Click it to activate your account, then log in.</p>
+    </div>
+
+    <p class="auth-footer">
+      Already have an account? <a href="customer-login">Log in</a>
+    </p>
+
+    <p class="auth-footer">
+      Own a business? <a href="signup">Sign up as a vendor instead</a>
+    </p>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="customer-signup.js"></script>
+<script defer src="script2.js"></script>
+
+</body>
+</html>

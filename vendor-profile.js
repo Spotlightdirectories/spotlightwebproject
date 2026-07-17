@@ -1100,6 +1100,79 @@ function applyLocationView(locationData) {
 
 }
 
+// -------------------------------
+// FAVORITE BUTTON (item 54) — only shown to a logged-in customer,
+// never to the vendor viewing their own profile or an anonymous
+// visitor. Toggles a row in customer_favorites.
+// -------------------------------
+(async function initFavoriteButton() {
+
+  const favoriteBtn = document.getElementById("favoriteBtn");
+  if (!favoriteBtn || isOwner) return;
+
+  const { data: { session: favSession } } = await supabase.auth.getSession();
+  if (!favSession) return;
+
+  const { data: customer } = await supabase
+    .from("customers")
+    .select("id")
+    .eq("auth_user_id", favSession.user.id)
+    .maybeSingle();
+
+  if (!customer) return; // logged in as a vendor only, not a customer
+
+  favoriteBtn.classList.remove("hidden");
+
+  const icon = favoriteBtn.querySelector("i");
+  const label = favoriteBtn.querySelector("span");
+
+  const { data: existingFavorite } = await supabase
+    .from("customer_favorites")
+    .select("id")
+    .eq("customer_id", customer.id)
+    .eq("vendor_id", vendor.id)
+    .maybeSingle();
+
+  let isFavorited = !!existingFavorite;
+
+  function updateFavoriteUI() {
+    if (icon) icon.className = isFavorited ? "fa-solid fa-heart" : "fa-regular fa-heart";
+    if (label) label.textContent = isFavorited ? "Saved" : "Save";
+  }
+
+  updateFavoriteUI();
+
+  favoriteBtn.addEventListener("click", async () => {
+
+    favoriteBtn.disabled = true;
+
+    if (isFavorited) {
+
+      const { error } = await supabase
+        .from("customer_favorites")
+        .delete()
+        .eq("customer_id", customer.id)
+        .eq("vendor_id", vendor.id);
+
+      if (!error) isFavorited = false;
+
+    } else {
+
+      const { error } = await supabase
+        .from("customer_favorites")
+        .insert({ customer_id: customer.id, vendor_id: vendor.id });
+
+      if (!error) isFavorited = true;
+
+    }
+
+    updateFavoriteUI();
+    favoriteBtn.disabled = false;
+
+  });
+
+})();
+
 // Default view: if a specific branch was named in the URL, show
 // that location directly (no switcher, no ambiguity). Otherwise the
 // vendor's own main address/hours/contact.
@@ -1724,7 +1797,7 @@ const query =
       "vendor_reviews"
     )
     .select(
-      "reviewer_name, review_text, created_at"
+      "reviewer_name, review_text, created_at, customer_id"
     )
     .eq(
       "vendor_id",
@@ -1896,6 +1969,7 @@ reviewsList.insertAdjacentHTML(
 
     <div class="reviewer-name">
       ${reviewerName}
+      ${review.customer_id ? '<span class="verified-reviewer-badge"><i class="fa-solid fa-circle-check"></i> Verified Customer</span>' : ""}
     </div>
 
     <div class="review-date">

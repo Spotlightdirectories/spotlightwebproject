@@ -1781,46 +1781,9 @@ if (discoverState) {
 
 loadStates();
 
-const discoverProfileNav =
-  document.getElementById(
-    "discoverProfileNav"
-  );
-
-if (discoverProfileNav) {
-
-  discoverProfileNav.addEventListener(
-    "click",
-    async () => {
-
-      try {
-
-        const {
-          data: { session }
-        } = await supabase.auth.getSession();
-
-        if (session) {
-
-          window.location.href =
-            "vendordashboard.html";
-
-          return;
-
-        }
-
-        window.location.href =
-          "login.html";
-
-      } catch {
-
-        window.location.href =
-          "login.html";
-
-      }
-
-    }
-  );
-
-}
+// Profile icon behavior (login-aware, vendor/customer-aware) is now
+// handled by the shared profile-nav.js, loaded as its own script tag
+// — see that file for the full logic (item 54).
 
 if (discoverSearchBtn) {
 

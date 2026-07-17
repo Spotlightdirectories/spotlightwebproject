@@ -3507,26 +3507,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   loadFilterOptions();
 
-  const profileNav = document.getElementById("discoverResultsProfileNav");
-
-  if (profileNav) {
-
-    profileNav.addEventListener("click", async () => {
-
-      try {
-
-        const { data: { session } } = await window.supabaseClient.auth.getSession();
-
-        window.location.href = session ? "vendordashboard.html" : "login.html";
-
-      } catch {
-
-        window.location.href = "login.html";
-
-      }
-
-    });
-
-  }
+  // Profile icon behavior (login-aware, vendor/customer-aware) is
+  // now handled by the shared profile-nav.js, loaded as its own
+  // script tag — see that file for the full logic (item 54).
 
 });

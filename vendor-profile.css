@@ -299,6 +299,24 @@ body {
   color:#111827;
 }
 
+.verified-reviewer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 0.7rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.verified-reviewer-badge i {
+  font-size: 0.7rem;
+}
+
 .review-date{
   font-size:0.75rem;
 

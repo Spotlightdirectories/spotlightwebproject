@@ -1986,3 +1986,39 @@ input:checked
   box-shadow: 0 6px 18px rgba(0,0,0,.06);
 
 }
+
+/* ===============================
+   PROFILE NAV MENU (item 54)
+================================ */
+
+.profile-nav-menu {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 -8px 24px rgba(0,0,0,0.15);
+  padding: 6px;
+  min-width: 220px;
+  z-index: 2000;
+}
+
+.profile-nav-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: none;
+  background: none;
+  text-align: left;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.profile-nav-menu-item:hover {
+  background: #f3f4f6;
+}
+
+.profile-nav-menu-item i {
+  color: #e6c200;
+  width: 16px;
+}
