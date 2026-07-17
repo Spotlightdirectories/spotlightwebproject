@@ -74,6 +74,26 @@
       style="margin:1rem 0;padding:1rem;background:#f5f5f5;border-radius:6px;">
     </div>
 
+    <!-- MID-CYCLE UPGRADE DISCLAIMER — only shown when a vendor with
+         an already-active paid plan is upgrading to a different plan
+         before their current subscription has ended. Payment buttons
+         stay disabled until this is explicitly acknowledged. -->
+    <div id="upgradeDisclaimer" class="hidden"
+      style="margin:1rem 0;padding:1rem;background:#fff7ed;border:1px solid #fdba74;border-radius:6px;">
+      <p style="margin:0 0 10px 0;font-size:0.92rem;color:#7c2d12;">
+        You're upgrading while your current subscription is still active.
+        Your new plan and billing cycle will start <strong>immediately</strong> upon payment,
+        and any unused time remaining on your current plan will be forfeited.
+        Spotlight Directories does not offer refunds for upgrades made before
+        the end of an existing subscription period — all payments are final.
+        See our <a href="disclaimer" target="_blank" rel="noopener">Disclaimer</a> for full terms.
+      </p>
+      <label style="display:flex;align-items:center;gap:8px;font-size:0.9rem;color:#7c2d12;">
+        <input type="checkbox" id="upgradeDisclaimerCheckbox" />
+        I understand and agree to these terms
+      </label>
+    </div>
+
     <!-- ACTION BUTTONS -->
     <div id="paymentActions" style="margin-top:2rem;">
       <button id="payOnlineBtn" style="padding:12px 18px;margin-right:12px;">

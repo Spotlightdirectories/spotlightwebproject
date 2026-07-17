@@ -1,6 +1,18 @@
 [functions.send-email]
 verify_jwt = false
 
+[functions.paystack-webhook]
+verify_jwt = false
+# Paystack calls this directly from its own servers — it has no way
+# to supply a Supabase JWT, which is exactly why every real webhook
+# call was being rejected with 401 before ever reaching the function
+# code (confirmed in the logs: repeated retries, all 401). This
+# function authenticates the caller itself by verifying the actual
+# payment reference against Paystack's own /transaction/verify
+# endpoint before doing anything — disabling Supabase's blanket JWT
+# check here doesn't skip authentication, it moves it to the right
+# place for a third-party webhook.
+
 [functions.send-email-resend]
 enabled = true
 verify_jwt = true

@@ -39,7 +39,61 @@ serve(async (req) => {
     return new Response("Method not allowed", { status: 405, headers: corsHeaders });
   }
 
-const body = await req.json();
+// -----------------------------------------------------------------
+// SIGNATURE VERIFICATION — now that Supabase's own JWT check is
+// disabled for this endpoint (required, since Paystack has no way to
+// supply one), this function must authenticate the caller itself.
+// Paystack signs every webhook request with HMAC-SHA512 of the exact
+// raw body, using your Paystack secret key, in the
+// x-paystack-signature header. Verifying this confirms the request
+// genuinely came from Paystack — without it, disabling the JWT check
+// would leave this endpoint open to anyone who knows the URL.
+// -----------------------------------------------------------------
+const rawBody = await req.text();
+const paystackSignature = req.headers.get("x-paystack-signature");
+const paystackSecretForSig = Deno.env.get("PAYSTACK_SECRET_KEY");
+
+if (!paystackSecretForSig) {
+  console.error("PAYSTACK_SECRET_KEY missing — cannot verify webhook signature.");
+  return new Response("Server misconfigured", { status: 500, headers: corsHeaders });
+}
+
+const signatureKey = await crypto.subtle.importKey(
+  "raw",
+  new TextEncoder().encode(paystackSecretForSig),
+  { name: "HMAC", hash: "SHA-512" },
+  false,
+  ["sign"]
+);
+const signatureBuffer = await crypto.subtle.sign("HMAC", signatureKey, new TextEncoder().encode(rawBody));
+const computedSignature = Array.from(new Uint8Array(signatureBuffer))
+  .map(b => b.toString(16).padStart(2, "0"))
+  .join("");
+
+if (!paystackSignature || computedSignature !== paystackSignature) {
+  console.error("Webhook signature mismatch — rejecting request that does not genuinely come from Paystack.");
+  return new Response("Invalid signature", { status: 401, headers: corsHeaders });
+}
+
+// -----------------------------------------------------------------
+// IP CHECK — second layer of defense, on top of the signature check
+// above. Paystack publishes the fixed set of IPs their webhooks are
+// sent from and states any request from outside these can safely be
+// treated as counterfeit. The signature check is the definitive
+// authentication (a forged request can't produce a valid signature
+// without the secret key, regardless of its source IP), so this is
+// logged and enforced as an additional check, not a replacement.
+// -----------------------------------------------------------------
+const PAYSTACK_WEBHOOK_IPS = ["52.31.139.75", "52.49.173.169", "52.214.14.220"];
+const forwardedFor = req.headers.get("x-forwarded-for") || "";
+const callerIp = forwardedFor.split(",")[0].trim();
+
+if (callerIp && !PAYSTACK_WEBHOOK_IPS.includes(callerIp)) {
+  console.error("Webhook request from unrecognized IP — rejecting.", { callerIp });
+  return new Response("Unrecognized source", { status: 401, headers: corsHeaders });
+}
+
+const body = JSON.parse(rawBody);
 
 const event = body.event;
 const reference = body.data?.reference;

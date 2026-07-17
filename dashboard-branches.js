@@ -77,6 +77,39 @@ custom: Infinity
 const branchForm = document.getElementById("branchForm");
 
 const branchWhatsappInput = document.getElementById("branchWhatsapp");
+const branchStateSelect = document.getElementById("branchState");
+const branchLgaSelect = document.getElementById("branchLga");
+
+// ===============================
+// STATE / LGA CASCADING SELECT
+// Same source of truth (window.nigeriaData) already used for the
+// vendor's own address on vendordashboard.html.
+// ===============================
+if (branchStateSelect) {
+  Object.keys(window.nigeriaData || {}).sort().forEach(stateName => {
+    const opt = document.createElement("option");
+    opt.value = stateName;
+    opt.textContent = stateName;
+    branchStateSelect.appendChild(opt);
+  });
+
+  branchStateSelect.addEventListener("change", () => {
+    populateLgaOptions(branchStateSelect.value);
+  });
+}
+
+function populateLgaOptions(stateName, selectedLga) {
+  if (!branchLgaSelect) return;
+  branchLgaSelect.innerHTML = '<option value="">Select LGA</option>';
+  const lgas = (window.nigeriaData || {})[stateName] || [];
+  lgas.forEach(lgaName => {
+    const opt = document.createElement("option");
+    opt.value = lgaName;
+    opt.textContent = lgaName;
+    if (lgaName === selectedLga) opt.selected = true;
+    branchLgaSelect.appendChild(opt);
+  });
+}
 
 // FORCE +234 PREFIX
 branchWhatsappInput.value = "+234";
@@ -125,11 +158,18 @@ const name = `${vendor.name} - ${branchInput}`;
 const address = document.getElementById("branchAddress").value.trim();
 const phone = document.getElementById("branchPhone").value.trim();
 const whatsapp = document.getElementById("branchWhatsapp").value.trim();
+const state = document.getElementById("branchState").value;
+const lga = document.getElementById("branchLga").value;
 const latitude = document.getElementById("branchLatitude").value.trim();
 const longitude = document.getElementById("branchLongitude").value.trim();
 
 if (!branchInput || !address) {
   alert("Branch name and address are required.");
+  return;
+}
+
+if (!state || !lga) {
+  alert("Please select the branch's state and LGA.");
   return;
 }
 
@@ -166,6 +206,8 @@ if (window.editingBranchId) {
   address: address,
   phone: phone,
   whatsapp: whatsapp,
+  state: state,
+  lga: lga,
   latitude: latitude || null,
   longitude: longitude || null
 })
@@ -183,6 +225,8 @@ if (window.editingBranchId) {
   address: address,
   phone: phone,
   whatsapp: whatsapp,
+  state: state,
+  lga: lga,
   latitude: latitude || null,
   longitude: longitude || null
 });
@@ -239,6 +283,9 @@ name.textContent = branch.branch_name;
 const address = document.createElement("div");
 address.textContent = branch.address;
 
+const region = document.createElement("div");
+region.textContent = (branch.state || branch.lga) ? `${branch.lga || "—"}, ${branch.state || "—"}` : "—";
+
 const editBtn = document.createElement("button");
 editBtn.textContent = "Edit";
 
@@ -250,6 +297,9 @@ document.getElementById("branchPhone").value = branch.phone || "";
 document.getElementById("branchWhatsapp").value = branch.whatsapp || "";
 document.getElementById("branchLatitude").value = branch.latitude || "";
 document.getElementById("branchLongitude").value = branch.longitude || "";
+
+if (branchStateSelect) branchStateSelect.value = branch.state || "";
+populateLgaOptions(branch.state, branch.lga);
 
 window.editingBranchId = branch.id;
 
@@ -280,6 +330,7 @@ location.reload();
 
 item.appendChild(name);
 item.appendChild(address);
+item.appendChild(region);
 item.appendChild(editBtn);
 item.appendChild(deleteBtn);
 

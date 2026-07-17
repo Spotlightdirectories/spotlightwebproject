@@ -85,6 +85,42 @@ const upgradingPlan =
   selectedPlan &&
   selectedPlan !== vendor.plan_tier;
 
+// A genuine mid-cycle upgrade: vendor already has an ACTIVE paid
+// plan and is switching to a different one before it's ended. This
+// is exactly the scenario the Disclaimer's "Mid-Cycle Plan Upgrades"
+// section covers — shown here at the actual decision point, not
+// just buried in a legal page, so it's genuinely informed consent.
+const isMidCycleUpgrade =
+  paidPlans.includes((vendor.plan_tier || "").toLowerCase()) &&
+  vendor.subscription_status === "active" &&
+  upgradingPlan;
+
+const upgradeDisclaimer = document.getElementById("upgradeDisclaimer");
+const upgradeDisclaimerCheckbox = document.getElementById("upgradeDisclaimerCheckbox");
+
+if (isMidCycleUpgrade && upgradeDisclaimer) {
+
+  upgradeDisclaimer.classList.remove("hidden");
+
+  // Payment buttons stay disabled until the disclaimer is explicitly
+  // acknowledged — this is the actual gate, not just a visual note.
+  payOnlineBtn.disabled = true;
+  payBankBtn.disabled = true;
+  payOnlineBtn.style.opacity = "0.5";
+  payBankBtn.style.opacity = "0.5";
+
+  if (upgradeDisclaimerCheckbox) {
+    upgradeDisclaimerCheckbox.addEventListener("change", () => {
+      const checked = upgradeDisclaimerCheckbox.checked;
+      payOnlineBtn.disabled = !checked;
+      payBankBtn.disabled = !checked;
+      payOnlineBtn.style.opacity = checked ? "1" : "0.5";
+      payBankBtn.style.opacity = checked ? "1" : "0.5";
+    });
+  }
+
+}
+
 if (
   paidPlans.includes(
     (vendor.plan_tier || "").toLowerCase()

@@ -188,29 +188,54 @@ if (!updatedPayment || updatedPayment.length === 0) {
 }
 
   // 🔹 Activate vendor (fallback if webhook has not fired yet)
-  // The webhook is the primary activation path.
-  // This ensures the vendor is never left in limbo
-  // if the webhook is delayed due to network issues.
-  // If the webhook already fired, the vendor is already active
-  // and this update is a safe no-op (same values written again).
+  // The webhook is SUPPOSED to be the primary activation path, but
+  // in practice this function ends up doing the real work (the
+  // webhook_event/webhook_received_at fields stay null on payments
+  // processed here, meaning the webhook isn't reliably firing).
+  //
+  // Previous guard here was `.neq("subscription_status", "active")`
+  // — intended to avoid double-processing if the webhook got there
+  // first, but it broke every UPGRADE: an upgrading vendor is, by
+  // definition, already active on their current plan, so that guard
+  // was always false and the plan/billing_cycle/expiry never
+  // actually got written, even though the payment itself succeeded.
+  //
+  // Fixed: fetch the vendor's current state first, and only skip the
+  // write if they're already on this EXACT plan+billing_cycle+active
+  // (a true duplicate/already-processed case) — not just "active on
+  // something". This lets upgrades apply while still avoiding a
+  // redundant duplicate write if the webhook did get there first.
   const expiry =
     existingPayment.billing_type === "monthly"
       ? new Date(new Date(now).setMonth(new Date(now).getMonth() + 1))
       : new Date(new Date(now).setFullYear(new Date(now).getFullYear() + 1));
 
-  await supabase
+  const { data: currentVendor } = await supabase
     .from("vendors")
-    .update({
-      subscription_status: "active",
-      plan_tier: existingPayment.plan,
-      billing_cycle: existingPayment.billing_type,
-      is_premium: true,
-      paystack_reference: reference,
-      paid_at: now,
-      expires_at: expiry.toISOString()
-    })
+    .select("plan_tier, billing_cycle, subscription_status")
     .eq("id", existingPayment.vendor_id)
-    .neq("subscription_status", "active"); // Only update if not already active
+    .single();
+
+  const alreadyAppliedExactly =
+    currentVendor &&
+    currentVendor.plan_tier === existingPayment.plan &&
+    currentVendor.billing_cycle === existingPayment.billing_type &&
+    currentVendor.subscription_status === "active";
+
+  if (!alreadyAppliedExactly) {
+    await supabase
+      .from("vendors")
+      .update({
+        subscription_status: "active",
+        plan_tier: existingPayment.plan,
+        billing_cycle: existingPayment.billing_type,
+        is_premium: true,
+        paystack_reference: reference,
+        paid_at: now,
+        expires_at: expiry.toISOString()
+      })
+      .eq("id", existingPayment.vendor_id);
+  }
 
   // 🔹 Send activation email
   const { data: vendorData } = await supabase
