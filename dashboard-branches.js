@@ -160,6 +160,9 @@ const phone = document.getElementById("branchPhone").value.trim();
 const whatsapp = document.getElementById("branchWhatsapp").value.trim();
 const state = document.getElementById("branchState").value;
 const lga = document.getElementById("branchLga").value;
+const openTime = document.getElementById("branchOpenTime").value || null;
+const closeTime = document.getElementById("branchCloseTime").value || null;
+const businessDays = Array.from(document.querySelectorAll(".branch-day:checked")).map(cb => cb.value).join(",") || null;
 const latitude = document.getElementById("branchLatitude").value.trim();
 const longitude = document.getElementById("branchLongitude").value.trim();
 
@@ -208,6 +211,9 @@ if (window.editingBranchId) {
   whatsapp: whatsapp,
   state: state,
   lga: lga,
+  open_time: openTime,
+  close_time: closeTime,
+  business_days: businessDays,
   latitude: latitude || null,
   longitude: longitude || null
 })
@@ -227,6 +233,9 @@ if (window.editingBranchId) {
   whatsapp: whatsapp,
   state: state,
   lga: lga,
+  open_time: openTime,
+  close_time: closeTime,
+  business_days: businessDays,
   latitude: latitude || null,
   longitude: longitude || null
 });
@@ -297,6 +306,13 @@ document.getElementById("branchPhone").value = branch.phone || "";
 document.getElementById("branchWhatsapp").value = branch.whatsapp || "";
 document.getElementById("branchLatitude").value = branch.latitude || "";
 document.getElementById("branchLongitude").value = branch.longitude || "";
+document.getElementById("branchOpenTime").value = branch.open_time || "";
+document.getElementById("branchCloseTime").value = branch.close_time || "";
+
+const selectedDays = (branch.business_days || "").split(",");
+document.querySelectorAll(".branch-day").forEach(cb => {
+  cb.checked = selectedDays.includes(cb.value);
+});
 
 if (branchStateSelect) branchStateSelect.value = branch.state || "";
 populateLgaOptions(branch.state, branch.lga);

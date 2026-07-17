@@ -88,6 +88,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function loadVendorProfile() {
     const params = new URLSearchParams(window.location.search);
     const slug = params.get("slug");
+    const branchId = params.get("branch");
 
     let vendor = null;
 
@@ -119,6 +120,23 @@ if (!vendor) {
   return;
 }
 
+// If a specific branch was named in the URL (e.g. clicked from a
+// branch card in search results), fetch its data here so the page
+// can show that location directly — no switcher, no ambiguity about
+// which location this is.
+let activeBranch = null;
+
+if (branchId) {
+  const { data: branchData } = await supabase
+    .from("branches")
+    .select("*")
+    .eq("id", branchId)
+    .eq("vendor_id", vendor.id)
+    .eq("account_status", "active")
+    .maybeSingle();
+  activeBranch = branchData || null;
+}
+
 const isOwner =
   currentUser &&
   vendor.auth_user_id === currentUser.id;
@@ -140,7 +158,7 @@ try {
 
 }
 
-renderVendorProfile(vendor);
+renderVendorProfile(vendor, activeBranch);
 
 }
 
@@ -687,8 +705,9 @@ if (
 
 }
 
-    const addressEl = document.getElementById("vendorAddress");
-    if (addressEl) addressEl.textContent = vendor.address || "";
+    // NOTE: address/contact/hours/whatsapp/call/map are now all set
+    // by applyLocationView() further down, called once here with the
+    // vendor's own data as the default "Main Location" view.
 
 // -------------------------------
 // LOGO & COVER
@@ -791,135 +810,10 @@ const addressDetail = document.getElementById("vendorAddressDetail");
 if (addressDetail) addressDetail.textContent = vendor.address || "";
 
 
-const whatsapp = document.getElementById("whatsappLink");
-
-if (whatsapp) {
-
-  if (vendor.whatsapp) {
-
-    whatsapp.href =
-      `https://wa.me/${vendor.whatsapp}`;
-
-    whatsapp.style.display =
-      "inline-block";
-
-    whatsapp.addEventListener(
-      "click",
-      async () => {
-
-try {
-  await window.logAnalyticsEvent(supabase, {
-    vendor_id: vendor.id,
-    event_type: "whatsapp_click",
-    visitor_id: window.visitorId
-  });
-} catch (analyticsErr) {
-  console.error("WhatsApp click analytics error:", analyticsErr);
-}
-
-      }
-    );
-
-  } else {
-
-    whatsapp.style.display =
-      "none";
-
-  }
-
-}
-
-const callLink =
-  document.getElementById(
-    "callLink"
-  );
-
-if (callLink) {
-
-  const phoneNumber =
-    vendor.phone ||
-    vendor.whatsapp;
-
-  if (phoneNumber) {
-
-    callLink.href =
-      `tel:${phoneNumber}`;
-
-    callLink.addEventListener(
-      "click",
-      async () => {
-
-        try {
-            await window.logAnalyticsEvent(supabase, {
-              vendor_id: vendor.id,
-              event_type: "phone_click",
-              visitor_id: window.visitorId
-            });
-          } catch (analyticsErr) {
-            console.error("Phone click analytics error:", analyticsErr);
-          }
-
-      }
-    );
-
-  } else {
-
-    callLink.style.display =
-      "none";
-
-  }
-
-}
-
-const map =
-  document.getElementById(
-    "mapLink"
-  );
-
-if (map) {
-
-  if (
-    vendor.latitude &&
-    vendor.longitude
-  ) {
-
-    map.href =
-      `https://www.google.com/maps/search/?api=1&query=${vendor.latitude},${vendor.longitude}`;
-
-  } else if (
-    vendor.address
-  ) {
-
-    map.href =
-      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vendor.address)}`;
-
-  } else {
-
-    map.href = "#";
-
-  }
-
-  map.addEventListener(
-    "click",
-    async () => {
-
-      try {
-          await window.logAnalyticsEvent(supabase, {
-            vendor_id: vendor.id,
-            event_type: "direction_click",
-            visitor_id: window.visitorId
-          });
-        } catch (analyticsErr) {
-          console.error("Direction click analytics error:", analyticsErr);
-        }
-
-    }
-  );
-
-  map.style.pointerEvents =
-    "auto";
-
-}
+    // NOTE: whatsapp/callLink/map are now set by applyLocationView()
+    // (defined further down, called once with the vendor's own data
+    // right after it's defined) — removed from here to avoid setting
+    // them twice and to avoid duplicate analytics listeners.
 
 const catalogBtn =
 
@@ -1073,55 +967,152 @@ const contactInfo =
     "businessContactInfo"
   );
 
-if (contactInfo) {
+// -------------------------------
+// LOCATION VIEW (swappable)
+// Sets address, business hours, contact links (WhatsApp/Call/Map)
+// from whichever location's data is passed in — the vendor's own
+// main address by default, or a specific branch's data when the
+// location switcher (built in loadBranches, further below) selects
+// one. Everything else on the page (about, products/services,
+// reviews) is intentionally untouched by this — those stay shared
+// regardless of which location is currently selected.
+// -------------------------------
+function applyLocationView(locationData) {
 
-  contactInfo.innerHTML = `
-  
-    <div class="business-contact-row">
+  const addressEl = document.getElementById("vendorAddress");
+  if (addressEl) addressEl.textContent = locationData.address || "";
 
-      <i class="far fa-clock"></i>
+  const whatsapp = document.getElementById("whatsappLink");
+  if (whatsapp) {
+    if (locationData.whatsapp) {
+      whatsapp.href = `https://wa.me/${locationData.whatsapp}`;
+      whatsapp.style.display = "inline-block";
+      whatsapp.onclick = async () => {
+        try {
+          await window.logAnalyticsEvent(supabase, {
+            vendor_id: vendor.id,
+            event_type: "whatsapp_click",
+            visitor_id: window.visitorId
+          });
+        } catch (analyticsErr) {
+          console.error("WhatsApp click analytics error:", analyticsErr);
+        }
+      };
+    } else {
+      whatsapp.style.display = "none";
+    }
+  }
 
-      <div>
+  const callLink = document.getElementById("callLink");
+  if (callLink) {
+    const phoneNumber = locationData.phone || locationData.whatsapp;
+    if (phoneNumber) {
+      callLink.href = `tel:${phoneNumber}`;
+      callLink.style.display = "inline-block";
+      callLink.onclick = async () => {
+        try {
+          await window.logAnalyticsEvent(supabase, {
+            vendor_id: vendor.id,
+            event_type: "phone_click",
+            visitor_id: window.visitorId
+          });
+        } catch (analyticsErr) {
+          console.error("Phone click analytics error:", analyticsErr);
+        }
+      };
+    } else {
+      callLink.style.display = "none";
+    }
+  }
 
-        <div class="business-hours">
-           Opens ${formatTime(vendor.open_time)}
-            •
-           Closes ${formatTime(vendor.close_time)}
-        </div>
+  const map = document.getElementById("mapLink");
+  if (map) {
+    if (locationData.latitude && locationData.longitude) {
+      map.href = `https://www.google.com/maps/search/?api=1&query=${locationData.latitude},${locationData.longitude}`;
+    } else if (locationData.address) {
+      map.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationData.address)}`;
+    } else {
+      map.href = "#";
+    }
+    map.onclick = async () => {
+      try {
+        await window.logAnalyticsEvent(supabase, {
+          vendor_id: vendor.id,
+          event_type: "direction_click",
+          visitor_id: window.visitorId
+        });
+      } catch (analyticsErr) {
+        console.error("Direction click analytics error:", analyticsErr);
+      }
+    };
+    map.style.pointerEvents = "auto";
+  }
 
-        <div class="business-days">
-          ${(vendor.business_days || "")
-            .split(",")
-            .join(" • ")}
+  if (contactInfo) {
+
+    contactInfo.innerHTML = `
+
+      <div class="business-contact-row">
+
+        <i class="far fa-clock"></i>
+
+        <div>
+
+          <div class="business-hours">
+             Opens ${formatTime(locationData.open_time)}
+              •
+             Closes ${formatTime(locationData.close_time)}
+          </div>
+
+          <div class="business-days">
+            ${(locationData.business_days || "")
+              .split(",")
+              .join(" • ")}
+          </div>
+
         </div>
 
       </div>
 
-    </div>
+      <div class="business-contact-row">
 
-    <div class="business-contact-row">
+        <i class="fas fa-phone-alt"></i>
 
-      <i class="fas fa-phone-alt"></i>
+        <span>
+          ${locationData.phone || locationData.telephone || ""}
+        </span>
 
-      <span>
-        ${vendor.phone || vendor.telephone || ""}
-      </span>
+      </div>
 
-    </div>
+      <div class="business-contact-row">
 
-    <div class="business-contact-row">
+        <i class="far fa-envelope"></i>
 
-      <i class="far fa-envelope"></i>
+        <span>
+          ${locationData.email || ""}
+        </span>
 
-      <span>
-        ${vendor.email || ""}
-      </span>
+      </div>
 
-    </div>
+    `;
 
-  `;
+  }
 
 }
+
+// Default view: the vendor's own main address/hours/contact
+applyLocationView({
+  address: vendor.address,
+  phone: vendor.phone,
+  telephone: vendor.telephone,
+  whatsapp: vendor.whatsapp,
+  latitude: vendor.latitude,
+  longitude: vendor.longitude,
+  open_time: vendor.open_time,
+  close_time: vendor.close_time,
+  business_days: vendor.business_days,
+  email: vendor.email
+});
 
     // -------------------------------
     // MEDIA
@@ -1600,6 +1591,11 @@ loadVideo();
 
     // -------------------------------
     // SOCIAL LINKS
+    // Always the vendor's own (HQ) links, regardless of which
+    // location tab is selected — social media accounts are brand-
+    // wide, not per physical location. Only contact details/hours
+    // swap per branch (see applyLocationView + the location switcher
+    // in loadBranches).
     // -------------------------------
   async function loadSocialLinks() {
 
@@ -2115,23 +2111,27 @@ async function loadBranches() {
 
   const branchesSection = document.getElementById("branchesSection");
   const branchesList = document.getElementById("branchesList");
+  const switcher = document.getElementById("locationSwitcher");
 
   if (!branchesSection || !branchesList) return;
 
   const { data: branches } = await supabase
     .from("branches")
     .select("*")
-    .eq("vendor_id", vendor.id);
+    .eq("vendor_id", vendor.id)
+    .eq("account_status", "active");
 
   const limit = BRANCH_LIMITS[vendor.plan_tier] ?? 0;
 
 if (!branches || branches.length === 0 || limit === 0) return;
 
+const activeBranches = branches.slice(0, limit);
+
   branchesSection.classList.remove("hidden");
 
   branchesList.innerHTML = "";
 
-  branches.slice(0, limit).forEach(branch => {
+  activeBranches.forEach(branch => {
 
     const item = document.createElement("div");
     item.className = "branch-item";
@@ -2162,6 +2162,81 @@ if (!branches || branches.length === 0 || limit === 0) return;
     branchesList.appendChild(item);
 
   });
+
+  // -------------------------------
+  // LOCATION SWITCHER
+  // "Main Location" (the vendor's own address) + one tab per active
+  // branch. Selecting a tab swaps address/hours/contact links/social
+  // links to that location — about, products/services, and reviews
+  // are intentionally untouched, since those are shared regardless
+  // of which location is currently selected.
+  // -------------------------------
+  if (switcher) {
+
+    switcher.classList.remove("hidden");
+    switcher.innerHTML = "";
+
+    function setActiveTab(tabEl) {
+      switcher.querySelectorAll(".location-tab").forEach(t => t.classList.remove("active"));
+      tabEl.classList.add("active");
+    }
+
+    const mainTab = document.createElement("button");
+    mainTab.type = "button";
+    mainTab.className = "location-tab active";
+    mainTab.textContent = "Main Location";
+
+    mainTab.addEventListener("click", () => {
+      setActiveTab(mainTab);
+      applyLocationView({
+        address: vendor.address,
+        phone: vendor.phone,
+        telephone: vendor.telephone,
+        whatsapp: vendor.whatsapp,
+        latitude: vendor.latitude,
+        longitude: vendor.longitude,
+        open_time: vendor.open_time,
+        close_time: vendor.close_time,
+        business_days: vendor.business_days,
+        email: vendor.email
+      });
+    });
+
+    switcher.appendChild(mainTab);
+
+    activeBranches.forEach(branch => {
+
+      const tab = document.createElement("button");
+      tab.type = "button";
+      tab.className = "location-tab";
+      // Strip the "VendorName - " prefix stored on the branch record,
+      // so the tab reads just the branch identifier (e.g. "Ikeja"),
+      // matching what the vendor actually typed when creating it.
+      tab.textContent = (branch.branch_name || "").replace(`${vendor.name} - `, "");
+
+      tab.addEventListener("click", () => {
+        setActiveTab(tab);
+        applyLocationView({
+          address: branch.address,
+          phone: branch.phone,
+          whatsapp: branch.whatsapp,
+          latitude: branch.latitude,
+          longitude: branch.longitude,
+          open_time: branch.open_time,
+          close_time: branch.close_time,
+          business_days: branch.business_days,
+          // Branches have no email of their own — email stays the
+          // vendor's own, shared, since there's no per-branch schema
+          // for it and it's not something Cyril asked to swap.
+          email: vendor.email
+        });
+      });
+
+      switcher.appendChild(tab);
+
+    });
+
+  }
 
 }
     // -------------------------------

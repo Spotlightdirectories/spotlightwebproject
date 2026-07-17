@@ -1732,6 +1732,30 @@ input:checked
 
 }
 
+.discover-results-branch-label {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 4px;
+
+  margin: 2px 0 0;
+
+  font-size: 11px;
+
+  font-weight: 700;
+
+  color: #7c3aed;
+
+}
+
+.discover-results-branch-label i {
+
+  font-size: 10px;
+
+}
+
 .discover-results-category{
 
   display:block;

@@ -610,6 +610,9 @@ if (
 
     await searchVendors();
 
+  const branchVendors = await searchBranches();
+  vendors = mergeBranchVendors(vendors, branchVendors);
+
   products =
 
     await searchProducts();
@@ -689,6 +692,9 @@ else if (
   vendors =
 
     await searchVendors();
+
+  const branchVendors = await searchBranches();
+  vendors = mergeBranchVendors(vendors, branchVendors);
 
 }
 
@@ -1191,9 +1197,12 @@ if (
 
         const vendorAddress =
 
-          vendor.address ||
+          vendor.isBranchMatch
 
-          `${vendor.lga || ""}, ${vendor.state || ""}`;
+            ? (vendor.branchAddress || `${vendor.lga || ""}, ${vendor.state || ""}`)
+
+            : (vendor.address ||
+               `${vendor.lga || ""}, ${vendor.state || ""}`);
 
         const averageRating =
 
@@ -1318,6 +1327,12 @@ ${vendorAddress}${formatDistanceInline(vendor.distanceKm)}
 
 </p>
 
+${
+vendor.isBranchMatch && vendor.branchName
+? `<p class="discover-results-branch-label"><i class="fa-solid fa-code-branch"></i> ${vendor.branchName} branch</p>`
+: ""
+}
+
 <span class="discover-results-category">
 
 ${vendor.subcategory ||
@@ -1353,6 +1368,8 @@ Leave Review
 class="discover-results-profile-btn"
 
 data-slug="${vendor.slug || ""}"
+
+${vendor.isBranchMatch && vendor.branchId ? `data-branch-id="${vendor.branchId}"` : ""}
 
 >
 
@@ -1418,6 +1435,10 @@ container
 
               button.dataset.slug;
 
+            const branchId =
+
+              button.dataset.branchId;
+
             if (
 
               slug
@@ -1431,7 +1452,9 @@ container
 
                   slug
 
-                );
+                ) +
+
+                (branchId ? "&branch=" + encodeURIComponent(branchId) : "");
 
             }
 
@@ -2373,6 +2396,132 @@ function formatDistanceInline(distanceKm) {
 }
 
 // ======================================
+// SEARCH BRANCHES
+// Vendors with branches (enterprise/elite/custom plans) can have a
+// physical location in a completely different state/LGA than their
+// main registered address. A keyword match should surface EVERY
+// location of that business — the main address AND every branch —
+// not just whichever one happens to satisfy an active location
+// filter. This always runs (no gate on state/lga/distance being
+// active); those filters, when present, still narrow which specific
+// branches qualify, exactly like they narrow the main vendor search.
+// ======================================
+
+async function searchBranches() {
+
+  let query = window.supabaseClient
+    .from("branches")
+    .select(`
+      id,
+      branch_name,
+      address,
+      state,
+      lga,
+      latitude,
+      longitude,
+      vendor_id,
+      vendors (
+        id, slug, name, logo_url, category, subcategory,
+        verification_status, average_rating, reviews_count,
+        is_sponsored, account_status
+      )
+    `)
+    .eq("account_status", "active");
+
+  if (discoverResultsState.state) {
+    query = query.eq("state", discoverResultsState.state);
+  }
+
+  if (discoverResultsState.lga) {
+    query = query.eq("lga", discoverResultsState.lga);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("searchBranches error:", error);
+    return [];
+  }
+
+  let results = (data || [])
+    .filter(b => b.vendors && b.vendors.account_status === "active")
+    .map(b => ({
+      id: b.vendors.id,
+      branchId: b.id,
+      slug: b.vendors.slug,
+      name: b.vendors.name,
+      logo_url: b.vendors.logo_url,
+      category: b.vendors.category,
+      subcategory: b.vendors.subcategory,
+      verification_status: b.vendors.verification_status,
+      average_rating: b.vendors.average_rating,
+      reviews_count: b.vendors.reviews_count,
+      is_sponsored: b.vendors.is_sponsored,
+      // Branch's own location, used INSTEAD of the vendor's main
+      // address for this result, since the match came from here.
+      state: b.state,
+      lga: b.lga,
+      latitude: b.latitude,
+      longitude: b.longitude,
+      branchName: b.branch_name,
+      branchAddress: b.address,
+      isBranchMatch: true
+    }));
+
+  // Keyword/category/verified filtering happens client-side here
+  // since branches carry no searchable text of their own — a branch
+  // match is only relevant if the PARENT vendor's business matches,
+  // same requirement as an ordinary vendor search.
+  const keyword = discoverResultsState.keyword.trim().toLowerCase();
+  if (keyword) {
+    results = results.filter(v =>
+      (v.name || "").toLowerCase().includes(keyword) ||
+      (v.category || "").toLowerCase().includes(keyword) ||
+      (v.subcategory || "").toLowerCase().includes(keyword)
+    );
+  }
+
+  if (discoverResultsState.category) {
+    results = results.filter(v => v.category === discoverResultsState.category);
+  }
+
+  if (discoverResultsState.subcategory) {
+    results = results.filter(v => v.subcategory === discoverResultsState.subcategory);
+  }
+
+  if (discoverResultsState.verified) {
+    results = results.filter(v =>
+      v.verification_status === "blue" || v.verification_status === "gray"
+    );
+  }
+
+  // Only actually computes/filters by distance when distance search
+  // is enabled (applyDistanceFilter no-ops otherwise) — so branches
+  // still show up fully in a plain keyword search with no filters.
+  return applyDistanceFilter(
+    results,
+    v => v.latitude,
+    v => v.longitude
+  );
+
+}
+
+// ======================================
+// ADD BRANCH MATCHES TO VENDOR RESULTS
+// Each branch is a genuinely distinct, visitable location, so it
+// gets its own card alongside the vendor's main-address card —
+// never merged or de-duplicated into one. A vendor with 2 branches
+// that all match can legitimately show up as 3 separate cards (HQ +
+// 2 branches), same as any multi-location directory listing.
+// ======================================
+
+function mergeBranchVendors(vendors, branchVendors) {
+
+  return vendors.concat(branchVendors);
+
+}
+
+// ======================================
 // SEARCH VENDORS
 // ======================================
 
@@ -2472,6 +2621,23 @@ function normalizeVendorResults(
 
         distanceKm:
           vendor.distanceKm,
+
+        // Present only when this result came from a branch match
+        // rather than the vendor's main address (see searchBranches
+        // / mergeBranchVendors) — lets the card show the branch's
+        // own name/address instead of the HQ's, and link "View
+        // Profile" to that specific branch instead of the main one.
+        branchId:
+          vendor.branchId || null,
+
+        branchName:
+          vendor.branchName || null,
+
+        branchAddress:
+          vendor.branchAddress || null,
+
+        isBranchMatch:
+          !!vendor.isBranchMatch,
 
         vendor
 
