@@ -84,6 +84,47 @@ window.resolveVisitorLocation = async function () {
 };
 
 // -----------------------------------------------------------------
+// KNOWN CRAWLER / BOT DETECTION
+//
+// Search engines and social-media link-preview bots identify
+// themselves truthfully in their User-Agent string (that's the whole
+// point of the string — so sites CAN recognize them). This checks
+// against the standard, well-known signatures for the major ones.
+// This is a real analytics-accuracy fix, not an SEO change: crawlers
+// still receive the exact same page, same HTML, same response —
+// this only decides whether we ALSO write an internal analytics row
+// afterward. Won't catch something deliberately disguising itself as
+// a normal browser, but that's a much smaller problem than real
+// search/social crawlers (which self-identify) inflating real
+// vendor-facing metrics like Audience and Marketplace Performance.
+// -----------------------------------------------------------------
+
+const KNOWN_CRAWLER_SIGNATURES = [
+  "googlebot",
+  "bingbot",
+  "yandexbot",
+  "baiduspider",
+  "duckduckbot",
+  "applebot",
+  "facebookexternalhit",
+  "twitterbot",
+  "linkedinbot",
+  "whatsapp",
+  "slackbot",
+  "telegrambot",
+  "discordbot",
+  "pinterestbot",
+  "semrushbot",
+  "ahrefsbot",
+  "mj12bot"
+];
+
+window.isKnownCrawler = function () {
+  const ua = (navigator.userAgent || "").toLowerCase();
+  return KNOWN_CRAWLER_SIGNATURES.some(sig => ua.includes(sig));
+};
+
+// -----------------------------------------------------------------
 // SHARED ANALYTICS EVENT LOGGER
 //
 // Wraps the analytics_events insert so visitor_state/visitor_lga get
@@ -94,6 +135,12 @@ window.resolveVisitorLocation = async function () {
 // -----------------------------------------------------------------
 
 window.logAnalyticsEvent = async function (supabase, fields) {
+
+  // Known crawlers never get logged as real audience — see
+  // isKnownCrawler() above for exactly why this is safe for SEO.
+  if (window.isKnownCrawler()) {
+    return { data: null, error: null, skipped: "crawler" };
+  }
 
   const location = await window.resolveVisitorLocation();
 

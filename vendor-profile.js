@@ -165,7 +165,7 @@ renderVendorProfile(vendor, activeBranch);
   // ===============================
   // RENDER PROFILE
   // ===============================
-  function renderVendorProfile(vendor) {
+  function renderVendorProfile(vendor, activeBranch) {
 
     const isOwner = 
       currentUser &&
@@ -399,7 +399,7 @@ setVideoStatus("Upload Video");
     // HERO
     // -------------------------------
     const nameEl = document.getElementById("vendorName");
-    if (nameEl) nameEl.textContent = vendor.name || "";
+    if (nameEl) nameEl.textContent = activeBranch ? (activeBranch.branch_name || vendor.name || "") : (vendor.name || "");
 
     const categoryEl = document.getElementById("vendorCategory");
     if (categoryEl) {
@@ -1100,19 +1100,38 @@ function applyLocationView(locationData) {
 
 }
 
-// Default view: the vendor's own main address/hours/contact
-applyLocationView({
-  address: vendor.address,
-  phone: vendor.phone,
-  telephone: vendor.telephone,
-  whatsapp: vendor.whatsapp,
-  latitude: vendor.latitude,
-  longitude: vendor.longitude,
-  open_time: vendor.open_time,
-  close_time: vendor.close_time,
-  business_days: vendor.business_days,
-  email: vendor.email
-});
+// Default view: if a specific branch was named in the URL, show
+// that location directly (no switcher, no ambiguity). Otherwise the
+// vendor's own main address/hours/contact.
+applyLocationView(
+  activeBranch
+    ? {
+        address: activeBranch.address,
+        phone: activeBranch.phone,
+        whatsapp: activeBranch.whatsapp,
+        latitude: activeBranch.latitude,
+        longitude: activeBranch.longitude,
+        open_time: activeBranch.open_time,
+        close_time: activeBranch.close_time,
+        business_days: activeBranch.business_days,
+        // Branches have no email of their own — email stays the
+        // vendor's own, shared, since there's no per-branch schema
+        // for it and it's not something Cyril asked to swap.
+        email: vendor.email
+      }
+    : {
+        address: vendor.address,
+        phone: vendor.phone,
+        telephone: vendor.telephone,
+        whatsapp: vendor.whatsapp,
+        latitude: vendor.latitude,
+        longitude: vendor.longitude,
+        open_time: vendor.open_time,
+        close_time: vendor.close_time,
+        business_days: vendor.business_days,
+        email: vendor.email
+      }
+);
 
     // -------------------------------
     // MEDIA
@@ -2106,12 +2125,16 @@ try {
 
   // -------------------------------
 // LOAD BRANCHES
+// Simple list of other locations (address + map link) — no
+// interactive switcher/buttons here. Which location is shown in the
+// hero/contact card is decided entirely by the URL (see
+// loadVendorProfile's ?branch= handling), matching how the search
+// results already link directly to a specific branch.
 // -------------------------------
 async function loadBranches() {
 
   const branchesSection = document.getElementById("branchesSection");
   const branchesList = document.getElementById("branchesList");
-  const switcher = document.getElementById("locationSwitcher");
 
   if (!branchesSection || !branchesList) return;
 
@@ -2162,81 +2185,6 @@ const activeBranches = branches.slice(0, limit);
     branchesList.appendChild(item);
 
   });
-
-  // -------------------------------
-  // LOCATION SWITCHER
-  // "Main Location" (the vendor's own address) + one tab per active
-  // branch. Selecting a tab swaps address/hours/contact links/social
-  // links to that location — about, products/services, and reviews
-  // are intentionally untouched, since those are shared regardless
-  // of which location is currently selected.
-  // -------------------------------
-  if (switcher) {
-
-    switcher.classList.remove("hidden");
-    switcher.innerHTML = "";
-
-    function setActiveTab(tabEl) {
-      switcher.querySelectorAll(".location-tab").forEach(t => t.classList.remove("active"));
-      tabEl.classList.add("active");
-    }
-
-    const mainTab = document.createElement("button");
-    mainTab.type = "button";
-    mainTab.className = "location-tab active";
-    mainTab.textContent = "Main Location";
-
-    mainTab.addEventListener("click", () => {
-      setActiveTab(mainTab);
-      applyLocationView({
-        address: vendor.address,
-        phone: vendor.phone,
-        telephone: vendor.telephone,
-        whatsapp: vendor.whatsapp,
-        latitude: vendor.latitude,
-        longitude: vendor.longitude,
-        open_time: vendor.open_time,
-        close_time: vendor.close_time,
-        business_days: vendor.business_days,
-        email: vendor.email
-      });
-    });
-
-    switcher.appendChild(mainTab);
-
-    activeBranches.forEach(branch => {
-
-      const tab = document.createElement("button");
-      tab.type = "button";
-      tab.className = "location-tab";
-      // Strip the "VendorName - " prefix stored on the branch record,
-      // so the tab reads just the branch identifier (e.g. "Ikeja"),
-      // matching what the vendor actually typed when creating it.
-      tab.textContent = (branch.branch_name || "").replace(`${vendor.name} - `, "");
-
-      tab.addEventListener("click", () => {
-        setActiveTab(tab);
-        applyLocationView({
-          address: branch.address,
-          phone: branch.phone,
-          whatsapp: branch.whatsapp,
-          latitude: branch.latitude,
-          longitude: branch.longitude,
-          open_time: branch.open_time,
-          close_time: branch.close_time,
-          business_days: branch.business_days,
-          // Branches have no email of their own — email stays the
-          // vendor's own, shared, since there's no per-branch schema
-          // for it and it's not something Cyril asked to swap.
-          email: vendor.email
-        });
-      });
-
-      switcher.appendChild(tab);
-
-    });
-
-  }
 
 }
     // -------------------------------

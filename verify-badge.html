@@ -30,6 +30,35 @@
 </head>
 <body>
 
+<header class="navbar">
+  <div class="logo-left">
+    <a href="index">
+      <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg">
+    </a>
+    <a href="index" class="home">Home</a>
+  </div>
+
+  <nav>
+    <button class="menu-open hide-desktop" aria-label="Open menu">
+      <img src="images/hbopen.png" alt="Open menu" width="32" height="32">
+    </button>
+
+    <ul class="nav-links">
+      <li class="menu-close">
+        <button class="xclose" aria-label="Close menu">
+          <img src="images/xclose.png" alt="Close menu" width="32" height="32">
+        </button>
+      </li>
+      <li><a href="vendordashboard">Dashboard</a></li>
+      <li><a href="discover">Discover</a></li>
+      <li><a href="contact-us">Contact Us</a></li>
+      <li id="authButton">
+        <a href="login" id="authBtn" class="nav-login-btn">Log in</a>
+      </li>
+    </ul>
+  </nav>
+</header>
+
 <main class="auth-card">
   <h2 id="badgeTitle">Badge Verification</h2>
   <p id="badgeRequirements"></p>

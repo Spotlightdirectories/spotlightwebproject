@@ -3,9 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <title>Create Partner Account</title>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="navbar.css">
   <link rel="stylesheet" href="partner-legal-shared.css">
+
+  <!-- Scoped to this page only — partner-legal-shared.css is shared
+       with partner-program.html/partner-legal.html, which use their
+       own different fixed header already accounted for elsewhere in
+       that file. -->
+  <style>
+    .partner-create-page { padding-top: 90px; }
+  </style>
 </head>
 <body class="partner-create-page">
+
+<header class="navbar">
+  <div class="logo-left">
+    <a href="index">
+      <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg">
+    </a>
+    <a href="index" class="home">Home</a>
+  </div>
+
+  <nav>
+    <button class="menu-open hide-desktop" aria-label="Open menu">
+      <img src="images/hbopen.png" alt="Open menu" width="32" height="32">
+    </button>
+
+    <ul class="nav-links">
+      <li class="menu-close">
+        <button class="xclose" aria-label="Close menu">
+          <img src="images/xclose.png" alt="Close menu" width="32" height="32">
+        </button>
+      </li>
+      <li><a href="admin/partner-dashboard">Partner Dashboard</a></li>
+      <li><a href="contact-us">Contact Us</a></li>
+      <li id="authButton">
+        <a href="login" id="authBtn" class="nav-login-btn">Log in</a>
+      </li>
+    </ul>
+  </nav>
+</header>
 
 <div class="partner-create-account">
 
@@ -35,6 +73,7 @@
 <script src="supabase-client.js"></script>
 <script src="email-templates.js"></script>
 <script defer src="partner-create-account.js"></script>
+<script defer src="script2.js"></script>
 
 </body>
 </html>

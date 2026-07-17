@@ -3462,7 +3462,8 @@ if (subscriptionStatusBadge) {
 
 }
 
-/* LATEST PAYMENT */
+/* LATEST PAYMENT (no longer used to compute next payment amount;
+   kept only in case a future feature needs the last-paid record) */
 
 const { data: latestPayment } =
   await supabase
@@ -3481,23 +3482,49 @@ const { data: latestPayment } =
 
 /* PAYMENT AMOUNT */
 
+// This is the NEXT payment amount — not what was historically paid
+// last time. Previously this showed the last confirmed payment's
+// amount, which is wrong whenever pricing has changed since then or
+// the vendor was on a different plan at that time (proven with real
+// data: this vendor's own historical Standard/yearly payment was
+// ₦25,976, but the current Standard/yearly price is ₦26,982 — the
+// old amount would have shown as "next payment" if they were still
+// on that plan). Computed directly from the vendor's CURRENT
+// plan_tier + billing_cycle against the same canonical pricing table
+// payment.js and the verify Edge Functions use, so it always
+// reflects what they'd actually be charged next, not history.
+const PLAN_PRICES_KOBO = {
+  standard: { monthly: 299800, yearly: 2698200 },
+  enterprise: { monthly: 1260000, yearly: 11340000 },
+  elite: { monthly: 2240000, yearly: 20160000 }
+};
+
+function getNextPaymentKobo(planTier, billingCycle) {
+  const planPrices = PLAN_PRICES_KOBO[planTier];
+  if (!planPrices) return null;
+  return planPrices[billingCycle] ?? planPrices.monthly ?? null;
+}
+
 if (subscriptionAmount) {
 
   if (
-    vendor.plan_tier === "free"
+    vendor.plan_tier === "free" ||
+    vendor.plan_tier === "custom"
   ) {
 
     subscriptionAmount.textContent =
-      "No active billing";
+      vendor.plan_tier === "free"
+        ? "No active billing"
+        : "Contact support for pricing";
 
   } else {
 
+    const nextKobo = getNextPaymentKobo(vendor.plan_tier, vendor.billing_cycle);
+
     subscriptionAmount.textContent =
-      latestPayment?.amount
-        ? `₦${(
-            latestPayment.amount / 100
-          ).toLocaleString()}`
-        : "₦0.00";
+      nextKobo != null
+        ? `\u20a6${(nextKobo / 100).toLocaleString()}`
+        : "—";
 
   }
 
@@ -3562,12 +3589,21 @@ if (subscriptionBillingDate) {
 
 if (billingHistoryList) {
 
+  // Now also selects plan + billing_type so each historical amount
+  // has a label explaining what it was for — previously this just
+  // showed a bare date + amount, which looks like random, unrelated
+  // numbers to a vendor who's changed plans (confirmed with real
+  // data: this vendor's 3 real payments are ₦201,600 / ₦113,400 /
+  // ₦25,976 with zero indication those were Elite/Enterprise/
+  // Standard respectively).
   const { data: payments } =
     await supabase
       .from("vendor_payments")
       .select(`
         amount,
-        approved_at
+        approved_at,
+        plan,
+        billing_type
       `)
       .eq("vendor_id", vendor.id)
       .in("status", ["confirmed"])
@@ -3591,15 +3627,24 @@ if (billingHistoryList) {
       row.className =
         "vd-history-row";
 
+      const planLabel = payment.plan
+        ? payment.plan.charAt(0).toUpperCase() + payment.plan.slice(1)
+        : "—";
+
+      const cycleLabel = payment.billing_type
+        ? payment.billing_type.charAt(0).toUpperCase() + payment.billing_type.slice(1)
+        : "—";
+
       row.innerHTML = `
         <span>
           ${new Date(
             payment.approved_at
           ).toLocaleDateString()}
+          — ${planLabel} (${cycleLabel})
         </span>
 
         <strong>
-          ₦${(
+          \u20a6${(
             payment.amount / 100
           ).toLocaleString()}
         </strong>

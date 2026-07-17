@@ -815,7 +815,8 @@ displayResults.services.forEach(
 );
 
 if (
-  searchImpressions.length
+  searchImpressions.length &&
+  !(typeof window.isKnownCrawler === "function" && window.isKnownCrawler())
 ) {
 
   const result =
@@ -1255,7 +1256,7 @@ this.src='images/default-vendor-logo.webp';
 
 <h3>
 
-${vendor.name}
+${vendor.isBranchMatch && vendor.branchName ? vendor.branchName : vendor.name}
 
 </h3>
 
@@ -1326,12 +1327,6 @@ ${averageRating}
 ${vendorAddress}${formatDistanceInline(vendor.distanceKm)}
 
 </p>
-
-${
-vendor.isBranchMatch && vendor.branchName
-? `<p class="discover-results-branch-label"><i class="fa-solid fa-code-branch"></i> ${vendor.branchName} branch</p>`
-: ""
-}
 
 <span class="discover-results-category">
 
