@@ -323,7 +323,18 @@ serve(async (req) => {
       // (WEBP encoding isn't reliably supported in the Deno edge
       // runtime today; JPEG at 80% gives an equivalent size/quality
       // result for photographic content.)
-      finalBytes = await img.encodeJPEG(80);
+      //
+      // JPEG has no transparency support. Without flattening first,
+      // any transparent areas (common in PNG logos/product images)
+      // default to BLACK when the encoder discards the alpha channel
+      // — confirmed as the exact cause of the black-background bug.
+      // Composite the image onto a solid white background first, so
+      // transparent areas become white instead.
+      const whiteBackground = new Image(img.width, img.height);
+      whiteBackground.fill(0xffffffff); // opaque white (RGBA)
+      whiteBackground.composite(img, 0, 0);
+
+      finalBytes = await whiteBackground.encodeJPEG(80);
       finalType = "image/jpeg";
     }
 

@@ -31,15 +31,15 @@ DESCRIPTION WORD LIMITS
 
 const DESCRIPTION_WORD_LIMITS = {
 
-  free: 100,
+  free: 50,
 
-  standard: 150,
+  standard: 100,
 
-  enterprise: 300,
+  enterprise: 150,
 
-  elite: 500,
+  elite: 200,
 
-  custom: 650
+  custom: 250
 
 };
 
@@ -1087,8 +1087,8 @@ function renderSavedProducts() {
           <div class="vd-service-description">
             ${
               (product.short_description || "")
-                .length > 160
-                  ? product.short_description.slice(0, 160) + "..."
+                .length > 200
+                  ? product.short_description.slice(0, 200) + "..."
                   : (product.short_description || "")
             }
           </div>
