@@ -103,28 +103,29 @@ const supabase = window.supabaseClient || null;
 
 if (authBtn && supabase) {
 
-async function checkAuth() {
-  try {
-    const res = await supabase.auth.getSession();
-    const session = res.data.session;
-
-    if (session) {
+  // Update button based on session
+  function updateAuthBtn(user) {
+    if (user) {
       authBtn.textContent = "Log out";
       authBtn.href = "#";
     } else {
       authBtn.textContent = "Log in";
       authBtn.href = "login";
     }
-  } catch (error) {
-    console.error("Auth check failed:", error);
   }
-}
 
-  checkAuth();
+  // Listen for auth state changes — fires reliably on every page
+  supabase.auth.onAuthStateChange((event, session) => {
+    updateAuthBtn(session?.user || null);
+  });
+
+  // Also check immediately on load
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    updateAuthBtn(session?.user || null);
+  });
 
   authBtn.addEventListener("click", async (e) => {
     const { data: { session } } = await supabase.auth.getSession();
-
     if (session) {
       e.preventDefault();
       await supabase.auth.signOut();

@@ -43,7 +43,34 @@
 
 <body>
 
+<header class="navbar">
+  <div class="logo-left">
+    <a href="index">
+      <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg">
+    </a>
+    <a href="index" class="home">Home</a>
+  </div>
 
+  <nav>
+    <button class="menu-open hide-desktop" aria-label="Open menu">
+      <img src="images/hbopen.png" alt="Open menu" width="32" height="32">
+    </button>
+
+    <ul class="nav-links">
+      <li class="menu-close">
+        <button class="xclose" aria-label="Close menu">
+          <img src="images/xclose.png" alt="Close menu" width="32" height="32">
+        </button>
+      </li>
+      <li><a href="discover">Discover</a></li>
+      <li><a href="getlisted">Get Listed</a></li>
+      <li><a href="contact-us">Contact Us</a></li>
+      <li id="authButton">
+        <a href="login" id="authBtn" class="nav-login-btn">Log in</a>
+      </li>
+    </ul>
+  </nav>
+</header>
 
 <main id="vendorProfile">
 
@@ -145,6 +172,11 @@
     <button id="catalogBtn" class="quick-action" type="button">
       <i class="fas fa-book-open"></i>
       <span>Catalog</span>
+    </button>
+
+    <button id="favoriteBtn" class="quick-action hidden" type="button">
+      <i class="fa-regular fa-heart"></i>
+      <span>Save</span>
     </button>
 
   </div>
@@ -365,11 +397,25 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
+<script src="upload-utils.js"></script>
 <script src="badge-utils.js"></script>
-
 <script src="reviews-utils.js"></script>
-
+<script src="analytics-utils.js"></script>
 <script src="vendor-profile.js" defer></script>
+
+<!--Start of Tawk.to Script-->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+(function(){
+var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/6a5b6743f97a4e1d45887656/1jtqgmomk';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+<!--End of Tawk.to Script-->
   
 </body>
 </html>

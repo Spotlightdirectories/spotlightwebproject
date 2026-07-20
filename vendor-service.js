@@ -2,1047 +2,414 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const supabase = window.supabaseClient;
 
-const params =
-  new URLSearchParams(
-    window.location.search
-  );
+  // -----------------------------
+  // NAVBAR (mobile menu + auth button, same pattern as other pages)
+  // -----------------------------
+  const menuOpenBtn = document.querySelector(".menu-open");
+  const menuCloseBtn = document.querySelector(".xclose");
+  const navLinks = document.querySelector(".nav-links");
 
-const serviceSlug =
-  params.get(
-    "slug"
-  );
-
-console.log(
-  "Service Slug:",
-  serviceSlug
-);
-
-if (!serviceSlug)
-  return;
-
-const { data, error } = await supabase
-  .from("vendor_services")
-  .select(`
-    *,
-    vendors(
-      whatsapp,
-      telephone,
-      slug,
-      name,
-      category,
-      subcategory,
-      verification_status,
-      average_rating,
-      reviews_count,
-      is_sponsored
-    )
-  `)
-  .eq(
-    "slug",
-     serviceSlug
-  )
-  .single();
-
-  console.log(
-  "Service Query Error:",
-  error
-);
-
-console.log(
-  "Service Query Data:",
-  data
-);
-
-  console.log(
-  "Service:",
-  data
-);
-
-console.log(
-  "Representative Image:",
-  data.representative_image_url
-);
-
-console.log(
-  "Additional Image:",
-  data.secondary_image_url
-);
-
-console.log(
-  "Error:",
-  error
-);
-
-  if (error) {
-    console.error("Product load error:", error.message);
-    return;
+  if (menuOpenBtn && navLinks) {
+    menuOpenBtn.addEventListener("click", () => navLinks.classList.add("open"));
+  }
+  if (menuCloseBtn && navLinks) {
+    menuCloseBtn.addEventListener("click", () => navLinks.classList.remove("open"));
   }
 
-await supabase
-  .from("analytics_events")
-  .insert({
-    vendor_id: data.vendor_id,
-    service_id: data.id,
-    event_type: "service_view"
-  });
-
-  const imageEl = document.getElementById("productImage");
-  const titleEl = document.getElementById("productTitle");
-  const priceEl = document.getElementById("productPrice");
-  const descEl = document.getElementById("productDescription");
-  const keyDetailsEl = document.getElementById("productKeyDetails");
-
-const contactBtn =
-  document.getElementById(
-    "contactVendorBtn"
-  );
-
-const callBtn =
-  document.getElementById(
-    "callVendorBtn"
-  );
-
-const backLink =
-  document.getElementById(
-    "backToVendor"
-  );
-
-const secondaryImageEl =
-  document.getElementById(
-    "secondaryProductImage"
-  );
-
-if (imageEl) {
-
-  /* Representative Image */
-
-  if (data.representative_image_url) {
-
-     imageEl.src =
-           data.representative_image_url;
-
-    imageEl.onerror =
-      function () {
-
-        this.style.display =
-          "none";
-
-      };
-
-  }
-
-  /* No Representative Image but Additional Image exists */
-
-  else if (
-    data.secondary_image_url
-  ) {
-
-    imageEl.src =
-      data.secondary_image_url;
-
-    imageEl.onerror =
-      function () {
-
-        this.style.display =
-          "none";
-
-      };
-
-  }
-
-  /* No images uploaded */
-
-/* No Representative Image or Additional Image */
-
-else {
-
-  imageEl.closest(
-    ".product-media"
-  ).style.display =
-    "none";
-
-}
-
-}
-
-if (
-  secondaryImageEl &&
-  data.secondary_image_url
-) {
-
-  /* Additional Image */
-
-  secondaryImageEl.src =
-    data.secondary_image_url;
-
-  secondaryImageEl.classList.remove(
-    "hidden"
-  );
-
-  secondaryImageEl.onclick =
-    () => {
-
-      const current =
-        imageEl.src;
-
-      imageEl.src =
-        secondaryImageEl.src;
-
-      secondaryImageEl.src =
-        current;
-
-    };
-
-} else if (
-  secondaryImageEl
-) {
-
-  /* No Additional Image */
-
-  secondaryImageEl.style.display =
-    "none";
-
-}
-
-/* ========================= */
-/* SERVICE TITLE */
-/* ========================= */
-
-if (titleEl) {
-
-  titleEl.textContent =
-    data.service_name || "";
-
-}
-
-/* ========================= */
-/* STARTING PRICE */
-/* ========================= */
-
-if (priceEl) {
-
-  if (data.starting_price) {
-
-    priceEl.innerHTML =
-      `Starting From <span>₦${Number(
-        data.starting_price
-      ).toLocaleString(
-        "en-NG",
-        {
-          minimumFractionDigits:2,
-          maximumFractionDigits:2
-        }
-      )}</span>`;
-
-  } else {
-
-    priceEl.style.display =
-      "none";
-
-  }
-
-}
-
-/* ========================= */
-/* SERVICE DESCRIPTION */
-/* ========================= */
-
-const rawDescription =
-  data.short_description || "";
-
-const hasRepresentativeImage =
-  !!data.representative_image_url;
-
-const productContainer =
-  document.querySelector(
-    ".product-container"
-  );
-
-if (
-  productContainer &&
-  !hasRepresentativeImage
-) {
-
-  productContainer.classList.add(
-    "no-image"
-  );
-
-console.log(
-  productContainer.className
-);
-
-}
-
-if (descEl) {
-
-  const lines =
-    rawDescription
-      .split("\n")
-      .map(
-        line => line.trim()
-      )
-      .filter(Boolean);
-
-  if (!lines.length) {
-
-    descEl.innerHTML = "";
-
-  } else {
-
-    const intro =
-      lines.shift();
-
-    let expanded =
-      false;
-
-    const renderDescription =
-      () => {
-
-        let html =
-          `<p>${intro}</p>`;
-
-        const displayLines =
-          hasRepresentativeImage &&
-          !expanded
-            ? lines.slice(0,2)
-            : lines;
-
-        if (
-          displayLines.length
-        ) {
-
-          html += "<ul>";
-
-          displayLines.forEach(
-            line => {
-
-              html +=
-                `<li>${line}</li>`;
-
-            }
-          );
-
-          html += "</ul>";
-
-        }
-
-        descEl.innerHTML =
-          html;
-
-        if (
-          hasRepresentativeImage &&
-          lines.length > 2
-        ) {
-
-          const toggle =
-            document.createElement(
-              "a"
-            );
-
-          toggle.href =
-            "#";
-
-          toggle.textContent =
-            expanded
-              ? " Read Less"
-              : " Read More";
-
-          toggle.onclick =
-            function(e){
-
-              e.preventDefault();
-
-              expanded =
-                !expanded;
-
-              renderDescription();
-
-            };
-
-          descEl.appendChild(
-            toggle
-          );
-
-        }
-
-      };
-
-    renderDescription();
-
-  }
-
-}
-
-const vendorMeta =
-
-  document.getElementById(
-
-    "productVendorMeta"
-
-  );
-
-if (
-
-  vendorMeta
-
-) {
-
-  vendorMeta.innerHTML =
-
-`
-
-<div class="discover-results2-product-vendor">
-
-<span>
-
-By ${data.vendors?.name || ""}
-
-</span>
-
-${
-data.vendors?.verification_status === "blue"
-? `<img src="images/bluebadge.png" class="discover-results2-product-badge">`
-: data.vendors?.verification_status === "gray"
-? `<img src="images/graybadge.png" class="discover-results2-product-badge">`
-: ""
-}
-
-</div>
-
-<div class="discover-results2-product-rating">
-
-<i class="fa-solid fa-star"></i>
-
-<span>
-
-${Number(data.vendors?.average_rating || 0).toFixed(1)}
-
-</span>
-
-<small>
-
-(${data.vendors?.reviews_count || 0})
-
-</small>
-
-</div>
-
-${
-data.vendors?.is_sponsored
-? `<p class="discover-results2-product-sponsored">Sponsored</p>`: ""}`;
-}
-
-if (contactBtn) {
-
-  const whatsapp =
-    data.vendors?.whatsapp;
-
-  if (whatsapp) {
-
-    contactBtn.href =
-      `https://wa.me/${whatsapp}`;
-
-  } else {
-
-    contactBtn.style.display =
-      "none";
-
-  }
-
-}
-
-if (callBtn) {
-
-  const telephone =
-    data.vendors?.telephone;
-
-  if (telephone) {
-
-    callBtn.href =
-      `tel:${telephone}`;
-
-  } else {
-
-    callBtn.style.display =
-      "none";
-
-  }
-
-}
-
-if (
-  backLink &&
-  data.vendors?.slug
-) {
-
-  backLink.href =
-    `vendor-profile.html?slug=${data.vendors.slug}`;
-
-}
-
-/* ========================= */
-/* MORE PRODUCTS */
-/* ========================= */
-
-const moreProductsGrid =
-  document.getElementById(
-    "moreProductsGrid"
-  );
-
-if (
-  moreProductsGrid &&
-  data.vendor_id
-) {
-
-const {
-  data: moreProducts,
-  error: moreProductsError
-} = await supabase
-  .from(
-    "vendor_services"
-  )
-  .select(`
-    slug,
-    service_name,
-    short_description,
-    starting_price,
-    representative_image_url,
-    vendor_id,
-    vendors(
-      slug,
-      name,
-      verification_status,
-      average_rating,
-      reviews_count,
-      is_sponsored
-    )
-  `)
-  .eq(
-    "vendor_id",
-    data.vendor_id
-  )
-  .neq(
-    "slug",
-    data.slug
-  );
-
-console.log(
-  "More Products:",
-  moreProducts
-);
-
-console.log(
-  "More Products Error:",
-  moreProductsError
-);
-
-console.log(
-  "First Product:",
-  moreProducts[0]
-);
-
-console.log(
-  "Vendor Object:",
-  moreProducts[0]?.vendors
-);
-
-const moreServicesSection =
-
-  document.querySelector(
-    ".more-products"
-  );
-
-if (
-
-  !moreProducts?.length
-
-) {
-
-  if (
-
-    moreServicesSection
-
-  ) {
-
-    moreServicesSection.style.display =
-      "none";
-
-  }
-
-}
-
-else {
-
-  if (
-
-    moreServicesSection
-
-  ) {
-
-    moreServicesSection.style.display =
-      "";
-
-  }
-
-}
-
-  if (
-    moreProducts?.length
-  ) {
-
-moreProducts.forEach(product => {
-
-  const badge =
-    product.vendors?.verification_status === "blue"
-      ? `<img src="images/bluebadge.png" alt="Verified" class="discover-results2-product-badge">`
-      : product.vendors?.verification_status === "gray"
-      ? `<img src="images/graybadge.png" alt="Verified" class="discover-results2-product-badge">`
-      : "";
-
-  const sponsored =
-    product.vendors?.is_sponsored
-      ? `<p class="discover-results2-product-sponsored">Sponsored</p>`
-      : "";
-
-const card = document.createElement("div");
-
-card.className =
-  product.representative_image_url
-    ? "discover-results2-service-card"
-    : "discover-results2-service-card no-image";
-
-  card.innerHTML = `
-
-${
-product.representative_image_url
-?
-
-`<img
-src="${product.representative_image_url}"
-class="discover-results2-product-image"
-alt="${product.service_name}"
->`
-
-: ""
-
-}
-
-<div>
-
-<h3 class="discover-results2-product-title">
-
-${product.service_name}
-
-</h3>
-
-<p class="discover-results2-product-price">
-
-Starting From
-<span>
-
-₦${Number(product.starting_price || 0).toLocaleString()}
-
-</span>
-
-</p>
-
-<div class="discover-results2-product-vendor">
-
-<span>
-
-By ${product.vendors?.name || ""}
-
-</span>
-
-${
-product.vendors?.verification_status === "blue"
-? `<img src="images/bluebadge.png" class="discover-results2-product-badge">`
-: product.vendors?.verification_status === "gray"
-? `<img src="images/graybadge.png" class="discover-results2-product-badge">`
-: ""
-}
-
-</div>
-
-<div class="discover-results2-product-rating">
-
-<i class="fa-solid fa-star"></i>
-
-<span>${Number(product.vendors?.average_rating || 0).toFixed(1)}</span>
-
-<small>(${product.vendors?.reviews_count || 0})</small>
-
-</div>
-
-${sponsored}
-
-</div>
-
-`;
-
-card.onclick = () => {
-  location.href = `vendor-service.html?slug=${product.slug}`;
-};
-
-  moreProductsGrid.appendChild(card);
-
-});
-
-  }
-
-}
-
-const shareBtn =
-  document.getElementById(
-    "shareProductBtn"
-  );
-
-if (shareBtn) {
-
-  shareBtn.onclick =
-    async () => {
-
-      const shareData = {
-
-        title:
-          data.product_name,
-
-        text:
-          `Check out ${data.product_name} on Spotlight Directories.`,
-
-        url:
-          window.location.href
-
-      };
-
-      if (
-        navigator.share
-      ) {
-
-        try {
-
-          await navigator.share(
-            shareData
-          );
-
-        } catch (err) {}
-
-      } else {
-
-        await navigator.clipboard.writeText(
-          window.location.href
-        );
-
-        alert(
-          "Product link copied to clipboard."
-        );
-
+  const authBtn = document.getElementById("authBtn");
+  if (authBtn && supabase) {
+    function updateAuthBtn(user) {
+      authBtn.textContent = user ? "Log out" : "Log in";
+      authBtn.href = user ? "#" : "login";
+    }
+    supabase.auth.onAuthStateChange((event, session) => updateAuthBtn(session?.user || null));
+    supabase.auth.getSession().then(({ data: { session } }) => updateAuthBtn(session?.user || null));
+    authBtn.addEventListener("click", async (e) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        e.preventDefault();
+        await supabase.auth.signOut();
+        window.location.reload();
       }
+    });
+  }
 
-    };
+  const params = new URLSearchParams(window.location.search);
+  const serviceSlug = params.get("slug");
 
-}
+  if (!serviceSlug) return;
 
-/* ========================= */
-/* SIMILAR PRODUCTS */
-/* ========================= */
-
-const similarProductsGrid =
-  document.getElementById(
-    "similarProductsGrid"
-  );
-
-if (
-  similarProductsGrid &&
-  data.vendor_id
-) {
-
-const {
-  data: similarProducts,
-  error: similarProductsError
-} = await supabase
-  .from("vendor_services")
-  .select(`
-      slug,
-      service_name,
-      short_description,
-      starting_price,
-      representative_image_url,
-      vendor_id,
+  const { data, error } = await supabase
+    .from("vendor_services")
+    .select(`
+      *,
       vendors(
+        whatsapp,
+        telephone,
+        slug,
         name,
-        subcategory,
         category,
+        subcategory,
         verification_status,
         average_rating,
         reviews_count,
         is_sponsored
       )
-    `);
+    `)
+    .eq("slug", serviceSlug)
+    .single();
 
-console.log(
-  "Similar Services:",
-  similarProducts
-);
+  if (error) {
+    console.error("Service load error:", error.message);
+    return;
+  }
 
-console.log(
-  "Similar Services Error:",
-  similarProductsError
-);
+  try {
+    await window.logAnalyticsEvent(supabase, {
+      vendor_id: data.vendor_id,
+      service_id: data.id,
+      event_type: "service_view",
+      visitor_id: window.visitorId
+    });
+  } catch (err) {
+    console.error("Service analytics error:", err);
+  }
 
-console.log(
-  "First Similar Service:",
-  similarProducts?.[0]
-);
+  const imageEl = document.getElementById("productImage");
+  const titleEl = document.getElementById("productTitle");
+  const priceEl = document.getElementById("productPrice");
+  const descEl = document.getElementById("productDescription");
 
-console.log(
-  "First Vendor Object:",
-  similarProducts?.[0]?.vendors
-);
+  const contactBtn = document.getElementById("contactVendorBtn");
+  const callBtn = document.getElementById("callVendorBtn");
+  const backLink = document.getElementById("backToVendor");
+  const secondaryImageEl = document.getElementById("secondaryProductImage");
 
-console.log(
-  "Current Subcategory:",
-  data.vendors?.subcategory
-);
+  const vsContainer = document.querySelector(".vs-container");
+  const hasRepresentativeImage = !!data.representative_image_url;
 
-console.log(
-  "Current Category:",
-  data.vendors?.category
-);
+  if (!hasRepresentativeImage && !data.secondary_image_url && vsContainer) {
+    vsContainer.classList.add("no-image");
+  }
 
-similarProducts.forEach(product => {
+  // -----------------------------
+  // IMAGE — sourced from vendor dashboard uploads
+  // (representative_image_url, falling back to secondary),
+  // with a real fallback if a stored URL ever fails to load.
+  // -----------------------------
+  if (imageEl) {
 
-  console.log(
+    const mainImageUrl = data.representative_image_url || data.secondary_image_url || "";
 
-    product.service_name,
-
-    product.vendors?.subcategory,
-
-    product.vendors?.category
-
-  );
-
-});
-
-let filteredProducts =
-  similarProducts.filter(
-    product =>
-
-      product.vendor_id !== data.vendor_id &&
-
-      product.slug !== data.slug &&
-
-      product.vendors?.subcategory ===
-      data.vendors?.subcategory
-
-  );
-
-/* Fallback to Category */
-
-if (
-  filteredProducts.length === 0
-) {
-
-  filteredProducts =
-    similarProducts.filter(
-      product =>
-
-        product.vendor_id !== data.vendor_id &&
-
-        product.slug !== data.slug &&
-
-        product.vendors?.category ===
-        data.vendors?.category
-
-    );
-
-console.log(
-  JSON.stringify(
-    data.vendors,
-    null,
-    2
-  )
-);
-
-}
-
-console.log(
-  "Filtered Products:",
-  filteredProducts
-);
-
-const similarServicesSection =
-
-  document.querySelector(
-    ".similar-products"
-  );
-
-if (
-
-  filteredProducts.length === 0
-
-) {
-
-  if (
-
-    similarServicesSection
-
-  ) {
-
-    similarServicesSection.style.display =
-      "none";
+    if (mainImageUrl) {
+      imageEl.src = mainImageUrl;
+      imageEl.onload = function () {
+        this.classList.add("loaded");
+      };
+      imageEl.onerror = function () {
+        this.onerror = null;
+        this.src = "images/placeholder.png";
+      };
+    } else if (imageEl.closest(".vs-media")) {
+      imageEl.closest(".vs-media").style.display = "none";
+    }
 
   }
 
-}
+  if (secondaryImageEl && data.secondary_image_url && data.representative_image_url) {
+    // Only show the secondary thumbnail when it's genuinely a second
+    // image — if there's no representative image, the secondary one
+    // is already being used as the main image above.
+    secondaryImageEl.src = data.secondary_image_url;
+    secondaryImageEl.classList.remove("hidden");
+    secondaryImageEl.onclick = () => {
+      const current = imageEl.src;
+      imageEl.src = secondaryImageEl.src;
+      secondaryImageEl.src = current;
+    };
+  } else if (secondaryImageEl) {
+    secondaryImageEl.remove();
+  }
 
-else {
+  if (titleEl) {
+    titleEl.textContent = data.service_name || "";
+  }
 
-  if (
+  if (priceEl) {
+    if (data.starting_price) {
+      priceEl.innerHTML = `Starting From <span>₦${Number(data.starting_price).toLocaleString("en-NG", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}</span>`;
+    } else {
+      priceEl.style.display = "none";
+    }
+  }
 
-    similarServicesSection
+  // -----------------------------
+  // DESCRIPTION — expandable Read More/Less, unchanged logic
+  // -----------------------------
+  const rawDescription = data.short_description || "";
 
-  ) {
+  if (descEl) {
 
-    similarServicesSection.style.display =
-      "";
+    const lines = rawDescription.split("\n").map(line => line.trim()).filter(Boolean);
+
+    if (!lines.length) {
+      descEl.innerHTML = "";
+    } else {
+
+      const intro = lines.shift();
+      let expanded = false;
+
+      const renderDescription = () => {
+
+        let html = `<p>${intro}</p>`;
+
+        const displayLines = hasRepresentativeImage && !expanded ? lines.slice(0, 2) : lines;
+
+        if (displayLines.length) {
+          html += "<ul>";
+          displayLines.forEach(line => { html += `<li>${line}</li>`; });
+          html += "</ul>";
+        }
+
+        descEl.innerHTML = html;
+
+        if (hasRepresentativeImage && lines.length > 2) {
+          const toggle = document.createElement("a");
+          toggle.href = "#";
+          toggle.textContent = expanded ? " Read Less" : " Read More";
+          toggle.onclick = function (e) {
+            e.preventDefault();
+            expanded = !expanded;
+            renderDescription();
+          };
+          descEl.appendChild(toggle);
+        }
+
+      };
+
+      renderDescription();
+
+    }
 
   }
 
-}
+  const vendorMeta = document.getElementById("productVendorMeta");
 
-if (filteredProducts.length) {
+  if (vendorMeta) {
+    vendorMeta.innerHTML = `
+      <div class="discover-results-product-vendor">
+        <span>By ${data.vendors?.name || ""}</span>
+        ${
+          data.vendors?.verification_status === "blue"
+            ? `<img src="images/bluebadge.png" class="discover-results-product-badge">`
+            : data.vendors?.verification_status === "gray"
+              ? `<img src="images/graybadge.png" class="discover-results-product-badge">`
+              : ""
+        }
+      </div>
+      <div class="discover-results-product-rating">
+        <i class="fa-solid fa-star"></i>
+        <span>${Number(data.vendors?.average_rating || 0).toFixed(1)}</span>
+        <small>(${data.vendors?.reviews_count || 0})</small>
+      </div>
+      ${data.vendors?.is_sponsored ? `<p class="discover-results-product-sponsored">Sponsored</p>` : ""}
+    `;
+  }
 
-  filteredProducts.forEach(product => {
+  if (contactBtn) {
+    const whatsapp = data.vendors?.whatsapp;
+    if (whatsapp) {
+      contactBtn.href = `https://wa.me/${whatsapp}`;
+    } else {
+      contactBtn.style.display = "none";
+    }
+  }
 
-const card = document.createElement("div");
+  if (callBtn) {
+    const telephone = data.vendors?.telephone;
+    if (telephone) {
+      callBtn.href = `tel:${telephone}`;
+    } else {
+      callBtn.style.display = "none";
+    }
+  }
 
-card.className =
-  product.representative_image_url
-    ? "discover-results2-service-card"
-    : "discover-results2-service-card no-image";
+  if (backLink && data.vendors?.slug) {
+    backLink.href = `vendor-profile.html?slug=${data.vendors.slug}`;
+  }
 
-card.innerHTML = `
+  // -----------------------------
+  // CARD RENDERER — shared by both "More" and "Similar" grids
+  // -----------------------------
+  function renderServiceCard(service) {
 
-${product.representative_image_url ?
+    const hasImage = !!service.representative_image_url;
 
-`<img
-src="${product.representative_image_url}"
-class="discover-results2-product-image"
-alt="${product.service_name}"
->` : ""}
+    const card = document.createElement("div");
+    card.className = hasImage ? "discover-results-service-card" : "discover-results-service-card no-image";
 
-<div class="more-service-info">
+    card.innerHTML = `
+      ${
+        hasImage
+          ? `<img src="${service.representative_image_url}" class="discover-results-product-image" alt="${service.service_name}"
+                  onerror="this.onerror=null;this.src='images/placeholder.png';">`
+          : ""
+      }
+      <div>
+        <h3 class="discover-results-product-title">${service.service_name}</h3>
+        ${
+          service.starting_price
+            ? `<p class="discover-results-product-price">Starting From <span>₦${Number(service.starting_price).toLocaleString()}</span></p>`
+            : ""
+        }
+        <div class="discover-results-product-vendor">
+          <span>By ${service.vendorName || ""}</span>
+          ${
+            service.vendorVerification === "blue"
+              ? `<img src="images/bluebadge.png" class="discover-results-product-badge">`
+              : service.vendorVerification === "gray"
+                ? `<img src="images/graybadge.png" class="discover-results-product-badge">`
+                : ""
+          }
+        </div>
+        <div class="discover-results-product-rating">
+          <i class="fa-solid fa-star"></i>
+          <span>${Number(service.vendorRating || 0).toFixed(1)}</span>
+          <small>(${service.vendorReviews || 0})</small>
+        </div>
+        ${service.sponsored ? `<p class="discover-results-product-sponsored">Sponsored</p>` : ""}
+      </div>
+    `;
 
-${
-product.representative_image_url
+    card.addEventListener("click", () => {
+      window.location.href = `vendor-service.html?slug=${service.slug}`;
+    });
 
-?
+    return card;
+  }
 
-`<h3 class="discover-results2-product-title">
+  // -----------------------------
+  // MORE SERVICES FROM THIS VENDOR
+  // Already correctly scoped server-side — unchanged.
+  // -----------------------------
+  const moreProductsGrid = document.getElementById("moreProductsGrid");
 
-${product.service_name}
+  if (moreProductsGrid && data.vendor_id) {
 
-</h3>`
+    const { data: moreServices, error: moreServicesError } = await supabase
+      .from("vendor_services")
+      .select(`
+        slug, service_name, starting_price, representative_image_url, vendor_id,
+        vendors(name, verification_status, average_rating, reviews_count, is_sponsored)
+      `)
+      .eq("vendor_id", data.vendor_id)
+      .neq("slug", data.slug);
 
-:
+    const moreServicesSection = document.querySelector(".vs-more-section");
 
-`<h3 class="discover-results2-product-title no-image-title">
+    if (moreServicesError) {
+      console.error("More services error:", moreServicesError.message);
+    }
 
-${product.service_name}
+    if (!moreServices?.length) {
+      if (moreServicesSection) moreServicesSection.style.display = "none";
+    } else {
+      if (moreServicesSection) moreServicesSection.style.display = "";
+      moreServices.forEach(service => {
+        moreProductsGrid.appendChild(renderServiceCard({
+          slug: service.slug,
+          service_name: service.service_name,
+          starting_price: service.starting_price,
+          representative_image_url: service.representative_image_url,
+          vendorName: service.vendors?.name,
+          vendorVerification: service.vendors?.verification_status,
+          vendorRating: service.vendors?.average_rating,
+          vendorReviews: service.vendors?.reviews_count,
+          sponsored: service.vendors?.is_sponsored
+        }));
+      });
+    }
 
-</h3>`
+  }
 
-}
+  // -----------------------------
+  // SHARE
+  // Fixed: previously referenced data.product_name (always
+  // undefined on this page — this is a service), which produced
+  // a blank share title. Now correctly uses data.service_name.
+  // -----------------------------
+  const shareBtn = document.getElementById("shareProductBtn");
 
-${
-product.starting_price ?
+  if (shareBtn) {
+    shareBtn.onclick = async () => {
+      const shareData = {
+        title: data.service_name,
+        text: `Check out ${data.service_name} on Spotlight Directories.`,
+        url: window.location.href
+      };
 
-`<p class="discover-results2-product-price">
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+        } catch (err) {}
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert("Service link copied to clipboard.");
+      }
+    };
+  }
 
-Starting From
-<span>
+  // -----------------------------
+  // SIMILAR SERVICES FROM OTHER VENDORS
+  // Now uses the get_similar_services RPC — real server-side
+  // filtering and ranking, instead of fetching every service in
+  // the database and filtering in the browser. The old code also
+  // had a completely empty, do-nothing forEach loop here — removed.
+  // Now has real error handling before using the result.
+  // -----------------------------
+  const similarProductsGrid = document.getElementById("similarProductsGrid");
 
-₦${Number(
-product.starting_price
-).toLocaleString()}
+  if (similarProductsGrid && data.vendor_id) {
 
-</span>
-
-</p>`
-
-: ""
-
-}
-
-<div class="discover-results2-product-vendor">
-
-<span>
-
-By ${product.vendors?.name || ""}
-
-</span>
-
-${
-product.vendors?.verification_status === "blue"
-
-? `<img src="images/bluebadge.png" class="discover-results2-product-badge">`
-
-: product.vendors?.verification_status === "gray"
-
-? `<img src="images/graybadge.png" class="discover-results2-product-badge">`
-
-: ""
-
-}
-
-</div>
-
-<div class="discover-results2-product-rating">
-
-<i class="fa-solid fa-star"></i>
-
-<span>
-
-${Number(
-product.vendors?.average_rating || 0
-).toFixed(1)}
-
-</span>
-
-<small>
-
-(${product.vendors?.reviews_count || 0})
-
-</small>
-
-</div>
-
-
-</div>
-
-`;
-
-card.onclick =
-  () => {
-
-    console.log(
-      "Clicked:",
-      product.service_name,
-      product.slug
+    const { data: similarServices, error: similarError } = await supabase.rpc(
+      "get_similar_services",
+      {
+        p_exclude_vendor_id: data.vendor_id,
+        p_exclude_service_id: data.id,
+        p_target_subcategory: data.vendors?.subcategory || null,
+        p_target_category: data.vendors?.category || null,
+        p_limit: 12
+      }
     );
 
-    location.href =
-      `vendor-service.html?slug=${product.slug}`;
+    const similarServicesSection = document.querySelector(".vs-similar-section");
 
-  };
+    if (similarError) {
+      console.error("Similar services error:", similarError.message);
+    }
 
-    similarProductsGrid.appendChild(card);
+    if (!similarServices?.length) {
+      if (similarServicesSection) similarServicesSection.style.display = "none";
+    } else {
+      if (similarServicesSection) similarServicesSection.style.display = "";
+      similarServices.forEach(service => {
+        similarProductsGrid.appendChild(renderServiceCard({
+          slug: service.slug,
+          service_name: service.service_name,
+          starting_price: service.starting_price,
+          representative_image_url: service.representative_image_url,
+          vendorName: service.vendor_name,
+          vendorVerification: service.vendor_verification_status,
+          vendorRating: service.vendor_average_rating,
+          vendorReviews: service.vendor_reviews_count,
+          sponsored: service.vendor_is_sponsored
+        }));
+      });
+    }
 
-  });
-
-}
-
-}
+  }
 
 });

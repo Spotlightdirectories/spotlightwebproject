@@ -95,33 +95,20 @@
 
   <!-- Row 3: Sponsorship + Catalog -->
   <div class="grid grid-1-1">
-    <section class="sponsor-card">
-     <div class="sponsor-header"><h2>Sponsorship</h2><span id="sponsorStateBadge" class="badge-active">Active</span></div>
+    <section class="sponsor-card" id="sponsorCard">
+     <div class="sponsor-header"><h2>Sponsorship</h2><span id="sponsorStateBadge" class="badge-active">Not Sponsored</span></div>
       <div class="sponsor-summary">
-      <div class="sponsor-plan">Silver Sponsor</div>
-      <div class="sponsor-status-text">Your business is currently being promoted across Spotlight.</div>
+      <div class="sponsor-status-text" id="sponsorStatusText">
+        Sponsor your business to appear first in search results and reach more customers.
       </div>
-      <div class="sponsor-days-row">
-        <span class="days-num" id="sponsorDays">14</span>
-        <span class="days-lbl">Days Remaining</span>
       </div>
-      <div class="sponsor-grid">
-        <div class="sponsor-stat">
-          <span class="s-lbl">Clicks</span>
-          <span class="s-val" id="sponsorClicks">1,894</span>
-          <span class="s-trend up">▲ 27%</span>
-        </div>
-        <div class="sponsor-stat">
-          <span class="s-lbl">Leads Generated</span>
-          <span class="s-val" id="sponsorLeads">96</span>
-          <span class="s-trend up">▲ 23%</span>
-        </div>
+
+      <div id="sponsorCountdownBox" class="sponsor-countdown-box hidden">
+        <p class="sponsor-countdown-label">Sponsorship Expires In</p>
+        <p id="sponsorDaysLeft" class="sponsor-countdown-days">—</p>
       </div>
-      <div class="sponsor-foot">
-        <span>Expiry Date</span>
-        <span id="sponsorExpiry">Oct 24, 2024</span>
-      </div>
-      <button id="sponsorActionBtn" class="manage-sub-btn">Manage Sponsorship</button>
+
+      <button id="sponsorActionBtn" class="manage-sub-btn">Sponsor Now</button>
     </section>
 
     <section class="card">
@@ -168,9 +155,9 @@
 
 <div class="rank-scale">
 
-<div class="rank-line"></div>
-
+<div class="rank-line">
 <div id="rankCurrentDot" class="rank-current-dot"></div>
+</div>
 
 <div class="rank-left-label">#50</div>
 
@@ -270,6 +257,9 @@ style="display:none;">
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="analytics-utils.js"></script>
 <script src="insight.js"></script>
 
 <div id="rankingCategoryModal" class="health-modal">
@@ -307,8 +297,8 @@ Home Services
 
 <select id="rankingSubcategorySelect" class="ranking-select">
 
-<option value="Accountant/Auditor" selected>
-Accountant/Auditor
+<option value="Accountant / Auditor" selected>
+Accountant / Auditor
 </option>
 
 <option value="Web Designer">
@@ -346,42 +336,32 @@ Architect
 
 </div>
 
+<p class="health-modal-note" style="margin-top:0;">
+These are the real factors that determine your position in search results, in priority order.
+</p>
+
 <div class="health-modal-item">
-<span>Profile Completeness</span>
-<strong>20/20</strong>
+<span>1. Sponsored Status</span>
+<strong id="rankFactorSponsored">—</strong>
 </div>
 
 <div class="health-modal-item">
-<span>Verification Status</span>
-<strong>20/20</strong>
+<span>2. Verification Status</span>
+<strong id="rankFactorVerification">—</strong>
 </div>
 
 <div class="health-modal-item">
-<span>Reviews & Ratings</span>
-<strong>16/20</strong>
+<span>3. Average Rating</span>
+<strong id="rankFactorRating">—</strong>
 </div>
 
 <div class="health-modal-item">
-<span>Catalog Quality</span>
-<strong>15/20</strong>
-</div>
-
-<div class="health-modal-item">
-<span>Engagement</span>
-<strong>12/20</strong>
-</div>
-
-<div class="health-modal-item">
-<span>Sponsorship</span>
-<strong>10/20</strong>
-</div>
-
-<div class="health-modal-score">
-93 / 100
+<span>4. Review Count</span>
+<strong id="rankFactorReviews">—</strong>
 </div>
 
 <p class="health-modal-note">
-Complete Growth Coach recommendations to improve your ranking.
+Sponsored businesses always rank first, then verified businesses, then by rating and review count. Improve any of these to move up.
 </p>
 
 </div>

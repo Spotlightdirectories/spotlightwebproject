@@ -33,6 +33,35 @@
 
 <body>
 
+<header class="navbar">
+  <div class="logo-left">
+    <a href="index">
+      <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg">
+    </a>
+    <a href="index" class="home">Home</a>
+  </div>
+
+  <nav>
+    <button class="menu-open hide-desktop" aria-label="Open menu">
+      <img src="images/hbopen.png" alt="Open menu" width="32" height="32">
+    </button>
+
+    <ul class="nav-links">
+      <li class="menu-close">
+        <button class="xclose" aria-label="Close menu">
+          <img src="images/xclose.png" alt="Close menu" width="32" height="32">
+        </button>
+      </li>
+      <li><a href="vendordashboard">Dashboard</a></li>
+      <li><a href="discover">Discover</a></li>
+      <li><a href="contact-us">Contact Us</a></li>
+      <li id="authButton">
+        <a href="login" id="authBtn" class="nav-login-btn">Log in</a>
+      </li>
+    </ul>
+  </nav>
+</header>
+
 <main class="branches-page">
 
 <h1>Branches</h1>
@@ -73,6 +102,44 @@ type="text"
 id="branchWhatsapp"
 placeholder="WhatsApp number"
 />
+
+<div class="branch-region-row">
+
+<select id="branchState">
+<option value="">Select State</option>
+</select>
+
+<select id="branchLga">
+<option value="">Select LGA</option>
+</select>
+
+</div>
+
+<div class="branch-hours-row">
+
+<label class="branch-hours-label">
+Opening Time
+<input type="time" id="branchOpenTime" />
+</label>
+
+<label class="branch-hours-label">
+Closing Time
+<input type="time" id="branchCloseTime" />
+</label>
+
+</div>
+
+<div class="branch-days-row">
+
+<label><input type="checkbox" value="Mon" class="branch-day"> Mon</label>
+<label><input type="checkbox" value="Tue" class="branch-day"> Tue</label>
+<label><input type="checkbox" value="Wed" class="branch-day"> Wed</label>
+<label><input type="checkbox" value="Thu" class="branch-day"> Thu</label>
+<label><input type="checkbox" value="Fri" class="branch-day"> Fri</label>
+<label><input type="checkbox" value="Sat" class="branch-day"> Sat</label>
+<label><input type="checkbox" value="Sun" class="branch-day"> Sun</label>
+
+</div>
 
 <p class="map-helper-text">
 To obtain the correct coordinates for this branch:<br>
@@ -121,7 +188,9 @@ Add Branch
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
+<script src="nigeria-data.js"></script>
 <script src="dashboard-branches.js"></script>
+<script defer src="script2.js"></script>
 
 </body>
 

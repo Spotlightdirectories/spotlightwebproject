@@ -3,339 +3,408 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Partner Terms & Policies</title>
+  <title>Partner Resources | Spotlight Directories</title>
 
-  <link rel="stylesheet" href="partner-program.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="navbar.css">
+  <link rel="stylesheet" href="partner-legal.css">
 
-  <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
-  <link rel="apple-touch-icon" href="images/favicon.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <link rel="icon" type="image/png" sizes="48x48" href="/images/favicon-48.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="/images/favicon-64.png">
+  <link rel="apple-touch-icon" href="/images/favicon-180.png">
 </head>
 
 <body>
 
-<section class="partner-section">
-  <div class="partner-container">
+<header class="navbar">
+  <div class="logo-left">
+    <a href="index">
+      <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg">
+    </a>
+    <a href="index" class="home">Home</a>
+  </div>
 
-    
+  <nav>
+    <button class="menu-open hide-desktop" aria-label="Open menu">
+      <img src="images/hbopen.png" alt="Open menu" width="32" height="32">
+    </button>
 
-    <!-- TABS -->
-    <div class="partner-tabs">
+    <ul class="nav-links">
+      <li class="menu-close">
+        <button class="xclose" aria-label="Close menu">
+          <img src="images/xclose.png" alt="Close menu" width="32" height="32">
+        </button>
+      </li>
+      <li><a href="partner-program">Partner Program</a></li>
+      <li><a href="contact-us">Contact Us</a></li>
+      <li id="authButton">
+        <a href="login" id="authBtn" class="nav-login-btn">Log in</a>
+      </li>
+    </ul>
+  </nav>
+</header>
 
-      <button class="partner-tab active" data-tab="terms">Terms</button>
-      <button class="partner-tab" data-tab="privacy">Privacy</button>
-      <button class="partner-tab" data-tab="assets">Marketing Assets</button>
-      <button class="partner-tab" data-tab="faq">FAQ</button>
+<main>
+<section class="pl-section">
+  <div class="pl-container">
 
-       <div class="partner-legal-nav">
-         <a href="index" class="partner-legal-link">← Home</a>
-         <a href="partner-program" class="partner-legal-link">Partner Page</a>
-       </div>
-
+    <div class="pl-tabs">
+      <button class="pl-tab active" data-tab="terms">Terms</button>
+      <button class="pl-tab" data-tab="privacy">Privacy</button>
+      <button class="pl-tab" data-tab="assets">Marketing Assets</button>
+      <button class="pl-tab" data-tab="brand">Brand Guide</button>
+      <button class="pl-tab" data-tab="calculator">Earning Calculator</button>
+      <button class="pl-tab" data-tab="faq">FAQ</button>
     </div>
 
-       <!-- CONTENT -->
+    <!-- ============ TERMS ============ -->
+    <div class="pl-tab-content active" id="terms">
+      <h2>Program Terms &amp; Conditions</h2>
 
-    <div class="partner-tab-content active" id="terms">
+      <div class="pl-block">
+        <h3>1. Commission Structure</h3>
+        <ul>
+          <li>20% commission on every successful paid vendor registration</li>
+          <li>10% commission on renewals</li>
+          <li>₦30,000 bonus upon reaching 50 yearly-paid vendors in a month</li>
+        </ul>
+      </div>
 
-  <h2 class="partner-font-headline">Program Terms & Conditions</h2>
+      <div class="pl-block">
+        <h3>2. Refund Policy</h3>
+        <ul>
+          <li>Refunds allowed within 7 days</li>
+          <li>No refunds after 7 days</li>
+          <li>Vendor consent is captured during onboarding</li>
+        </ul>
+      </div>
 
-  
+      <div class="pl-block">
+        <h3>3. Commission Eligibility</h3>
+        <ul>
+          <li>Commissions become available 7 days after a payment is confirmed</li>
+          <li>Refunded transactions cancel commissions</li>
+        </ul>
+      </div>
 
-  <div class="partner-legal-block">
-    <h3>1. Commission Structure</h3>
-    <ul>
-      <li>20% commission on every successful paid vendor registration</li>
-      <li>10% commission on renewals</li>
-      <li>₦30,000 bonus upon reaching 50 paid vendors in a month</li>
-    </ul>
-  </div>
+      <div class="pl-block">
+        <h3>4. Partner Responsibility</h3>
+        <ul>
+          <li>Partners must communicate the refund policy clearly</li>
+          <li>Misrepresentation may lead to suspension</li>
+        </ul>
+      </div>
 
-   <div class="partner-legal-block">
-    <h3>2. Refund Policy</h3>
-    <ul>
-      <li>Refunds allowed within 7 days</li>
-      <li>No refunds after 7 days</li>
-      <li>Vendor consent is captured during onboarding</li>
-    </ul>
-  </div>
+      <div class="pl-block">
+        <h3>5. Growth Reward (Referred Partners)</h3>
+        <ul>
+          <li>5% override on the commission a partner you refer earns — not 5% of the vendor's payment</li>
+          <li>Paid separately by Spotlight — never deducted from the referred partner's own earnings</li>
+          <li>Applies only to active partners</li>
+          <li>Limited to one level, not a multi-level structure</li>
+        </ul>
+      </div>
 
-  <div class="partner-legal-block">
-    <h3>3. Commission Eligibility</h3>
-    <ul>
-      <li>Commissions become available after 7 days</li>
-      <li>Refunded transactions cancel commissions</li>
-    </ul>
-  </div>
+      <div class="pl-block">
+        <h3>6. Payout Policy</h3>
+        <ul>
+          <li>Payouts processed between the 1st and 5th of each month</li>
+          <li>Minimum payout is ₦10,000</li>
+        </ul>
+      </div>
 
-  <div class="partner-legal-block">
-    <h3>4. Partner Responsibility</h3>
-    <ul>
-      <li>Partners must communicate refund policy clearly</li>
-      <li>Misrepresentation may lead to suspension</li>
-    </ul>
-  </div>
+      <div class="pl-block">
+        <h3>7. Fraud &amp; Abuse</h3>
+        <ul>
+          <li>No fake or duplicate vendors</li>
+          <li>No self-referrals</li>
+          <li>Violations may lead to suspension and loss of earnings</li>
+        </ul>
+      </div>
 
-  <div class="partner-legal-block">
-    <h3>5. Referral Commission</h3>
-    <ul>
-      <li>5% commission on directly referred partners</li>
-      <li>No tiers, no complexity — just straightforward earning.</li>
-      <li>Applies only to active partners.</li>
-      <li>Limited to one level and not MLM.</li>
-    </ul>
-  </div>
-
-  <div class="partner-legal-block">
-    <h3>6. Payout Policy</h3>
-    <ul>
-      <li>Payouts processed between 1st – 5th monthly</li>
-      <li>Minimum payout is ₦10,000</li>
-    </ul>
-  </div>
-
-  <div class="partner-legal-block">
-    <h3>7. Fraud & Abuse</h3>
-    <ul>
-      <li>No fake or duplicate vendors</li>
-      <li>No self-referrals</li>
-      <li>Violations may lead to suspension and loss of earnings</li>
-    </ul>
-  </div>
-
-  <div class="partner-legal-block">
-    <h3>8. Identity & Payment Compliance</h3>
-    <ul>
-      <li>Valid ID (e.g. NIN) may be required before payout</li>
-      <li>Account name must match payment details</li>
-      <li>Spotlight may suspend accounts with inconsistencies</li>
-    </ul>
-  </div>
-
-</div>
-
-    <div class="partner-tab-content" id="privacy">
-
-  <h2 class="partner-font-headline">Privacy Policy (Partners)</h2>
-
-  <div class="partner-legal-block">
-    <h3>1. Introduction</h3>
-    <p>
-      Spotlight Digital Services Ltd respects your privacy and is committed to protecting your personal information.
-      This policy applies only to partners using the platform.
-    </p>
-  </div>
-
-  <div class="partner-legal-block">
-    <h3>2. Information We Collect</h3>
-    <ul>
-      <li>Full name, email address, and phone number</li>
-      <li>Referral activity and earnings data</li>
-      <li>Partner ID and account information</li>
-      <li>Government-issued ID (e.g. NIN) for verification</li>
-      <li>Bank account details for payouts</li>
-    </ul>
-  </div>
-
-  <div class="partner-legal-block">
-    <h3>3. How We Use Your Information</h3>
-    <ul>
-      <li>Manage your partner account</li>
-      <li>Track referrals and calculate commissions</li>
-      <li>Process payouts</li>
-      <li>Prevent fraud and verify identity</li>
-      <li>Improve platform performance</li>
-    </ul>
-  </div>
-
-  <div class="partner-legal-block">
-    <h3>4. Verification & Fraud Prevention</h3>
-    <p>
-      We may use your data to verify your identity, detect fraudulent activity, and enforce compliance with our terms.
-    </p>
-  </div>
-
-  <div class="partner-legal-block">
-    <h3>5. Data Sharing</h3>
-    <ul>
-      <li>Financial institutions for partner payouts</li>
-      <li>Service providers supporting platform operations</li>
-      <li>Authorities when required by law</li>
-    </ul>
-  </div>
-
-  <div class="partner-legal-block">
-    <h3>6. Data Security</h3>
-    <p>
-      We implement appropriate measures to protect your data from unauthorized access or misuse.
-    </p>
-  </div>
-
-  <div class="partner-legal-block">
-    <h3>7. Data Retention</h3>
-    <p>
-      We retain data only as long as necessary to operate the partner program and comply with legal obligations.
-    </p>
-  </div>
-
-  <div class="partner-legal-block">
-    <h3>8. Your Rights</h3>
-    <ul>
-      <li>Access your personal data</li>
-      <li>Request corrections</li>
-      <li>Request deletion (subject to limitations)</li>
-    </ul>
-  </div>
-
-  <div class="partner-legal-block">
-    <h3>9. Updates</h3>
-    <p>
-      We may update this policy from time to time. Continued use of the platform means acceptance of updates.
-    </p>
-  </div>
-
-  <div class="partner-legal-block">
-    <h3>10. Contact</h3>
-    <p>
-      Contact us through our official support channels for any privacy-related concerns.
-    </p>
-  </div>
-
-</div>
-
-    <div class="partner-tab-content" id="assets">
-
-  <h2 class="partner-font-headline">Marketing Assets</h2>
-
-  <div class="partner-legal-block">
-    <h3>1. Referral Link</h3>
-    <p>
-      Each partner is assigned a unique referral link used to track all vendor registrations.
-      Commissions are only recorded when vendors sign up through your link.
-    </p>
-  </div>
-
-  <div class="partner-legal-block">
-    <h3>2. WhatsApp Message Templates</h3>
-
-    <p><strong>Template 1 — Direct Offer</strong></p>
-    <p>
-      Hello 👋<br><br>
-      I help businesses get listed on Spotlight — a platform that connects customers to trusted service providers.<br><br>
-      You can register here:<br>
-      [PASTE YOUR REFERRAL LINK]
-    </p>
-
-    <p><strong>Template 2 — Casual Outreach</strong></p>
-    <p>
-      Hi, I came across your business and wanted to share an opportunity to get more customers.<br><br>
-      Spotlight helps promote businesses like yours.<br><br>
-      Register here:<br>
-      [PASTE YOUR REFERRAL LINK]
-    </p>
-
-    <p><strong>Template 3 — Follow-Up</strong></p>
-    <p>
-      Just checking in 😊<br><br>
-      Have you had a chance to register your business on Spotlight?<br><br>
-      Let me know if you need help getting started.
-    </p>
-
-  </div>
-
-  <div class="partner-legal-block">
-    <h3>3. Simple Sales Script</h3>
-    <ul>
-      <li>Introduce yourself: “I help businesses get more visibility on Spotlight.”</li>
-      <li>Explain value: “Customers can find and contact your business easily.”</li>
-      <li>Create urgency: “Early listings get better visibility.”</li>
-      <li>Close: “Let me help you register now.”</li>
-    </ul>
-  </div>
-
-  <div class="partner-legal-block">
-    <h3>4. Vendor Onboarding Guide</h3>
-    <ul>
-      <li>Share your referral link</li>
-      <li>Guide vendor through registration</li>
-      <li>Explain 7-day refund policy for paid vendors</li>
-      <li>Ensure free vendors send WhatsApp message for activation</li>
-      <li>Stay available to assist</li>
-    </ul>
-  </div>
-
-</div>
-
-    <div class="partner-tab-content" id="faq">
-
-  <h2 class="partner-font-headline">Partner FAQ</h2>
-
-  <div class="partner-faq">
-
-    <div class="partner-faq-item">
-      <button class="partner-faq-question">How do I earn as a partner?</button>
-      <div class="partner-faq-answer">
-        You earn commission by referring vendors using your unique referral link.
+      <div class="pl-block">
+        <h3>8. Identity &amp; Payment Compliance</h3>
+        <ul>
+          <li>Valid ID (e.g. NIN) may be required before payout</li>
+          <li>Account name must match payment details</li>
+          <li>Spotlight may suspend accounts with inconsistencies</li>
+        </ul>
       </div>
     </div>
 
-    <div class="partner-faq-item">
-      <button class="partner-faq-question">When do I get paid?</button>
-      <div class="partner-faq-answer">
-        Payments are processed between 1st and 5th of every month.
+    <!-- ============ PRIVACY ============ -->
+    <div class="pl-tab-content" id="privacy">
+      <h2>Privacy Policy (Partners)</h2>
+
+      <div class="pl-block">
+        <h3>1. Introduction</h3>
+        <p>Spotlight Digital Services Ltd respects your privacy and is committed to protecting your personal information. This policy applies only to partners using the platform.</p>
+      </div>
+
+      <div class="pl-block">
+        <h3>2. Information We Collect</h3>
+        <ul>
+          <li>Full name, email address, and phone number</li>
+          <li>Referral activity and earnings data</li>
+          <li>Partner ID and account information</li>
+          <li>Government-issued ID (e.g. NIN) for verification</li>
+          <li>Bank account details for payouts</li>
+        </ul>
+      </div>
+
+      <div class="pl-block">
+        <h3>3. How We Use Your Information</h3>
+        <ul>
+          <li>Manage your partner account</li>
+          <li>Track referrals and calculate commissions</li>
+          <li>Process payouts</li>
+          <li>Prevent fraud and verify identity</li>
+          <li>Improve platform performance</li>
+        </ul>
+      </div>
+
+      <div class="pl-block">
+        <h3>4. Verification &amp; Fraud Prevention</h3>
+        <p>We may use your data to verify your identity, detect fraudulent activity, and enforce compliance with our terms.</p>
+      </div>
+
+      <div class="pl-block">
+        <h3>5. Data Sharing</h3>
+        <ul>
+          <li>Financial institutions for partner payouts</li>
+          <li>Service providers supporting platform operations</li>
+          <li>Authorities when required by law</li>
+        </ul>
+      </div>
+
+      <div class="pl-block">
+        <h3>6. Data Security</h3>
+        <p>We implement appropriate measures to protect your data from unauthorized access or misuse.</p>
+      </div>
+
+      <div class="pl-block">
+        <h3>7. Data Retention</h3>
+        <p>We retain data only as long as necessary to operate the partner program and comply with legal obligations.</p>
+      </div>
+
+      <div class="pl-block">
+        <h3>8. Your Rights</h3>
+        <ul>
+          <li>Access your personal data</li>
+          <li>Request corrections</li>
+          <li>Request deletion (subject to limitations)</li>
+        </ul>
+      </div>
+
+      <div class="pl-block">
+        <h3>9. Updates</h3>
+        <p>We may update this policy from time to time. Continued use of the platform means acceptance of updates.</p>
+      </div>
+
+      <div class="pl-block">
+        <h3>10. Contact</h3>
+        <p>Contact us through our official support channels for any privacy-related concerns.</p>
       </div>
     </div>
 
-    <div class="partner-faq-item">
-      <button class="partner-faq-question">What is the minimum payout?</button>
-      <div class="partner-faq-answer">
-        The minimum payout is ₦10,000.
+    <!-- ============ MARKETING ASSETS ============ -->
+    <div class="pl-tab-content" id="assets">
+      <h2>Marketing Assets</h2>
+
+      <div class="pl-block">
+        <h3>1. Referral Link</h3>
+        <p>Each partner is assigned a unique referral link used to track all vendor registrations. Commissions are only recorded when vendors sign up through your link.</p>
+      </div>
+
+      <div class="pl-block">
+        <h3>2. WhatsApp Message Templates</h3>
+
+        <p><strong>Template 1 — Direct Offer</strong></p>
+        <p>Hello 👋<br><br>I help businesses get listed on Spotlight — a platform that connects customers to trusted service providers.<br><br>You can register here:<br>[PASTE YOUR REFERRAL LINK]</p>
+
+        <p><strong>Template 2 — Casual Outreach</strong></p>
+        <p>Hi, I came across your business and wanted to share an opportunity to get more customers.<br><br>Spotlight helps promote businesses like yours.<br><br>Register here:<br>[PASTE YOUR REFERRAL LINK]</p>
+
+        <p><strong>Template 3 — Follow-Up</strong></p>
+        <p>Just checking in 😊<br><br>Have you had a chance to register your business on Spotlight?<br><br>Let me know if you need help getting started.</p>
+      </div>
+
+      <div class="pl-block">
+        <h3>3. Simple Sales Script</h3>
+        <ul>
+          <li>Introduce yourself: "I help businesses get more visibility on Spotlight."</li>
+          <li>Explain value: "Customers can find and contact your business easily."</li>
+          <li>Create urgency: "Early listings get better visibility."</li>
+          <li>Close: "Let me help you register now."</li>
+        </ul>
+      </div>
+
+      <div class="pl-block">
+        <h3>4. Vendor Onboarding Guide</h3>
+        <ul>
+          <li>Share your referral link</li>
+          <li>Guide the vendor through registration</li>
+          <li>Explain the 7-day refund policy for paid vendors</li>
+          <li>Stay available to assist</li>
+        </ul>
       </div>
     </div>
 
-    <div class="partner-faq-item">
-      <button class="partner-faq-question">When does my commission become available?</button>
-      <div class="partner-faq-answer">
-        After 7 days, once the refund window has passed.
+    <!-- ============ BRAND GUIDE (NEW) ============ -->
+    <div class="pl-tab-content" id="brand">
+      <h2>Brand Guide</h2>
+
+      <div class="pl-block">
+        <h3>1. Logo</h3>
+        <p>Always use the official Spotlight Directories logo below. Don't recolor, stretch, distort, or add effects to it.</p>
+        <div class="pl-logo-preview">
+          <img src="images/whitelogo3.png" alt="Spotlight Directories Logo">
+        </div>
+      </div>
+
+      <div class="pl-block">
+        <h3>2. Brand Colors</h3>
+        <div class="pl-swatch-row">
+          <div class="pl-swatch">
+            <div class="pl-swatch-color" style="background:#000000;"></div>
+            <span>Black — #000000</span>
+          </div>
+          <div class="pl-swatch">
+            <div class="pl-swatch-color" style="background:#e6c200;"></div>
+            <span>Gold — #e6c200</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pl-block">
+        <h3>3. How to Talk About Spotlight</h3>
+        <p>Be honest and helpful, not pushy. Spotlight helps real businesses get discovered by real customers — lead with that, not hype.</p>
+      </div>
+
+      <div class="pl-block">
+        <h3>4. Do's and Don'ts</h3>
+        <ul>
+          <li><strong>Do</strong> mention only features that are actually live today</li>
+          <li><strong>Do</strong> quote the real commission structure from the Terms tab</li>
+          <li><strong>Don't</strong> promise features that don't exist yet (e.g. delivery arrangement, scheduling tools)</li>
+          <li><strong>Don't</strong> spam vendors with repeated messages</li>
+          <li><strong>Don't</strong> misrepresent how commissions or the monthly bonus are calculated</li>
+        </ul>
       </div>
     </div>
 
-    <div class="partner-faq-item">
-      <button class="partner-faq-question">What qualifies a free vendor?</button>
-      <div class="partner-faq-answer">
-        Vendor must register, send WhatsApp verification, be approved, and stay active for 14 days.
+    <!-- ============ EARNING CALCULATOR (NEW) ============ -->
+    <div class="pl-tab-content" id="calculator">
+      <h2>Earning Calculator</h2>
+      <p class="pl-calc-intro">See what your monthly earnings could realistically look like, based on the real commission structure — nothing invented.</p>
+
+      <div class="pl-calc-card">
+
+        <label for="calc-count">How many vendors do you expect to refer this month?</label>
+        <input type="number" id="calc-count" min="0" value="5" class="pl-input">
+
+        <label for="calc-plan">What plan will most of them choose?</label>
+        <select id="calc-plan" class="pl-input">
+          <option value="standard">Standard — ₦26,982/year</option>
+          <option value="enterprise">Enterprise — ₦113,400/year</option>
+          <option value="elite">Elite — ₦201,600/year</option>
+        </select>
+
+        <button type="button" id="calc-btn" class="pl-btn-primary">Calculate</button>
+
+        <div class="pl-calc-results" id="calc-results" style="display:none;">
+          <div class="pl-calc-row">
+            <span>First-payment commission (20%)</span>
+            <strong id="calc-first"></strong>
+          </div>
+          <div class="pl-calc-row">
+            <span>Each renewal year (10%)</span>
+            <strong id="calc-renewal"></strong>
+          </div>
+          <div class="pl-calc-row">
+            <span>Monthly bonus (₦30,000 per 50 yearly vendors)</span>
+            <strong id="calc-bonus"></strong>
+          </div>
+          <div class="pl-calc-row pl-calc-total">
+            <span>Estimated total this month</span>
+            <strong id="calc-total"></strong>
+          </div>
+          <p class="pl-calc-note">
+            <i class="fa-solid fa-clock"></i>
+            All commissions become available 7 days after each payment is confirmed.
+          </p>
+        </div>
+
       </div>
     </div>
 
-    <div class="partner-faq-item">
-      <button class="partner-faq-question">Can I create fake vendors?</button>
-      <div class="partner-faq-answer">
-        No. This will lead to suspension and loss of earnings.
+    <!-- ============ FAQ ============ -->
+    <div class="pl-tab-content" id="faq">
+      <h2>Partner FAQ</h2>
+
+      <div class="pl-faq">
+
+        <div class="pl-faq-item">
+          <button class="pl-faq-question">How do I earn as a partner?</button>
+          <div class="pl-faq-answer">You earn commission by referring vendors using your unique referral link.</div>
+        </div>
+
+        <div class="pl-faq-item">
+          <button class="pl-faq-question">When do I get paid?</button>
+          <div class="pl-faq-answer">Payments are processed between the 1st and 5th of every month.</div>
+        </div>
+
+        <div class="pl-faq-item">
+          <button class="pl-faq-question">What is the minimum payout?</button>
+          <div class="pl-faq-answer">The minimum payout is ₦10,000.</div>
+        </div>
+
+        <div class="pl-faq-item">
+          <button class="pl-faq-question">When does my commission become available?</button>
+          <div class="pl-faq-answer">After 7 days, once the refund window has passed.</div>
+        </div>
+
+        <div class="pl-faq-item">
+          <button class="pl-faq-question">Can I create fake vendors?</button>
+          <div class="pl-faq-answer">No. This will lead to suspension and loss of earnings.</div>
+        </div>
+
+        <div class="pl-faq-item">
+          <button class="pl-faq-question">Do I earn from partners I refer?</button>
+          <div class="pl-faq-answer">Yes — a 5% override on the commission they earn, paid separately by Spotlight. It's never deducted from what they earn.</div>
+        </div>
+
+        <div class="pl-faq-item">
+          <button class="pl-faq-question">Do I need ID verification?</button>
+          <div class="pl-faq-answer">Yes. You may be required to provide ID before payout.</div>
+        </div>
+
       </div>
     </div>
-
-    <div class="partner-faq-item">
-      <button class="partner-faq-question">Do I earn from other partners?</button>
-      <div class="partner-faq-answer">
-        Yes. You earn 5% from partners you directly refer.
-      </div>
-    </div>
-
-    <div class="partner-faq-item">
-      <button class="partner-faq-question">Do I need ID verification?</button>
-      <div class="partner-faq-answer">
-        Yes. You may be required to provide ID before payout.
-      </div>
-    </div>
-
-  </div>
-
- </div>
 
   </div>
 </section>
+</main>
 
+<footer class="hfooter">
+  <div class="hcontainer hfooter-bottom">
+    <p>&copy; 2026 Spotlight Digital Services Ltd. All Rights Reserved.</p>
+    <div class="hfooter-legal">
+      <a href="partner-program">Partner Page</a>
+      <a href="terms">Terms</a>
+      <a href="privacy">Privacy</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
 <script defer src="partner-legal.js"></script>
 
 </body>

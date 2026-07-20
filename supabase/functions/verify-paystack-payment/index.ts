@@ -1,6 +1,27 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// -----------------------------------------------------------------
+// PRICING TABLE — must exactly mirror getAmountInKobo() in
+// payment.js. Exists here so the server can independently verify
+// what a payment SHOULD have cost, rather than trusting whatever
+// amount the browser sent to Paystack. Already expressed in kobo,
+// matching payment.js's own values directly (no naira conversion
+// needed here, unlike the sponsorship pricing table).
+// -----------------------------------------------------------------
+const PLAN_PRICES_KOBO: Record<string, Record<string, number>> = {
+  standard: { monthly: 299800, yearly: 2698200 },
+  enterprise: { monthly: 1260000, yearly: 11340000 },
+  elite: { monthly: 2240000, yearly: 20160000 },
+};
+
+function getExpectedKobo(plan: string, billingType: string): number {
+  const normalizedPlan = (plan || "").toLowerCase();
+  const planPrices = PLAN_PRICES_KOBO[normalizedPlan];
+  if (!planPrices) return 0;
+  return planPrices[billingType] ?? planPrices.monthly ?? 0;
+}
+
 serve(async (req) => {
 
   console.log("EDGE FUNCTION HIT");
@@ -73,7 +94,7 @@ serve(async (req) => {
   );
 
     const { data: debugAllPayments } = await supabase
-  .from("vendorpayments")
+  .from("vendor_payments")
   .select("id, gateway_ref, status")
   .order("created_at", { ascending: false })
   .limit(5);
@@ -82,7 +103,7 @@ console.log("LATEST PAYMENTS:", debugAllPayments);
 
   // 🔹 Prevent duplicate processing
     const { data: existingPayment, error: fetchError } = await supabase
-     .from("vendorpayments")
+     .from("vendor_payments")
      .select("id, status, vendor_id, plan, billing_type")
      .eq("id", payment_id)
      .single();
@@ -108,13 +129,47 @@ if (existingPayment.status === "confirmed") {
   );
 }
 
+// -----------------------------------------------------------------
+// SERVER-SIDE PRICE CHECK — the actual security fix.
+// Independently recompute what this payment SHOULD have cost, using
+// the same pricing rules as payment.js, and compare it to what
+// Paystack actually confirms was charged. The browser's number is
+// never trusted on its own.
+// -----------------------------------------------------------------
+const expectedKobo = getExpectedKobo(existingPayment.plan, existingPayment.billing_type);
+const actualKobo = verifyJson.data.amount;
+
+if (expectedKobo > 0 && actualKobo !== expectedKobo) {
+  console.error(
+    "PRICE MISMATCH — refusing to activate.",
+    {
+      payment_id,
+      plan: existingPayment.plan,
+      billing_type: existingPayment.billing_type,
+      expectedKobo,
+      actualKobo,
+      reference,
+    }
+  );
+  // Left as-is deliberately — not auto-confirmed — so an admin can
+  // review a genuine mismatch. The vendor was already charged
+  // whatever they were charged; a human should look at this specific
+  // case before anything else happens to it.
+  return new Response(
+    JSON.stringify({
+      message: "Payment amount does not match the expected price for this plan. This has been flagged for manual review."
+    }),
+    { status: 400, headers: corsHeaders }
+  );
+}
+
   const now = new Date().toISOString();
 
   console.log("PAYMENT ID:", payment_id);
 
   // 🔹 Update vendorpayment
   const { data: updatedPayment, error: paymentUpdateError } = await supabase
-  .from("vendorpayments")
+  .from("vendor_payments")
   .update({
     status: "confirmed",
     approved_at: now,
@@ -132,24 +187,55 @@ if (!updatedPayment || updatedPayment.length === 0) {
   console.error("No payment matched reference:", reference);
 }
 
-//   // 🔹 Activate vendor
-//   const expiry =
-//   existingPayment.billing_type === "monthly"
-//     ? new Date(new Date(now).setMonth(new Date(now).getMonth() + 1))
-//     : new Date(new Date(now).setFullYear(new Date(now).getFullYear() + 1));
+  // 🔹 Activate vendor (fallback if webhook has not fired yet)
+  // The webhook is SUPPOSED to be the primary activation path, but
+  // in practice this function ends up doing the real work (the
+  // webhook_event/webhook_received_at fields stay null on payments
+  // processed here, meaning the webhook isn't reliably firing).
+  //
+  // Previous guard here was `.neq("subscription_status", "active")`
+  // — intended to avoid double-processing if the webhook got there
+  // first, but it broke every UPGRADE: an upgrading vendor is, by
+  // definition, already active on their current plan, so that guard
+  // was always false and the plan/billing_cycle/expiry never
+  // actually got written, even though the payment itself succeeded.
+  //
+  // Fixed: fetch the vendor's current state first, and only skip the
+  // write if they're already on this EXACT plan+billing_cycle+active
+  // (a true duplicate/already-processed case) — not just "active on
+  // something". This lets upgrades apply while still avoiding a
+  // redundant duplicate write if the webhook did get there first.
+  const expiry =
+    existingPayment.billing_type === "monthly"
+      ? new Date(new Date(now).setMonth(new Date(now).getMonth() + 1))
+      : new Date(new Date(now).setFullYear(new Date(now).getFullYear() + 1));
 
-// await supabase
-//   .from("vendors")
-//   .update({
-//     subscription_status: "active",
-//     plan_tier: existingPayment.plan,
-//     billing_cycle: existingPayment.billing_type,
-//     is_premium: true,
-//     paystack_reference: reference,
-//     paid_at: now,
-//     expires_at: expiry
-//   })
-//   .eq("id", existingPayment.vendor_id);
+  const { data: currentVendor } = await supabase
+    .from("vendors")
+    .select("plan_tier, billing_cycle, subscription_status")
+    .eq("id", existingPayment.vendor_id)
+    .single();
+
+  const alreadyAppliedExactly =
+    currentVendor &&
+    currentVendor.plan_tier === existingPayment.plan &&
+    currentVendor.billing_cycle === existingPayment.billing_type &&
+    currentVendor.subscription_status === "active";
+
+  if (!alreadyAppliedExactly) {
+    await supabase
+      .from("vendors")
+      .update({
+        subscription_status: "active",
+        plan_tier: existingPayment.plan,
+        billing_cycle: existingPayment.billing_type,
+        is_premium: true,
+        paystack_reference: reference,
+        paid_at: now,
+        expires_at: expiry.toISOString()
+      })
+      .eq("id", existingPayment.vendor_id);
+  }
 
   // 🔹 Send activation email
   const { data: vendorData } = await supabase

@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("PAYMENT JS STARTED");
   const supabase = window.supabaseClient;
 
   const planSummaryEl = document.getElementById("planSummary");
@@ -10,7 +9,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const payOnlineBtn = document.getElementById("payOnlineBtn");
   const payBankBtn = document.getElementById("payBankBtn");
   const submitReceiptBtn = document.getElementById("submitReceiptBtn");
-  console.log("SUBMIT BTN:", submitReceiptBtn);
   const receiptFileInput = document.getElementById("receiptFile");
 
   // ===============================
@@ -31,6 +29,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     .eq("auth_user_id", user.id)
     .maybeSingle();
 
+  // Check this BEFORE anything below tries to read vendor.plan_tier —
+  // a vendor row can genuinely not exist yet (e.g. signup completed
+  // but business profile setup was never finished), and reading a
+  // property off null here would crash the whole script silently,
+  // before any payment button click handlers get attached.
+  if (!vendor) {
+    window.location.replace(
+  "vendordashboard"
+);
+    return;
+  }
+
     const billingType = vendor?.billing_cycle || "monthly";
 
     const selectedPlan =
@@ -47,13 +57,6 @@ if (planSummaryEl && vendor) {
   planSummaryEl.textContent =
     `You selected the ${effectivePlan.toUpperCase()} plan.`;
 }
-
-  if (!vendor) {
-    window.location.replace(
-  "vendordashboard"
-);
-    return;
-  }
 
 const upgradingFromFree =
   vendor.plan_tier === "free" &&
@@ -81,6 +84,42 @@ const paidPlans = [
 const upgradingPlan =
   selectedPlan &&
   selectedPlan !== vendor.plan_tier;
+
+// A genuine mid-cycle upgrade: vendor already has an ACTIVE paid
+// plan and is switching to a different one before it's ended. This
+// is exactly the scenario the Disclaimer's "Mid-Cycle Plan Upgrades"
+// section covers — shown here at the actual decision point, not
+// just buried in a legal page, so it's genuinely informed consent.
+const isMidCycleUpgrade =
+  paidPlans.includes((vendor.plan_tier || "").toLowerCase()) &&
+  vendor.subscription_status === "active" &&
+  upgradingPlan;
+
+const upgradeDisclaimer = document.getElementById("upgradeDisclaimer");
+const upgradeDisclaimerCheckbox = document.getElementById("upgradeDisclaimerCheckbox");
+
+if (isMidCycleUpgrade && upgradeDisclaimer) {
+
+  upgradeDisclaimer.classList.remove("hidden");
+
+  // Payment buttons stay disabled until the disclaimer is explicitly
+  // acknowledged — this is the actual gate, not just a visual note.
+  payOnlineBtn.disabled = true;
+  payBankBtn.disabled = true;
+  payOnlineBtn.style.opacity = "0.5";
+  payBankBtn.style.opacity = "0.5";
+
+  if (upgradeDisclaimerCheckbox) {
+    upgradeDisclaimerCheckbox.addEventListener("change", () => {
+      const checked = upgradeDisclaimerCheckbox.checked;
+      payOnlineBtn.disabled = !checked;
+      payBankBtn.disabled = !checked;
+      payOnlineBtn.style.opacity = checked ? "1" : "0.5";
+      payBankBtn.style.opacity = checked ? "1" : "0.5";
+    });
+  }
+
+}
 
 if (
   paidPlans.includes(
@@ -110,8 +149,8 @@ if (
 
   const { data: latestPendingPayment } =
     await supabase
-      .from("vendorpayments")
-      .select("created_at")
+      .from("vendor_payments")
+      .select("created_at, payment_method")
       .eq("vendor_id", vendor.id)
       .eq("status", "pending")
       .order("created_at", {
@@ -134,8 +173,13 @@ if (
       (now - createdAt) /
       (1000 * 60 * 60);
 
-    // 24-hour recovery fallback
-    if (hoursPassed >= 24) {
+    // Downgrade window:
+    // Bank transfers: 48 hours (admin needs time to review receipts)
+    // Card payments: 24 hours (webhook should fire within seconds)
+    const downgradeCutoffHours =
+      latestPendingPayment.payment_method === "bank" ? 48 : 24;
+
+    if (hoursPassed >= downgradeCutoffHours) {
 
    await supabase
   .from("vendors")
@@ -148,7 +192,7 @@ if (
   .eq("id", vendor.id);
 
   await supabase
-    .from("vendorpayments")
+    .from("vendor_payments")
     .update({
     status: "expired"
     })
@@ -175,7 +219,7 @@ if (
 
     // Expire older pending card payments
 await supabase
-  .from("vendorpayments")
+  .from("vendor_payments")
   .update({
     status: "expired"
   })
@@ -187,7 +231,7 @@ await supabase
    const paystackReference = `SPOT_${Date.now()}`;
 
 const { data, error } = await supabase
-  .from("vendorpayments")
+  .from("vendor_payments")
   .insert({
      vendor_id: vendor.id,
      auth_user_id: user.id,
@@ -256,13 +300,49 @@ async function verifyPayment(reference) {
       }
     );
 
-    console.log("Invoke result:", data, error);
-
     if (error) {
-      console.log("VERIFY ERROR:", error);
-      alert("Payment verification failed.");
+
+      // The webhook (paystack-webhook) is the PRIMARY activation path
+      // — this client-side verify call is really just a UX nicety for
+      // showing the success screen a little faster. If this call
+      // fails for a network reason, check the vendor's actual current
+      // status before showing a scary "payment failed" message that
+      // may not even be true.
+      const { data: refreshedVendor } = await supabase
+        .from("vendors")
+        .select("subscription_status, plan_tier")
+        .eq("id", vendor.id)
+        .maybeSingle();
+
+      if (
+        refreshedVendor?.subscription_status === "active" &&
+        refreshedVendor?.plan_tier === effectivePlan
+      ) {
+        // The webhook already activated the plan successfully —
+        // this was a false alarm, not a real failure.
+        showPaymentSuccessScreen();
+        return;
+      }
+
+      alert(
+        "We couldn't confirm your payment right away. If money was deducted, your account will update automatically within a few minutes once our system receives confirmation. Please check your dashboard shortly."
+      );
+
+      window.location.replace("vendordashboard");
+
       return;
     }
+
+    showPaymentSuccessScreen();
+
+  } catch (err) {
+    console.error("Unexpected verification error:", err);
+    alert("Payment verification failed. Please contact support.");
+  }
+
+}
+
+function showPaymentSuccessScreen() {
 
      // Show inline success state
 document.body.innerHTML = `
@@ -299,11 +379,6 @@ setTimeout(() => {
 );
 }, 2500);
 
-  } catch (err) {
-    console.error("Unexpected verification error:", err);
-    alert("Payment verification failed. Please contact support.");
-  }
-
 }
 
 
@@ -318,8 +393,6 @@ payBankBtn.onclick = async () => {
 
 };
 
-  console.log("ATTACHING CLICK HANDLER");
-
   submitReceiptBtn.onclick = async () => {
     
 
@@ -327,7 +400,6 @@ payBankBtn.onclick = async () => {
     submitReceiptBtn.textContent = "Uploading Receipt...";
 
     const file = receiptFileInput.files[0];
-    console.log("FILE INPUT:", receiptFileInput.files);
 
     if (!file) {
       alert("Select a receipt file.");
@@ -336,9 +408,9 @@ payBankBtn.onclick = async () => {
       return;
     }
 
-    const { data: paymentData, error: paymentError } =
+const { data: paymentData, error: paymentError } =
   await supabase
-    .from("vendorpayments")
+    .from("vendor_payments")
     .insert({
       vendor_id: vendor.id,
       auth_user_id: user.id,
@@ -355,7 +427,6 @@ payBankBtn.onclick = async () => {
     .maybeSingle();
 
 if (paymentError || !paymentData) {
-
   alert(
     paymentError?.message ||
     "Could not create payment record."
@@ -371,32 +442,27 @@ if (paymentError || !paymentData) {
  window.currentPaymentId =
   paymentData.id;
 
-    const filePath = `bank-receipts/${window.currentPaymentId}-${file.name}`;
+// Sends the file to the validate-upload Edge Function, which checks
+// it server-side (real file type, size) before it reaches storage.
+let uploadResult;
 
-    const { error: uploadError } = await supabase.storage
-      .from("payment-receipts")
-      .upload(filePath, file, { upsert: true });
-
-      console.log("UPLOAD COMPLETED");
-
-    if (uploadError) {
-      console.log("UPLOAD ERROR:", uploadError);
-      alert(uploadError.message);
-      submitReceiptBtn.disabled = false;
-      submitReceiptBtn.textContent = "Submit Receipt";
-      return;
-    }
+try {
+  uploadResult = await uploadVendorFile(file, "receipt");
+} catch (err) {
+  alert(err.message || "Receipt upload failed.");
+  submitReceiptBtn.disabled = false;
+  submitReceiptBtn.textContent = "Submit Receipt";
+  return;
+}
 
     // 1️⃣ Update payment record
     const { data: updateData, error: updateError } = await supabase
-      .from("vendorpayments")
+      .from("vendor_payments")
       .update({
-       transfer_proof_url: filePath
+       transfer_proof_url: uploadResult.path
      })
       .eq("id", window.currentPaymentId)
       .select();
-
-console.log("UPDATE RESULT:", updateData, updateError, window.currentPaymentId);
 
 // 2️⃣ Ensure vendor subscription is pending
     await supabase
@@ -412,9 +478,9 @@ console.log("UPDATE RESULT:", updateData, updateError, window.currentPaymentId);
 
   function getAmountInKobo(plan, billingType) {
   const prices = {
-    standard: { monthly: 299800, yearly: 2597600 },
-    enterprise: { monthly: 899800, yearly: 8297600 },
-    elite: { monthly: 2299800, yearly: 11097600 }
+    standard: { monthly: 299800, yearly: 2698200 },
+    enterprise: { monthly: 1260000, yearly: 11340000 },
+    elite: { monthly: 2240000, yearly: 20160000 }
   };
 
   const normalizedPlan =

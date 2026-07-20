@@ -13,17 +13,47 @@ SERVICE LIMITS
 
 const SERVICE_LIMITS = {
 
-  free: 3,
+  free: 1,
 
-  standard: 10,
+  standard: 6,
 
-  enterprise: 25,
+  enterprise: 12,
 
-  elite: 50,
+  elite: 24,
 
   custom: Infinity
 
 };
+
+/* ===============================
+DESCRIPTION WORD LIMITS
+=============================== */
+
+const DESCRIPTION_WORD_LIMITS = {
+
+  free: 50,
+
+  standard: 100,
+
+  enterprise: 150,
+
+  elite: 200,
+
+  custom: 250
+
+};
+
+function countWords(html) {
+
+  const text = (html || "")
+    .replace(/<[^>]*>/g, " ")
+    .trim();
+
+  if (!text) return 0;
+
+  return text.split(/\s+/).length;
+
+}
 
 /* ===============================
 GET SERVICE LIMIT
@@ -79,6 +109,33 @@ if (vendorError) {
 if (!vendor) {
   // If no profile yet → still allow access (important for onboarding merge)
   console.warn("No vendor record yet");
+}
+
+/* ===============================
+TRIAL STATE (for product/service limits)
+=============================== */
+
+let trialActive = false;
+let trialExpired = false;
+
+if (
+  (vendor?.plan_tier || "free") === "free" &&
+  vendor?.trial_started_at
+) {
+
+  const trialStart = new Date(vendor.trial_started_at);
+  const trialNow = new Date();
+
+  const trialDiffDays = Math.floor(
+    (trialNow - trialStart) / (1000 * 60 * 60 * 24)
+  );
+
+  if (trialDiffDays <= 90) {
+    trialActive = true;
+  } else {
+    trialExpired = true;
+  }
+
 }
 
 /* ===============================
@@ -488,148 +545,46 @@ if (
         ).textContent =
           "Uploading...";
 
-        const MAX_IMAGE_SIZE =
-          2 * 1024 * 1024;
-  
-       if (
-         file.size >
-         MAX_IMAGE_SIZE
-       ) {
+        try {
 
-         alert(
-           "Image size must not exceed 2 MB."
-        );
+          const result =
+            await uploadVendorFile(
+              file,
+              "product"
+            );
 
-        primaryProductImageInput.value =
-          "";
+          primaryProductImageUrl =
+            result.publicUrl;
 
-        return;
+          document.getElementById(
+            "primaryProductImageName"
+          ).textContent =
+            file.name;
 
-      }
+        } catch (err) {
 
-        const allowedTypes = [
-          "image/jpeg",
-          "image/png",
-          "image/webp"
-        ];
+          console.error(
+            "PRIMARY IMAGE UPLOAD ERROR:",
+            err
+          );
 
-        if (
-          !allowedTypes.includes(
-            file.type
-          )
-        ) {
+          document.getElementById(
+            "primaryProductImageName"
+          ).textContent =
+            "";
 
           alert(
-            "Only JPG, PNG or WEBP images allowed."
+            err.message ||
+            "Primary image upload failed."
           );
 
           primaryProductImageInput.value =
             "";
 
-          return;
-
         }
 
-        const image =
-          new Image();
-
-        image.src =
-          URL.createObjectURL(
-            file
-         );
-
-        await new Promise(
-          resolve => {
-
-            image.onload =
-              resolve;
-
-         }
-       );
-
-       if (
-
-          image.width < 800 ||
-
-          image.height < 800
-
-       ) {
-
-         alert(
-           "Image resolution must be at least 800 × 800 pixels."
-       );
-
-       primaryProductImageInput.value =
-         "";
-
-       URL.revokeObjectURL(
-         image.src
-      );
-
-      return;
-
       }
-
-      URL.revokeObjectURL(
-        image.src
-     );
-
-const filePath =
-  `${vendor.id}/products/${Date.now()}-${file.name}`;
-
-const {
-  error: uploadError
-} = await supabase.storage
-  .from(
-    "vendor-gallery"
-  )
-  .upload(
-    filePath,
-    file
-  );
-
-if (
-  uploadError
-) {
-
-  console.error(
-    "PRIMARY IMAGE UPLOAD ERROR:",
-    uploadError
-  );
-
-document.getElementById(
-  "primaryProductImageName"
-).textContent =
-  "";
-
-  alert(
-    "Primary image upload failed."
-  );
-
-  return;
-
-}
-
-const {
-  data
-} = supabase.storage
-  .from(
-    "vendor-gallery"
-  )
-  .getPublicUrl(
-    filePath
-  );
-
-primaryProductImageUrl =
-  data.publicUrl;
-
-document.getElementById(
-  "primaryProductImageName"
-).textContent =
-  file.name;
-
-  }
-);
+    );
 
 }
 
@@ -658,148 +613,46 @@ if (
         ).textContent =
           "Uploading...";
 
-        const MAX_IMAGE_SIZE =
-          2 * 1024 * 1024;
-  
-       if (
-         file.size >
-         MAX_IMAGE_SIZE
-       ) {
+        try {
 
-         alert(
-           "Image size must not exceed 2 MB."
-        );
+          const result =
+            await uploadVendorFile(
+              file,
+              "service"
+            );
 
-        servicePrimaryImageInput.value =
-          "";
+          representativeServiceImageUrl =
+            result.publicUrl;
 
-        return;
+          document.getElementById(
+            "servicePrimaryImageName"
+          ).textContent =
+            file.name;
 
-      }
+        } catch (err) {
 
-        const allowedTypes = [
-          "image/jpeg",
-          "image/png",
-          "image/webp"
-        ];
+          console.error(
+            "SERVICE IMAGE UPLOAD ERROR:",
+            err
+          );
 
-        if (
-          !allowedTypes.includes(
-            file.type
-          )
-        ) {
+          document.getElementById(
+            "servicePrimaryImageName"
+          ).textContent =
+            "";
 
           alert(
-            "Only JPG, PNG or WEBP images allowed."
+            err.message ||
+            "Representative image upload failed."
           );
 
           servicePrimaryImageInput.value =
             "";
 
-          return;
-
         }
 
-        const image =
-          new Image();
-
-        image.src =
-          URL.createObjectURL(
-            file
-         );
-
-        await new Promise(
-          resolve => {
-
-            image.onload =
-              resolve;
-
-         }
-       );
-
-       if (
-
-          image.width < 800 ||
-
-          image.height < 800
-
-       ) {
-
-         alert(
-           "Image resolution must be at least 800 × 800 pixels."
-       );
-
-       servicePrimaryImageInput.value =
-         "";
-
-       URL.revokeObjectURL(
-         image.src
-      );
-
-      return;
-
       }
-
-      URL.revokeObjectURL(
-        image.src
-     );
-
-const filePath =
-  `${vendor.id}/services/${Date.now()}-${file.name}`;
-
-const {
-  error: uploadError
-} = await supabase.storage
-  .from(
-    "vendor-gallery"
-  )
-  .upload(
-    filePath,
-    file
-  );
-
-if (
-  uploadError
-) {
-
-  document.getElementById(
-    "servicePrimaryImageName"
-  ).textContent =
-    "";
-
-  console.error(
-    "SERVICE IMAGE UPLOAD ERROR:",
-    uploadError
-  );
-
-  alert(
-    "Representative image upload failed."
-  );
-
-  return;
-
-}
-
-const {
-  data
-} = supabase.storage
-  .from(
-    "vendor-gallery"
-  )
-  .getPublicUrl(
-    filePath
-  );
-
-representativeServiceImageUrl =
-  data.publicUrl;
-
-document.getElementById(
-  "servicePrimaryImageName"
-).textContent =
-  file.name;
-
-  }
-);
+    );
 
 }
 
@@ -828,109 +681,23 @@ if (
         ).textContent =
           "Uploading...";
 
-        const MAX_IMAGE_SIZE =
-          2 * 1024 * 1024;
+        try {
 
-        if (
-          file.size >
-          MAX_IMAGE_SIZE
-        ) {
+          const result =
+            await uploadVendorFile(
+              file,
+              "product"
+            );
 
-          alert(
-            "Image size must not exceed 2 MB."
-          );
+          secondaryProductImageUrl =
+            result.publicUrl;
 
-          secondaryProductImageInput.value =
-            "";
+          document.getElementById(
+            "secondaryProductImageName"
+          ).textContent =
+            file.name;
 
-          return;
-
-        }
-
-        const allowedTypes = [
-          "image/jpeg",
-          "image/png",
-          "image/webp"
-        ];
-
-        if (
-          !allowedTypes.includes(
-            file.type
-          )
-        ) {
-
-          alert(
-            "Only JPG, PNG or WEBP images allowed."
-          );
-
-          secondaryProductImageInput.value =
-            "";
-
-          return;
-
-        }
-
-        const image =
-          new Image();
-
-        image.src =
-          URL.createObjectURL(
-            file
-          );
-
-        await new Promise(
-          resolve => {
-
-            image.onload =
-              resolve;
-
-          }
-        );
-
-        if (
-
-          image.width < 800 ||
-
-          image.height < 800
-
-        ) {
-
-          alert(
-            "Image resolution must be at least 800 × 800 pixels."
-          );
-
-          secondaryProductImageInput.value =
-            "";
-
-          URL.revokeObjectURL(
-            image.src
-          );
-
-          return;
-
-        }
-
-        URL.revokeObjectURL(
-          image.src
-        );
-
-        const filePath =
-          `${vendor.id}/products/${Date.now()}-${file.name}`;
-
-        const {
-          error: uploadError
-        } = await supabase.storage
-          .from(
-            "vendor-gallery"
-          )
-          .upload(
-            filePath,
-            file
-          );
-
-        if (
-          uploadError
-        ) {
+        } catch (err) {
 
           document.getElementById(
             "secondaryProductImageName"
@@ -938,30 +705,14 @@ if (
             "";
 
           alert(
+            err.message ||
             "Secondary image upload failed."
           );
 
-          return;
+          secondaryProductImageInput.value =
+            "";
 
         }
-
-        const {
-          data
-        } = supabase.storage
-          .from(
-            "vendor-gallery"
-          )
-          .getPublicUrl(
-            filePath
-          );
-
-        secondaryProductImageUrl =
-          data.publicUrl;
-
-        document.getElementById(
-          "secondaryProductImageName"
-        ).textContent =
-          file.name;
 
       }
     );
@@ -993,140 +744,38 @@ if (
         ).textContent =
           "Uploading...";
 
-        const MAX_IMAGE_SIZE =
-          2 * 1024 * 1024;
+        try {
 
-        if (
-          file.size >
-          MAX_IMAGE_SIZE
-        ) {
+          const result =
+            await uploadVendorFile(
+              file,
+              "service"
+            );
+
+          secondaryServiceImageUrl =
+            result.publicUrl;
+
+          document.getElementById(
+            "serviceSecondaryImageName"
+          ).textContent =
+            file.name;
+
+        } catch (err) {
+
+          document.getElementById(
+            "serviceSecondaryImageName"
+          ).textContent =
+            "";
 
           alert(
-            "Image size must not exceed 2 MB."
+            err.message ||
+            "Additional image upload failed."
           );
 
           serviceSecondaryImageInput.value =
             "";
 
-          return;
-
         }
-
-        const allowedTypes = [
-          "image/jpeg",
-          "image/png",
-          "image/webp"
-        ];
-
-        if (
-          !allowedTypes.includes(
-            file.type
-          )
-        ) {
-
-          alert(
-            "Only JPG, PNG or WEBP images allowed."
-          );
-
-          serviceSecondaryImageInput.value =
-            "";
-
-          return;
-
-        }
-
-        const image =
-          new Image();
-
-        image.src =
-          URL.createObjectURL(
-            file
-          );
-
-        await new Promise(
-          resolve => {
-
-            image.onload =
-              resolve;
-
-          }
-        );
-
-        if (
-
-          image.width < 800 ||
-
-          image.height < 800
-
-        ) {
-
-          alert(
-            "Image resolution must be at least 800 × 800 pixels."
-          );
-
-          serviceSecondaryImageInput.value =
-            "";
-
-          URL.revokeObjectURL(
-            image.src
-          );
-
-          return;
-
-        }
-
-        URL.revokeObjectURL(
-          image.src
-        );
-
-        const filePath =
-          `${vendor.id}/services/${Date.now()}-${file.name}`;
-
-        const {
-          error: uploadError
-        } = await supabase.storage
-          .from(
-            "vendor-gallery"
-          )
-          .upload(
-            filePath,
-            file
-          );
-
-         if (
-           uploadError
-          ) {
-
-           document.getElementById(
-             "serviceSecondaryImageName"
-           ).textContent =
-             "";
-
-           alert(
-             "Additional image upload failed."
-           );
-
-           return;
-
-           }
-
-        const {
-          data
-        } = supabase.storage
-          .from(
-            "vendor-gallery"
-          )
-          .getPublicUrl(
-            filePath
-          );
-
-        secondaryServiceImageUrl =
-          data.publicUrl;
-
-      document.getElementById(
-        "serviceSecondaryImageName"
-      ).textContent =
-        file.name;
 
       }
     );
@@ -1159,109 +808,23 @@ if (
         ).textContent =
           "Uploading...";
 
-        const MAX_IMAGE_SIZE =
-          2 * 1024 * 1024;
+        try {
 
-        if (
-          file.size >
-          MAX_IMAGE_SIZE
-        ) {
+          const result =
+            await uploadVendorFile(
+              file,
+              "product"
+            );
 
-          alert(
-            "Image size must not exceed 2 MB."
-          );
+          tertiaryProductImageUrl =
+            result.publicUrl;
 
-          tertiaryProductImageInput.value =
-            "";
+          document.getElementById(
+            "tertiaryProductImageName"
+          ).textContent =
+            file.name;
 
-          return;
-
-        }
-
-        const allowedTypes = [
-          "image/jpeg",
-          "image/png",
-          "image/webp"
-        ];
-
-        if (
-          !allowedTypes.includes(
-            file.type
-          )
-        ) {
-
-          alert(
-            "Only JPG, PNG or WEBP images allowed."
-          );
-
-          tertiaryProductImageInput.value =
-            "";
-
-          return;
-
-        }
-
-        const image =
-          new Image();
-
-        image.src =
-          URL.createObjectURL(
-            file
-          );
-
-        await new Promise(
-          resolve => {
-
-            image.onload =
-              resolve;
-
-          }
-        );
-
-        if (
-
-          image.width < 800 ||
-
-          image.height < 800
-
-        ) {
-
-          alert(
-            "Image resolution must be at least 800 × 800 pixels."
-          );
-
-          tertiaryProductImageInput.value =
-            "";
-
-          URL.revokeObjectURL(
-            image.src
-          );
-
-          return;
-
-        }
-
-        URL.revokeObjectURL(
-          image.src
-        );
-
-        const filePath =
-          `${vendor.id}/products/${Date.now()}-${file.name}`;
-
-        const {
-          error: uploadError
-        } = await supabase.storage
-          .from(
-            "vendor-gallery"
-          )
-          .upload(
-            filePath,
-            file
-          );
-
-        if (
-          uploadError
-        ) {
+        } catch (err) {
 
           document.getElementById(
             "tertiaryProductImageName"
@@ -1269,30 +832,14 @@ if (
             "";
 
           alert(
+            err.message ||
             "Third image upload failed."
           );
 
-          return;
+          tertiaryProductImageInput.value =
+            "";
 
         }
-
-        const {
-          data
-        } = supabase.storage
-          .from(
-            "vendor-gallery"
-          )
-          .getPublicUrl(
-            filePath
-          );
-
-        tertiaryProductImageUrl =
-          data.publicUrl;
-
-        document.getElementById(
-          "tertiaryProductImageName"
-        ).textContent =
-          file.name;
 
       }
     );
@@ -1336,9 +883,11 @@ function getProductLimit(
 }
 
 const currentProductLimit =
-  getProductLimit(
-    vendor?.plan_tier || "free"
-  );
+  trialActive
+    ? 3
+    : getProductLimit(
+        vendor?.plan_tier || "free"
+      );
 
 if (productLimitText) {
 
@@ -1441,9 +990,29 @@ function renderPendingProducts() {
         "vd-service-pill";
 
       item.innerHTML = `
-        <span>
-          ${product.product_name}
-        </span>
+        <img
+          class="vd-service-image"
+          src="${product.primary_image_url || 'images/placeholder.png'}"
+          alt="${product.product_name}"
+        >
+
+        <div class="vd-service-content">
+
+          <div class="vd-service-name">
+            ${product.product_name}
+          </div>
+
+          ${
+            product.short_description
+              ? `<div class="vd-service-description">${product.short_description}</div>`
+              : ""
+          }
+
+          <div class="vd-product-price">
+            ₦${Number(product.price).toLocaleString()}
+          </div>
+
+        </div>
 
         <button
           type="button"
@@ -1518,8 +1087,8 @@ function renderSavedProducts() {
           <div class="vd-service-description">
             ${
               (product.short_description || "")
-                .length > 160
-                  ? product.short_description.slice(0, 160) + "..."
+                .length > 200
+                  ? product.short_description.slice(0, 200) + "..."
                   : (product.short_description || "")
             }
           </div>
@@ -2151,6 +1720,9 @@ const payload =
       vendor_id:
         vendor.id,
 
+      vendor_name:
+        vendor.name,
+
       product_name:
         product.product_name,
 
@@ -2276,9 +1848,11 @@ alert(
 /* ========================= */
 
 const currentServiceLimit =
-  getServiceLimit(
-    vendor?.plan_tier || "free"
-  );
+  trialActive
+    ? 3
+    : getServiceLimit(
+        vendor?.plan_tier || "free"
+      );
 
 /* EXISTING SAVED SERVICES */
 
@@ -2339,11 +1913,6 @@ if (
     fetchedServices || [];
 
 }
-
-console.log(
-  "Saved Services:",
-  savedServices
-);
 
 /* LIMIT TEXT */
 
@@ -2608,9 +2177,6 @@ if (editBtn) {
         String(item.id) ===
         String(serviceId)
     );
-
-  console.log(service);
-    
 
   if (!service) {
     return;
@@ -3258,17 +2824,7 @@ const {
   )
   .select();
 
-console.log(
-  "SERVICE INSERT DATA:",
-  data
-);
-
-console.log(
-  "SERVICE INSERT ERROR:",
-  error
-);
-
-          if (error) {
+         if (error) {
             throw error;
           }
 
@@ -3313,12 +2869,6 @@ console.log(
             }
 
         } catch (err) {
-
-console.log(err);
-console.log(err.message);
-console.log(err.details);
-console.log(err.hint);
-
 
           alert(
             "Unable to save services."
@@ -3912,11 +3462,12 @@ if (subscriptionStatusBadge) {
 
 }
 
-/* LATEST PAYMENT */
+/* LATEST PAYMENT (no longer used to compute next payment amount;
+   kept only in case a future feature needs the last-paid record) */
 
 const { data: latestPayment } =
   await supabase
-    .from("vendorpayments")
+    .from("vendor_payments")
     .select(`
       amount,
       approved_at
@@ -3931,23 +3482,49 @@ const { data: latestPayment } =
 
 /* PAYMENT AMOUNT */
 
+// This is the NEXT payment amount — not what was historically paid
+// last time. Previously this showed the last confirmed payment's
+// amount, which is wrong whenever pricing has changed since then or
+// the vendor was on a different plan at that time (proven with real
+// data: this vendor's own historical Standard/yearly payment was
+// ₦25,976, but the current Standard/yearly price is ₦26,982 — the
+// old amount would have shown as "next payment" if they were still
+// on that plan). Computed directly from the vendor's CURRENT
+// plan_tier + billing_cycle against the same canonical pricing table
+// payment.js and the verify Edge Functions use, so it always
+// reflects what they'd actually be charged next, not history.
+const PLAN_PRICES_KOBO = {
+  standard: { monthly: 299800, yearly: 2698200 },
+  enterprise: { monthly: 1260000, yearly: 11340000 },
+  elite: { monthly: 2240000, yearly: 20160000 }
+};
+
+function getNextPaymentKobo(planTier, billingCycle) {
+  const planPrices = PLAN_PRICES_KOBO[planTier];
+  if (!planPrices) return null;
+  return planPrices[billingCycle] ?? planPrices.monthly ?? null;
+}
+
 if (subscriptionAmount) {
 
   if (
-    vendor.plan_tier === "free"
+    vendor.plan_tier === "free" ||
+    vendor.plan_tier === "custom"
   ) {
 
     subscriptionAmount.textContent =
-      "No active billing";
+      vendor.plan_tier === "free"
+        ? "No active billing"
+        : "Contact support for pricing";
 
   } else {
 
+    const nextKobo = getNextPaymentKobo(vendor.plan_tier, vendor.billing_cycle);
+
     subscriptionAmount.textContent =
-      latestPayment?.amount
-        ? `₦${(
-            latestPayment.amount / 100
-          ).toLocaleString()}`
-        : "₦0.00";
+      nextKobo != null
+        ? `\u20a6${(nextKobo / 100).toLocaleString()}`
+        : "—";
 
   }
 
@@ -3955,17 +3532,19 @@ if (subscriptionAmount) {
 
 if (manageBranchesBtn) {
 
+  const branchAllowedPlans = ["enterprise", "elite", "custom"];
+
   if (
-    vendor.plan_tier === "free"
+    branchAllowedPlans.includes(vendor.plan_tier)
   ) {
 
-    manageBranchesBtn.classList.add(
+    manageBranchesBtn.classList.remove(
       "hidden"
     );
 
   } else {
 
-    manageBranchesBtn.classList.remove(
+    manageBranchesBtn.classList.add(
       "hidden"
     );
 
@@ -4010,12 +3589,21 @@ if (subscriptionBillingDate) {
 
 if (billingHistoryList) {
 
+  // Now also selects plan + billing_type so each historical amount
+  // has a label explaining what it was for — previously this just
+  // showed a bare date + amount, which looks like random, unrelated
+  // numbers to a vendor who's changed plans (confirmed with real
+  // data: this vendor's 3 real payments are ₦201,600 / ₦113,400 /
+  // ₦25,976 with zero indication those were Elite/Enterprise/
+  // Standard respectively).
   const { data: payments } =
     await supabase
-      .from("vendorpayments")
+      .from("vendor_payments")
       .select(`
         amount,
-        approved_at
+        approved_at,
+        plan,
+        billing_type
       `)
       .eq("vendor_id", vendor.id)
       .in("status", ["confirmed"])
@@ -4039,15 +3627,24 @@ if (billingHistoryList) {
       row.className =
         "vd-history-row";
 
+      const planLabel = payment.plan
+        ? payment.plan.charAt(0).toUpperCase() + payment.plan.slice(1)
+        : "—";
+
+      const cycleLabel = payment.billing_type
+        ? payment.billing_type.charAt(0).toUpperCase() + payment.billing_type.slice(1)
+        : "—";
+
       row.innerHTML = `
         <span>
           ${new Date(
             payment.approved_at
           ).toLocaleDateString()}
+          — ${planLabel} (${cycleLabel})
         </span>
 
         <strong>
-          ₦${(
+          \u20a6${(
             payment.amount / 100
           ).toLocaleString()}
         </strong>
@@ -4113,12 +3710,108 @@ if (managePaymentMethodBtn) {
       "click",
       () => {
 
+        // Honest, accurate explanation of how billing actually works
+        // here — per-transaction Paystack checkout each cycle, not a
+        // stored card. Previously this was just a placeholder alert
+        // that never explained anything real.
         alert(
-          "Payment method management will be connected later."
+          "Spotlight doesn't store a card on file — your subscription is billed via a secure one-time payment each cycle. You'll be prompted to pay again shortly before your next billing date, and can pay by card or bank transfer at that time."
         );
 
       }
     );
+
+}
+
+/* ========================= */
+/* SPONSORSHIP HISTORY */
+/* Own section below Subscription — sponsorship and subscription
+   expiry dates are tracked completely independently. */
+/* ========================= */
+
+const sponsorshipHistoryList =
+  document.getElementById(
+    "sponsorshipHistoryList"
+  );
+
+const vdSponsorNowBtn =
+  document.getElementById(
+    "vdSponsorNowBtn"
+  );
+
+if (vdSponsorNowBtn) {
+
+  vdSponsorNowBtn.addEventListener(
+    "click",
+    () => {
+      window.location.href = "getsponsored.html";
+    }
+  );
+
+}
+
+if (sponsorshipHistoryList) {
+
+  const { data: sponsorships, error: sponsorshipsError } =
+    await supabase
+      .from("vendor_sponsorships")
+      .select(`
+        sponsorship_type,
+        target_id,
+        tier,
+        billing_cycle,
+        payment_status,
+        starts_at,
+        expires_at
+      `)
+      .eq("vendor_id", vendor.id)
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+  sponsorshipHistoryList.innerHTML = "";
+
+  if (sponsorshipsError || !sponsorships || !sponsorships.length) {
+
+    sponsorshipHistoryList.innerHTML = `
+      <div class="vd-history-row">
+        <span>No sponsorships yet</span>
+        <strong>—</strong>
+      </div>
+    `;
+
+  } else {
+
+    sponsorships.forEach(s => {
+
+      const startDisplay = s.starts_at
+        ? new Date(s.starts_at).toLocaleDateString()
+        : "—";
+
+      const endDisplay = s.expires_at
+        ? new Date(s.expires_at).toLocaleDateString()
+        : "—";
+
+      const tierLabel = s.tier
+        ? s.tier.charAt(0).toUpperCase() + s.tier.slice(1)
+        : "—";
+
+      const typeLabel = s.sponsorship_type
+        ? s.sponsorship_type.charAt(0).toUpperCase() + s.sponsorship_type.slice(1)
+        : "—";
+
+      const row = document.createElement("div");
+      row.className = "vd-history-row";
+
+      row.innerHTML = `
+        <span>${tierLabel} ${typeLabel} — ${s.billing_cycle || "—"} · ${startDisplay} to ${endDisplay}</span>
+        <strong>${(s.payment_status || "—").toUpperCase()}</strong>
+      `;
+
+      sponsorshipHistoryList.appendChild(row);
+
+    });
+
+  }
 
 }
 
@@ -4301,6 +3994,25 @@ const trialTimeLeftEl =
     "trialTimeLeft"
   );
 
+const trialUpgradeBtn =
+  document.getElementById(
+    "trialUpgradeBtn"
+  );
+
+if (trialUpgradeBtn) {
+
+  trialUpgradeBtn.addEventListener(
+    "click",
+    () => {
+
+      window.location.href =
+        "getlisted.html";
+
+    }
+  );
+
+}
+
 const isFreeVendor =
   vendor.plan_tier === "free";
 
@@ -4326,6 +4038,13 @@ if (
     expiryDate.getDate() + 90
   );
 
+  // Declared before first use — if the trial has already expired
+  // the moment this page loads, updateTrialCountdown() below calls
+  // clearInterval() on this before setInterval() ever runs. Using
+  // `let` here (not `const`) avoids a temporal-dead-zone crash in
+  // that case; clearInterval(undefined) is a safe no-op.
+  let trialCountdownInterval;
+
   const updateTrialCountdown =
     () => {
 
@@ -4335,8 +4054,35 @@ if (
       let timeDiff =
         expiryDate - now;
 
-      if (timeDiff < 0) {
-        timeDiff = 0;
+      if (timeDiff <= 0) {
+
+        // Trial has ended — show a clear, distinct state and
+        // stop counting, rather than sitting at zero forever
+        // with no explanation or next step.
+        if (trialDaysLeftEl) {
+
+          trialDaysLeftEl.textContent =
+            "Your trial has ended";
+
+        }
+
+        if (trialTimeLeftEl) {
+
+          trialTimeLeftEl.textContent =
+            "Upgrade to keep your extra products, services, gallery photos and social link.";
+
+        }
+
+        trialBox.classList.add(
+          "vd-trial-ended"
+        );
+
+        clearInterval(
+          trialCountdownInterval
+        );
+
+        return;
+
       }
 
       const daysLeft =
@@ -4361,13 +4107,21 @@ if (
           ) % 60
         );
 
+      const secondsLeft =
+        Math.floor(
+          (
+            timeDiff /
+            1000
+          ) % 60
+        );
+
       trialDaysLeftEl.textContent =
         `${daysLeft} Days Left`;
 
       if (trialTimeLeftEl) {
 
         trialTimeLeftEl.textContent =
-          `${hoursLeft}h ${minutesLeft}m remaining`;
+          `${hoursLeft}h ${minutesLeft}m ${secondsLeft}s remaining`;
 
       }
 
@@ -4375,10 +4129,11 @@ if (
 
   updateTrialCountdown();
 
-  setInterval(
-    updateTrialCountdown,
-    60000
-  );
+  trialCountdownInterval =
+    setInterval(
+      updateTrialCountdown,
+      1000
+    );
 
 }
 
@@ -4723,92 +4478,6 @@ if (progressBar && statusIcon) {
   
 }
 
-/*
-DESCRIPTION TOOLBAR
-
-
-function applyFormat(command) {
-
-  const selection =
-    window.getSelection();
-
-  if (!selection.rangeCount) return;
-
-  const range =
-    selection.getRangeAt(0);
-
-  if (command === "bold") {
-
-    const strong =
-      document.createElement("strong");
-
-    strong.appendChild(
-      range.extractContents()
-    );
-
-    range.insertNode(strong);
-
-  }
-
-  if (command === "italic") {
-
-    const em =
-      document.createElement("em");
-
-    em.appendChild(
-      range.extractContents()
-    );
-
-    range.insertNode(em);
-
-  }
-
-  if (command === "underline") {
-
-    const u =
-      document.createElement("u");
-
-    u.appendChild(
-      range.extractContents()
-    );
-
-    range.insertNode(u);
-
-  }
-
-}
-
-if (aboutToolbar) {
-
-  aboutToolbar.classList.remove(
-    "hidden"
-  );
-
-  aboutToolbar
-    .querySelectorAll("button")
-    .forEach(btn => {
-
-      btn.addEventListener(
-        "mousedown",
-        function (e) {
-
-          e.preventDefault();
-
-          const cmd =
-            this.getAttribute(
-              "data-cmd"
-            );
-
-          applyFormat(cmd);
-
-        }
-      );
-
-    });
-
-}
-*/
-
 /* =========================
 INLINE EDIT TOGGLES
 ========================= */
@@ -5006,46 +4675,8 @@ if (
 
 }
 
- //NIGERIA STATES AND LGAS SCRIPT
-  const nigeriaData = {
-    "Abia": ["Aba North","Aba South","Arochukwu","Bende","Ikwuano","Isiala Ngwa North","Isiala Ngwa South","Isuikwuato","Obi Ngwa","Ohafia","Osisioma","Ugwunagbo","Ukwa East","Ukwa West","Umuahia North","Umuahia South","Umu Nneochi"],
-    "Adamawa": ["Demsa","Fufore","Ganye","Girei","Gombi","Guyuk","Hong","Jada","Lamurde","Madagali","Maiha","Mayo-Belwa","Michika","Mubi North","Mubi South","Numan","Shelleng","Song","Toungo","Yola North","Yola South"],
-    "Akwa Ibom": ["Abak","Eastern Obolo","Eket","Esit-Eket","Essien Udim","Etim Ekpo","Etinan","Ibeno","Ibesikpo Asutan","Ibiono Ibom","Ika","Ikono","Ikot Abasi","Ikot Ekpene","Ini","Itu","Mbo","Mkpat-Enin","Nsit-Atai","Nsit-Ibom","Nsit-Ubium","Obot Akara","Okobo","Onna","Oron","Oruk Anam","Udung-Uko","Ukanafun","Uruan","Urue-Offong/Oruko","Uyo"],
-    "Anambra": ["Aguata","Anambra East","Anambra West","Anaocha","Awka North","Awka South","Ayamelum","Dunukofia","Ekwusigo","Idemili North","Idemili South","Ihiala","Njikoka","Nnewi North","Nnewi South","Ogbaru","Onitsha North","Onitsha South","Orumba North","Orumba South","Oyi"],
-    "Bauchi": ["Alkaleri","Bauchi","Bogoro","Damban","Darazo","Dass","Gamawa","Ganjuwa","Giade","Itas/Gadau","Jama'are","Katagum","Kirfi","Misau","Ningi","Shira","Tafawa Balewa","Toro","Warji","Zaki"],
-    "Bayelsa": ["Brass","Ekeremor","Kolokuma/Opokuma","Nembe","Ogbia","Sagbama","Southern Ijaw","Yenagoa"],
-    "Benue": ["Ado","Agatu","Apa","Buruku","Gboko","Guma","Gwer East","Gwer West","Katsina-Ala","Konshisha","Kwande","Logo","Makurdi","Obi","Ogbadibo","Ohimini","Oju","Okpokwu","Otukpo","Tarka","Ukum","Ushongo","Vandeikya"],
-    "Borno": ["Abadam","Askira/Uba","Bama","Bayo","Biu","Chibok","Damboa","Dikwa","Gubio","Guzamala","Gwoza","Hawul","Jere","Kaga","Kala/Balge","Konduga","Kukawa","Kwaya Kusar","Mafa","Magumeri","Maiduguri","Marte","Mobbar","Monguno","Ngala","Nganzai","Shani"],
-    "Cross River": ["Abi","Akamkpa","Akpabuyo","Bakassi","Bekwarra","Biase","Boki","Calabar Municipal","Calabar South","Etung","Ikom","Obanliku","Obubra","Obudu","Odukpani","Ogoja","Yakuur","Yala"],
-    "Delta": ["Aniocha North","Aniocha South","Bomadi","Burutu","Ethiope East","Ethiope West","Ika North East","Ika South","Isoko North","Isoko South","Ndokwa East","Ndokwa West","Okpe","Oshimili North","Oshimili South","Patani","Sapele","Udu","Ughelli North","Ughelli South","Ukwuani","Uvwie","Warri North","Warri South","Warri South West"],
-    "Ebonyi": ["Abakaliki","Afikpo North","Afikpo South","Ebonyi","Ezza North","Ezza South","Ikwo","Ishielu","Ivo","Izzi","Ohaozara","Ohaukwu","Onicha"],
-    "Edo": ["Akoko-Edo","Egor","Esan Central","Esan North-East","Esan South-East","Esan West","Etsako Central","Etsako East","Etsako West","Igueben","Ikpoba-Okha","Orhionmwon","Oredo","Ovia North-East","Ovia South-West","Owan East","Owan West","Uhunmwonde"],
-    "Ekiti": ["Ado-Ekiti","Efon","Ekiti East","Ekiti South-West","Ekiti West","Emure","Gbonyin","Ido Osi","Ijero","Ikere","Ikole","Ilejemeje","Irepodun/Ifelodun","Ise/Orun","Moba","Oye"],
-    "Enugu": ["Aninri","Awgu","Enugu East","Enugu North","Enugu South","Ezeagu","Igbo Etiti","Igbo Eze North","Igbo Eze South","Isi Uzo","Nkanu East","Nkanu West","Nsukka","Oji River","Udenu","Udi","Uzo-Uwani"],
-    "Gombe": ["Akko","Balanga","Billiri","Dukku","Funakaye","Gombe","Kaltungo","Kwami","Nafada","Shongom","Yamaltu/Deba"],
-    "Imo": ["Aboh Mbaise","Ahiazu Mbaise","Ehime Mbano","Ezinihitte","Ideato North","Ideato South","Ihitte/Uboma","Ikeduru","Isiala Mbano","Isu","Mbaitoli","Ngor Okpala","Njaba","Nkwerre","Nwangele","Obowo","Oguta","Ohaji/Egbema","Okigwe","Onuimo","Orlu","Orsu","Oru East","Oru West","Owerri Municipal","Owerri North","Owerri West"],
-    "Jigawa": ["Auyo","Babura","Biriniwa","Birnin Kudu","Buji","Dutse","Gagarawa","Garki","Gumel","Guri","Gwaram","Gwiwa","Hadejia","Jahun","Kafin Hausa","Kazaure","Kiri Kasama","Kiyawa","Maigatari","Malam Madori","Miga","Ringim","Roni","Sule Tankarkar","Taura","Yankwashi"],
-    "Kaduna": ["Birnin Gwari","Chikun","Giwa","Igabi","Ikara","Jaba","Jema'a","Kachia","Kaduna North","Kaduna South","Kagarko","Kajuru","Kaura","Kauru","Kubau","Kudan","Lere","Makarfi","Sabon Gari","Sanga","Soba","Zangon Kataf","Zaria"],
-    "Kano": ["Ajingi","Albasu","Bagwai","Bebeji","Bichi","Bunkure","Dala","Dambatta","Dawakin Kudu","Dawakin Tofa","Doguwa","Fagge","Gabasawa","Garko","Garun Mallam","Gaya","Gezawa","Gwale","Gwarzo","Kabo","Kano Municipal","Karaye","Kibiya","Kiru","Kumbotso","Kunchi","Kura","Madobi","Makoda","Minjibir","Nasarawa","Rano","Rimin Gado","Rogo","Shanono","Sumaila","Takai","Tarauni","Tofa","Tsanyawa","Tudun Wada","Ungogo","Warawa","Wudil"],
-    "Katsina": ["Bakori","Batagarawa","Batsari","Baure","Bindawa","Charanchi","Dandume","Danja","Dan Musa","Daura","Dutsi","Dutsin Ma","Faskari","Funtua","Ingawa","Jibia","Kafur","Kaita","Kankara","Kankia","Katsina","Kurfi","Kusada","Mai’Adua","Malumfashi","Mani","Mashi","Matazu","Musawa","Rimi","Sabuwa","Safana","Sandamu","Zango"],
-    "Kebbi": ["Aleiro","Arewa Dandi","Argungu","Augie","Bagudo","Birnin Kebbi","Bunza","Dandi","Fakai","Gwandu","Jega","Kalgo","Koko/Besse","Maiyama","Ngaski","Sakaba","Shanga","Suru","Wasagu/Danko","Yauri","Zuru"],
-    "Kogi": ["Adavi","Ajaokuta","Ankpa","Bassa","Dekina","Ibaji","Idah","Igalamela Odolu","Ijumu","Kabba/Bunu","Kogi","Lokoja","Mopa Muro","Ofu","Ogori/Magongo","Okehi","Okene","Olamaboro","Omala","Yagba East","Yagba West"],
-    "Kwara": ["Asa","Baruten","Edu","Ekiti","Ifelodun","Ilorin East","Ilorin South","Ilorin West","Irepodun","Isin","Kaiama","Moro","Offa","Oke Ero","Oyun","Pategi"],
-    "Lagos": ["Agege","Ajeromi-Ifelodun","Alimosho","Amuwo-Odofin","Apapa","Badagry","Epe","Eti-Osa","Ibeju-Lekki","Ifako-Ijaiye","Ikeja","Ikorodu","Kosofe","Lagos Island","Lagos Mainland","Mushin","Ojo","Oshodi-Isolo","Shomolu","Surulere"],
-    "Nasarawa": ["Akwanga","Awe","Doma","Karu","Keana","Keffi","Kokona","Lafia","Nasarawa","Nasarawa Egon","Obi","Toto","Wamba"],
-    "Niger": ["Agaie","Agwara","Bida","Borgu","Bosso","Chanchaga","Edati","Gbako","Gurara","Katcha","Kontagora","Lapai","Lavun","Magama","Mariga","Mashegu","Mokwa","Muya","Paikoro","Rafi","Rijau","Shiroro","Suleja","Tafa","Wushishi"],
-    "Ogun": ["Abeokuta North","Abeokuta South","Ado-Odo/Ota","Egbado North","Egbado South","Ewekoro","Ifo","Ijebu East","Ijebu North","Ijebu North East","Ijebu Ode","Ikenne","Imeko Afon","Ipokia","Obafemi Owode","Odeda","Odogbolu","Ogun Waterside","Remo North","Shagamu"],
-    "Ondo": ["Akoko North-East","Akoko North-West","Akoko South-West","Akoko South-East","Akure North","Akure South","Ese Odo","Idanre","Ifedore","Ilaje","Ile Oluji/Okeigbo","Irele","Odigbo","Okitipupa","Ondo East","Ondo West","Ose","Owo"],
-    "Osun": ["Atakunmosa East","Atakunmosa West","Aiyedaade","Aiyedire","Boluwaduro","Boripe","Ede North","Ede South","Egbedore","Ejigbo","Ife Central","Ife East","Ife North","Ife South","Ifedayo","Ifelodun","Ila","Ilesa East","Ilesa West","Irepodun","Irewole","Isokan","Iwo","Obokun","Odo Otin","Ola Oluwa","Olorunda","Oriade","Orolu","Osogbo"],
-    "Oyo": ["Afijio","Akinyele","Atiba","Atisbo","Egbeda","Ibadan North","Ibadan North-East","Ibadan North-West","Ibadan South-East","Ibadan South-West","Ibarapa Central","Ibarapa East","Ibarapa North","Ido","Irepo","Iseyin","Itesiwaju","Iwajowa","Kajola","Lagelu","Ogbomosho North","Ogbomosho South","Ogo Oluwa","Olorunsogo","Oluyole","Ona Ara","Orelope","Ori Ire","Oyo East","Oyo West","Saki East","Saki West","Surulere"],
-    "Plateau": ["Barkin Ladi","Bassa","Bokkos","Jos East","Jos North","Jos South","Kanam","Kanke","Langtang North","Langtang South","Mangu","Mikang","Pankshin","Qua'an Pan","Riyom","Shendam","Wase"],
-    "Rivers": ["Abua/Odual","Ahoada East","Ahoada West","Akuku-Toru","Andoni","Asari-Toru","Bonny","Degema","Eleme","Emohua","Etche","Gokana","Ikwerre","Khana","Obio/Akpor","Ogba/Egbema/Ndoni","Ogu/Bolo","Okrika","Omuma","Opobo/Nkoro","Oyigbo","Port Harcourt","Tai"],
-    "Sokoto": ["Binji","Bodinga","Dange Shuni","Gada","Goronyo","Gudu","Gwadabawa","Illela","Isa","Kebbe","Kware","Rabah","Sabon Birni","Shagari","Silame","Sokoto North","Sokoto South","Tambuwal","Tangaza","Tureta","Wamako","Wurno","Yabo"],
-    "Taraba": ["Ardo Kola","Bali","Donga","Gashaka","Gassol","Ibi","Jalingo","Karim Lamido","Kumi","Lau","Sardauna","Takum","Ussa","Wukari","Yorro","Zing"],
-    "Yobe": ["Bade","Bursari","Damaturu","Fika","Fune","Geidam","Gujba","Gulani","Jakusko","Karasuwa","Machina","Nangere","Nguru","Potiskum","Tarmuwa","Yunusari","Yusufari"],
-    "Zamfara": ["Anka","Bakura","Birnin Magaji/Kiyaw","Bukkuyum","Bungudu","Gummi","Gusau","Kaura Namoda","Maradun","Maru","Shinkafi","Talata Mafara","Chafe","Zurmi"],
-    "FCT": ["Abaji","Bwari","Gwagwalada","Kuje","Kwali","Municipal Area Council"]
-  };
+ // Nigeria states and LGAs loaded from nigeria-data.js
+  const nigeriaData = window.nigeriaData;
 
    Object.keys(nigeriaData).forEach(state => {
     const option = document.createElement("option");
@@ -5066,7 +4697,6 @@ if (
       });
     }
   });
-  //END OF NIGERIA STATES AND LGAS SCRIPT
 
   if (vendor?.state && stateSelect) {
 
@@ -5434,6 +5064,35 @@ if (
 
     profileStatusMsg.textContent =
       "Category and subcategory are required.";
+
+  }
+
+  saveProfileBtn.disabled = false;
+
+  return;
+
+}
+
+/* DESCRIPTION WORD LIMIT VALIDATION */
+
+const descriptionWordLimit =
+  DESCRIPTION_WORD_LIMITS[
+    vendor?.plan_tier || "free"
+  ] ?? 100;
+
+const descriptionWordCount =
+  countWords(
+    descriptionField?.innerHTML || ""
+  );
+
+if (
+  descriptionWordCount > descriptionWordLimit
+) {
+
+  if (profileStatusMsg) {
+
+    profileStatusMsg.textContent =
+      `Your business description exceeds the ${descriptionWordLimit}-word limit for your plan. Please shorten it.`;
 
   }
 
@@ -6026,8 +5685,283 @@ if (
 }
 
 /* =========================
-BUSINESS INSIGHTS
+CHANGE EMAIL (SETTINGS)
 ========================= */
+
+const settingsCurrentEmail =
+  document.getElementById(
+    "settingsCurrentEmail"
+  );
+
+const showChangeEmailBtn =
+  document.getElementById(
+    "showChangeEmailBtn"
+  );
+
+const changeEmailForm =
+  document.getElementById(
+    "changeEmailForm"
+  );
+
+const newEmailInput =
+  document.getElementById(
+    "newEmailInput"
+  );
+
+const sendEmailChangeBtn =
+  document.getElementById(
+    "sendEmailChangeBtn"
+  );
+
+const cancelEmailChangeBtn =
+  document.getElementById(
+    "cancelEmailChangeBtn"
+  );
+
+const emailChangeStatus =
+  document.getElementById(
+    "emailChangeStatus"
+  );
+
+// Show current email in settings
+if (settingsCurrentEmail && vendor) {
+  settingsCurrentEmail.textContent =
+    vendor.email || "—";
+}
+
+const emailChangeStep1 = document.getElementById("emailChangeStep1");
+const emailChangeStep2 = document.getElementById("emailChangeStep2");
+const otpCodeInput = document.getElementById("otpCodeInput");
+const confirmEmailChangeBtn = document.getElementById("confirmEmailChangeBtn");
+const cancelEmailChangeStep2Btn = document.getElementById("cancelEmailChangeStep2Btn");
+
+function resetEmailChangeForm() {
+  if (changeEmailForm) changeEmailForm.classList.remove("active");
+  if (newEmailInput) newEmailInput.value = "";
+  if (otpCodeInput) otpCodeInput.value = "";
+  if (emailChangeStep1) emailChangeStep1.classList.remove("hidden");
+  if (emailChangeStep2) emailChangeStep2.classList.add("hidden");
+  if (emailChangeStatus) emailChangeStatus.textContent = "";
+}
+
+// Toggle the change email form
+if (showChangeEmailBtn && changeEmailForm) {
+
+  showChangeEmailBtn.addEventListener(
+    "click",
+    () => {
+      changeEmailForm.classList.toggle("active");
+      if (emailChangeStatus) {
+        emailChangeStatus.textContent = "";
+      }
+    }
+  );
+
+}
+
+// Cancel button (step 1) hides the whole form
+if (cancelEmailChangeBtn && changeEmailForm) {
+
+  cancelEmailChangeBtn.addEventListener(
+    "click",
+    resetEmailChangeForm
+  );
+
+}
+
+// Cancel button (step 2) also resets back to the start
+if (cancelEmailChangeStep2Btn) {
+  cancelEmailChangeStep2Btn.addEventListener("click", resetEmailChangeForm);
+}
+
+// STEP 1: request the two verification codes
+if (sendEmailChangeBtn && newEmailInput) {
+
+  sendEmailChangeBtn.addEventListener(
+    "click",
+    async () => {
+
+      const newEmail = newEmailInput.value.trim();
+
+      if (!newEmail) {
+        if (emailChangeStatus) {
+          emailChangeStatus.textContent =
+            "Please enter a new email address.";
+          emailChangeStatus.style.color = "#c0392b";
+        }
+        return;
+      }
+
+      // Basic email format check
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(newEmail)) {
+        if (emailChangeStatus) {
+          emailChangeStatus.textContent =
+            "Please enter a valid email address.";
+          emailChangeStatus.style.color = "#c0392b";
+        }
+        return;
+      }
+
+      // Block if same as current email
+      if (newEmail.toLowerCase() === (vendor.email || "").toLowerCase()) {
+        if (emailChangeStatus) {
+          emailChangeStatus.textContent =
+            "This is already your current email address.";
+          emailChangeStatus.style.color = "#c0392b";
+        }
+        return;
+      }
+
+      sendEmailChangeBtn.disabled = true;
+      sendEmailChangeBtn.textContent = "Sending...";
+
+      try {
+
+        const {
+          data: { session }
+        } = await supabase.auth.getSession();
+
+        const response = await fetch(
+          "https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/request-email-change",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ newEmail })
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || "Unable to send verification codes.");
+        }
+
+        if (emailChangeStatus) {
+          emailChangeStatus.textContent =
+            `✓ Code sent to ${newEmail}. Enter it above to confirm.`;
+          emailChangeStatus.style.color = "#1a6b3a";
+        }
+
+        if (emailChangeStep1) emailChangeStep1.classList.add("hidden");
+        if (emailChangeStep2) emailChangeStep2.classList.remove("hidden");
+
+      } catch (err) {
+
+        console.error("Email change request error:", err);
+
+        if (emailChangeStatus) {
+          emailChangeStatus.textContent =
+            err.message ||
+            "Unable to send verification codes. Please try again.";
+          emailChangeStatus.style.color = "#c0392b";
+        }
+
+      } finally {
+
+        sendEmailChangeBtn.disabled = false;
+        sendEmailChangeBtn.textContent = "Send Verification Codes";
+
+      }
+
+    }
+  );
+
+}
+
+// STEP 2: confirm both codes and apply the change
+if (confirmEmailChangeBtn) {
+
+  confirmEmailChangeBtn.addEventListener(
+    "click",
+    async () => {
+
+      const otp = (otpCodeInput?.value || "").trim();
+
+      if (!otp) {
+        if (emailChangeStatus) {
+          emailChangeStatus.textContent =
+            "Please enter the code.";
+          emailChangeStatus.style.color = "#c0392b";
+        }
+        return;
+      }
+
+      confirmEmailChangeBtn.disabled = true;
+      confirmEmailChangeBtn.textContent = "Confirming...";
+
+      try {
+
+        const {
+          data: { session }
+        } = await supabase.auth.getSession();
+
+        const response = await fetch(
+          "https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/confirm-email-change",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ otp })
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || "Unable to confirm email change.");
+        }
+
+        if (emailChangeStatus) {
+          emailChangeStatus.textContent =
+            `✓ Your email has been changed to ${result.newEmail}.`;
+          emailChangeStatus.style.color = "#1a6b3a";
+        }
+
+        if (settingsCurrentEmail) settingsCurrentEmail.textContent = result.newEmail;
+        if (bizEmail) bizEmail.textContent = result.newEmail;
+        vendor.email = result.newEmail;
+
+        if (emailChangeStep1) emailChangeStep1.classList.remove("hidden");
+        if (emailChangeStep2) emailChangeStep2.classList.add("hidden");
+        if (newEmailInput) newEmailInput.value = "";
+        if (otpCodeInput) otpCodeInput.value = "";
+
+        setTimeout(() => {
+          if (changeEmailForm) changeEmailForm.classList.remove("active");
+        }, 2500);
+
+      } catch (err) {
+
+        console.error("Email change confirm error:", err);
+
+        if (emailChangeStatus) {
+          emailChangeStatus.textContent =
+            err.message ||
+            "Unable to confirm email change. Please try again.";
+          emailChangeStatus.style.color = "#c0392b";
+        }
+
+      } finally {
+
+        confirmEmailChangeBtn.disabled = false;
+        confirmEmailChangeBtn.textContent = "Confirm Email Change";
+
+      }
+
+    }
+  );
+
+}
+
+/* ========================= */
+/* BUSINESS INSIGHTS */
+/* ========================= */
 
 const businessInsightsSidebarBtn =
 

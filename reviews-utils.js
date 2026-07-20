@@ -2,17 +2,41 @@
 
 const reviewsSupabase =
   window.supabaseClient;
- 
+
+// Cached across modal opens so we don't re-check the session every
+// single time — refreshed once per page load, which is fine since a
+// login/logout mid-session already triggers a page navigation here.
+let cachedReviewingCustomer = undefined; // undefined = not yet checked, null = not a customer
+
+async function getReviewingCustomer() {
+
+  if (cachedReviewingCustomer !== undefined) return cachedReviewingCustomer;
+
+  const { data: { session } } = await reviewsSupabase.auth.getSession();
+
+  if (!session) {
+    cachedReviewingCustomer = null;
+    return null;
+  }
+
+  const { data: customer } = await reviewsSupabase
+    .from("customers")
+    .select("id, name, email")
+    .eq("auth_user_id", session.user.id)
+    .maybeSingle();
+
+  cachedReviewingCustomer = customer || null;
+  return cachedReviewingCustomer;
+
+}
+
 window.ReviewsUtils = {
 
-  openReviewModal(
+  async openReviewModal(
     vendorId
   ) {
 
-  console.log(
-  "openReviewModal fired",
-  vendorId
-);
+    const reviewingCustomer = await getReviewingCustomer();
 
     let reviewModal =
       document.getElementById(
@@ -30,6 +54,41 @@ if (
 
   existingVendorField.value =
     vendorId || "";
+
+}
+
+// Applies on EVERY open (not just first build) — either shows the
+// soft nudge for an anonymous submitter, or auto-fills and locks
+// name/email for a logged-in customer so their review is genuinely
+// tied to their real identity, not just whatever they might type.
+function applyReviewerIdentity() {
+
+  const notice = document.getElementById("reviewAnonNotice");
+  const nameField = document.getElementById("reviewerName");
+  const emailField = document.getElementById("reviewerEmail");
+
+  if (reviewingCustomer) {
+
+    if (notice) notice.classList.add("hidden");
+
+    if (nameField) {
+      nameField.value = reviewingCustomer.name || "";
+      nameField.readOnly = true;
+    }
+
+    if (emailField) {
+      emailField.value = reviewingCustomer.email || "";
+      emailField.readOnly = true;
+    }
+
+  } else {
+
+    if (notice) notice.classList.remove("hidden");
+
+    if (nameField) nameField.readOnly = false;
+    if (emailField) emailField.readOnly = false;
+
+  }
 
 }
 
@@ -55,6 +114,11 @@ if (
     <h3>
       Leave a Review
     </h3>
+
+    <div id="reviewAnonNotice" class="review-anon-notice hidden">
+      Reviews from signed-in Spotlight customers are marked <strong>Verified Customer</strong> and carry more weight with other shoppers. You can still submit without signing in, or
+      <a href="customer-login.html">log in</a> / <a href="customer-signup.html">sign up</a> first.
+    </div>
 
     <form id="reviewForm">
 
@@ -116,7 +180,7 @@ if (
           "reviewModal"
         );
 
-        const reviewVendorId =
+const reviewVendorId =
   document.getElementById(
     "reviewVendorId"
   );
@@ -130,12 +194,7 @@ if (
 
 }
 
-console.log(
-  "Review Vendor ID:",
-  reviewVendorId.value
-);
-
-    const reviewStars =
+const reviewStars =
   reviewModal.querySelectorAll(
     ".review-stars button"
   );
@@ -145,11 +204,6 @@ reviewStars.forEach(star => {
   star.addEventListener(
     "click",
     () => {
-
-    console.log(
-  "Star clicked",
-  star.dataset.rating
-);
 
       selectedRating =
         Number(
@@ -234,6 +288,12 @@ document
           "reviewText"
         ).value.trim();
 
+      // Re-fetched (cheap — cached after the first real check) rather
+      // than trusting a value captured when this listener was first
+      // attached, since the modal element itself is only ever built
+      // once and reused across opens.
+      const currentReviewingCustomer = await getReviewingCustomer();
+
       const {
         error
       } = await reviewsSupabase
@@ -256,22 +316,13 @@ document
               selectedRating,
 
             review_text:
-              reviewText
+              reviewText,
+
+            customer_id:
+              currentReviewingCustomer?.id || null
 
           }
         ]);
-
-      await reviewsSupabase
-  .from(
-    "analytics_events"
-  )
-  .insert({
-    vendor_id:
-      vendorId,
-
-    event_type:
-      "review_submitted"
-  });
 
       if (error) {
 
@@ -279,13 +330,38 @@ document
           error
         );
 
-        alert(
-          "Unable to submit review."
-        );
+        // Postgres returns SQLSTATE 42501 (insufficient_privilege) when
+        // an RLS WITH CHECK fails. The only realistic way this INSERT
+        // policy blocks a submission from this exact form is the
+        // self-review guard — the customer_id sent is always the
+        // reviewer's own real one (fetched above), so this can't be
+        // triggered by an actual spoofing attempt through this UI.
+        if (error.code === "42501") {
+          alert(
+            "You cannot submit a review for yourself."
+          );
+        } else {
+          alert(
+            "Unable to submit review."
+          );
+        }
 
         return;
 
       }
+
+      // Only log this AFTER confirming the review itself actually
+      // saved — previously this fired unconditionally, so a failed
+      // submission was still recorded as a successful one.
+      await reviewsSupabase
+  .from("analytics_events")
+  .insert({
+    vendor_id:
+      vendorId,
+    event_type:
+      "review_submitted",
+      visitor_id: window.visitorId
+  });
 
 alert(
   "Review submitted successfully."
@@ -357,6 +433,8 @@ if (
     );
 
     }
+
+    applyReviewerIdentity();
 
   }
 

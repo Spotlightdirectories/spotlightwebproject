@@ -1,426 +1,354 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Applies saved dark/light theme before first paint, so there's
+         no flash of the wrong theme when navigating between pages. -->
+    <script src="theme-toggle.js"></script>
 
-<title>Spotlight Directories | Put Your Business on the Spotlight</title>
+    <title>Spotlight Directories | Get Your Business Found in Nigeria</title>
+    <meta name="description" content="Spotlight Directories helps Nigerian artisans, traders, and professionals get discovered by nearby customers. List your business free — 90-day trial, no card required.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://www.spotlightdirectories.com/">
 
-<link rel="stylesheet" href="theme.css">
-<link rel="stylesheet" href="style2.css">
-<link rel="stylesheet" href="navbar.css">
+    <meta property="og:title" content="Spotlight Directories | Get Your Business Found">
+    <meta property="og:description" content="The discovery platform connecting Nigerian businesses with nearby customers.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://spotlightdirectories.com/">
 
-<noscript>
-  <link rel="stylesheet" href="theme.css">
-  <link rel="stylesheet" href="style2.css">
-  <link rel="stylesheet" href="navbar.css">
-</noscript>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="navbar.css">
+    <link rel="stylesheet" href="index.css">
 
-<!-- ✅ UPDATED FAVICONS -->
-<link rel="icon" type="image/png" sizes="48x48" href="/images/favicon-48.png">
-<link rel="icon" type="image/png" sizes="64x64" href="/images/favicon-64.png">
-<link rel="apple-touch-icon" href="/images/favicon-180.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-<!-- ✅ STRUCTURED DATA (GOOGLE LOGO CONTROL) -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "Spotlight Directories",
-  "url": "https://spotlightdirectories.com",
-  "logo": "https://spotlightdirectories.com/images/spotlightlogo-512.png"
-}
-</script>
+    <link rel="icon" type="image/png" sizes="48x48" href="/images/favicon-48.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="/images/favicon-64.png">
+    <link rel="apple-touch-icon" href="/images/favicon-180.png">
 
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Spotlight Directories",
+      "url": "https://spotlightdirectories.com",
+      "logo": "https://spotlightdirectories.com/images/spotlightlogo-512.png"
+    }
+    </script>
 </head>
-
 <body>
 
 <header class="navbar">
-
   <div class="logo-left">
     <a href="index">
-      <img src="images/whitelogo3.webp" width="160" height="63" alt="Spotlight Directories Logo" class="homeimg">
+      <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg">
     </a>
     <a href="index" class="home">Home</a>
   </div>
 
   <nav>
-
-    <!-- HAMBURGER OPEN -->
     <button class="menu-open hide-desktop" aria-label="Open menu">
-      <img src="images/hbopen.webp" width="40" height="40" alt="Open menu" width="32" height="32">
+      <img src="images/hbopen.png" alt="Open menu" width="32" height="32">
     </button>
 
     <ul class="nav-links">
-
-      <!-- CLOSE BUTTON -->
       <li class="menu-close">
         <button class="xclose" aria-label="Close menu">
-          <img src="images/xclose.webp" width="40" height="40" alt="Close menu" width="32" height="32">
+          <img src="images/xclose.png" alt="Close menu" width="32" height="32">
         </button>
       </li>
-
       <li><a href="aboutUs">Why Spotlight?</a></li>
-      <li><a href="getListed">Get Listed</a></li>
+      <li><a href="getlisted">Get Listed</a></li>
       <li><a href="contact-us">Contact Us</a></li>
       <li><a href="FAQ">FAQ</a></li>
       <li><a href="feedback">Feedback</a></li>
-
-              <!-- AUTH LINKS (NEW) -->
       <li id="authButton">
-       <a href="login" id="authBtn" class="nav-login-btn">Log in</a>
+        <a href="login" id="authBtn" class="nav-login-btn">Log in</a>
       </li>
-
+      <li>
+        <button class="theme-toggle-btn" data-theme-toggle aria-label="Switch to dark mode"></button>
+      </li>
     </ul>
-
   </nav>
-
 </header>
-
-
 
 <main>
 
-<section class="hero">
+  <!-- ===============================
+       HERO — consolidated slideshow with
+       archetype captions, not a bare photo fade
+       =============================== -->
+  <section class="ld-hero">
 
-<div class="hcontainer hero-grid">
+    <div class="ld-hero-text">
+      <p class="ld-eyebrow">Nigeria's discovery platform for real businesses</p>
+      <h1>Put Your Business On The <span class="ld-spotlight-glow">Spotlight</span></h1>
+      <p class="ld-hero-sub">Whatever you sell or fix or build — Spotlight helps nearby customers find you, contact you, and choose you.</p>
 
-<div class="hero-text">
+      <div class="ld-hero-ctas">
+        <a href="getlisted" class="ld-btn ld-btn-primary">Get Listed Free</a>
+        <a href="discover" class="ld-btn ld-btn-outline">Search Nearby</a>
+      </div>
 
-<h1>
-Put Your Business on the <span>Spotlight</span>
-</h1>
-
-<p>
-The ultimate directory platform connecting local businesses with ready-to-buy customers. Elevate your presence and get discovered by your community and visitors today.
-</p>
-
-<div class="hero-buttons">
-
-<button onclick="window.location.href='getlisted'" class="btn-primary">
-Get Listed
-</button>
-
-<button onclick="window.location.href='discover.html'" class="btn-secondary">
-Search Products Or Services Nearby
-</button>
-
-</div>
-
-</div>
-
-
-<div class="hero-media">
-
-  <div class="hero-slideshow">
-
-    <div class="hero-slide active">
-      <img src="images/tailorwoman.webp" width="667" height="369" fetchpriority="high" alt="A tailor store">
+      <p class="ld-hero-micro"><i class="fa-solid fa-bolt"></i> 90-day free trial &middot; No card required</p>
     </div>
 
-    <div class="hero-slide">
-      <img src="images/mechanic3.webp" width="678" height="375" loading="lazy" alt="A mechanic workshop">
+    <div class="ld-hero-slideshow">
+
+      <div class="ld-slide active">
+        <img src="images/tailorwoman.webp" alt="Tailoring and fashion business owner">
+        <div class="ld-slide-caption">
+          <span class="ld-slide-tag">Fashion &amp; Tailoring</span>
+          <p>Get found by customers looking for your craft nearby</p>
+        </div>
+      </div>
+
+      <div class="ld-slide">
+        <img src="images/mechanic3.webp" alt="Auto mechanic and repair business owner">
+        <div class="ld-slide-caption">
+          <span class="ld-slide-tag">Auto &amp; Technical Services</span>
+          <p>Trusted by the customers already searching for you</p>
+        </div>
+      </div>
+
+      <div class="ld-slide">
+        <img src="images/consultant3.webp" alt="Consultant and professional services provider">
+        <div class="ld-slide-caption">
+          <span class="ld-slide-tag">Professional &amp; Consulting</span>
+          <p>Reach clients who need exactly what you offer</p>
+        </div>
+      </div>
+
+      <div class="ld-slide-dots">
+        <button class="ld-dot active" data-slide="0" aria-label="Slide 1"></button>
+        <button class="ld-dot" data-slide="1" aria-label="Slide 2"></button>
+        <button class="ld-dot" data-slide="2" aria-label="Slide 3"></button>
+      </div>
+
     </div>
 
-    <div class="hero-slide">
-      <img src="images/consultant3.webp" width="678" height="375" loading="lazy" alt="A Consulting Office">
+  </section>
+
+  <!-- ===============================
+       BENEFITS — trimmed from 6 generic
+       icon cards down to 4 sharper ones
+       =============================== -->
+  <section class="ld-benefits">
+
+    <h2>Why Businesses Choose Spotlight</h2>
+
+    <div class="ld-benefits-grid">
+
+      <div class="ld-benefit-card">
+        <i class="fa-solid fa-location-dot"></i>
+        <h3>Found By Location</h3>
+        <p>Customers searching near your area find you first — not buried in a generic list.</p>
+      </div>
+
+      <div class="ld-benefit-card">
+        <i class="fa-solid fa-comment-dots"></i>
+        <h3>Direct Contact, No Middleman</h3>
+        <p>WhatsApp, call, or get directions straight to you — no commission, no waiting on a platform.</p>
+      </div>
+
+      <div class="ld-benefit-card">
+        <i class="fa-solid fa-chart-line"></i>
+        <h3>See Who's Finding You</h3>
+        <p>Every plan includes a real analytics dashboard — where your visitors search from, what they're looking for.</p>
+      </div>
+
+      <div class="ld-benefit-card">
+        <i class="fa-solid fa-sack-dollar"></i>
+        <h3>Free To Start</h3>
+        <p>A genuine 90-day trial with real features — not a locked-down demo. No card required.</p>
+      </div>
+
+      <div class="ld-benefit-card">
+        <i class="fa-solid fa-earth-africa"></i>
+        <h3>Reach Customers Beyond Your Area</h3>
+        <p>Search on Spotlight isn't limited to nearby only — customers anywhere in Nigeria can find and reach you.</p>
+      </div>
+
+      <div class="ld-benefit-card">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <h3>Search Without Signing Up</h3>
+        <p>Customers can browse and search Spotlight freely — no account needed to find you.</p>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ===============================
+       MOBILE APP — honestly labeled as
+       upcoming, no fake working download links
+       =============================== -->
+  <section class="ld-app">
+
+    <div class="ld-app-text">
+      <span class="ld-app-badge">Coming Soon</span>
+      <h2>The Spotlight App Is On Its Way</h2>
+      <p>We're building native Android and iOS apps so you can manage your listing and find businesses on the go. Not available yet — no download links to click here, just an honest heads-up.</p>
+    </div>
+
+    <div class="ld-app-phone">
+      <img src="images/app-preview.webp" alt="Spotlight mobile app preview">
+    </div>
+
+  </section>
+
+  <!-- ===============================
+       HOW IT WORKS — replaces the second,
+       redundant slideshow entirely
+       =============================== -->
+  <section class="ld-how">
+
+    <h2>How It Works</h2>
+
+    <div class="ld-how-grid">
+
+      <div class="ld-how-step">
+        <img src="images/slide-community2.webp" alt="Business owner listing their business">
+        <span class="ld-how-number">1</span>
+        <h3>List Your Business</h3>
+        <p>Add your name, category, location, and photos. Takes about 5 minutes.</p>
+      </div>
+
+      <div class="ld-how-step">
+        <img src="images/slide-service_nearby.webp" alt="Customer searching for a nearby business">
+        <span class="ld-how-number">2</span>
+        <h3>Get Discovered</h3>
+        <p>Customers find you by location, category, or by searching what they need.</p>
+      </div>
+
+      <div class="ld-how-step">
+        <img src="images/slide-empowering-small-businesses2.webp" alt="Business owner connecting with a customer">
+        <span class="ld-how-number">3</span>
+        <h3>Connect Directly</h3>
+        <p>They reach you by WhatsApp, phone call, or directions — straight to your door.</p>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ===============================
+       VENDOR GROWTH — false "smart scheduling"
+       claim replaced with the real, universal
+       Insight Dashboard
+       =============================== -->
+  <section class="ld-growth">
+
+    <div class="ld-growth-text">
+      <p class="ld-eyebrow">For business owners</p>
+      <h2>Join Spotlight Directory Today</h2>
+      <p>Every listing — on every plan — gets these real tools to grow.</p>
+
+      <div class="ld-growth-features">
+
+        <div class="ld-growth-feature">
+          <i class="fa-solid fa-magnifying-glass-location"></i>
+          <div>
+            <h3>Stand Out Locally</h3>
+            <p>Show up when nearby customers search your category.</p>
+          </div>
+        </div>
+
+        <div class="ld-growth-feature">
+          <i class="fa-solid fa-chart-line"></i>
+          <div>
+            <h3>Business Insight Dashboard</h3>
+            <p>See where your visitors come from and what they search for — included on every plan.</p>
+          </div>
+        </div>
+
+        <div class="ld-growth-feature">
+          <i class="fa-solid fa-shield-heart"></i>
+          <div>
+            <h3>Build Trust With Verification</h3>
+            <p>Apply for a verification badge so customers know you're real.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <a href="getlisted" class="ld-btn ld-btn-primary">List Your Business Free</a>
+    </div>
+
+  </section>
+
+</main>
+
+<footer class="hfooter">
+
+  <div class="hcontainer hfooter-grid">
+
+    <div class="hfooter-brand">
+      <img src="images/whitelogo3.png" alt="Spotlight Directories Logo" class="homeimg">
+      <p>Dedicated to digitalizing local businesses and making services accessible to everyone, everywhere.</p>
+    </div>
+
+    <div class="hfooter-links">
+      <h4>Quick Links</h4>
+      <a href="index">Home</a>
+      <a href="aboutUs">Why Spotlight</a>
+      <a href="getlisted">Get Listed</a>
+      <a href="discover">Search Vendors</a>
+    </div>
+
+    <div class="hfooter-support">
+      <h4>Support</h4>
+      <a href="FAQ">FAQ</a>
+      <a href="contact-us">Contact Us</a>
+      <a href="feedback">Feedback</a>
+      <a href="partner-program" class="hfooter-partner-btn">Partner Program</a>
+    </div>
+
+    <div class="hfooter-newsletter">
+      <h4>Newsletter</h4>
+      <p>Get the latest business tips and deals.</p>
+      <div class="newsletter-form">
+        <input type="email" placeholder="Email address (Coming Soon)" disabled>
+        <button type="button" disabled>Go</button>
+      </div>
     </div>
 
   </div>
 
-</div>
-
-</div>
-
-</section>
-
-
-<section class="benefits-section" id="why">
-
-<div class="hcontainer">
-
-<h2>Find Vendors Near You in Seconds</h2>
-
-<p class="benefits-subtitle">
-Discover reliable local services without the hassle. We make it easy for you to connect with the best in the business.
-</p>
-
-<div class="benefits-grid">
-
-
-<div class="benefits-card">
-
-<div class="benefit-icon">
-<i class="fa-solid fa-location-dot"></i>
-</div>
-
-<h3>Location-Based Search</h3>
-<p>Find businesses exactly where you are or in specific neighborhoods.</p>
-
-</div>
-
-<div class="benefits-card">
-
-<div class="benefit-icon">
-<i class="fa-solid fa-bolt"></i>
-</div>
-
-<h3>Fast & Easy</h3>
-<p>No sign-up required for searches.</p>
-
-</div>
-
-<div class="benefits-card">
-
-<div class="benefit-icon">
-<i class="fa-solid fa-sack-dollar"></i>
-</div>
-
-<h3>Value for Money</h3>
-<p>Compare vendors and get the best deals at your fingertips.</p>
-
-</div>
-
-<div class="benefits-card">
-
-<div class="benefit-icon">
-<i class="fa-solid fa-comments"></i>
-</div>
-
-<h3>Direct Contact</h3>
-<p>Call, message or book directly with the business owner.</p>
-
-</div>
-
-<div class="benefits-card">
-
-<div class="benefit-icon">
-<i class="fa-solid fa-magnifying-glass"></i>
-</div>
-
-<h3>Smart Filters</h3>
-<p>Filter vendors by category and rating.</p>
-
-</div>
-
-<div class="benefits-card">
-
-<div class="benefit-icon">
-<i class="fa-solid fa-gift"></i>
-</div>
-
-<h3>Free to Use</h3>
-<p>Search vendors without paying.</p>
-
-</div>
-
-</div>
-
-</div>
-
-</section>
-
-
-
-<section class="media-section">
-
-<div class="hcontainer">
-
-<div class="slideshow-hcontainer">
-
-<div class="slide active">
-<img src="images/slide-community2.webp" alt="Connecting Communities">
-<h3>Connecting Communities</h3>
-</div>
-
-<div class="slide">
-<img src="images/slide-service_nearby.webp" alt="Find Services Nearby">
-<h3>Find Services Nearby</h3>
-</div>
-
-<div class="slide">
-<img src="images/slide-empowering-small-businesses2.webp" alt="Empowering Small Businesses">
-<h3>Empowering Small Businesses</h3>
-</div>
-
-<button id="prevSlide">❮</button>
-<button id="nextSlide">❯</button>
-
-</div>
-
-</div>
-
-</section>
-
-
-
-<section class="mobile-app">
-
-<div class="hcontainer app-grid">
-
-<div class="app-text">
-
-<h2>
-Download the Spotlight Mobile App
-</h2>
-
-<p>
-Never miss a local vendor again.
-</p>
-
-<div class="app-buttons">
-
-<a href="#" onclick="alert('Spotlight mobile app will be available soon.'); return false;">
-<img src="images/google-play.webp" width="150" height="45" alt="Download on Google Play">
-</a>
-
-<a href="#" onclick="alert('Spotlight mobile app will be available soon.'); return false;">
-<img src="images/app-store.webp" width="150" height="45" alt="Download on the App Store">
-</a>
-
-</div>
-
-</div>
-
-<div class="app-phone">
-
-<img src="images/app-preview.webp" width="300" height="600" alt="Spotlight Mobile App Preview">
-
-</div>
-
-</div>
-
-</section>
-
-
-
-<section class="vendor-growth">
-
-<div class="hcontainer">
-
-<h2>Join Spotlight Directory Today</h2>
-
-<div class="growth-grid">
-
-<div class="growth-card">
-
-<h4><span class="growth-icon"><i class="fa-solid fa-chart-line"></i></span> Stand Out Locally</h4>
-
-<ul>
-<li>Premium profile placement</li>
-<li>Image galleries</li>
-<li>Local keyword optimization</li>
-<li> Verified presence with Google</li>
-</ul>
-
-</div>
-
-
-<div class="growth-card">
-
-<h4><span class="growth-icon"><i class="fa-solid fa-calendar-check"></i></span> Smart Scheduling & Client Management</h4>
-
-<ul>
-<li>Never miss a client call or inquiry</li>
-<li>Enhances professional image and client trust</li>
-<li>Saves time with automated scheduling</li>
-<li>24/7 appointment booking availability</li>
-</ul>
-
-</div>
-
-
-<div class="growth-card">
-
-<h4><span class="growth-icon"><i class="fa-solid fa-rocket"></i></span> Boost Walk-In Traffic & Calls</h4>
-
-<ul>
-<li>Social media distribution</li>
-<li>Integrated “Call Now” and “Directions” buttons</li>
-<li>Up-to-date contact details</li>
-<li>Ad campaigns</li>
-</ul>
-
-</div>
-
-</div>
-
-<button class="btn-primary" onclick="window.location.href='getlisted'">
-  Get Listed Today
-</button>
-
-</div>
-
-</section>
-
-</main>
-
-
-
-<footer class="hfooter">
-
-<div class="hcontainer hfooter-grid">
-
-<div class="hfooter-brand">
-<img src="images/whitelogo3.webp" alt="Spotlight Directories Logo" class="homeimg">
-<p>
-Dedicated to digitalizing local businesses and making services accessible to everyone, everywhere.
-</p>
-</div>
-
-<div class="hfooter-links">
-<h4>Quick Links</h4>
-<a href="index">Home</a>
-<a href="aboutUs">Why Spotlight</a>
-<a href="getlisted">Get Listed</a>
-<a href="vendor">Search Vendors</a>
-</div>
-
-<div class="hfooter-support">
-<h4>Support</h4>
-<a href="faq">FAQ</a>
-<a href="contact-us">Contact Us</a>
-<a href="feedback">Feedback</a>
-<a href="partner-program" class="hfooter-partner-btn">Partner Program</a>
-</div>
-
-<div class="hfooter-newsletter">
-
-<h4>Newsletter</h4>
-<p>Get the latest business tips and deals.</p>
-
-<div class="newsletter-form">
-<input type="email" placeholder="Email address (Coming Soon)" disabled>
-<button onclick="newsletterPending(event)">Go</button>
-</div>
-
-</div>
-
-</div>
-
-
-<div class="hfooter-bottom">
-
-<p>© 2026 Spotlight Digital Services Ltd. All Rights Reserved.</p>
-
-<div class="hfooter-legal">
-<a href="terms">Terms</a>
-<a href="privacy">Privacy</a>
-<a href="disclaimer">Disclaimer</a>
-
-</div>
-
-</div>
+  <div class="hcontainer hfooter-bottom">
+    <p>&copy; 2026 Spotlight Digital Services Ltd. All Rights Reserved.</p>
+    <div class="hfooter-legal">
+      <a href="terms">Terms</a>
+      <a href="privacy">Privacy</a>
+      <a href="disclaimer">Disclaimer</a>
+    </div>
+  </div>
 
 </footer>
 
-<script defer src="signup.js"></script>
-<script defer src="script2.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="index.js"></script>
+
+<!--Start of Tawk.to Script-->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+(function(){
+var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/6a5b6743f97a4e1d45887656/1jtqgmomk';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+<!--End of Tawk.to Script-->
 
 </body>
 </html>

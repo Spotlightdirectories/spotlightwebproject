@@ -718,6 +718,51 @@ function renderTrendingSearches() {
 }
 
 /* ========================= */
+/* LOAD TRENDING SEARCHES (real data) */
+/* Replaces the hardcoded list with actual
+   popular searches from analytics_events,
+   falling back to the starter list only when
+   there isn't enough real search data yet
+   (e.g. a brand-new deployment). */
+/* ========================= */
+
+async function loadTrendingKeywords() {
+
+  try {
+
+    const { data, error } =
+      await supabase.rpc(
+        "get_trending_searches",
+        { p_limit: 15 }
+      );
+
+    if (
+      !error &&
+      data &&
+      data.length >= 5
+    ) {
+
+      trendingKeywords =
+        data.map(
+          row => row.keyword
+        );
+
+    }
+
+  } catch (err) {
+
+    console.error(
+      "Trending searches load error:",
+      err
+    );
+
+  }
+
+  renderTrendingSearches();
+
+}
+
+/* ========================= */
 /* TRENDING SEARCHES LIST */
 /* ========================= */
 
@@ -726,7 +771,7 @@ const discoverTrendingTags =
     "discoverTrendingTags"
   );
 
-const trendingKeywords = [
+let trendingKeywords = [
 
   "Plumber Near Me",
   "POS Agent",
@@ -1052,43 +1097,25 @@ function executeSearch() {
       searchParams.radius
     );
 
-      const storedLocationData =
-      sessionStorage.getItem(
-        "discoverUserLocation"
+    if (
+
+      searchParams.latitude !== null &&
+
+      searchParams.longitude !== null
+
+    ) {
+
+      queryParams.set(
+        "lat",
+        searchParams.latitude
       );
 
-    if (storedLocationData) {
-
-      try {
-
-        const parsedLocation =
-          JSON.parse(
-            storedLocationData
-          );
-
-        queryParams.set(
-          "lat",
-          parsedLocation.latitude
-        );
-
-        queryParams.set(
-          "lng",
-          parsedLocation.longitude
-        );
-
-      } catch {}
+      queryParams.set(
+        "lng",
+        searchParams.longitude
+      );
 
     }
-
-  queryParams.set(
-    "lat",
-    searchParams.latitude
-  );
-
-  queryParams.set(
-    "lng",
-    searchParams.longitude
-  );
 
 }
 
@@ -1361,6 +1388,14 @@ const searchKeyword =
           : ""
       );
 
+// PostgREST's filter syntax treats these characters as structural
+// (comma separates conditions in .or(), period separates
+// column.operator.value, parentheses group logic) — stripping them
+// before building the raw filter string below prevents a crafted
+// search term from altering what the query actually matches. This
+// keyword is still used normally for the ilike pattern match itself.
+const safeSearchKeyword = searchKeyword.replace(/[,.()* ]/g, m => m === " " ? " " : "");
+
   try {
 
 let sponsoredQuery =
@@ -1392,11 +1427,11 @@ let sponsoredQuery =
       "active"
     );
 
-if (searchKeyword) {
+if (safeSearchKeyword) {
 
   sponsoredQuery =
     sponsoredQuery.or(
-      `subcategory.ilike.%${searchKeyword}%,category.ilike.%${searchKeyword}%`
+      `subcategory.ilike.%${safeSearchKeyword}%,category.ilike.%${safeSearchKeyword}%`
     );
 
 }
@@ -1540,6 +1575,32 @@ if (
           vendorCard
         );
 
+        // Card wasn't clickable before — only the small "Review"
+        // and "Profile" buttons inside it worked. Now the whole
+        // card navigates to the vendor's profile, while clicks on
+        // those two buttons still do their own specific thing
+        // (handled by the document-level delegated listeners below)
+        // rather than also triggering this navigation.
+        vendorCard.style.cursor = "pointer";
+
+        vendorCard.addEventListener(
+          "click",
+          event => {
+
+            if (
+              event.target.closest(".review-trigger-btn") ||
+              event.target.closest(".view-profile-btn")
+            ) {
+              return;
+            }
+
+            if (vendor.slug) {
+              window.location.href = `vendor-profile.html?slug=${encodeURIComponent(vendor.slug)}`;
+            }
+
+          }
+        );
+
       }
     );
 
@@ -1641,7 +1702,7 @@ function renderRecentSearches() {
 
 }
 
-renderTrendingSearches();
+loadTrendingKeywords();
 
 loadSponsoredVendors();
 
@@ -1720,41 +1781,9 @@ if (discoverState) {
 
 loadStates();
 
-if (discoverProfileNav) {
-
-  discoverProfileNav.addEventListener(
-    "click",
-    async () => {
-
-      try {
-
-        const {
-          data: { session }
-        } = await supabase.auth.getSession();
-
-        if (session) {
-
-          window.location.href =
-            "vendordashboard.html";
-
-          return;
-
-        }
-
-        window.location.href =
-          "login.html";
-
-      } catch {
-
-        window.location.href =
-          "login.html";
-
-      }
-
-    }
-  );
-
-}
+// Profile icon behavior (login-aware, vendor/customer-aware) is now
+// handled by the shared profile-nav.js, loaded as its own script tag
+// — see that file for the full logic (item 54).
 
 if (discoverSearchBtn) {
 
