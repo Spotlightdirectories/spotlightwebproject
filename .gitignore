@@ -1,0 +1,4 @@
+
+# Never commit real vendor/customer data dumps
+production-data.sql
+*-data.sql
