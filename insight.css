@@ -368,6 +368,35 @@ select{font-family:inherit;}
   font-size:13px;
 }
 
+.sponsor-countdown-box{
+  background:rgba(230,184,0,.12);
+  border:1px solid var(--gold);
+  border-radius:12px;
+  padding:12px 16px;
+  margin-bottom:16px;
+  text-align:center;
+}
+.sponsor-countdown-label{
+  font-size:11px;
+  color:#B8B8B8;
+  margin:0 0 4px;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.sponsor-countdown-days{
+  font-size:20px;
+  font-weight:800;
+  color:var(--gold);
+  margin:0;
+}
+.sponsor-countdown-box.urgent{
+  background:rgba(217,48,37,.14);
+  border-color:var(--red);
+}
+.sponsor-countdown-box.urgent .sponsor-countdown-days{
+  color:var(--red);
+}
+
 /* Catalog */
 .catalog-row{
   display:grid;
@@ -797,7 +826,7 @@ background:#f5f5f5;
 
 .rank-scale{position:relative;height:46px;margin:22px 0}
 .rank-line{position:absolute;left:48px;right:78px;top:10px;height:2px;background:#d6d6d6}
-.rank-current-dot{position:absolute;left:48%;top:6px;width:8px;height:8px;border-radius:50%;background:#8430CE}
+.rank-current-dot{position:absolute;left:48%;top:-3px;width:8px;height:8px;border-radius:50%;background:#8430CE;transform:translateX(-50%)}
 .rank-left-label{position:absolute;left:0;top:0;font-size:13px;font-weight:600}
 .rank-current-label{position:absolute;left:48%;top:18px;transform:translateX(-50%);font-size:13px;font-weight:700;color:#8430CE}
 .rank-right-label{position:absolute;right:0;top:0;font-size:13px;font-weight:700;color:#1E8E3E}

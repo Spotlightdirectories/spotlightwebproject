@@ -1,0 +1,515 @@
+/* ==============================================
+   GET SPONSORED PAGE
+============================================== */
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f9fafb;
+  margin: 0;
+  padding: 100px 16px 60px;
+}
+
+.gs-page {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.gs-hero {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.gs-hero h1 {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #111111;
+  margin-bottom: 10px;
+}
+
+.gs-hero p {
+  color: #4b5563;
+  font-size: 1rem;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* HOW IT WORKS */
+
+.gs-how {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 32px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+}
+
+.gs-how h2 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin-bottom: 20px;
+  color: #111111;
+}
+
+.gs-how-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.gs-how-step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.gs-how-num {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #000000;
+  color: #e6c200;
+  font-weight: 800;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gs-how-step h3 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: #111111;
+}
+
+.gs-how-step p {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.gs-loading {
+  text-align: center;
+  padding: 60px 0;
+  color: #6b7280;
+}
+
+.gs-current-sponsorships {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+  border: 2px solid #e6c200;
+}
+
+.gs-current-sponsorships h2 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin: 0 0 14px;
+  color: #111111;
+}
+
+.gs-current-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gs-current-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fffbea;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.gs-current-item strong {
+  color: #111111;
+}
+
+.gs-current-item span {
+  color: #6b7280;
+}
+
+.gs-current-rank,
+.gs-current-views {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.gs-current-rank strong {
+  color: #111111;
+}
+
+.gs-current-badge {
+  background: #16a34a;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.gs-current-item span.gs-current-badge {
+  color: #ffffff;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* TYPE TABS */
+
+.gs-type-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.gs-type-tab {
+  padding: 10px 22px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.gs-type-tab.active {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+
+.gs-business-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fffbea;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 13px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+/* BILLING TOGGLE */
+
+.gs-billing-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.gs-billing-btn {
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gs-billing-btn.active {
+  background: #e6c200;
+  border-color: #e6c200;
+  color: #000000;
+}
+
+.gs-save-badge {
+  font-size: 10px;
+  background: #16a34a;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+
+/* TIER GRID */
+
+.gs-tier-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+.gs-tier-card {
+  background: #ffffff;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.gs-tier-card:hover {
+  border-color: #e6c200;
+  transform: translateY(-2px);
+}
+
+.gs-tier-card.selected {
+  border-color: #000000;
+  background: #fffbea;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+.gs-tier-name {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #111111;
+  margin-bottom: 6px;
+}
+
+.gs-tier-items {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 10px;
+}
+
+.gs-tier-price {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #111111;
+}
+
+.gs-tier-price small {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.gs-tier-price-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 0;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.gs-tier-price-option:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.gs-tier-price-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.gs-tier-price-amount {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #111111;
+}
+
+.gs-tier-price-amount small {
+  font-size: 10px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.gs-tier-price-single .gs-tier-price-amount {
+  color: #92400e;
+}
+
+.gs-tier-note {
+  font-size: 10px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-top: 8px;
+}
+
+/* ITEM PICKER */
+
+.gs-item-picker {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+}
+
+.gs-item-picker h3 {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+  color: #111111;
+}
+
+.gs-item-picker-note {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.gs-item-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.gs-item-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.gs-item-row img {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #f3f4f6;
+}
+
+.gs-item-row span {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111111;
+}
+
+.gs-item-row.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* CHECKOUT SUMMARY */
+
+.gs-checkout-summary {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+}
+
+.gs-summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 14px;
+  color: #4b5563;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.gs-summary-total {
+  border-bottom: none;
+  padding-top: 12px;
+  font-size: 1.1rem;
+}
+
+.gs-summary-total strong {
+  color: #111111;
+}
+
+.gs-payment-methods {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.gs-pay-btn {
+  flex: 1;
+  height: 48px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.gs-pay-online {
+  background: #000000;
+  color: #ffffff;
+}
+
+.gs-pay-bank {
+  background: #f3f4f6;
+  color: #111111;
+}
+
+.gs-bank-section {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.gs-bank-section p {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+.gs-bank-section input[type="file"] {
+  margin-bottom: 12px;
+}
+
+.gs-submit-receipt-btn {
+  width: 100%;
+  height: 44px;
+  border-radius: 10px;
+  border: none;
+  background: #e6c200;
+  color: #000000;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* EMPTY STATE */
+
+.gs-empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.gs-empty-state i {
+  font-size: 32px;
+  color: #f59e0b;
+  margin-bottom: 12px;
+}
+
+.gs-upgrade-link {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 10px 24px;
+  background: #000000;
+  color: #ffffff;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .gs-how-steps {
+    grid-template-columns: 1fr 1fr;
+  }
+  .gs-payment-methods {
+    flex-direction: column;
+  }
+}

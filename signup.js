@@ -10,7 +10,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let isSubmitting = false;
 
   form.addEventListener("submit", async (e) => {
-    console.log("FORM SUBMIT TRIGGERED");
 
     e.preventDefault();
 
@@ -163,16 +162,11 @@ if (!validWhatsapp) {
 let partnerId = null;
 
 const storedReferral = localStorage.getItem("referral_code")?.trim().toUpperCase();
-console.log("RAW storedReferral:", storedReferral);
-console.log("TYPE:", typeof storedReferral);
 
 if (storedReferral) {
   const { data: partners, error } = await supabase
   .from("partners")
   .select("id, referral_code");
-
-console.log("PARTNERS DATA:", partners);
-console.log("PARTNERS ERROR:", error);
 
   if (partners && partners.length > 0) {
     const match = partners.find(
@@ -185,14 +179,11 @@ console.log("PARTNERS ERROR:", error);
   }
 }
 
-console.log("RESOLVED partnerId:", partnerId);
-
     if (!selectedPlan) {
       showError("Please select a plan first.");
       resetSubmitState();
       return;
     }
-   console.log("BEFORE VENDOR INSERT");
    const insertResponse = await supabase
   .from("vendors")
   .insert([
@@ -220,6 +211,14 @@ console.log("RESOLVED partnerId:", partnerId);
     ? "free"
     : "pending",
 
+  // The 90-day free trial clock starts here. Without this, a free
+  // signup would silently be stuck on the bare baseline forever,
+  // never actually receiving the enhanced trial-period limits.
+  trial_started_at:
+  selectedPlan === "free"
+    ? new Date().toISOString()
+    : null,
+
   is_premium:
     selectedPlan !== "free",
 
@@ -232,7 +231,6 @@ console.log("RESOLVED partnerId:", partnerId);
 
   ]);
 const { data: vendorData, error: vendorError } = insertResponse;
-console.log("AFTER VENDOR INSERT", vendorError);
 
     if (vendorError) {
       console.error("Vendor creation error:", vendorError);
@@ -245,6 +243,30 @@ console.log("AFTER VENDOR INSERT", vendorError);
     localStorage.removeItem("selectedPlan");
     localStorage.removeItem("billingType");
     localStorage.removeItem("referral_code");
+
+    // Send welcome email
+    try {
+      await fetch(
+        "https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/send-email",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": window.SUPABASE_ANON_KEY
+          },
+          body: JSON.stringify({
+            to: email,
+            subject: "Welcome to Spotlight Directories",
+            html: EmailTemplates.welcomeVendor({
+              vendorName: businessName,
+              plan: selectedPlan
+            })
+          })
+        }
+      );
+    } catch (err) {
+      console.error("Welcome email failed:", err);
+    }
 
     // Store business name and email for onboarding
     localStorage.setItem("pendingBusinessName", businessName);

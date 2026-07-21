@@ -80,9 +80,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Route after verification
     const selectedPlan = localStorage.getItem("selectedPlan");
 
-    console.log("OTP VERIFIED");
-    console.log("Selected Plan:", selectedPlan);
-
    if (selectedPlan === "free") {
      window.location.replace("onboarding");
      return;

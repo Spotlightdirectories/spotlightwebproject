@@ -11,6 +11,34 @@
   z-index:99999;
 }
 
+/* Self-contained — don't assume a shared .hidden utility exists on
+   whichever page this modal happens to be opened from. */
+.hidden {
+  display: none !important;
+}
+
+.review-anon-notice {
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #7c2d12;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.review-anon-notice a {
+  color: #7c2d12;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+#reviewForm input[readonly] {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
 .review-modal-content{
   width:90%;
   max-width:380px;

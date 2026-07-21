@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Staff Signup | Spotlight</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ADMIN STYLES -->
+  <link rel="stylesheet" href="./admin.css" />
+
+  <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
+  <link rel="apple-touch-icon" href="images/favicon.png" />
+  <link rel="icon" href="images/favicon.ico" />
+</head>
+
+<body>
+  <main class="admin-container">
+    <h1>Admin Staff Signup</h1>
+    <p class="section-note">
+      This page is for staff who have been invited by a super admin.
+      Creating an account here does not grant access on its own — your
+      role is applied automatically the first time you log in, if a
+      matching invitation exists for your email.
+    </p>
+
+    <form id="adminSignupForm">
+      <!-- EMAIL -->
+      <label for="email">Email</label>
+      <input
+        type="email"
+        id="email"
+        placeholder="you@spotlightdirectories.com"
+        required
+      />
+
+      <!-- PASSWORD -->
+      <label for="password">Password</label>
+      <div class="password-field">
+        <input
+          type="password"
+          id="password"
+          placeholder="Create a password"
+          required
+          minlength="8"
+        />
+        <button
+          type="button"
+          class="toggle-password"
+          data-target="password"
+          aria-label="Toggle password visibility"
+        >
+          👁
+        </button>
+      </div>
+
+      <!-- CONFIRM PASSWORD -->
+      <label for="confirmPassword">Confirm password</label>
+      <div class="password-field">
+        <input
+          type="password"
+          id="confirmPassword"
+          placeholder="Repeat your password"
+          required
+        />
+        <button
+          type="button"
+          class="toggle-password"
+          data-target="confirmPassword"
+          aria-label="Toggle password visibility"
+        >
+          👁
+        </button>
+      </div>
+
+      <!-- SUBMIT -->
+      <button type="submit" class="primary-btn" id="signupBtn">
+        Create account
+      </button>
+    </form>
+
+    <p id="signupError" class="error"></p>
+    <p id="signupSuccess" class="section-note hidden"></p>
+
+    <p class="section-note">
+      Already have an account? <a href="admin-login">Log in</a>
+    </p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./admin-signup-supabase-client.js"></script>
+  <script src="./admin-signup.js"></script>
+</body>
+</html>

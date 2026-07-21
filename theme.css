@@ -1,37 +1,179 @@
-/* GLOBAL THEME SUPPORT */
+/* ==============================================
+   SPOTLIGHT DIRECTORIES — DESIGN TOKEN SYSTEM
+   theme.css
 
-/* Default (light mode) */
+   HOW TO USE:
+   Every colour, spacing, font size, shadow, and
+   border radius in this file is a CSS custom
+   property (variable). Use var(--token-name)
+   anywhere in your CSS instead of hardcoding
+   values.
 
-body{
-background:#FFFBF5;
-color:#111;
+   Example:
+     background: var(--color-primary);
+     padding: var(--spacing-md);
+     font-size: var(--text-base);
+
+   Light mode tokens are defined in :root.
+   Dark mode tokens are defined in [data-theme="dark"].
+   Dark mode is activated by adding data-theme="dark"
+   to the <html> element via a toggle button.
+   Full dark mode wiring happens in Block 5 page rebuilds.
+============================================== */
+
+
+/* ==============================================
+   LIGHT MODE (DEFAULT)
+============================================== */
+
+:root {
+
+  /* --- BRAND COLOURS --- */
+  --color-primary:        #e6c200; /* deep yellow — buttons hover, accents */
+  --color-primary-hover:  #d4b000; /* slightly darker yellow for hover states */
+  --color-dark:           #000000; /* chalk coal black — primary buttons */
+  --color-dark-hover:     #111111; /* slightly lifted black for hover */
+
+  /* --- CTA / UPGRADE COLOUR (ORANGE — DO NOT USE FOR STANDARD BUTTONS) --- */
+  --color-cta:            #f97316; /* orange — upgrade CTAs only */
+  --color-cta-hover:      #e6c200; /* yellow on hover */
+
+  /* --- BACKGROUND COLOURS --- */
+  --color-background:     #fafaf8; /* light cream — platform background */
+  --color-surface:        #ffffff; /* white — cards, panels, modals */
+  --color-surface-alt:    #f3f4f6; /* light gray — alternate surface */
+  --color-surface-hover:  #f8fafc; /* very light — row hover states */
+
+  /* --- BORDER COLOURS --- */
+  --color-border:         #e5e7eb; /* standard border */
+  --color-border-light:   #f1f5f9; /* subtle divider */
+  --color-border-focus:   #e6c200; /* yellow — input focus ring */
+
+  /* --- TEXT COLOURS --- */
+  --color-text-primary:   #0f172a; /* near black — headings, important text */
+  --color-text-body:      #334155; /* dark slate — body copy */
+  --color-text-muted:     #64748b; /* medium gray — helper text, subtitles */
+  --color-text-faint:     #94a3b8; /* light gray — labels, metadata */
+  --color-text-inverse:   #ffffff; /* white — text on dark backgrounds */
+
+  /* --- STATUS COLOURS --- */
+  --color-success:        #16a34a; /* green — verified, confirmed */
+  --color-success-bg:     #dcfce7; /* light green — success backgrounds */
+  --color-warning:        #d97706; /* amber — warnings */
+  --color-warning-bg:     #fef3c7; /* light amber — warning backgrounds */
+  --color-error:          #dc2626; /* red — errors, danger zone */
+  --color-error-bg:       #fef2f2; /* light red — error backgrounds */
+  --color-info:           #2563eb; /* blue — blue badge, info states */
+  --color-info-bg:        #dbeafe; /* light blue — info backgrounds */
+
+  /* --- BADGE COLOURS --- */
+  --color-badge-gray:     #64748b; /* gray badge verification */
+  --color-badge-blue:     #2563eb; /* blue badge verification */
+  --color-whatsapp:       #25d366; /* WhatsApp green — natural, do not change */
+
+  /* --- SPACING SCALE --- */
+  --spacing-xs:   4px;
+  --spacing-sm:   8px;
+  --spacing-md:   16px;
+  --spacing-lg:   24px;
+  --spacing-xl:   32px;
+  --spacing-2xl:  48px;
+  --spacing-3xl:  64px;
+
+  /* --- TYPOGRAPHY --- */
+  --font-family:        Arial, sans-serif;
+  --font-family-mono:   'Courier New', monospace;
+
+  --text-xs:    11px;  /* labels, metadata */
+  --text-sm:    13px;  /* helper text, captions */
+  --text-base:  15px;  /* body copy standard */
+  --text-md:    16px;  /* slightly larger body */
+  --text-lg:    18px;  /* subheadings */
+  --text-xl:    20px;  /* section headings */
+  --text-2xl:   24px;  /* card headings */
+  --text-3xl:   28px;  /* page headings */
+  --text-4xl:   32px;  /* hero subheadings */
+  --text-5xl:   40px;  /* hero headings */
+
+  --font-normal:   400;
+  --font-medium:   500;
+  --font-semibold: 600;
+  --font-bold:     700;
+  --font-black:    900;
+
+  --line-height-tight:  1.2;
+  --line-height-normal: 1.6;
+  --line-height-loose:  1.8;
+
+  /* --- BORDER RADIUS --- */
+  --radius-sm:   6px;   /* small chips, tags */
+  --radius-md:   8px;   /* small buttons, badges */
+  --radius-lg:   12px;  /* standard buttons, inputs */
+  --radius-xl:   14px;  /* cards, panels */
+  --radius-2xl:  16px;  /* large cards */
+  --radius-3xl:  20px;  /* modals, overlays */
+  --radius-full: 999px; /* pills, fully rounded */
+
+  /* --- SHADOWS --- */
+  --shadow-sm:   0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md:   0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lg:   0 4px 16px rgba(0, 0, 0, 0.10);
+  --shadow-xl:   0 8px 30px rgba(15, 23, 42, 0.12);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  /* --- TRANSITIONS --- */
+  --transition-fast:   0.15s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow:   0.3s ease;
+
+  /* --- Z-INDEX SCALE --- */
+  --z-base:     1;
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-overlay:  1000;
+  --z-modal:    1100;
+  --z-sidebar:  1200;
+  --z-topbar:   1300;
+
 }
 
 
-/* Dark mode */
+/* ==============================================
+   DARK MODE
+   Activated by: <html data-theme="dark">
+   Toggle wiring happens in Block 5 page rebuilds.
+   Only background, surface, border, and text
+   tokens change — brand colours stay the same.
+============================================== */
 
-@media (prefers-color-scheme: dark){
+[data-theme="dark"] {
 
-body{
-background:#0b0b0b;
-color:#e5e7eb;
-}
+  /* --- BACKGROUND COLOURS --- */
+  --color-background:     #0b0b0b; /* deep black — platform background */
+  --color-surface:        #111111; /* dark surface — cards, panels */
+  --color-surface-alt:    #1a1a1a; /* slightly lighter — alternate surface */
+  --color-surface-hover:  #222222; /* hover states */
 
-.navbar{
-background:#000;
-}
+  /* --- BORDER COLOURS --- */
+  --color-border:         #2d2d2d; /* dark border */
+  --color-border-light:   #1f1f1f; /* subtle dark divider */
 
-.footer{
-background:#000;
-}
+  /* --- TEXT COLOURS --- */
+  --color-text-primary:   #f1f5f9; /* near white — headings */
+  --color-text-body:      #cbd5e1; /* light slate — body copy */
+  --color-text-muted:     #94a3b8; /* medium gray — helper text */
+  --color-text-faint:     #64748b; /* darker gray — metadata */
+  --color-text-inverse:   #000000; /* black — text on light elements */
 
-.benefits-card{
-background:#1a1a1a;
-}
+  /* --- STATUS BACKGROUNDS (darker in dark mode) --- */
+  --color-success-bg:     #052e16;
+  --color-warning-bg:     #422006;
+  --color-error-bg:       #450a0a;
+  --color-info-bg:        #0c1a3a;
 
-.growth-card{
-background:#1a1a1a;
-}
+  /* Brand colours, CTA, spacing, typography,
+     radius, shadows, z-index stay the same
+     as light mode — no need to redefine. */
 
 }
 

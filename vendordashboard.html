@@ -346,8 +346,16 @@
   </p>
 
   <p id="trialTimeLeft" class="vd-trial-time">
-    0h 0m remaining
+    0h 0m 0s remaining
   </p>
+
+  <button
+    id="trialUpgradeBtn"
+    class="vd-trial-upgrade-btn"
+    type="button"
+  >
+    Upgrade Now
+  </button>
 
 </div>
 
@@ -494,6 +502,10 @@
       </div>
 
       <div class="vd-service-description-row">
+
+        <button type="button" class="vd-ai-generate-btn" data-ai-type="product" data-ai-target="productDescription" data-ai-item-name="productName">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Generate with AI
+        </button>
 
         <textarea
           id="productDescription"
@@ -746,6 +758,10 @@
 </div>
 
 <div class="vd-service-description-row">
+
+  <button type="button" class="vd-ai-generate-btn" data-ai-type="service" data-ai-target="serviceDescription" data-ai-item-name="serviceName">
+    <i class="fa-solid fa-wand-magic-sparkles"></i> Generate with AI
+  </button>
 
   <textarea
     id="serviceDescription"
@@ -1441,6 +1457,10 @@
     class="vd-inline-editor"
   >
 
+    <button type="button" class="vd-ai-generate-btn" data-ai-type="business" data-ai-target="descriptionInput">
+      <i class="fa-solid fa-wand-magic-sparkles"></i> Generate with AI
+    </button>
+
     <div
       id="aboutToolbar"
       class="about-toolbar hidden"
@@ -1665,6 +1685,36 @@
 
   </div>
 
+  <!-- SPONSORSHIP HISTORY — its own section, since sponsorship and
+       subscription expiry dates are independent of each other -->
+  <div class="vd-card vd-sponsorship-history-card">
+
+    <div class="vd-subscription-header">
+      <h3>Sponsorship History</h3>
+    </div>
+
+    <div
+      id="sponsorshipHistoryList"
+      class="vd-billing-history-list"
+    >
+
+      <div class="vd-history-row">
+        <span>—</span>
+        <strong>—</strong>
+      </div>
+
+    </div>
+
+    <button
+      id="vdSponsorNowBtn"
+      class="vd-secondary-outline-btn"
+      type="button"
+    >
+      Sponsor Your Business
+    </button>
+
+  </div>
+
 </section>
 
 <section id="verification" class="vd-section">
@@ -1826,6 +1876,124 @@
 
   <div class="vd-settings-layout">
 
+    <!-- ACCOUNT SETTINGS -->
+    <div class="vd-card vd-settings-card">
+
+      <div class="vd-settings-card-header">
+        <h3>Account Settings</h3>
+      </div>
+
+      <div class="vd-settings-content">
+
+        <div class="vd-setting-row vd-setting-row-col">
+
+          <div>
+            <h4>Email Address</h4>
+            <p id="settingsCurrentEmail" class="vd-settings-email-display">—</p>
+            <p class="vd-settings-email-note">
+              We'll send a verification code to your new email address.
+              Enter the code to confirm the change.
+            </p>
+          </div>
+
+          <button
+            id="showChangeEmailBtn"
+            type="button"
+            class="vd-secondary-outline-btn"
+            style="margin-top:8px;align-self:flex-start;"
+          >
+            Change Email
+          </button>
+
+          <!-- Change email form — hidden until button clicked -->
+          <div
+            id="changeEmailForm"
+            class="vd-inline-editor"
+            style="width:100%;margin-top:12px;"
+          >
+
+            <!-- STEP 1: enter new email, request codes -->
+            <div id="emailChangeStep1">
+
+              <input
+                type="email"
+                id="newEmailInput"
+                class="vd-input"
+                placeholder="Enter new email address"
+                style="margin-bottom:10px;"
+              />
+
+              <div style="display:flex;gap:10px;">
+                <button
+                  id="sendEmailChangeBtn"
+                  type="button"
+                  class="vd-primary-btn"
+                >
+                  Send Verification Codes
+                </button>
+
+                <button
+                  id="cancelEmailChangeBtn"
+                  type="button"
+                  class="vd-secondary-outline-btn"
+                >
+                  Cancel
+                </button>
+              </div>
+
+            </div>
+
+            <!-- STEP 2: enter the code — hidden until it's sent -->
+            <div id="emailChangeStep2" class="hidden" style="margin-top:14px;">
+
+              <p class="vd-settings-email-note">
+                Enter the code sent to your new email address. It expires in 15 minutes.
+              </p>
+
+              <input
+                type="text"
+                id="otpCodeInput"
+                class="vd-input"
+                placeholder="Enter verification code"
+                maxlength="6"
+                inputmode="numeric"
+                style="margin-bottom:10px;"
+              />
+
+              <div style="display:flex;gap:10px;">
+                <button
+                  id="confirmEmailChangeBtn"
+                  type="button"
+                  class="vd-primary-btn"
+                >
+                  Confirm Email Change
+                </button>
+
+                <button
+                  id="cancelEmailChangeStep2Btn"
+                  type="button"
+                  class="vd-secondary-outline-btn"
+                >
+                  Cancel
+                </button>
+              </div>
+
+            </div>
+
+            <p
+              id="emailChangeStatus"
+              class="vd-profile-status"
+              style="margin-top:10px;"
+            ></p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
     <!-- NOTIFICATIONS -->
     <div class="vd-card vd-settings-card">
 
@@ -1957,7 +2125,10 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
+<script src="upload-utils.js"></script>
+<script src="nigeria-data.js"></script>
 <script src="badge-utils.js"></script>
+<script src="ai-description.js"></script>
 <script src="vendordashboard.js"></script>
 
 </body>

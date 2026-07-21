@@ -45,10 +45,7 @@ if (partnerError || !partner) {
 }
 
   const partnerId = partner.id;
-  console.log("CURRENT PARTNER ID:", partnerId);
-  console.log("ACCOUNT STATUS:", partner.account_status);
-
-  // SET 14 DAYS FROM NOW
+    // SET 14 DAYS FROM NOW
   const deletionDate = new Date();
   deletionDate.setDate(deletionDate.getDate() + 14);
 
@@ -137,7 +134,6 @@ if (!table) {
       data: { user },
       error: authError
     } = await supabase.auth.getUser();
-    console.log("7fc1e3c0-a9b9-4d05-93b3-a4c73f2ac199:", user.id);
 
     if (authError || !user) {
       table.innerHTML = `<tr><td colspan="6">Not logged in</td></tr>`;
@@ -152,7 +148,6 @@ if (!table) {
       .select("id, account_status, scheduled_deletion_at, created_at")
       .eq("user_id", user.id)
       .single();
-      console.log("PARTNER:", partner, "ERROR:", partnerError);
 
     if (partnerError || !partner) {
   console.error("INVALID SESSION: Not a partner");
@@ -162,9 +157,6 @@ if (!table) {
   window.location.href = "/partner-program.html#login";
   return;
 }
-
-    console.log("ACCOUNT STATUS ON LOAD:", partner.account_status);
-
 
 const partnerId = partner.id;
 
@@ -177,8 +169,6 @@ if (partner.scheduled_deletion_at) {
   const deletionDate = new Date(partner.scheduled_deletion_at);
 
   if (now >= deletionDate) {
-
-    console.log("ENFORCING ACCOUNT CLOSURE:", partnerId);
 
     // 1. UPDATE STATUS TO CLOSED
     const { error: closeError } = await supabase
@@ -454,7 +444,7 @@ if (referredPartnersEl) {
           name,
           plan_tier
       ),
-      vendorpayments (
+      vendor_payments (
       plan,
       billing_type
      )
@@ -501,35 +491,116 @@ if (referredPartnersEl) {
       if (c.type === "free_vendor") freeVendorTotal += amount;
       if (c.type === "override") overrideTotal += amount;
       if (c.type === "bonus") bonusTotal += amount;
-
-      // STATUS CLASS
-      let statusClass = `status-${c.status}`;
-
-      // TYPE LABEL
-      let typeLabel = "—";
-      if (c.type === "vendor") typeLabel = "Paid Vendor";
-      if (c.type === "free_vendor") typeLabel = "Free Vendor";
-      if (c.type === "override") typeLabel = "Override";
-      if (c.type === "bonus") typeLabel = "Bonus";
-
-      const tr = document.createElement("tr");
-
-      tr.innerHTML = `
-        <td>${c.vendors?.name || "—"}</td>
-        <td>${c.vendors?.plan_tier || "—"}</td>
-        <td>${typeLabel}</td>
-        <td>₦${amount.toLocaleString()}</td>
-        <td class="${statusClass}">${c.status}</td>
-        <td>${new Date(c.created_at).toLocaleDateString()}</td>
-      `;
-
-      table.appendChild(tr);
     });
 
     // ===============================
-// MONTHLY BONUS CALCULATION (STEP 3)
-// ===============================
+    // SEARCH / FILTER / COLLAPSE
+    // Same pattern as the admin dashboard's history tables — shows
+    // the 10 most recent by default, with search by vendor name and
+    // filters by type/status, and a See more/See less toggle for
+    // the rest.
+    // ===============================
+    const COMMISSION_PAGE_SIZE = 10;
+    let commissionExpanded = false;
+
+    const commissionSearchInput = document.getElementById("commissionSearch");
+    const commissionTypeFilter = document.getElementById("commissionTypeFilter");
+    const commissionStatusFilter = document.getElementById("commissionStatusFilter");
+    const commissionSeeMoreBtn = document.getElementById("commissionSeeMoreBtn");
+
+    function getFilteredCommissions() {
+      const searchTerm = (commissionSearchInput?.value || "").toLowerCase().trim();
+      const typeValue = commissionTypeFilter?.value || "all";
+      const statusValue = commissionStatusFilter?.value || "all";
+
+      return commissions.filter(c => {
+        const nameMatch = (c.vendors?.name || "").toLowerCase().includes(searchTerm);
+        const typeMatch = typeValue === "all" || c.type === typeValue;
+        const statusMatch = statusValue === "all" || c.status === statusValue;
+        return nameMatch && typeMatch && statusMatch;
+      });
+    }
+
+    function renderCommissionRows(list) {
+      table.innerHTML = "";
+
+      if (!list.length) {
+        table.innerHTML = `<tr><td colspan="6">No results found.</td></tr>`;
+        if (commissionSeeMoreBtn) commissionSeeMoreBtn.style.display = "none";
+        return;
+      }
+
+      const visible = commissionExpanded ? list : list.slice(0, COMMISSION_PAGE_SIZE);
+
+      visible.forEach(c => {
+        const amount = Number(c.amount) / 100;
+
+        let statusClass = `status-${c.status}`;
+
+        let typeLabel = "—";
+        if (c.type === "vendor") typeLabel = "Paid Vendor";
+        if (c.type === "free_vendor") typeLabel = "Free Vendor";
+        if (c.type === "override") typeLabel = "Override";
+        if (c.type === "bonus") typeLabel = "Bonus";
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>${c.vendors?.name || "—"}</td>
+          <td>${c.vendors?.plan_tier || "—"}</td>
+          <td>${typeLabel}</td>
+          <td>₦${amount.toLocaleString()}</td>
+          <td class="${statusClass}">${c.status}</td>
+          <td>${new Date(c.created_at).toLocaleDateString()}</td>
+        `;
+
+        table.appendChild(tr);
+      });
+
+      if (commissionSeeMoreBtn) {
+        const remaining = list.length - COMMISSION_PAGE_SIZE;
+        if (remaining > 0) {
+          commissionSeeMoreBtn.style.display = "inline-block";
+          commissionSeeMoreBtn.textContent = commissionExpanded ? "See less" : `See more (${remaining} older)`;
+        } else {
+          commissionSeeMoreBtn.style.display = "none";
+        }
+      }
+    }
+
+    function applyCommissionFiltersAndRender() {
+      renderCommissionRows(getFilteredCommissions());
+    }
+
+    if (commissionSearchInput) commissionSearchInput.addEventListener("input", () => {
+      commissionExpanded = false;
+      applyCommissionFiltersAndRender();
+    });
+    if (commissionTypeFilter) commissionTypeFilter.addEventListener("change", () => {
+      commissionExpanded = false;
+      applyCommissionFiltersAndRender();
+    });
+    if (commissionStatusFilter) commissionStatusFilter.addEventListener("change", () => {
+      commissionExpanded = false;
+      applyCommissionFiltersAndRender();
+    });
+    if (commissionSeeMoreBtn) commissionSeeMoreBtn.addEventListener("click", () => {
+      commissionExpanded = !commissionExpanded;
+      applyCommissionFiltersAndRender();
+    });
+
+    applyCommissionFiltersAndRender();
+
+    // ===============================
+    // MONTHLY PROGRESS + BONUS STATUS
+    // Reads real, persisted data only — no separate live
+    // recalculation. The bonus trigger now writes an actual
+    // 'bonus' commission row the moment a partner crosses each
+    // new 50-vendor threshold, so this just reflects what's
+    // really in the database.
+    // ===============================
 let monthlyQualified = 0;
+let monthlyBonusEarned = 0;
 
 const now = new Date();
 const currentMonth = now.getMonth();
@@ -537,24 +608,26 @@ const currentYear = now.getFullYear();
 
 commissions.forEach(c => {
 
-  const isVendor = c.type === "vendor";
-  const isAvailable = c.status === "available";
-  const isYearly = c.vendorpayments?.billing_type === "yearly";
-
   const createdDate = new Date(c.created_at);
 
   const isCurrentMonth =
     createdDate.getMonth() === currentMonth &&
     createdDate.getFullYear() === currentYear;
 
-   if (isVendor && isYearly && isCurrentMonth) {
+  if (!isCurrentMonth) return;
+
+  const isVendor = c.type === "vendor";
+  const isYearly = c.vendor_payments?.billing_type === "yearly";
+
+   if (isVendor && isYearly) {
      monthlyQualified++;
     }
 
- });
+  if (c.type === "bonus") {
+    monthlyBonusEarned += Number(c.amount) / 100;
+  }
 
-const bonusUnits = Math.floor(monthlyQualified / 50);
-const bonusAmount = bonusUnits * 30000;
+ });
 
     // ===============================
     // UPDATE SUMMARY
@@ -595,14 +668,14 @@ if (bonusCurrentEl) {
 
 if (bonusStatusEl) {
   bonusStatusEl.innerText =
-    bonusUnits > 0 ? `₦${bonusAmount.toLocaleString()} Earned` : "Not Achieved";
+    monthlyBonusEarned > 0 ? `₦${monthlyBonusEarned.toLocaleString()} Earned` : "Not Achieved";
 }
 
     const downloadBtn = document.getElementById("downloadStatementBtn");
 
 if (downloadBtn) {
   downloadBtn.addEventListener("click", () => {
-    downloadCSV(commissions, bonusAmount);
+    downloadCSV(commissions);
   });
 }
 
@@ -617,7 +690,7 @@ if (downloadBtn) {
 }
 });
 
-function downloadCSV(data, bonusAmount) {
+function downloadCSV(data) {
 
   if (!data || data.length === 0) {
     alert("No data to export");
@@ -627,7 +700,7 @@ function downloadCSV(data, bonusAmount) {
   // 1️⃣ Remove pending
   const filtered = data.filter(c => c.status !== "pending");
 
-  if (filtered.length === 0 && bonusAmount === 0) {
+  if (filtered.length === 0) {
     alert("No available or paid records to export");
     return;
   }
@@ -649,7 +722,8 @@ function downloadCSV(data, bonusAmount) {
     if (c.status === "available") {
       credit = amount;
       balance += amount;
-      description = `${c.type} earning`;
+      description =
+        c.type === "bonus" ? "Monthly Bonus" : `${c.type} earning`;
     }
 
     if (c.status === "paid") {
@@ -666,23 +740,6 @@ function downloadCSV(data, bonusAmount) {
       Balance: balance.toFixed(2)
     });
   });
-
-  // ===============================
-// ADD MONTHLY BONUS TO STATEMENT
-// ===============================
-if (bonusAmount > 0) {
-
-  balance += bonusAmount;
-
-  rows.push({
-    Date: new Date().toLocaleDateString(),
-    Description: "Monthly Bonus",
-    Credit: bonusAmount.toFixed(2),
-    Debit: "",
-    Balance: balance.toFixed(2)
-  });
-
-}
 
   const csvContent = [
     Object.keys(rows[0]).join(","),

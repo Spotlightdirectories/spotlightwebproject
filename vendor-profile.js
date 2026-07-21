@@ -1,8 +1,39 @@
 document.addEventListener("DOMContentLoaded", async () => {
 
-  console.log("✅ vendor-profile.js loaded");
 
   const supabase = window.supabaseClient;
+
+  // ===============================
+  // NAVBAR (mobile menu + auth button, same pattern as other pages)
+  // ===============================
+  const menuOpenBtn = document.querySelector(".menu-open");
+  const menuCloseBtn = document.querySelector(".xclose");
+  const navLinks = document.querySelector(".nav-links");
+
+  if (menuOpenBtn && navLinks) {
+    menuOpenBtn.addEventListener("click", () => navLinks.classList.add("open"));
+  }
+  if (menuCloseBtn && navLinks) {
+    menuCloseBtn.addEventListener("click", () => navLinks.classList.remove("open"));
+  }
+
+  const navAuthBtn = document.getElementById("authBtn");
+  if (navAuthBtn && supabase) {
+    function updateNavAuthBtn(user) {
+      navAuthBtn.textContent = user ? "Log out" : "Log in";
+      navAuthBtn.href = user ? "#" : "login";
+    }
+    supabase.auth.onAuthStateChange((event, session) => updateNavAuthBtn(session?.user || null));
+    supabase.auth.getSession().then(({ data: { session } }) => updateNavAuthBtn(session?.user || null));
+    navAuthBtn.addEventListener("click", async (e) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        e.preventDefault();
+        await supabase.auth.signOut();
+        window.location.reload();
+      }
+    });
+  }
 
   // ===============================
   // RESOLVE CURRENT USER
@@ -19,14 +50,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ===============================
   // PLAN CAPABILITIES
   // ===============================
-  const TIER_CAPABILITIES = {
-    free: { media: true },
-    standard: { media: true },
-    enterprise: { media: true },
-    elite: { media: true },
-    custom: { media: true }
-  };
-
   const SOCIAL_LIMITS = {
     free: 1,
     standard: 2,
@@ -37,7 +60,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const BRANCH_LIMITS = {
   free: 0,
-  standard: 1,
+  standard: 0,
   enterprise: 10,
   elite: 30,
   custom: Infinity
@@ -51,12 +74,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   custom: { allowed: true, maxDuration: 120, maxSize: 24 * 1024 * 1024 }
 };
 
+  const DESCRIPTION_WORD_LIMITS = {
+  free: 100,
+  standard: 150,
+  enterprise: 300,
+  elite: 500,
+  custom: 650
+};
+
   // ===============================
   // LOAD VENDOR
   // ===============================
   async function loadVendorProfile() {
     const params = new URLSearchParams(window.location.search);
     const slug = params.get("slug");
+    const branchId = params.get("branch");
 
     let vendor = null;
 
@@ -88,29 +120,52 @@ if (!vendor) {
   return;
 }
 
+// If a specific branch was named in the URL (e.g. clicked from a
+// branch card in search results), fetch its data here so the page
+// can show that location directly — no switcher, no ambiguity about
+// which location this is.
+let activeBranch = null;
+
+if (branchId) {
+  const { data: branchData } = await supabase
+    .from("branches")
+    .select("*")
+    .eq("id", branchId)
+    .eq("vendor_id", vendor.id)
+    .eq("account_status", "active")
+    .maybeSingle();
+  activeBranch = branchData || null;
+}
+
 const isOwner =
   currentUser &&
   vendor.auth_user_id === currentUser.id;
 
 if (!isOwner) {
 
-  await supabase
-    .from("analytics_events")
-    .insert({
+
+try {
+  await window.logAnalyticsEvent(supabase, {
       vendor_id: vendor.id,
-      event_type: "profile_view"
+      event_type: "profile_view",
+      visitor_id: window.visitorId
     });
+} catch (analyticsErr) {
+  // Never let a logging failure stop the actual profile from
+  // rendering — this must be non-fatal, always.
+  console.error("Profile view analytics error:", analyticsErr);
+}
 
 }
 
-renderVendorProfile(vendor);
+renderVendorProfile(vendor, activeBranch);
 
 }
 
   // ===============================
   // RENDER PROFILE
   // ===============================
-  function renderVendorProfile(vendor) {
+  function renderVendorProfile(vendor, activeBranch) {
 
     const isOwner = 
       currentUser &&
@@ -145,38 +200,24 @@ if (vendor.plan_tier === "free" && vendor.trial_started_at) {
 // EFFECTIVE LIMITS (PLAN + TRIAL)
 // ===============================
 let effectiveSocialLimit = 0;
-let effectiveGalleryLimit = 0;
 
 if (vendor.plan_tier === "free") {
 
   if (trial_active) {
     effectiveSocialLimit = 1;
-    effectiveGalleryLimit = 3;
-  }
-
-  if (trial_expired) {
+  } else if (trial_expired) {
     effectiveSocialLimit = 0;
-    effectiveGalleryLimit = 1;
+  } else {
+    // No trial record on file — treat as permanent Free baseline
+    effectiveSocialLimit = 0;
   }
 
 } else {
   effectiveSocialLimit = SOCIAL_LIMITS[vendor.plan_tier] ?? 0;
-
-  const GALLERY_LIMITS = {
-    free: 3,
-    standard: 6,
-    enterprise: 12,
-    elite: 24,
-    custom: 24
-  };
-
-  effectiveGalleryLimit = GALLERY_LIMITS[vendor.plan_tier] ?? 0;
 }
 
       const isFree = vendor.plan_tier === "free";
       const isPaid = !isFree;
-
-      const galleryInput = document.getElementById("galleryInput");
 
       const videoInput = document.getElementById("videoInput");
       const videoPlayer = document.getElementById("vendorVideo");
@@ -204,161 +245,6 @@ if (videoNote) {
 
 }
 
-if (galleryInput) {
-
-galleryInput.addEventListener("change", async (e) => {
-
-let file = e.target.files[0];
-if (!file) return;
-
-// ===============================
-// RESIZE + COMPRESS IMAGE
-// ===============================
-const img = document.createElement("img");
-img.src = URL.createObjectURL(file);
-
-await new Promise(resolve => {
-  img.onload = resolve;
-});
-
-const canvas = document.createElement("canvas");
-const ctx = canvas.getContext("2d");
-
-// MAX SIZE
-const MAX_WIDTH = 1200;
-const MAX_HEIGHT = 1200;
-
-let width = img.width;
-let height = img.height;
-
-// Maintain aspect ratio
-if (width > height) {
-  if (width > MAX_WIDTH) {
-    height *= MAX_WIDTH / width;
-    width = MAX_WIDTH;
-  }
-} else {
-  if (height > MAX_HEIGHT) {
-    width *= MAX_HEIGHT / height;
-    height = MAX_HEIGHT;
-  }
-}
-
-canvas.width = width;
-canvas.height = height;
-
-ctx.drawImage(img, 0, 0, width, height);
-
-// COMPRESS
-const blob = await new Promise(resolve =>
-  canvas.toBlob(resolve, "image/jpeg", 0.7)
-);
-
-// Replace file
-file = new File([blob], `optimized-${Date.now()}.jpg`, {
-  type: "image/jpeg"
-});
-
-
-// ===============================
-// ENFORCE GALLERY LIMIT
-// ===============================
-const limit = effectiveGalleryLimit;
-
-const { data: existingImages } = await supabase
-  .from("vendor_media")
-  .select("id")
-  .eq("vendor_id", vendor.id)
-  .eq("media_type", "image");
-
-if (existingImages && existingImages.length >= limit) {
-  alert("You have reached the maximum number of images allowed for your plan.");
-  return;
-}
-
-       // file type validation
-           const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-           if (!allowedTypes.includes(file.type)) {
-           alert("Only JPG, PNG or WEBP images allowed.");
-           return;
-          }
-
-        // 750KB size limit
-           if (file.size > 750 * 1024) {
-           alert("Image must be less than 750KB.");
-           return;
-          }
-
-          // ===============================
-// INSTANT PREVIEW (UX IMPROVEMENT)
-// ===============================
-const previewUrl = URL.createObjectURL(file);
-
-const grid = document.getElementById("galleryGrid");
-if (grid) {
-  const previewItem = document.createElement("div");
-  previewItem.className = "gallery-item";
-
-  const previewImg = document.createElement("img");
-  previewImg.src = previewUrl;
-  previewImg.style.opacity = "0.5";
-
-  previewItem.appendChild(previewImg);
-  grid.prepend(previewItem);
-}
-
-           const fileName = `${Date.now()}-${file.name}`;
-           const filePath = `${vendor.id}/gallery/${fileName}`;
-
-         // upload to storage
-        const { error: uploadError } = await supabase.storage
-          .from("vendor-branding")
-          .upload(filePath, file);
-
-          if (uploadError) {
-          console.error("Upload error:", uploadError.message);
-          alert("Upload failed.");
-          return;
-          }
-
-
-          const { data } = supabase.storage
-           .from("vendor-branding")
-           .getPublicUrl(filePath);
-
-    // save record in vendor_media
-        // GET CURRENT MAX ORDER
-const { data: existing } = await supabase
-  .from("vendor_media")
-  .select("display_order")
-  .eq("vendor_id", vendor.id)
-  .order("display_order", { ascending: false })
-  .limit(1);
-
-const nextOrder = existing && existing.length > 0
-  ? existing[0].display_order + 1
-  : 1;
-
-const { error: dbError } = await supabase
-  .from("vendor_media")
-  .insert({
-    vendor_id: vendor.id,
-    media_type: "image",
-    file_url: data.publicUrl,
-    display_order: nextOrder
-  });
-
-    if (dbError) {
-      console.error("DB error:", dbError.message);
-      return;
-    }
-
-    await loadGallery();
-
-  });
-
-}
-
 if (videoInput) {
 
   videoInput.addEventListener("change", async (e) => {
@@ -368,9 +254,17 @@ if (videoInput) {
 
     videoInput.disabled = true;
 
+    const videoUploadLabel = document.querySelector('label[for="videoInput"]');
+    const setVideoStatus = (text) => {
+      if (videoUploadLabel) videoUploadLabel.textContent = text;
+    };
+
+    setVideoStatus("⏳ Checking video...");
+
     if (file.type !== "video/mp4") {
      alert("Only MP4 videos are allowed.");
      videoInput.disabled = false;
+     setVideoStatus("Upload Video");
      return;
     }
 
@@ -378,11 +272,15 @@ if (videoInput) {
 
     if (!limits.allowed) {
       alert("Your current plan does not allow video upload.");
+      videoInput.disabled = false;
+      setVideoStatus("Upload Video");
       return;
     }
 
     if (file.size > limits.maxSize) {
       alert("Video file exceeds the maximum size allowed for your plan.");
+      videoInput.disabled = false;
+      setVideoStatus("Upload Video");
       return;
     }
 
@@ -397,8 +295,24 @@ await new Promise((resolve) => {
 
 if (video.duration > limits.maxDuration) {
   alert("Video duration exceeds the maximum allowed for your plan.");
+  videoInput.disabled = false;
+  setVideoStatus("Upload Video");
   return;
 }
+
+// ===============================
+// RESOLUTION CHECK (720p max)
+// ===============================
+const videoLongSide = Math.max(video.videoWidth, video.videoHeight);
+const videoShortSide = Math.min(video.videoWidth, video.videoHeight);
+
+if (videoLongSide > 1280 || videoShortSide > 720) {
+  alert("Video resolution must be 720p or lower. Please lower your phone's recording quality and try again.");
+  videoInput.disabled = false;
+  setVideoStatus("Upload Video");
+  return;
+}
+
  // remove existing vendor video
   const { data: existingVideos } = await supabase
   .from("vendor_media")
@@ -432,6 +346,8 @@ if (existingVideos && existingVideos.length > 0) {
    const videoFileName = `video-${Date.now()}.mp4`;
    const videoPath = `${vendor.id}/video/${videoFileName}`;
 
+   setVideoStatus("⏳ Uploading video...");
+
    const { error: uploadError } = await supabase.storage
      .from("vendor-videos")
      .upload(videoPath, file);
@@ -440,6 +356,7 @@ if (existingVideos && existingVideos.length > 0) {
      console.error("Video upload error:", uploadError.message);
      alert("Video upload failed.");
      videoInput.disabled = false;
+     setVideoStatus("Upload Video");
      return;
    }
 
@@ -459,23 +376,18 @@ const { error: videoDbError } = await supabase
 if (videoDbError) {
   console.error("Video DB error:", videoDbError.message);
   videoInput.disabled = false;
+  setVideoStatus("Upload Video");
   return;
 }
 
 await loadVideo();
 videoInput.value = "";
 videoInput.disabled = false;
+setVideoStatus("Upload Video");
 
   });
 
 }
-
-      const galleryUploader = document.getElementById("galleryUploader");
-
-      
-     if (galleryUploader && isOwner && TIER_CAPABILITIES[vendor.plan_tier].media) {
-        galleryUploader.classList.remove("hidden");
-    }
 
     const videoLimits = VIDEO_LIMITS[vendor.plan_tier];
 
@@ -483,15 +395,11 @@ videoInput.disabled = false;
       videoUploader.classList.remove("hidden");
     }
 
-     if (isFree && galleryInput) {
-     galleryInput.disabled = false;
-    }
-
     // -------------------------------
     // HERO
     // -------------------------------
     const nameEl = document.getElementById("vendorName");
-    if (nameEl) nameEl.textContent = vendor.name || "";
+    if (nameEl) nameEl.textContent = activeBranch ? (activeBranch.branch_name || vendor.name || "") : (vendor.name || "");
 
     const categoryEl = document.getElementById("vendorCategory");
     if (categoryEl) {
@@ -797,8 +705,9 @@ if (
 
 }
 
-    const addressEl = document.getElementById("vendorAddress");
-    if (addressEl) addressEl.textContent = vendor.address || "";
+    // NOTE: address/contact/hours/whatsapp/call/map are now all set
+    // by applyLocationView() further down, called once here with the
+    // vendor's own data as the default "Main Location" view.
 
 // -------------------------------
 // LOGO & COVER
@@ -901,126 +810,10 @@ const addressDetail = document.getElementById("vendorAddressDetail");
 if (addressDetail) addressDetail.textContent = vendor.address || "";
 
 
-const whatsapp = document.getElementById("whatsappLink");
-
-if (whatsapp) {
-
-  if (vendor.whatsapp) {
-
-    whatsapp.href =
-      `https://wa.me/${vendor.whatsapp}`;
-
-    whatsapp.style.display =
-      "inline-block";
-
-    whatsapp.addEventListener(
-      "click",
-      async () => {
-
-        await supabase
-          .from("analytics_events")
-          .insert({
-            vendor_id: vendor.id,
-            event_type: "whatsapp_click"
-          });
-
-      }
-    );
-
-  } else {
-
-    whatsapp.style.display =
-      "none";
-
-  }
-
-}
-
-const callLink =
-  document.getElementById(
-    "callLink"
-  );
-
-if (callLink) {
-
-  const phoneNumber =
-    vendor.phone ||
-    vendor.whatsapp;
-
-  if (phoneNumber) {
-
-    callLink.href =
-      `tel:${phoneNumber}`;
-
-    callLink.addEventListener(
-      "click",
-      async () => {
-
-        await supabase
-          .from("analytics_events")
-          .insert({
-            vendor_id: vendor.id,
-            event_type: "phone_click"
-          });
-
-      }
-    );
-
-  } else {
-
-    callLink.style.display =
-      "none";
-
-  }
-
-}
-
-const map =
-  document.getElementById(
-    "mapLink"
-  );
-
-if (map) {
-
-  if (
-    vendor.latitude &&
-    vendor.longitude
-  ) {
-
-    map.href =
-      `https://www.google.com/maps/search/?api=1&query=${vendor.latitude},${vendor.longitude}`;
-
-  } else if (
-    vendor.address
-  ) {
-
-    map.href =
-      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vendor.address)}`;
-
-  } else {
-
-    map.href = "#";
-
-  }
-
-  map.addEventListener(
-    "click",
-    async () => {
-
-      await supabase
-        .from("analytics_events")
-        .insert({
-          vendor_id: vendor.id,
-          event_type: "direction_click"
-        });
-
-    }
-  );
-
-  map.style.pointerEvents =
-    "auto";
-
-}
+    // NOTE: whatsapp/callLink/map are now set by applyLocationView()
+    // (defined further down, called once with the vendor's own data
+    // right after it's defined) — removed from here to avoid setting
+    // them twice and to avoid duplicate analytics listeners.
 
 const catalogBtn =
 
@@ -1030,26 +823,23 @@ const catalogBtn =
 
 if (catalogBtn) {
 
-  catalogBtn.onclick =
-    async function () {
+  catalogBtn.onclick = async function () {
 
-      await supabase
-        .from("analytics_events")
-        .insert({
-          vendor_id: vendor.id,
-          event_type: "catalog_visit"
-        });
+try {
+  await window.logAnalyticsEvent(supabase, {
+      vendor_id: vendor.id,
+      event_type: "catalog_visit",
+      visitor_id: window.visitorId
+    });
+} catch (analyticsErr) {
+  console.error("Catalog visit analytics error:", analyticsErr);
+}
 
       document
-        .getElementById(
-          "mediaSection"
-        )
+        .getElementById("mediaSection")
         ?.scrollIntoView({
-
           behavior: "smooth",
-
           block: "start"
-
         });
 
     };
@@ -1098,6 +888,17 @@ if (desc) {
     textarea.innerHTML = vendor.description || "";
 
     textarea.addEventListener("blur", async () => {
+
+      const descriptionWordLimit =
+        DESCRIPTION_WORD_LIMITS[vendor.plan_tier] ?? 100;
+
+      const plainText = textarea.innerText.trim();
+      const wordCount = plainText ? plainText.split(/\s+/).length : 0;
+
+      if (wordCount > descriptionWordLimit) {
+        alert(`Your business description exceeds the ${descriptionWordLimit}-word limit for your plan. Please shorten it — changes were not saved.`);
+        return;
+      }
 
       const { error } = await supabase
         .from("vendors")
@@ -1166,58 +967,244 @@ const contactInfo =
     "businessContactInfo"
   );
 
-if (contactInfo) {
+// -------------------------------
+// LOCATION VIEW (swappable)
+// Sets address, business hours, contact links (WhatsApp/Call/Map)
+// from whichever location's data is passed in — the vendor's own
+// main address by default, or a specific branch's data when the
+// location switcher (built in loadBranches, further below) selects
+// one. Everything else on the page (about, products/services,
+// reviews) is intentionally untouched by this — those stay shared
+// regardless of which location is currently selected.
+// -------------------------------
+function applyLocationView(locationData) {
 
-console.log(contactInfo);
-console.log(vendor);
+  const addressEl = document.getElementById("vendorAddress");
+  if (addressEl) addressEl.textContent = locationData.address || "";
 
-  contactInfo.innerHTML = `
-  
-    <div class="business-contact-row">
+  const whatsapp = document.getElementById("whatsappLink");
+  if (whatsapp) {
+    if (locationData.whatsapp) {
+      whatsapp.href = `https://wa.me/${locationData.whatsapp}`;
+      whatsapp.style.display = "inline-block";
+      whatsapp.onclick = async () => {
+        try {
+          await window.logAnalyticsEvent(supabase, {
+            vendor_id: vendor.id,
+            event_type: "whatsapp_click",
+            visitor_id: window.visitorId
+          });
+        } catch (analyticsErr) {
+          console.error("WhatsApp click analytics error:", analyticsErr);
+        }
+      };
+    } else {
+      whatsapp.style.display = "none";
+    }
+  }
 
-      <i class="far fa-clock"></i>
+  const callLink = document.getElementById("callLink");
+  if (callLink) {
+    const phoneNumber = locationData.phone || locationData.whatsapp;
+    if (phoneNumber) {
+      callLink.href = `tel:${phoneNumber}`;
+      callLink.style.display = "inline-block";
+      callLink.onclick = async () => {
+        try {
+          await window.logAnalyticsEvent(supabase, {
+            vendor_id: vendor.id,
+            event_type: "phone_click",
+            visitor_id: window.visitorId
+          });
+        } catch (analyticsErr) {
+          console.error("Phone click analytics error:", analyticsErr);
+        }
+      };
+    } else {
+      callLink.style.display = "none";
+    }
+  }
 
-      <div>
+  const map = document.getElementById("mapLink");
+  if (map) {
+    if (locationData.latitude && locationData.longitude) {
+      map.href = `https://www.google.com/maps/search/?api=1&query=${locationData.latitude},${locationData.longitude}`;
+    } else if (locationData.address) {
+      map.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationData.address)}`;
+    } else {
+      map.href = "#";
+    }
+    map.onclick = async () => {
+      try {
+        await window.logAnalyticsEvent(supabase, {
+          vendor_id: vendor.id,
+          event_type: "direction_click",
+          visitor_id: window.visitorId
+        });
+      } catch (analyticsErr) {
+        console.error("Direction click analytics error:", analyticsErr);
+      }
+    };
+    map.style.pointerEvents = "auto";
+  }
 
-        <div class="business-hours">
-           Opens ${formatTime(vendor.open_time)}
-            •
-           Closes ${formatTime(vendor.close_time)}
-        </div>
+  if (contactInfo) {
 
-        <div class="business-days">
-          ${(vendor.business_days || "")
-            .split(",")
-            .join(" • ")}
+    contactInfo.innerHTML = `
+
+      <div class="business-contact-row">
+
+        <i class="far fa-clock"></i>
+
+        <div>
+
+          <div class="business-hours">
+             Opens ${formatTime(locationData.open_time)}
+              •
+             Closes ${formatTime(locationData.close_time)}
+          </div>
+
+          <div class="business-days">
+            ${(locationData.business_days || "")
+              .split(",")
+              .join(" • ")}
+          </div>
+
         </div>
 
       </div>
 
-    </div>
+      <div class="business-contact-row">
 
-    <div class="business-contact-row">
+        <i class="fas fa-phone-alt"></i>
 
-      <i class="fas fa-phone-alt"></i>
+        <span>
+          ${locationData.phone || locationData.telephone || ""}
+        </span>
 
-      <span>
-        ${vendor.phone || vendor.telephone || ""}
-      </span>
+      </div>
 
-    </div>
+      <div class="business-contact-row">
 
-    <div class="business-contact-row">
+        <i class="far fa-envelope"></i>
 
-      <i class="far fa-envelope"></i>
+        <span>
+          ${locationData.email || ""}
+        </span>
 
-      <span>
-        ${vendor.email || ""}
-      </span>
+      </div>
 
-    </div>
+    `;
 
-  `;
+  }
 
 }
+
+// -------------------------------
+// FAVORITE BUTTON (item 54) — only shown to a logged-in customer,
+// never to the vendor viewing their own profile or an anonymous
+// visitor. Toggles a row in customer_favorites.
+// -------------------------------
+(async function initFavoriteButton() {
+
+  const favoriteBtn = document.getElementById("favoriteBtn");
+  if (!favoriteBtn || isOwner) return;
+
+  const { data: { session: favSession } } = await supabase.auth.getSession();
+  if (!favSession) return;
+
+  const { data: customer } = await supabase
+    .from("customers")
+    .select("id")
+    .eq("auth_user_id", favSession.user.id)
+    .maybeSingle();
+
+  if (!customer) return; // logged in as a vendor only, not a customer
+
+  favoriteBtn.classList.remove("hidden");
+
+  const icon = favoriteBtn.querySelector("i");
+  const label = favoriteBtn.querySelector("span");
+
+  const { data: existingFavorite } = await supabase
+    .from("customer_favorites")
+    .select("id")
+    .eq("customer_id", customer.id)
+    .eq("vendor_id", vendor.id)
+    .maybeSingle();
+
+  let isFavorited = !!existingFavorite;
+
+  function updateFavoriteUI() {
+    if (icon) icon.className = isFavorited ? "fa-solid fa-heart" : "fa-regular fa-heart";
+    if (label) label.textContent = isFavorited ? "Saved" : "Save";
+  }
+
+  updateFavoriteUI();
+
+  favoriteBtn.addEventListener("click", async () => {
+
+    favoriteBtn.disabled = true;
+
+    if (isFavorited) {
+
+      const { error } = await supabase
+        .from("customer_favorites")
+        .delete()
+        .eq("customer_id", customer.id)
+        .eq("vendor_id", vendor.id);
+
+      if (!error) isFavorited = false;
+
+    } else {
+
+      const { error } = await supabase
+        .from("customer_favorites")
+        .insert({ customer_id: customer.id, vendor_id: vendor.id });
+
+      if (!error) isFavorited = true;
+
+    }
+
+    updateFavoriteUI();
+    favoriteBtn.disabled = false;
+
+  });
+
+})();
+
+// Default view: if a specific branch was named in the URL, show
+// that location directly (no switcher, no ambiguity). Otherwise the
+// vendor's own main address/hours/contact.
+applyLocationView(
+  activeBranch
+    ? {
+        address: activeBranch.address,
+        phone: activeBranch.phone,
+        whatsapp: activeBranch.whatsapp,
+        latitude: activeBranch.latitude,
+        longitude: activeBranch.longitude,
+        open_time: activeBranch.open_time,
+        close_time: activeBranch.close_time,
+        business_days: activeBranch.business_days,
+        // Branches have no email of their own — email stays the
+        // vendor's own, shared, since there's no per-branch schema
+        // for it and it's not something Cyril asked to swap.
+        email: vendor.email
+      }
+    : {
+        address: vendor.address,
+        phone: vendor.phone,
+        telephone: vendor.telephone,
+        whatsapp: vendor.whatsapp,
+        latitude: vendor.latitude,
+        longitude: vendor.longitude,
+        open_time: vendor.open_time,
+        close_time: vendor.close_time,
+        business_days: vendor.business_days,
+        email: vendor.email
+      }
+);
 
     // -------------------------------
     // MEDIA
@@ -1696,6 +1683,11 @@ loadVideo();
 
     // -------------------------------
     // SOCIAL LINKS
+    // Always the vendor's own (HQ) links, regardless of which
+    // location tab is selected — social media accounts are brand-
+    // wide, not per physical location. Only contact details/hours
+    // swap per branch (see applyLocationView + the location switcher
+    // in loadBranches).
     // -------------------------------
   async function loadSocialLinks() {
 
@@ -1744,12 +1736,15 @@ loadVideo();
   "click",
   async () => {
 
-    await supabase
-      .from("analytics_events")
-      .insert({
+    try {
+      await window.logAnalyticsEvent(supabase, {
         vendor_id: vendor.id,
-        event_type: "external_visit"
+        event_type: "external_visit",
+        visitor_id: window.visitorId
       });
+    } catch (analyticsErr) {
+      console.error("External visit analytics error:", analyticsErr);
+    }
 
   }
 );
@@ -1802,7 +1797,7 @@ const query =
       "vendor_reviews"
     )
     .select(
-      "reviewer_name, review_text, created_at"
+      "reviewer_name, review_text, created_at, customer_id"
     )
     .eq(
       "vendor_id",
@@ -1830,35 +1825,14 @@ const {
   error
 } = await query;
 
-console.log(
-  "showAllReviews:",
-  showAllReviews
-);
-
-console.log(
-  "Review Count:",
-  reviews?.length
-);
-
-  console.log(
-    "Recent Reviews:",
-    reviews
-  );
-
-  console.log(
-    "Review Error:",
-    error
-  );
+if (error) {
+  console.error("Reviews load error:", error.message);
+}
 
   const reviewsList =
   document.getElementById(
     "reviewsList"
   );
-
-console.log(
-  "Reviews List Element:",
-  reviewsList
-);
 
 if (
   reviewsList
@@ -1866,6 +1840,19 @@ if (
 
   reviewsList.innerHTML =
     "";
+
+  if (error) {
+
+    reviewsList.innerHTML =
+      `
+      <div class="no-reviews-message">
+        Couldn't load reviews right now. Please try again shortly.
+      </div>
+      `;
+
+    return;
+
+  }
 
   if (
     !reviews ||
@@ -1982,6 +1969,7 @@ reviewsList.insertAdjacentHTML(
 
     <div class="reviewer-name">
       ${reviewerName}
+      ${review.customer_id ? '<span class="verified-reviewer-badge"><i class="fa-solid fa-circle-check"></i> Verified Customer</span>' : ""}
     </div>
 
     <div class="review-date">
@@ -2013,66 +2001,16 @@ async function loadSimilarBusinesses(
   vendor
 ) {
 
-  console.log(
-    "Loading Similar Businesses:",
-    vendor.category
-  );
-
   const {
     data: businesses,
     error
-  } = await supabase
-    .from(
-      "vendors"
-    )
-    .select(
-      `
-      id,
-      slug,
-      name,
-      logo_url,
-      category,
-      average_rating,
-      reviews_count,
-      verification_status,
-      is_sponsored
-      `
-    )
-    .eq(
-      "category",
-      vendor.category
-    )
-    .eq(
-      "account_status",
-      "active"
-    )
-
-    .eq(
-  "onboarding_completed",
-  true
-)
-.eq(
-  "public_listing_accepted",
-  true
-)
-.eq(
-  "subscription_status",
-  "active"
-)
-
-    .neq(
-      "id",
-      vendor.id
-    );
-
-  console.log(
-    "Similar Businesses:",
-    businesses
-  );
-
-  console.log(
-    "Similar Businesses Error:",
-    error
+  } = await supabase.rpc(
+    "get_similar_businesses",
+    {
+      p_exclude_vendor_id: vendor.id,
+      p_target_category: vendor.category,
+      p_limit: 6
+    }
   );
 
   if (
@@ -2080,96 +2018,11 @@ async function loadSimilarBusinesses(
   !businesses
 ) {
 
+  console.error("Similar businesses error:", error?.message);
+
   return;
 
 }
-
-businesses.sort(
-  (
-    a,
-    b
-  ) => {
-
-    const getRank =
-      vendor => {
-
-        if (
-          vendor.is_sponsored
-        ) {
-          return 1;
-        }
-
-        if (
-          vendor.verification_status ===
-          "blue"
-        ) {
-          return 2;
-        }
-
-        if (
-          vendor.verification_status ===
-          "gray"
-        ) {
-          return 3;
-        }
-
-        return 4;
-
-      };
-
-    const rankA =
-      getRank(a);
-
-    const rankB =
-      getRank(b);
-
-    if (
-      rankA !== rankB
-    ) {
-
-      return (
-        rankA -
-        rankB
-      );
-
-    }
-
-    if (
-      Number(
-        b.average_rating || 0
-      ) !==
-      Number(
-        a.average_rating || 0
-      )
-    ) {
-
-      return (
-        Number(
-          b.average_rating || 0
-        ) -
-        Number(
-          a.average_rating || 0
-        )
-      );
-
-    }
-
-    return (
-      Number(
-        b.reviews_count || 0
-      ) -
-      Number(
-        a.reviews_count || 0
-      )
-    );
-
-  }
-);
-
-console.log(
-  "Sorted Businesses:",
-  businesses
-);
 
 const similarBusinessesList =
   document.getElementById(
@@ -2188,7 +2041,6 @@ similarBusinessesList.innerHTML =
   "";
 
 businesses
-  .slice(0, 6)
   .forEach(
     business => {
 
@@ -2347,6 +2199,11 @@ try {
 
   // -------------------------------
 // LOAD BRANCHES
+// Simple list of other locations (address + map link) — no
+// interactive switcher/buttons here. Which location is shown in the
+// hero/contact card is decided entirely by the URL (see
+// loadVendorProfile's ?branch= handling), matching how the search
+// results already link directly to a specific branch.
 // -------------------------------
 async function loadBranches() {
 
@@ -2358,17 +2215,20 @@ async function loadBranches() {
   const { data: branches } = await supabase
     .from("branches")
     .select("*")
-    .eq("vendor_id", vendor.id);
+    .eq("vendor_id", vendor.id)
+    .eq("account_status", "active");
 
   const limit = BRANCH_LIMITS[vendor.plan_tier] ?? 0;
 
 if (!branches || branches.length === 0 || limit === 0) return;
 
+const activeBranches = branches.slice(0, limit);
+
   branchesSection.classList.remove("hidden");
 
   branchesList.innerHTML = "";
 
-  branches.slice(0, limit).forEach(branch => {
+  activeBranches.forEach(branch => {
 
     const item = document.createElement("div");
     item.className = "branch-item";
@@ -2498,22 +2358,23 @@ if (socialLimit === 0) {
     const file = e.target.files[0];
     if (!file) return;
 
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp"
-    ];
+    // Client-side size pre-check — instant feedback instead of
+    // silently converting the whole file to base64 and uploading it
+    // over the network before the server eventually rejects it.
+    const maxCoverSize = 1 * 1024 * 1024;
 
-    if (!allowedTypes.includes(file.type)) {
-      alert("Only JPG, PNG or WEBP images allowed.");
+    if (file.size > maxCoverSize) {
+      alert("Cover image must be 1MB or smaller. Please choose a smaller file.");
       coverInput.value = "";
       return;
     }
 
-    if (file.size > 1024 * 1024) {
-      alert("Cover image must be less than 1MB.");
-      coverInput.value = "";
-      return;
+    // Visible feedback while the upload is actually in flight —
+    // there was previously no indication anything was happening
+    // during this network round-trip.
+    if (coverLabel) {
+      coverLabel.style.pointerEvents = "none";
+      coverLabel.firstChild.textContent = "⏳ Uploading...";
     }
 
     if (vendor.cover_url) {
@@ -2529,38 +2390,38 @@ if (socialLimit === 0) {
 
     }
 
-    const ext =
-      file.name.split(".").pop().toLowerCase();
+    let uploadResult;
 
-    const filePath =
-      `${currentUser.id}/cover-${Date.now()}.${ext}`;
-
-    const { error } = await supabase.storage
-      .from("vendor-branding")
-      .upload(filePath, file);
-
-    if (error) {
-      alert("Cover upload failed.");
+    try {
+      uploadResult = await uploadVendorFile(file, "cover");
+    } catch (err) {
+      console.error("Cover Upload Error:", err.message);
+      alert(err.message || "Cover upload failed.");
       coverInput.value = "";
+      if (coverLabel) {
+        coverLabel.firstChild.textContent = "📷";
+        coverLabel.style.pointerEvents = "";
+      }
       return;
     }
-
-    const { data } = supabase.storage
-      .from("vendor-branding")
-      .getPublicUrl(filePath);
 
     await supabase
       .from("vendors")
       .update({
-        cover_url: data.publicUrl
+        cover_url: uploadResult.publicUrl
       })
       .eq("id", vendor.id);
 
-    vendor.cover_url = data.publicUrl;
+    vendor.cover_url = uploadResult.publicUrl;
 
     renderBranding();
 
     coverInput.value = "";
+
+    if (coverLabel) {
+      coverLabel.firstChild.textContent = "📷";
+      coverLabel.style.pointerEvents = "";
+    }
 
   });
 
@@ -2662,16 +2523,18 @@ if (logoInput) {
     const file = e.target.files[0];
     if (!file) return;
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    // Same client-side size pre-check as cover — instant feedback.
+    const maxLogoSize = 1 * 1024 * 1024;
 
-    if (!allowedTypes.includes(file.type)) {
-      alert("Only JPG, PNG or WEBP images allowed.");
+    if (file.size > maxLogoSize) {
+      alert("Logo image must be 1MB or smaller. Please choose a smaller file.");
+      logoInput.value = "";
       return;
     }
 
-    if (file.size > 1024 * 1024) {
-      alert("Logo image must be less than 1MB.");
-      return;
+    if (logoLabel) {
+      logoLabel.style.pointerEvents = "none";
+      logoLabel.firstChild.textContent = "⏳";
     }
 
     if (vendor.logo_url) {
@@ -2686,32 +2549,36 @@ if (logoInput) {
 
     }
 
-    const ext = file.name.split(".").pop().toLowerCase();
+    let uploadResult;
 
-    const filePath =
-      `${currentUser.id}/logo-${Date.now()}.${ext}`;
-
-    const { error } = await supabase.storage
-      .from("vendor-branding")
-      .upload(filePath, file);
-
-    if (error) {
-      console.error("Logo Upload Error:", error.message);
+    try {
+      uploadResult = await uploadVendorFile(file, "logo");
+    } catch (err) {
+      console.error("Logo Upload Error:", err.message);
+      alert(err.message || "Logo upload failed.");
+      logoInput.value = "";
+      if (logoLabel) {
+        logoLabel.firstChild.textContent = "📷";
+        logoLabel.style.pointerEvents = "";
+      }
       return;
     }
 
-    const { data } = supabase.storage
-      .from("vendor-branding")
-      .getPublicUrl(filePath);
-
     await supabase
       .from("vendors")
-      .update({ logo_url: data.publicUrl })
+      .update({ logo_url: uploadResult.publicUrl })
       .eq("id", vendor.id);
 
-    vendor.logo_url = data.publicUrl;
+    vendor.logo_url = uploadResult.publicUrl;
 
     renderBranding();
+
+    logoInput.value = "";
+
+    if (logoLabel) {
+      logoLabel.firstChild.textContent = "📷";
+      logoLabel.style.pointerEvents = "";
+    }
 
   });
 

@@ -789,6 +789,49 @@ color:inherit;
   color: #9a3412;
 }
 
+.vd-trial-upgrade-btn {
+  margin-top: 12px;
+  width: 100%;
+
+  padding: 10px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #000000;
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.vd-trial-upgrade-btn:hover {
+  background: #e6c200;
+  color: #000000;
+}
+
+.vd-trial-box.vd-trial-ended {
+  background: linear-gradient(
+    135deg,
+    #fef2f2 0%,
+    #fee2e2 100%
+  );
+
+  border-color: #fca5a5;
+}
+
+.vd-trial-box.vd-trial-ended .vd-trial-days {
+  color: #b91c1c;
+}
+
+.vd-trial-box.vd-trial-ended .vd-trial-time {
+  color: #7f1d1d;
+}
+
 /* =========================
 PROFILE ARCHITECTURE
 ========================= */
@@ -1009,7 +1052,7 @@ PROFILE ARCHITECTURE
 
   padding: 15px 24px;
 
-  background: #f97316;
+  background: #000000;
   color: #ffffff;
 
   font-size: 15px;
@@ -1021,6 +1064,16 @@ PROFILE ARCHITECTURE
 .vd-primary-btn:hover {
   background: #e6c200;
   color: #000;
+}
+
+#subscriptionUpgradeBtn {
+  background: #f97316;
+  color: #ffffff;
+}
+
+#subscriptionUpgradeBtn:hover {
+  background: #e6c200;
+  color: #000000;
 }
 
 #saveProfileBtn {
@@ -1770,9 +1823,32 @@ DESCRIPTION EDITOR
 
 }
 
-/* ===============================
-EMAIL VERIFICATION
-=============================== */
+/* ========================= */
+/* SETTINGS EMAIL CHANGE */
+/* ========================= */
+
+.vd-settings-email-display {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 6px 0 4px;
+}
+
+.vd-settings-email-note {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #64748b;
+  margin: 0;
+}
+
+.vd-setting-row-col {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* ========================= */
+/* EMAIL VERIFICATION */
+/* ========================= */
 
 .vd-email-row {
   display: flex;
@@ -2518,4 +2594,153 @@ EMPTY STATE
 
 }
 
+}
+
+/* ========================= */
+/* AI DESCRIPTION GENERATOR (item 56) */
+/* ========================= */
+
+.vd-ai-generate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+
+  background: linear-gradient(135deg, #e6c200, #f4b400);
+  color: #000;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.vd-ai-generate-btn:hover {
+  opacity: 0.85;
+}
+
+.ai-desc-modal {
+  position: fixed;
+  inset: 0;
+
+  background: rgba(0,0,0,0.6);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 99999;
+}
+
+.ai-desc-modal-content {
+  width: 90%;
+  max-width: 420px;
+
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+
+  position: relative;
+
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.ai-desc-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+
+  border: none;
+  background: none;
+
+  font-size: 22px;
+  cursor: pointer;
+
+  color: #6b7280;
+}
+
+.ai-desc-modal-content h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.ai-desc-subtext {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 18px;
+}
+
+.ai-desc-modal-content label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 14px 0 4px;
+}
+
+.ai-desc-nudge {
+  margin: 0 0 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.ai-desc-modal-content input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.ai-desc-error {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 13px;
+}
+
+#aiDescSubmit {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.ai-desc-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+
+  background: #111827;
+  color: #fff;
+
+  padding: 12px 20px;
+  border-radius: 999px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  opacity: 0;
+  pointer-events: none;
+
+  transition: opacity 0.3s ease, transform 0.3s ease;
+
+  z-index: 999999;
+}
+
+.ai-desc-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }

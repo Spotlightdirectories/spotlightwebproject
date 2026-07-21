@@ -6,16 +6,7 @@
 // supabase setup moved to its own file: supabase-client.js
 const supabaseClient = window.supabaseClient;
 
-// ✅ Test Supabase connection
-(async () => {
-  try {
-    const { data, error } = await supabaseClient.from("vendors").select("*").limit(1);
-    if (error) console.error("❌ Supabase connection failed:", error.message);
-    else console.log("✅ Supabase connected! Sample:", data);
-  } catch (err) {
-    console.error("⚠️ Supabase test error:", err);
-  }
-})();
+// Connection verified via supabase-client.js
 
 
 // ===============================
@@ -211,46 +202,11 @@ if (billingToggle) {
 
 
 // ===============================
-// AUTH-AWARE NAV (LOGIN / LOGOUT)
+// AUTH NAV
+// Handled by script2.js via authBtn pattern.
+// loginLink / logoutLink pattern removed — no longer used on any page.
 // ===============================
 
-document.addEventListener("DOMContentLoaded", async () => {
-
-  if (!supabaseClient) return;
-
-  const supabase = supabaseClient;
-
-  const loginLink = document.getElementById("loginLink");
-  const logoutLink = document.getElementById("logoutLink");
-  const logoutBtn = document.getElementById("logoutBtn");
-
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-
-  if (user) {
-
-    loginLink?.classList.add("hidden");
-    logoutLink?.classList.remove("hidden");
-
-  } else {
-
-    loginLink?.classList.remove("hidden");
-    logoutLink?.classList.add("hidden");
-
-  }
-
-  logoutBtn?.addEventListener("click", async (e) => {
-
-    e.preventDefault();
-
-    await supabase.auth.signOut();
-
-    window.location.href = "index";
-
-  });
-
-});
 
 document.addEventListener("DOMContentLoaded", () => {
 

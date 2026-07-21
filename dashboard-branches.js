@@ -1,7 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
 
-console.log("Branches manager loaded");
-
 const supabase = window.supabaseClient;
 
 
@@ -36,9 +34,6 @@ console.error("Vendor not found");
 return;
 }
 
-console.log("Vendor loaded:", vendor);
-
-
 // ===============================
 // PLACEHOLDER
 // ===============================
@@ -49,11 +44,28 @@ window.vendorData = vendor;
 // PLAN LIMITS
 // ===============================
 
+// ===============================
+// BUSINESS NAME GUARD
+// Uses word-boundary matching (not plain substring) so a short
+// business name like "AB" doesn't false-positive on unrelated
+// words like "Cabin". Still catches real duplication like
+// vendor name "ABC Traders" appearing in "ABC Traders Ikeja".
+// ===============================
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function containsBusinessName(text, businessName) {
+  if (!businessName) return false;
+  const pattern = new RegExp(`\\b${escapeRegex(businessName)}\\b`, "i");
+  return pattern.test(text);
+}
+
 const BRANCH_LIMITS = {
 free: 0,
-standard: 1,
+standard: 0,
 enterprise: 10,
-elite: 50,
+elite: 30,
 custom: Infinity
 };
 
@@ -65,6 +77,39 @@ custom: Infinity
 const branchForm = document.getElementById("branchForm");
 
 const branchWhatsappInput = document.getElementById("branchWhatsapp");
+const branchStateSelect = document.getElementById("branchState");
+const branchLgaSelect = document.getElementById("branchLga");
+
+// ===============================
+// STATE / LGA CASCADING SELECT
+// Same source of truth (window.nigeriaData) already used for the
+// vendor's own address on vendordashboard.html.
+// ===============================
+if (branchStateSelect) {
+  Object.keys(window.nigeriaData || {}).sort().forEach(stateName => {
+    const opt = document.createElement("option");
+    opt.value = stateName;
+    opt.textContent = stateName;
+    branchStateSelect.appendChild(opt);
+  });
+
+  branchStateSelect.addEventListener("change", () => {
+    populateLgaOptions(branchStateSelect.value);
+  });
+}
+
+function populateLgaOptions(stateName, selectedLga) {
+  if (!branchLgaSelect) return;
+  branchLgaSelect.innerHTML = '<option value="">Select LGA</option>';
+  const lgas = (window.nigeriaData || {})[stateName] || [];
+  lgas.forEach(lgaName => {
+    const opt = document.createElement("option");
+    opt.value = lgaName;
+    opt.textContent = lgaName;
+    if (lgaName === selectedLga) opt.selected = true;
+    branchLgaSelect.appendChild(opt);
+  });
+}
 
 // FORCE +234 PREFIX
 branchWhatsappInput.value = "+234";
@@ -97,7 +142,7 @@ if (!branchInput) {
 }
 
 // Block vendor name usage
-if (branchInput.toLowerCase().includes(vendor.name.toLowerCase())) {
+if (containsBusinessName(branchInput, vendor.name)) {
   alert("Do not include your business name. Enter only the branch identifier (e.g. 'Isolo').");
   return;
 }
@@ -113,6 +158,11 @@ const name = `${vendor.name} - ${branchInput}`;
 const address = document.getElementById("branchAddress").value.trim();
 const phone = document.getElementById("branchPhone").value.trim();
 const whatsapp = document.getElementById("branchWhatsapp").value.trim();
+const state = document.getElementById("branchState").value;
+const lga = document.getElementById("branchLga").value;
+const openTime = document.getElementById("branchOpenTime").value || null;
+const closeTime = document.getElementById("branchCloseTime").value || null;
+const businessDays = Array.from(document.querySelectorAll(".branch-day:checked")).map(cb => cb.value).join(",") || null;
 const latitude = document.getElementById("branchLatitude").value.trim();
 const longitude = document.getElementById("branchLongitude").value.trim();
 
@@ -121,13 +171,16 @@ if (!branchInput || !address) {
   return;
 }
 
-// Prevent user from typing full business name
-if (branchInput.toLowerCase().includes(vendor.name.toLowerCase())) {
-  alert("Enter only branch identifier (e.g. 'Isolo'), not full business name.");
+if (!state || !lga) {
+  alert("Please select the branch's state and LGA.");
   return;
 }
 
-// check plan limit
+// check plan limit (only applies when creating a NEW branch —
+// editing an existing branch must never be blocked by the limit,
+// since you're not adding a row, just changing one you already have)
+if (!window.editingBranchId) {
+
 const limit = BRANCH_LIMITS[vendor.plan_tier] ?? 0;
 
 const { data: existingBranches } = await supabase
@@ -139,6 +192,8 @@ if (existingBranches && existingBranches.length >= limit) {
 
 alert("You have reached the maximum number of branches allowed for your plan.");
 return;
+
+}
 
 }
 
@@ -154,6 +209,11 @@ if (window.editingBranchId) {
   address: address,
   phone: phone,
   whatsapp: whatsapp,
+  state: state,
+  lga: lga,
+  open_time: openTime,
+  close_time: closeTime,
+  business_days: businessDays,
   latitude: latitude || null,
   longitude: longitude || null
 })
@@ -171,6 +231,11 @@ if (window.editingBranchId) {
   address: address,
   phone: phone,
   whatsapp: whatsapp,
+  state: state,
+  lga: lga,
+  open_time: openTime,
+  close_time: closeTime,
+  business_days: businessDays,
   latitude: latitude || null,
   longitude: longitude || null
 });
@@ -227,6 +292,9 @@ name.textContent = branch.branch_name;
 const address = document.createElement("div");
 address.textContent = branch.address;
 
+const region = document.createElement("div");
+region.textContent = (branch.state || branch.lga) ? `${branch.lga || "—"}, ${branch.state || "—"}` : "—";
+
 const editBtn = document.createElement("button");
 editBtn.textContent = "Edit";
 
@@ -238,6 +306,16 @@ document.getElementById("branchPhone").value = branch.phone || "";
 document.getElementById("branchWhatsapp").value = branch.whatsapp || "";
 document.getElementById("branchLatitude").value = branch.latitude || "";
 document.getElementById("branchLongitude").value = branch.longitude || "";
+document.getElementById("branchOpenTime").value = branch.open_time || "";
+document.getElementById("branchCloseTime").value = branch.close_time || "";
+
+const selectedDays = (branch.business_days || "").split(",");
+document.querySelectorAll(".branch-day").forEach(cb => {
+  cb.checked = selectedDays.includes(cb.value);
+});
+
+if (branchStateSelect) branchStateSelect.value = branch.state || "";
+populateLgaOptions(branch.state, branch.lga);
 
 window.editingBranchId = branch.id;
 
@@ -268,6 +346,7 @@ location.reload();
 
 item.appendChild(name);
 item.appendChild(address);
+item.appendChild(region);
 item.appendChild(editBtn);
 item.appendChild(deleteBtn);
 
