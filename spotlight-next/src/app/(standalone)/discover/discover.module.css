@@ -1,0 +1,737 @@
+/* ===============================================================
+   discover.module.css
+   Ported faithfully from the original discover.css.
+   Change from original: hardcoded colours swapped for design
+   tokens so dark/light mode works (a required migration
+   deliverable). Light-mode appearance is unchanged; dark mode
+   now themes correctly. All spacing, sizes, layout, and
+   animations are exactly as production.
+=============================================================== */
+
+/* PAGE */
+.discoverPage {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--color-surface);
+  position: relative;
+  padding-bottom: 100px;
+}
+
+/* HEADER */
+.discoverHeader {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--color-surface);
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.discoverBrand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.discoverLogo {
+  width: 34px;
+  height: 34px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.discoverBrandText {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* SEARCH SECTION */
+.discoverSearchSection {
+  padding: 16px 16px 8px;
+}
+
+.discoverSearchWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.discoverSearchWrap i {
+  position: absolute;
+  left: 14px;
+  font-size: 14px;
+  color: var(--color-text-faint);
+}
+
+.discoverSearchInput {
+  flex: 1;
+  height: 50px;
+  padding: 0 16px 0 42px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  font-size: 14px;
+  color: var(--color-text-primary);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.discoverSearchInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(230, 194, 0, 0.12);
+}
+
+.discoverSearchBtn {
+  height: 50px;
+  border: none;
+  border-radius: 16px;
+  padding: 0 18px;
+  background: var(--color-dark);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.discoverSearchBtn:hover {
+  background: var(--color-primary);
+  color: #000000;
+}
+
+/* SEARCH TABS */
+.discoverSearchTabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.discoverTab {
+  height: 38px;
+  border: none;
+  border-radius: 999px;
+  background: var(--color-surface-alt);
+  color: var(--color-text-body);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.discoverTab.active {
+  background: var(--color-dark);
+  color: #ffffff;
+}
+
+.discoverTab:hover {
+  background: var(--color-primary);
+  color: #000000;
+}
+
+/* QUICK FILTERS */
+.discoverQuickFilters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.discoverToggleWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.discoverToggleWrap input {
+  display: none;
+}
+
+.discoverToggleSlider {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  background: var(--color-border);
+  border-radius: 999px;
+  transition: 0.2s ease;
+}
+
+.discoverToggleSlider::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: 0.2s ease;
+}
+
+.discoverToggleWrap input:checked + .discoverToggleSlider {
+  background: var(--color-primary);
+}
+
+.discoverToggleWrap input:checked + .discoverToggleSlider::before {
+  transform: translateX(18px);
+}
+
+.discoverToggleLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.discoverMoreFiltersBtn {
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.discoverMoreFiltersBtn:hover {
+  opacity: 0.7;
+}
+
+/* DISTANCE SEARCH */
+.discoverDistanceCard {
+  padding: 12px 14px;
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+}
+
+.discoverDistanceTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: nowrap;
+}
+
+.discoverDistanceToggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+  cursor: pointer;
+}
+
+.discoverDistanceToggle input {
+  display: none;
+}
+
+.discoverDistanceCheckbox {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--color-text-faint);
+  border-radius: 6px;
+  position: relative;
+  background: var(--color-surface);
+}
+
+.discoverDistanceToggle input:checked + .discoverDistanceCheckbox {
+  background: var(--color-dark);
+  border-color: var(--color-dark);
+}
+
+.discoverDistanceToggle input:checked + .discoverDistanceCheckbox::after {
+  content: "✓";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.discoverDistanceText {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+}
+
+.discoverLocationBtn {
+  height: 34px;
+  border: none;
+  border-radius: 999px;
+  padding: 0 12px;
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.discoverLocationBtn:hover {
+  opacity: 0.8;
+}
+
+.discoverDistanceSliderWrap {
+  width: 100%;
+}
+
+.discoverDistanceSlider {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-info-bg);
+  outline: none;
+}
+
+.discoverDistanceSlider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #0047ab;
+  cursor: pointer;
+}
+
+.discoverDistanceScale {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.discoverDistanceScale span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.distanceRadiusValue {
+  color: var(--color-text-primary) !important;
+}
+
+/* SECTION SPACING */
+.discoverSection {
+  padding: 20px 16px 0;
+}
+
+.discoverSectionHeading h2 {
+  margin: 0 0 16px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  word-break: break-word;
+  color: var(--color-text-primary);
+}
+
+/* SPONSORED */
+.discoverSponsoredScroll {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.discoverSponsoredScroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* TRENDING */
+.discoverTrendingTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.discoverTrendingTags button {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-body);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.discoverTrendingTags button:hover {
+  background: var(--color-primary);
+  color: #000000;
+}
+
+/* RECENT */
+.discoverRecentList {
+  display: flex;
+  flex-direction: column;
+}
+
+/* BOTTOM NAV */
+.discoverBottomNav {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: 74px;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  z-index: 200;
+}
+
+.discoverBottomItem {
+  border: none;
+  background: transparent;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.discoverBottomItem:hover {
+  opacity: 0.7;
+}
+
+.discoverBottomItem i,
+.discoverBottomItem span {
+  color: var(--color-text-primary);
+}
+
+.discoverBottomItem span {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.discoverBottomItem i {
+  font-size: 15px;
+}
+
+/* FILTER DRAWER */
+.discoverFiltersDrawer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: -100%;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--color-surface);
+  border-radius: 24px 24px 0 0;
+  z-index: 300;
+  transition: bottom 0.3s ease;
+}
+
+.discoverFiltersDrawer.active {
+  bottom: 0;
+}
+
+.discoverFiltersHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.discoverFiltersHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.closeFiltersDrawerBtn {
+  border: none;
+  background: transparent;
+  font-size: 28px;
+  cursor: pointer;
+  color: var(--color-text-primary);
+}
+
+.discoverFiltersBody {
+  padding: 20px;
+}
+
+.discoverFilterGroup {
+  margin-bottom: 18px;
+}
+
+.discoverFilterGroup label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-body);
+}
+
+.discoverFilterSelect {
+  width: 100%;
+  height: 50px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 0 14px;
+  font-size: 14px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+.discoverFilterSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.discoverFiltersFooter {
+  display: flex;
+  gap: 12px;
+  padding: 0 20px 24px;
+}
+
+.discoverResetBtn,
+.discoverApplyBtn {
+  flex: 1;
+  height: 50px;
+  border: none;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.discoverResetBtn {
+  background: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.discoverResetBtn:hover {
+  background: var(--color-text-faint);
+}
+
+.discoverApplyBtn {
+  background: var(--color-dark);
+  color: #ffffff;
+}
+
+.discoverApplyBtn:hover {
+  background: var(--color-primary);
+  color: #000000;
+}
+
+/* OVERLAY */
+.discoverDrawerOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  visibility: hidden;
+  transition: 0.3s ease;
+  z-index: 250;
+}
+
+.discoverDrawerOverlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* DISTANCE ENABLED STATE */
+.discoverDistanceCard:not(.distanceEnabled) .discoverDistanceSliderWrap {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.discoverDistanceCard:not(.distanceEnabled) .discoverLocationBtn {
+  opacity: 0.5;
+}
+
+/* SEARCH LOADING */
+.discoverSearchLoading {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.92);
+  z-index: 9999;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.discoverSearchLoading.active {
+  display: flex;
+}
+
+.discoverSearchLoading p {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111111;
+}
+
+.discoverSearchSpinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #000000;
+  border-radius: 50%;
+  animation: discoverSpin 0.8s linear infinite;
+}
+
+@keyframes discoverSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* SEARCH ERROR */
+.discoverSearchError {
+  display: none;
+  margin: -6px 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-error);
+}
+
+.discoverSearchError.active {
+  display: block;
+}
+
+/* RESPONSIVE */
+@media (min-width: 768px) {
+  .discoverPage {
+    margin: 24px auto 0;
+    border-radius: 24px 24px 0 0;
+    overflow: visible;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  }
+  .discoverSponsoredScroll {
+    gap: 18px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .discoverPage {
+    max-width: 760px;
+  }
+  .discoverSearchSection,
+  .discoverSection {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+@media (max-width: 360px) {
+  .discoverSearchSection,
+  .discoverSection {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .discoverDistanceTop { gap: 6px; }
+  .discoverDistanceText { font-size: 12px; }
+  .discoverLocationBtn { padding: 0 10px; font-size: 11px; }
+  .discoverSectionHeading h2 { font-size: 18px; }
+}
+
+/* ===============================================================
+   DARK MODE TOUCH-UPS (Option B — outlined-black primaries)
+   Only applies in dark mode; light mode is unchanged. Fixes the
+   near-black-on-near-black contrast issues by giving the always-
+   black primary elements a subtle light outline so they stay
+   visible against the dark page, plus small contrast nudges.
+=============================================================== */
+
+/* Search button + active tab: keep them black, add a clearly
+   visible light-gray border so they separate from the dark
+   background instead of vanishing. */
+:global([data-theme="dark"]) .discoverSearchBtn,
+:global([data-theme="dark"]) .discoverTab.active,
+:global([data-theme="dark"]) .discoverApplyBtn {
+  border: 1.5px solid #6b7280;
+}
+
+/* Distance checkbox when checked: same idea, keep the black fill
+   readable with a visible light outline. */
+:global([data-theme="dark"]) .discoverDistanceToggle input:checked + .discoverDistanceCheckbox {
+  border-color: #6b7280;
+}
+
+/* Slider track: brighten it clearly so it reads against the dark
+   card, and give the thumb a light ring for visibility. */
+:global([data-theme="dark"]) .discoverDistanceSlider {
+  background: #4b5563;
+}
+
+:global([data-theme="dark"]) .discoverDistanceSlider::-webkit-slider-thumb {
+  background: #3b82f6;
+  box-shadow: 0 0 0 2px #e5e7eb;
+}
+
+/* Km scale marks: sharpen them so they're clearly readable. */
+:global([data-theme="dark"]) .discoverDistanceScale span {
+  color: #cbd5e1;
+}
+
+/* "Use Current" button: the success-green tokens are too dim in
+   dark mode — give it a readable green fill and text. */
+:global([data-theme="dark"]) .discoverLocationBtn {
+  background: #14532d;
+  color: #86efac;
+}
+
+/* The distance card's DISABLED (not-yet-enabled) state dims the
+   slider + location button. In dark mode that dimming was too
+   strong to see anything — lift the minimum opacity so the
+   disabled state is still visibly present, just clearly muted. */
+:global([data-theme="dark"]) .discoverDistanceCard:not(.distanceEnabled) .discoverDistanceSliderWrap {
+  opacity: 0.7;
+}
+
+:global([data-theme="dark"]) .discoverDistanceCard:not(.distanceEnabled) .discoverLocationBtn {
+  opacity: 0.75;
+}
+
+/* Loading overlay: dark backdrop + dark-appropriate spinner, so a
+   search in dark mode doesn't flash a white screen. */
+:global([data-theme="dark"]) .discoverSearchLoading {
+  background: rgba(11, 11, 11, 0.92);
+}
+
+:global([data-theme="dark"]) .discoverSearchLoading p {
+  color: var(--color-text-primary);
+}
+
+:global([data-theme="dark"]) .discoverSearchSpinner {
+  border: 4px solid var(--color-surface-alt);
+  border-top: 4px solid var(--color-primary);
+}
