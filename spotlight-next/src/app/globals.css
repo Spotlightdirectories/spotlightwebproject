@@ -1,0 +1,188 @@
+@import "tailwindcss";
+
+/* ==============================================
+   SPOTLIGHT DIRECTORIES — DESIGN TOKEN SYSTEM
+   Ported from the original theme.css.
+
+   Light mode tokens live in :root.
+   Dark mode tokens live in [data-theme="dark"].
+   Dark mode is activated by setting
+   data-theme="dark" on the <html> element
+   (handled by the ThemeProvider, ported from
+   the original theme-toggle.js).
+============================================== */
+
+:root {
+
+  /* --- BRAND COLOURS --- */
+  --color-primary:        #e6c200;
+  --color-primary-hover:  #d4b000;
+  --color-dark:           #000000;
+  --color-dark-hover:     #111111;
+
+  /* --- CTA / UPGRADE COLOUR (ORANGE — UPGRADE CTAs ONLY) --- */
+  --color-cta:            #f97316;
+  --color-cta-hover:      #e6c200;
+
+  /* --- BACKGROUND COLOURS --- */
+  --color-background:     #fafaf8;
+  --color-surface:        #ffffff;
+  --color-surface-alt:    #f3f4f6;
+  --color-surface-hover:  #f8fafc;
+
+  /* --- BORDER COLOURS --- */
+  --color-border:         #e5e7eb;
+  --color-border-light:   #f1f5f9;
+  --color-border-focus:   #e6c200;
+
+  /* --- TEXT COLOURS --- */
+  --color-text-primary:   #0f172a;
+  --color-text-body:      #334155;
+  --color-text-muted:     #64748b;
+  --color-text-faint:     #94a3b8;
+  --color-text-inverse:   #ffffff;
+
+  /* --- STATUS COLOURS --- */
+  --color-success:        #16a34a;
+  --color-success-bg:     #dcfce7;
+  --color-warning:        #d97706;
+  --color-warning-bg:     #fef3c7;
+  --color-error:          #dc2626;
+  --color-error-bg:       #fef2f2;
+  --color-info:           #2563eb;
+  --color-info-bg:        #dbeafe;
+
+  /* --- BADGE COLOURS --- */
+  --color-badge-gray:     #64748b;
+  --color-badge-blue:     #2563eb;
+  --color-whatsapp:       #25d366;
+
+  /* --- SPACING SCALE --- */
+  --spacing-xs:   4px;
+  --spacing-sm:   8px;
+  --spacing-md:   16px;
+  --spacing-lg:   24px;
+  --spacing-xl:   32px;
+  --spacing-2xl:  48px;
+  --spacing-3xl:  64px;
+
+  /* --- TYPOGRAPHY --- */
+  --font-family:        Arial, sans-serif;
+  --font-family-mono:   'Courier New', monospace;
+
+  --text-xs:    11px;
+  --text-sm:    13px;
+  --text-base:  15px;
+  --text-md:    16px;
+  --text-lg:    18px;
+  --text-xl:    20px;
+  --text-2xl:   24px;
+  --text-3xl:   28px;
+  --text-4xl:   32px;
+  --text-5xl:   40px;
+
+  --font-normal:   400;
+  --font-medium:   500;
+  --font-semibold: 600;
+  --font-bold:     700;
+  --font-black:    900;
+
+  --line-height-tight:  1.2;
+  --line-height-normal: 1.6;
+  --line-height-loose:  1.8;
+
+  /* --- BORDER RADIUS --- */
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   14px;
+  --radius-2xl:  16px;
+  --radius-3xl:  20px;
+  --radius-full: 999px;
+
+  /* --- SHADOWS --- */
+  --shadow-sm:   0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md:   0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lg:   0 4px 16px rgba(0, 0, 0, 0.10);
+  --shadow-xl:   0 8px 30px rgba(15, 23, 42, 0.12);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  /* --- TRANSITIONS --- */
+  --transition-fast:   0.15s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow:   0.3s ease;
+
+  /* --- HEADER --- */
+  --header-height: 70px;
+
+  /* Legacy alias kept for ported CSS that references --gold */
+  --gold: #e6c200;
+
+  /* --- Z-INDEX SCALE --- */
+  --z-base:     1;
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-overlay:  1000;
+  --z-modal:    1100;
+  --z-sidebar:  1200;
+  --z-topbar:   1300;
+}
+
+
+/* ==============================================
+   DARK MODE — activated by <html data-theme="dark">
+   Only background, surface, border, and text
+   tokens change — brand colours stay the same.
+============================================== */
+
+[data-theme="dark"] {
+
+  --color-background:     #0b0b0b;
+  --color-surface:        #111111;
+  --color-surface-alt:    #1a1a1a;
+  --color-surface-hover:  #222222;
+
+  --color-border:         #2d2d2d;
+  --color-border-light:   #1f1f1f;
+
+  --color-text-primary:   #f1f5f9;
+  --color-text-body:      #cbd5e1;
+  --color-text-muted:     #94a3b8;
+  --color-text-faint:     #64748b;
+  --color-text-inverse:   #000000;
+
+  --color-success-bg:     #052e16;
+  --color-warning-bg:     #422006;
+  --color-error-bg:       #450a0a;
+  --color-info-bg:        #0c1a3a;
+}
+
+
+/* ==============================================
+   BASE RESET
+============================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text-body);
+  font-family: var(--font-family);
+  font-size: var(--text-base);
+  line-height: var(--line-height-normal);
+  transition: background var(--transition-normal),
+              color var(--transition-normal);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}

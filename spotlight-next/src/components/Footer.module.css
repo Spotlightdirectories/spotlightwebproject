@@ -1,0 +1,31 @@
+/* ===============================================================
+   Footer.module.css — scoped footer styles using design tokens.
+=============================================================== */
+
+.footer {
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  padding: var(--spacing-2xl) var(--spacing-lg);
+  text-align: center;
+  color: var(--color-text-faint);
+}
+
+.brandLine {
+  margin: 0 0 var(--spacing-sm);
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+}
+
+.gold {
+  color: var(--color-primary);
+}
+
+.tagline {
+  margin: 0 0 var(--spacing-xs);
+  font-size: var(--text-sm);
+}
+
+.copyright {
+  margin: 0;
+  font-size: var(--text-xs);
+}
