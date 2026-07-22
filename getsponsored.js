@@ -595,7 +595,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const reference = `SPONSOR_${Date.now()}`;
 
     const handler = PaystackPop.setup({
-      key: "pk_test_3dc48990c568ef43d2b42a9571cde21b9175d699",
+      key: "sk_live_e53ffa8faa0e3b98a3e9e461095c1b86cba76605",
       email: vendor.email || user.email,
       amount: unitPrice * 100,
       currency: "NGN",

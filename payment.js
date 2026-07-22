@@ -255,7 +255,7 @@ const { data, error } = await supabase
 
   // 2️⃣ Open Paystack
   const handler = PaystackPop.setup({
-    key: "pk_test_3dc48990c568ef43d2b42a9571cde21b9175d699",
+    key: "sk_live_e53ffa8faa0e3b98a3e9e461095c1b86cba76605",
     email: user.email,
     amount: getAmountInKobo(effectivePlan, billingType),
     currency: "NGN",
