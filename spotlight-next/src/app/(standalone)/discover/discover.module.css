@@ -627,7 +627,109 @@
   display: block;
 }
 
-/* RESPONSIVE */
+/* SPONSORED CARD */
+.discoverSponsoredCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 120px;
+  max-width: 140px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-md) var(--spacing-sm);
+  text-decoration: none;
+  scroll-snap-align: start;
+  flex-shrink: 0;
+  transition: box-shadow var(--transition-normal);
+}
+
+.discoverSponsoredCard:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.discoverSponsoredLogo {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+  margin-bottom: var(--spacing-sm);
+}
+
+.discoverSponsoredInfo {
+  text-align: center;
+}
+
+.discoverSponsoredName {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 2px;
+  line-height: 1.2;
+}
+
+.discoverSponsoredCat {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* RECENT SEARCHES */
+.discoverRecentItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-sm) 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border-light);
+  font-size: var(--text-sm);
+  color: var(--color-text-body);
+  cursor: pointer;
+  text-align: left;
+  transition: color var(--transition-fast);
+}
+
+.discoverRecentItem i {
+  color: var(--color-text-faint);
+  font-size: 13px;
+}
+
+.discoverRecentItem:hover {
+  color: var(--color-text-primary);
+}
+
+.discoverClearRecent {
+  background: transparent;
+  border: none;
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+  cursor: pointer;
+  padding: var(--spacing-sm) 0 0;
+  text-align: left;
+}
+
+.discoverClearRecent:hover {
+  color: var(--color-error);
+}
+
+/* SEARCH ERROR ACTIVE STATE */
+.discoverSearchError.active {
+  display: block;
+}
+
+/* DISTANCE ENABLED — un-dim the slider */
+.discoverDistanceCard.distanceEnabled .discoverDistanceSliderWrap {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.discoverDistanceCard.distanceEnabled .discoverLocationBtn {
+  opacity: 1;
+}
+
+
 @media (min-width: 768px) {
   .discoverPage {
     margin: 24px auto 0;
