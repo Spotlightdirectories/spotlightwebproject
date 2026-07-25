@@ -186,6 +186,7 @@ export default function VendorProfilePage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [trialActive, setTrialActive] = useState(false);
+  const [activeBranch, setActiveBranch] = useState<any>(null);
 
   // Data
   const [products, setProducts] = useState<Product[]>([]);
@@ -242,6 +243,21 @@ export default function VendorProfilePage() {
       if (!vendorData) return;
 
       vendorData.plan_tier = getSafePlanTier(vendorData.plan_tier);
+
+      // Branch swap: if ?branch= in URL, fetch that branch's data
+      // and use it for the hero contact/address display instead of HQ.
+      // Everything else (about, products, reviews) stays HQ-level.
+      const branchId = searchParams.get("branch");
+      if (branchId) {
+        const { data: branchData } = await supabase
+          .from("branches")
+          .select("*")
+          .eq("id", branchId)
+          .eq("vendor_id", vendorData.id)
+          .eq("account_status", "active")
+          .maybeSingle();
+        if (branchData) setActiveBranch(branchData);
+      }
 
       // Trial check
       if (vendorData.plan_tier === "free" && vendorData.trial_started_at) {
@@ -556,11 +572,32 @@ export default function VendorProfilePage() {
     );
   }
 
-  const mapHref = vendor.latitude && vendor.longitude
-    ? `https://www.google.com/maps/search/?api=1&query=${vendor.latitude},${vendor.longitude}`
-    : vendor.address
-      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vendor.address)}`
+  const mapHref = (activeBranch?.latitude || vendor.latitude) && (activeBranch?.longitude || vendor.longitude)
+    ? `https://www.google.com/maps/search/?api=1&query=${activeBranch?.latitude || vendor.latitude},${activeBranch?.longitude || vendor.longitude}`
+    : (activeBranch?.address || vendor.address)
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeBranch?.address || vendor.address)}`
       : "#";
+
+  // Location view — uses branch data when ?branch= active, HQ otherwise
+  const locationView = activeBranch ? {
+    name: activeBranch.branch_name || vendor.name,
+    address: activeBranch.address || vendor.address,
+    phone: activeBranch.phone || vendor.phone,
+    whatsapp: activeBranch.whatsapp || vendor.whatsapp,
+    open_time: activeBranch.open_time || vendor.open_time,
+    close_time: activeBranch.close_time || vendor.close_time,
+    business_days: activeBranch.business_days || vendor.business_days,
+    email: vendor.email, // email stays HQ
+  } : {
+    name: vendor.name,
+    address: vendor.address,
+    phone: vendor.phone,
+    whatsapp: vendor.whatsapp,
+    open_time: vendor.open_time,
+    close_time: vendor.close_time,
+    business_days: vendor.business_days,
+    email: vendor.email,
+  };
 
   return (
     <>
@@ -621,7 +658,7 @@ export default function VendorProfilePage() {
             {/* VENDOR INFO */}
             <div className={styles.heroText}>
               <div className={styles.nameRow}>
-                <h1>{vendor.name}</h1>
+                <h1>{locationView.name}</h1>
                 <Badge status={vendor.verification_status} />
               </div>
 
@@ -639,7 +676,7 @@ export default function VendorProfilePage() {
                 </div>
               </div>
 
-              <p className={styles.addressLine}>{vendor.address}</p>
+              <p className={styles.addressLine}>{locationView.address}</p>
 
               {/* SOCIAL LINKS */}
               {socialLinks.length > 0 && (
@@ -667,9 +704,9 @@ export default function VendorProfilePage() {
 
           {/* QUICK ACTIONS */}
           <div className={styles.quickActions}>
-            {vendor.whatsapp && (
+            {locationView.whatsapp && (
               <a
-                href={`https://wa.me/${vendor.whatsapp}`}
+                href={`https://wa.me/${locationView.whatsapp}`}
                 className={`${styles.quickAction} ${styles.quickActionWhatsapp}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -679,9 +716,9 @@ export default function VendorProfilePage() {
                 <span>WhatsApp</span>
               </a>
             )}
-            {(vendor.phone || vendor.whatsapp) && (
+            {(locationView.phone || locationView.whatsapp) && (
               <a
-                href={`tel:${vendor.phone || vendor.whatsapp}`}
+                href={`tel:${locationView.phone || locationView.whatsapp}`}
                 className={styles.quickAction}
                 onClick={() => logEvent("phone_click")}
               >
@@ -787,31 +824,31 @@ export default function VendorProfilePage() {
 
         {/* CONTACT INFO */}
         <div className={styles.businessContactInfo}>
-          {(vendor.open_time || vendor.close_time) && (
+          {(locationView.open_time || locationView.close_time) && (
             <div className={styles.contactRow}>
               <i className="far fa-clock"></i>
               <div>
                 <div className={styles.businessHours}>
-                  Opens {formatTime(vendor.open_time)} • Closes {formatTime(vendor.close_time)}
+                  Opens {formatTime(locationView.open_time)} • Closes {formatTime(locationView.close_time)}
                 </div>
-                {vendor.business_days && (
+                {locationView.business_days && (
                   <div className={styles.businessDays}>
-                    {vendor.business_days.split(",").join(" • ")}
+                    {locationView.business_days.split(",").join(" • ")}
                   </div>
                 )}
               </div>
             </div>
           )}
-          {(vendor.phone || vendor.telephone) && (
+          {(locationView.phone) && (
             <div className={styles.contactRow}>
               <i className="fas fa-phone-alt"></i>
-              <span>{vendor.phone || vendor.telephone}</span>
+              <span>{locationView.phone}</span>
             </div>
           )}
-          {vendor.email && (
+          {locationView.email && (
             <div className={styles.contactRow}>
               <i className="far fa-envelope"></i>
-              <span>{vendor.email}</span>
+              <span>{locationView.email}</span>
             </div>
           )}
         </div>

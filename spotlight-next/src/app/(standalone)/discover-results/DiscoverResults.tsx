@@ -270,27 +270,59 @@ export default function DiscoverResultsPage() {
         lat, lng, rad, distOn
       );
 
-        // Branch search
+        // Branch search — mirrors production's searchBranches() exactly
         let branchQuery = supabase
           .from("branches")
-          .select(`id, branch_name, address, state, lga, latitude, longitude, vendor_id,
-            vendors (id, slug, name, logo_url, category, subcategory,
-              verification_status, average_rating, reviews_count, account_status)`)
-          .eq("account_status", "active");
+          .select(`
+            id, branch_name, address, state, lga, latitude, longitude, vendor_id,
+            phone, whatsapp, open_time, close_time, business_days,
+            vendors!inner (
+              id, slug, name, logo_url, category, subcategory,
+              verification_status, average_rating, reviews_count,
+              is_sponsored, account_status
+            )
+          `)
+          .eq("account_status", "active")
+          .eq("vendors.account_status", "active");
         if (st) branchQuery = branchQuery.eq("state", st);
         if (lg) branchQuery = branchQuery.eq("lga", lg);
         const { data: branchData } = await branchQuery;
         let branches = ((branchData || []) as any[])
           .filter(b => b.vendors?.account_status === "active")
           .map(b => ({
-            ...b.vendors,
-            state: b.state, lga: b.lga,
-            latitude: b.latitude, longitude: b.longitude,
-            branchId: b.id, branchName: b.branch_name,
-            branchAddress: b.address, isBranchMatch: true,
+            id: b.vendors.id,
+            branchId: b.id,
+            slug: b.vendors.slug,
+            name: b.vendors.name,
+            logo_url: b.vendors.logo_url,
+            category: b.vendors.category,
+            subcategory: b.vendors.subcategory,
+            verification_status: b.vendors.verification_status,
+            average_rating: b.vendors.average_rating,
+            reviews_count: b.vendors.reviews_count,
+            is_sponsored: b.vendors.is_sponsored,
+            state: b.state,
+            lga: b.lga,
+            latitude: b.latitude,
+            longitude: b.longitude,
+            branchName: b.branch_name,
+            branchAddress: b.address,
+            isBranchMatch: true,
           }));
-        if (kw) branches = branches.filter(b =>
-          [b.name, b.category, b.subcategory].some(f => f?.toLowerCase().includes(kw.toLowerCase()))
+        // Keyword/category/verified filtering client-side
+        // (same as production's searchBranches)
+        if (kw) {
+          const kwLower = kw.toLowerCase();
+          branches = branches.filter(b =>
+            (b.name || "").toLowerCase().includes(kwLower) ||
+            (b.category || "").toLowerCase().includes(kwLower) ||
+            (b.subcategory || "").toLowerCase().includes(kwLower)
+          );
+        }
+        if (cat) branches = branches.filter(b => b.category === cat);
+        if (subcat) branches = branches.filter(b => b.subcategory === subcat);
+        if (verified) branches = branches.filter(b =>
+          b.verification_status === "blue" || b.verification_status === "gray"
         );
         branches = applyDistance(
           branches,
@@ -298,6 +330,7 @@ export default function DiscoverResultsPage() {
           v => v.longitude ? Number(v.longitude) : null,
           lat, lng, rad, distOn
         );
+        // Merge branch results into vendor results (same as production)
         rawVendors = rawVendors.concat(branches);
       }
 
