@@ -270,67 +270,85 @@ export default function DiscoverResultsPage() {
         lat, lng, rad, distOn
       );
 
-        // Branch search — mirrors production's searchBranches() exactly
+        // Branch search — two-step query to avoid join syntax issues
+        // Step 1: fetch all active branches
         let branchQuery = supabase
           .from("branches")
-          .select(`
-            id, branch_name, address, state, lga, latitude, longitude, vendor_id,
-            phone, whatsapp, open_time, close_time, business_days,
-            vendors!inner (
-              id, slug, name, logo_url, category, subcategory,
-              verification_status, average_rating, reviews_count,
-              is_sponsored, account_status
-            )
-          `)
-          .eq("account_status", "active")
-          .eq("vendors.account_status", "active");
+          .select("id, branch_name, address, state, lga, latitude, longitude, vendor_id, phone, whatsapp, open_time, close_time, business_days, account_status")
+          .eq("account_status", "active");
         if (st) branchQuery = branchQuery.eq("state", st);
         if (lg) branchQuery = branchQuery.eq("lga", lg);
-        const { data: branchData } = await branchQuery;
-        let branches = ((branchData || []) as any[])
-          .filter(b => b.vendors?.account_status === "active")
-          .map(b => ({
-            id: b.vendors.id,
-            branchId: b.id,
-            slug: b.vendors.slug,
-            name: b.vendors.name,
-            logo_url: b.vendors.logo_url,
-            category: b.vendors.category,
-            subcategory: b.vendors.subcategory,
-            verification_status: b.vendors.verification_status,
-            average_rating: b.vendors.average_rating,
-            reviews_count: b.vendors.reviews_count,
-            is_sponsored: b.vendors.is_sponsored,
-            state: b.state,
-            lga: b.lga,
-            latitude: b.latitude,
-            longitude: b.longitude,
-            branchName: b.branch_name,
-            branchAddress: b.address,
-            isBranchMatch: true,
-          }));
-        // Keyword/category/verified filtering client-side
-        // (same as production's searchBranches)
-        if (kw) {
-          const kwLower = kw.toLowerCase();
-          branches = branches.filter(b =>
-            (b.name || "").toLowerCase().includes(kwLower) ||
-            (b.category || "").toLowerCase().includes(kwLower) ||
-            (b.subcategory || "").toLowerCase().includes(kwLower)
+        const { data: branchData, error: branchError } = await branchQuery;
+        if (branchError) console.error("Branch query error:", branchError);
+
+        let branches: any[] = [];
+        if (branchData && branchData.length > 0) {
+          // Step 2: fetch parent vendors for these branches
+          const vendorIds = [...new Set(branchData.map((b: any) => b.vendor_id))];
+          const { data: branchVendors } = await supabase
+            .from("vendors")
+            .select("id, slug, name, logo_url, category, subcategory, verification_status, average_rating, reviews_count, is_sponsored, account_status")
+            .in("id", vendorIds)
+            .eq("account_status", "active");
+
+          const vendorMap = new Map((branchVendors || []).map((v: any) => [v.id, v]));
+
+          branches = branchData
+            .map((b: any) => {
+              const v = vendorMap.get(b.vendor_id);
+              if (!v) return null;
+              return {
+                id: v.id,
+                branchId: b.id,
+                slug: v.slug,
+                name: v.name,
+                logo_url: v.logo_url,
+                category: v.category,
+                subcategory: v.subcategory,
+                verification_status: v.verification_status,
+                average_rating: v.average_rating,
+                reviews_count: v.reviews_count,
+                is_sponsored: v.is_sponsored,
+                state: b.state,
+                lga: b.lga,
+                latitude: b.latitude ? Number(b.latitude) : null,
+                longitude: b.longitude ? Number(b.longitude) : null,
+                branchName: b.branch_name,
+                branchAddress: b.address,
+                phone: b.phone,
+                whatsapp: b.whatsapp,
+                open_time: b.open_time,
+                close_time: b.close_time,
+                business_days: b.business_days,
+                isBranchMatch: true,
+              };
+            })
+            .filter(Boolean);
+
+          // Client-side keyword/category/verified filtering
+          if (kw) {
+            const kwLower = kw.toLowerCase();
+            branches = branches.filter((b: any) =>
+              (b.name || "").toLowerCase().includes(kwLower) ||
+              (b.category || "").toLowerCase().includes(kwLower) ||
+              (b.subcategory || "").toLowerCase().includes(kwLower) ||
+              (b.branchName || "").toLowerCase().includes(kwLower)
+            );
+          }
+          if (cat) branches = branches.filter((b: any) => b.category === cat);
+          if (subcat) branches = branches.filter((b: any) => b.subcategory === subcat);
+          if (verified) branches = branches.filter((b: any) =>
+            b.verification_status === "blue" || b.verification_status === "gray"
+          );
+
+          branches = applyDistance(
+            branches,
+            (v: any) => v.latitude,
+            (v: any) => v.longitude,
+            lat, lng, rad, distOn
           );
         }
-        if (cat) branches = branches.filter(b => b.category === cat);
-        if (subcat) branches = branches.filter(b => b.subcategory === subcat);
-        if (verified) branches = branches.filter(b =>
-          b.verification_status === "blue" || b.verification_status === "gray"
-        );
-        branches = applyDistance(
-          branches,
-          v => v.latitude ? Number(v.latitude) : null,
-          v => v.longitude ? Number(v.longitude) : null,
-          lat, lng, rad, distOn
-        );
-        // Merge branch results into vendor results (same as production)
+
         rawVendors = rawVendors.concat(branches);
       }
 

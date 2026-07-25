@@ -1,0 +1,312 @@
+/* ===============================================================
+   vendor-service.module.css
+   Ported faithfully from vendor-service.css.
+   Hardcoded colours replaced with design tokens for dark/light mode.
+=============================================================== */
+
+.vsPage {
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 32px 16px 40px;
+}
+
+.vsVendorLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 10px 18px;
+  background: var(--color-dark);
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.vsVendorLink:hover {
+  background: var(--color-primary);
+  color: #000000;
+}
+
+.vsContainer {
+  display: flex;
+  gap: 48px;
+  align-items: flex-start;
+  background: var(--color-surface);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: var(--shadow-xl);
+  width: 100%;
+}
+
+.vsContainerNoImage .vsMedia { display: none; }
+
+.vsContainerNoImage .vsInfo {
+  width: 100% !important;
+  max-width: 700px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.vsContainerNoImage .vsInfo h1,
+.vsContainerNoImage .vsPrice { text-align: center; }
+
+.vsContainerNoImage .vsVendorMeta { align-items: center; width: 100%; }
+
+.vsContainerNoImage .vsVendorRow,
+.vsContainerNoImage .vsRatingRow { justify-content: center; }
+
+.vsContainerNoImage .vsDescription { text-align: left; width: 100%; }
+
+/* MEDIA */
+.vsMedia {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.vsImageWrap {
+  width: 100%;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-surface-alt);
+}
+
+.vsMainImage {
+  width: 100%;
+  height: 440px;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  background: var(--color-surface-alt);
+  transition: opacity 0.25s ease;
+}
+
+.vsThumbnails { display: flex; gap: 10px; }
+
+.vsThumbnail {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.vsThumbnail:hover { transform: scale(1.04); }
+.vsThumbnailActive { border-color: var(--color-primary); }
+
+/* INFO */
+.vsInfo { width: 55%; }
+
+.vsInfo h1 {
+  margin: 0 0 12px;
+  font-size: 1.8rem;
+  line-height: 1.25;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.vsPrice {
+  display: inline-block;
+  margin: 0 0 16px;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  padding-bottom: 6px;
+  border-bottom: 3px solid var(--color-primary);
+}
+
+.vsPrice span { color: var(--color-success); font-weight: 800; }
+
+.vsVendorMeta { margin-bottom: 16px; display: flex; flex-direction: column; align-items: flex-start; }
+
+.vsVendorRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.vsRatingRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.vsRatingRow i { color: var(--color-primary); }
+.vsBadge { width: 16px; height: 16px; }
+.vsSponsored { margin: 6px 0 0; font-size: 12px; font-weight: 700; color: var(--color-primary); }
+
+/* DESCRIPTION */
+.vsDescription {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--color-text-body);
+  margin-top: 16px;
+}
+
+.vsDescription ul { margin: 12px 0; padding-left: 22px; }
+.vsDescription li { margin-bottom: 8px; line-height: 1.7; }
+
+.vsReadMoreBtn {
+  background: none;
+  border: none;
+  color: #0047ab;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 4px;
+}
+
+/* ACTIONS */
+.vsActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+  width: 100%;
+}
+
+.vsActionBtn {
+  width: 100%;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.vsActionBtn i { font-size: 14px; }
+.vsActionBtn:hover { transform: translateY(-1px); opacity: 0.95; }
+
+.vsWhatsappBtn { background: #25D366; color: #ffffff; box-shadow: 0 6px 16px rgba(0,0,0,0.12); }
+.vsWhatsappBtn:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(0,0,0,0.18); }
+.vsCallBtn { background: var(--color-dark); color: #ffffff; }
+.vsShareBtn { background: var(--color-primary); color: #000000; }
+
+/* MORE / SIMILAR */
+.vsMoreSection, .vsSimilarSection { margin-top: 48px; }
+
+.vsMoreSection h2, .vsSimilarSection h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: var(--color-text-primary);
+}
+
+.vsCardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 18px;
+}
+
+/* SERVICE CARDS */
+.vsServiceCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: 0.2s ease;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+}
+
+.vsServiceCard:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+.vsCardImage {
+  width: calc(100% - 24px);
+  margin: 12px auto 6px;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  display: block;
+  border-radius: 12px;
+  background: var(--color-surface-alt);
+}
+
+.vsCardTitle {
+  margin: 12px 12px 4px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--color-text-primary);
+}
+
+.vsCardPrice {
+  margin: 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.vsCardPrice span { color: var(--color-success); font-weight: 800; }
+
+.vsCardVendor {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 12px 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.vsCardRating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 12px 12px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.vsCardRating i { color: var(--color-primary); }
+
+/* DARK MODE */
+:global([data-theme="dark"]) .vsCallBtn { border: 1.5px solid #6b7280; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .vsContainer { flex-direction: column; gap: 20px; padding: 16px; border-radius: 12px; }
+  .vsMedia, .vsInfo { width: 100%; }
+  .vsMainImage { height: 260px; }
+  .vsInfo h1 { font-size: 1.3rem; }
+  .vsPrice { font-size: 1.15rem; }
+  .vsActions { gap: 6px; }
+  .vsActionBtn { height: 42px; font-size: 12px; }
+  .vsMoreSection, .vsSimilarSection { margin-top: 32px; }
+  .vsCardGrid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .vsContainer { flex-direction: column; align-items: center; gap: 32px; padding: 28px; }
+  .vsMedia, .vsInfo { width: 100%; max-width: 560px; }
+}

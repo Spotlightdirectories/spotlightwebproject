@@ -839,10 +839,10 @@ export default function VendorProfilePage() {
               </div>
             </div>
           )}
-          {(locationView.phone) && (
+          {(locationView.phone || locationView.whatsapp || vendor.telephone) && (
             <div className={styles.contactRow}>
               <i className="fas fa-phone-alt"></i>
-              <span>{locationView.phone}</span>
+              <span>{locationView.phone || locationView.whatsapp || vendor.telephone}</span>
             </div>
           )}
           {locationView.email && (
