@@ -1,28 +1,22 @@
 // ===============================================================
 // src/app/(main)/layout.tsx
 //
-// Layout for the MAIN site pages — everything that should show the
-// shared site Navbar and Footer (homepage, getlisted, vendor
-// dashboard, etc.). The route-group folder name "(main)" is in
-// parentheses, so it groups these pages WITHOUT adding "/main" to
-// their URLs.
+// Layout for main site pages — shared Navbar only.
+// Each page controls its own <main> wrapper and footer.
+// The homepage has its own full branded footer.
+// Other pages (vendor profile, product, service) use the shared
+// Footer component imported directly in their own layout files.
 // ===============================================================
 
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 
-export default function MainLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Navbar />
-      <main style={{ paddingTop: "var(--header-height)", minHeight: "70vh" }}>
+      <div style={{ paddingTop: "var(--header-height)" }}>
         {children}
-      </main>
-      <Footer />
+      </div>
     </>
   );
 }

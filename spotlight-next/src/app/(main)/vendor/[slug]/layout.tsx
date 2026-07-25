@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Vendor Profile | Spotlight Directories",
@@ -13,7 +14,10 @@ export default function VendorProfileLayout({ children }: { children: React.Reac
         Loading...
       </div>
     }>
-      {children}
+      <main style={{ minHeight: "70vh" }}>
+        {children}
+      </main>
+      <Footer />
     </Suspense>
   );
 }

@@ -1,117 +1,190 @@
-// ===============================================================
-// src/app/page.tsx — temporary home page.
-//
-// This is a PLACEHOLDER just to verify the shared foundation
-// (navbar, theme toggle, footer, design tokens) all work together.
-// The real homepage (ported from index.html) comes later in the
-// migration batches.
-// ===============================================================
+"use client";
 
-export default function Home() {
+import { useState, useEffect, useCallback } from "react";
+import Footer from "@/components/Footer";
+import styles from "./homepage.module.css";
+
+const SLIDES = [
+  { img: "/images/tailorwoman.webp", alt: "Tailoring and fashion business owner", tag: "Fashion & Tailoring", caption: "Get found by customers looking for your craft nearby" },
+  { img: "/images/mechanic3.webp", alt: "Auto mechanic and repair business owner", tag: "Auto & Technical Services", caption: "Trusted by the customers already searching for you" },
+  { img: "/images/consultant3.webp", alt: "Consultant and professional services provider", tag: "Professional & Consulting", caption: "Reach clients who need exactly what you offer" },
+];
+
+const BENEFITS = [
+  { icon: "fa-solid fa-location-dot", title: "Found By Location", desc: "Customers searching near your area find you first — not buried in a generic list." },
+  { icon: "fa-solid fa-comment-dots", title: "Direct Contact, No Middleman", desc: "WhatsApp, call, or get directions straight to you — no commission, no waiting on a platform." },
+  { icon: "fa-solid fa-chart-line", title: "See Who's Finding You", desc: "Every plan includes a real analytics dashboard — where your visitors search from, what they're looking for." },
+  { icon: "fa-solid fa-sack-dollar", title: "Free To Start", desc: "A genuine 90-day trial with real features — not a locked-down demo. No card required." },
+  { icon: "fa-solid fa-earth-africa", title: "Reach Customers Beyond Your Area", desc: "Search on Spotlight isn't limited to nearby only — customers anywhere in Nigeria can find and reach you." },
+  { icon: "fa-solid fa-magnifying-glass", title: "Search Without Signing Up", desc: "Customers can browse and search Spotlight freely — no account needed to find you." },
+];
+
+const HOW_STEPS = [
+  { img: "/images/slide-community2.webp", alt: "Business owner listing their business", num: "1", title: "List Your Business", desc: "Add your name, category, location, and photos. Takes about 5 minutes." },
+  { img: "/images/slide-service_nearby.webp", alt: "Customer searching for a nearby business", num: "2", title: "Get Discovered", desc: "Customers find you by location, category, or by searching what they need." },
+  { img: "/images/slide-empowering-small-businesses2.webp", alt: "Business owner connecting with a customer", num: "3", title: "Connect Directly", desc: "They reach you by WhatsApp, phone call, or directions — straight to your door." },
+];
+
+const GROWTH = [
+  { icon: "fa-solid fa-magnifying-glass-location", title: "Stand Out Locally", desc: "Show up when nearby customers search your category." },
+  { icon: "fa-solid fa-chart-line", title: "Business Insight Dashboard", desc: "See where your visitors come from and what they search for — included on every plan." },
+  { icon: "fa-solid fa-shield-heart", title: "Build Trust With Verification", desc: "Apply for a verification badge so customers know you're real." },
+];
+
+export default function HomePage() {
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  const nextSlide = useCallback(() => {
+    setActiveSlide(s => (s + 1) % SLIDES.length);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(nextSlide, 6000);
+    return () => clearInterval(timer);
+  }, [nextSlide]);
+
   return (
-    <div
-      style={{
-        maxWidth: "800px",
-        margin: "0 auto",
-        padding: "var(--spacing-3xl) var(--spacing-lg)",
-        textAlign: "center",
-      }}
-    >
-      <h1
-        style={{
-          fontSize: "var(--text-5xl)",
-          fontWeight: "var(--font-black)",
-          color: "var(--color-text-primary)",
-          marginBottom: "var(--spacing-md)",
-        }}
-      >
-        Foundation is working ✅
-      </h1>
-
-      <p
-        style={{
-          fontSize: "var(--text-lg)",
-          color: "var(--color-text-muted)",
-          marginBottom: "var(--spacing-xl)",
-          lineHeight: "var(--line-height-normal)",
-        }}
-      >
-        This temporary page confirms the shared foundation is in place:
-        the navbar, footer, design tokens, and dark/light theme toggle
-        (try the ☀️ / 🌙 button in the navbar) are all live. The real
-        pages get ported on top of this next.
-      </p>
-
-      <div
-        style={{
-          display: "flex",
-          gap: "var(--spacing-md)",
-          justifyContent: "center",
-          flexWrap: "wrap",
-        }}
-      >
-        <div
-          style={{
-            background: "var(--color-surface)",
-            border: "1px solid var(--color-border)",
-            borderRadius: "var(--radius-xl)",
-            padding: "var(--spacing-lg)",
-            boxShadow: "var(--shadow-card)",
-            minWidth: "180px",
-          }}
-        >
-          <p
-            style={{
-              color: "var(--color-primary)",
-              fontWeight: "var(--font-bold)",
-              fontSize: "var(--text-lg)",
-              margin: 0,
-            }}
-          >
-            Design tokens
+    <>
+      {/* HERO */}
+      <section className={styles.ldHero}>
+        <div className={styles.ldHeroText}>
+          <p className={styles.ldEyebrow}>Nigeria's discovery platform for real businesses</p>
+          <h1>Put Your Business On The <span className={styles.ldSpotlightGlow}>Spotlight</span></h1>
+          <p className={styles.ldHeroSub}>
+            Whatever you sell or fix or build — Spotlight helps nearby customers find you, contact you, and choose you.
           </p>
-          <p
-            style={{
-              color: "var(--color-text-muted)",
-              fontSize: "var(--text-sm)",
-              margin: "var(--spacing-xs) 0 0",
-            }}
-          >
-            Ported from theme.css
+          <div className={styles.ldHeroCtas}>
+            <a href="/getlisted" className={`${styles.ldBtn} ${styles.ldBtnPrimary}`}>Get Listed Free</a>
+            <a href="/discover" className={`${styles.ldBtn} ${styles.ldBtnOutline}`}>Search Nearby</a>
+          </div>
+          <p className={styles.ldHeroMicro}>
+            <i className="fa-solid fa-bolt"></i>
+            {" "}90-day free trial · No card required
           </p>
         </div>
 
-        <div
-          style={{
-            background: "var(--color-surface)",
-            border: "1px solid var(--color-border)",
-            borderRadius: "var(--radius-xl)",
-            padding: "var(--spacing-lg)",
-            boxShadow: "var(--shadow-card)",
-            minWidth: "180px",
-          }}
-        >
-          <p
-            style={{
-              color: "var(--color-primary)",
-              fontWeight: "var(--font-bold)",
-              fontSize: "var(--text-lg)",
-              margin: 0,
-            }}
-          >
-            Dark / light mode
-          </p>
-          <p
-            style={{
-              color: "var(--color-text-muted)",
-              fontSize: "var(--text-sm)",
-              margin: "var(--spacing-xs) 0 0",
-            }}
-          >
-            Toggle in the navbar
-          </p>
+        <div className={styles.ldHeroSlideshow}>
+          {SLIDES.map((slide, i) => (
+            <div key={i} className={`${styles.ldSlide} ${activeSlide === i ? styles.ldSlideActive : ""}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={slide.img} alt={slide.alt} className={activeSlide === i ? styles.ldSlideActiveImg : ""} />
+              <div className={styles.ldSlideCaption}>
+                <span className={styles.ldSlideTag}>{slide.tag}</span>
+                <p>{slide.caption}</p>
+              </div>
+            </div>
+          ))}
+          <div className={styles.ldSlideDots}>
+            {SLIDES.map((_, i) => (
+              <button key={i} type="button"
+                className={`${styles.ldDot} ${activeSlide === i ? styles.ldDotActive : ""}`}
+                onClick={() => setActiveSlide(i)}
+                aria-label={`Slide ${i + 1}`}
+              />
+            ))}
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
+
+      {/* BENEFITS */}
+      <section className={styles.ldBenefits}>
+        <h2>Why Businesses Choose Spotlight</h2>
+        <div className={styles.ldBenefitsGrid}>
+          {BENEFITS.map((b, i) => (
+            <div key={i} className={styles.ldBenefitCard}>
+              <i className={b.icon}></i>
+              <h3>{b.title}</h3>
+              <p>{b.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* MOBILE APP */}
+      <section className={styles.ldApp}>
+        <div className={styles.ldAppText}>
+          <span className={styles.ldAppBadge}>Coming Soon</span>
+          <h2>The Spotlight App Is On Its Way</h2>
+          <p>We're building native Android and iOS apps so you can manage your listing and find businesses on the go. Not available yet — no download links to click here, just an honest heads-up.</p>
+        </div>
+        <div className={styles.ldAppPhone}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/app-preview.webp" alt="Spotlight mobile app preview" />
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className={styles.ldHow}>
+        <h2>How It Works</h2>
+        <div className={styles.ldHowGrid}>
+          {HOW_STEPS.map((step, i) => (
+            <div key={i} className={styles.ldHowStep}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={step.img} alt={step.alt} />
+              <span className={styles.ldHowNumber}>{step.num}</span>
+              <h3>{step.title}</h3>
+              <p>{step.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* VENDOR GROWTH */}
+      <section className={styles.ldGrowth}>
+        <div>
+          <p className={styles.ldEyebrow}>For business owners</p>
+          <h2>Join Spotlight Directory Today</h2>
+          <p className={styles.ldGrowthSub}>Every listing — on every plan — gets these real tools to grow.</p>
+          <div className={styles.ldGrowthFeatures}>
+            {GROWTH.map((f, i) => (
+              <div key={i} className={styles.ldGrowthFeature}>
+                <i className={f.icon}></i>
+                <div>
+                  <h3>{f.title}</h3>
+                  <p>{f.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <a href="/getlisted" className={`${styles.ldBtn} ${styles.ldBtnPrimary}`}>List Your Business Free</a>
+        </div>
+      </section>
+
+      {/* BRANDED FOOTER — 4-column, homepage only */}
+      <footer className={styles.hfooter}>
+        <div className={`${styles.hcontainer} ${styles.hfooterGrid}`}>
+          <div className={styles.hfooterBrand}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/whitelogo3.png" alt="Spotlight Directories" />
+            <p>Dedicated to digitalizing local businesses and making services accessible to everyone, everywhere.</p>
+          </div>
+          <div className={styles.hfooterLinks}>
+            <h4>Quick Links</h4>
+            <a href="/">Home</a>
+            <a href="/aboutUs">Why Spotlight</a>
+            <a href="/getlisted">Get Listed</a>
+            <a href="/discover">Search Vendors</a>
+          </div>
+          <div className={styles.hfooterSupport}>
+            <h4>Support</h4>
+            <a href="/FAQ">FAQ</a>
+            <a href="/contact-us">Contact Us</a>
+            <a href="/feedback">Feedback</a>
+            <a href="/partner-program" className={styles.hfooterPartnerBtn}>Partner Program</a>
+          </div>
+          <div className={styles.hfooterNewsletter}>
+            <h4>Newsletter</h4>
+            <p>Get the latest business tips and deals.</p>
+            <div className={styles.newsletterForm}>
+              <input type="email" placeholder="Email address (Coming Soon)" disabled />
+              <button type="button" disabled>Go</button>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* SHARED FOOTER — matches all other pages */}
+      <Footer />
+    </>
   );
 }

@@ -1,0 +1,144 @@
+/* contact.module.css — ported from contact.css */
+
+.hero {
+  text-align: center;
+  padding: 120px 20px 70px;
+  max-width: 900px;
+  margin: auto;
+}
+
+.hero h1 { font-size: 3rem; margin-bottom: 20px; color: var(--color-text-primary); }
+.hero p { font-size: 1.2rem; margin-bottom: 30px; color: var(--color-text-muted); }
+
+.whatsappBtn {
+  display: inline-block;
+  background: #25D366;
+  color: white;
+  padding: 14px 26px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.contactMain {
+  max-width: 1400px;
+  margin: auto;
+  padding: 60px 20px;
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: 60px;
+  row-gap: 70px;
+  align-items: stretch;
+}
+
+.contactImage img { width: 100%; height: 100%; object-fit: cover; border-radius: 14px; }
+.contactImage { height: 100%; display: flex; }
+
+.formArea { width: 100%; max-width: 460px; margin: 0; }
+.formArea h2 { margin-bottom: 25px; font-size: 1.6rem; color: var(--color-text-primary); }
+
+.formArea label {
+  display: block;
+  margin-top: 16px;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: var(--color-text-body);
+}
+
+.formArea input,
+.formArea select,
+.formArea textarea {
+  width: 100%;
+  padding: 13px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  font-size: 1rem;
+  margin-bottom: 8px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: inherit;
+}
+
+.formArea textarea { resize: vertical; }
+
+.privacyConsent {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 18px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--color-text-body);
+  cursor: pointer;
+}
+
+.privacyConsent input { margin-top: 4px; }
+.privacyConsent a { color: var(--color-primary); }
+
+.submitBtn {
+  display: block;
+  margin: 18px auto 10px;
+  padding: 14px 22px;
+  background: var(--color-dark);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  font-size: 1rem;
+}
+
+.submitBtn:hover:not(:disabled) { background: var(--color-primary); color: #000; }
+.submitBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.responseNote { margin-top: 10px; font-size: 0.9rem; color: var(--color-text-muted); text-align: center; }
+.warningNote { font-weight: bold; color: #b22222; margin-top: 12px; text-align: center; font-size: 0.85rem; }
+
+.successMsg {
+  padding: 16px;
+  background: #dcfce7;
+  color: #166534;
+  border-radius: 8px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.errorMsg { color: #dc2626; font-size: 0.9rem; margin-bottom: 8px; }
+
+.spotlighters {
+  margin-top: 80px;
+  padding: 80px 40px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+  background: linear-gradient(180deg, #111, #000);
+  color: white;
+}
+
+.spotLeft { max-width: 650px; }
+.spotLeft h2 { font-size: 2.2rem; margin-bottom: 20px; font-weight: 700; color: #ffd400; }
+.spotLeft h3 { margin: 25px 0 15px; color: white; }
+.spotLeft p { font-size: 1.05rem; line-height: 1.7; color: #e6e6e6; }
+
+.spotRight { max-width: 500px; margin-top: 70px; }
+.spotRight p { margin-bottom: 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.spotRight a { color: white; text-decoration: none; }
+.spotRight a:hover { color: #ffd400; }
+.spotRight i { font-size: 20px; min-width: 24px; text-align: center; color: #ffd400; flex-shrink: 0; }
+
+.socialIcons { display: flex; gap: 18px; margin-top: 18px; align-items: center; flex-wrap: wrap; }
+.socialIcons a { font-size: 24px; color: white; transition: 0.2s ease; }
+.socialIcons a:hover { color: #ffd400; }
+
+@media (min-width: 1000px) {
+  .contactMain { grid-template-columns: 1fr 1fr; gap: 80px; align-items: stretch; }
+  .spotlighters { grid-template-columns: 1.2fr 1fr; gap: 80px; }
+  .hero h1 { font-size: 3.5rem; }
+}
+
+@media (max-width: 600px) {
+  .spotRight { margin-top: 40px; }
+  .spotRight p { font-size: 15px; }
+  .socialIcons { justify-content: center; gap: 12px; }
+}

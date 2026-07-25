@@ -1,0 +1,83 @@
+/* about.module.css — ported from about-modern.css */
+
+.container { width: 90%; max-width: 1150px; margin: auto; }
+.center { text-align: center; }
+.narrow { max-width: 750px; }
+
+.hero {
+  background: linear-gradient(135deg, #000, #1a1a1a);
+  color: white;
+  padding: 100px 0 80px;
+  text-align: center;
+}
+
+.hero h1 { font-size: 3rem; margin-bottom: 20px; }
+.hero p { max-width: 700px; margin: 0 auto 30px; color: #d6d6d6; }
+.heroMeta { margin-top: 20px; font-size: 0.9rem; color: #aaa; }
+.heroActions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+
+.btnPrimary {
+  display: inline-block;
+  background: #e6c200;
+  color: black;
+  padding: 14px 28px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.btnOutline {
+  display: inline-block;
+  border: 1px solid white;
+  color: white;
+  padding: 14px 28px;
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+.large { padding: 16px 40px; }
+
+.section { padding: 100px 0; color: white; background: #000; }
+.light { background: #f5f6f8 !important; color: #1a1a1a !important; }
+.section h2 { font-size: 2rem; margin-bottom: 20px; }
+
+.grid3 { display: grid; gap: 40px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.grid4 { display: grid; gap: 40px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.grid5 { display: grid; gap: 40px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+
+.card {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  transition: 0.3s ease;
+  color: #1a1a1a;
+}
+
+.card:hover { transform: translateY(-5px); }
+.card h3 { font-size: 1.1rem; margin-bottom: 8px; }
+.card p { font-size: 0.9rem; color: #666; }
+
+.metrics { background: #000; color: white; padding: 100px 0; }
+.metrics h2 { font-size: 2.5rem; margin-bottom: 8px; }
+.metrics p { color: #aaa; }
+
+.legal { font-size: 0.9rem; color: #666; line-height: 1.7; }
+
+.cta {
+  background: linear-gradient(135deg, #000, #1a1a1a);
+  color: white;
+  padding: 120px 0;
+  text-align: center;
+}
+
+.cta h2 { font-size: 2rem; margin-bottom: 14px; }
+.cta p { color: #d6d6d6; margin-bottom: 28px; }
+
+@media (max-width: 900px) {
+  .hero { padding: 80px 0 50px; }
+  .hero h1 { font-size: 28px; line-height: 1.2; }
+  .hero p { font-size: 15px; padding: 0 10px; }
+  .heroActions { flex-direction: column; align-items: center; }
+  .btnPrimary, .btnOutline { width: 100%; text-align: center; padding: 12px; }
+}
