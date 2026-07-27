@@ -14,6 +14,10 @@
   margin: 0;
   min-height: 100vh;
   font-family: Arial, sans-serif;
+  color: #111827; /* production's default text is near-black; this overrides
+                     the muted gray body color inherited from the shared
+                     app layout, which only applies where no more specific
+                     rule (like .vd-card-label) already sets a color */
 }
 
 /* SIDEBAR */
@@ -21,7 +25,7 @@
   position: fixed;
   left: 16px;
   top: 16px;
-  width: 220px;
+  width: 248px;
   height: calc(100vh - 32px);
   padding: 0;
   background: transparent;
@@ -44,7 +48,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 36px;
+  margin-bottom: 24px;
 }
 
 .vd-logo-icon {
@@ -69,15 +73,15 @@
 .vd-nav {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 6px;
 }
 
 .vd-nav-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
-  padding: 12px 14px;
+  padding: 9px 12px;
   text-decoration: none;
   justify-content: flex-start;
   appearance: none;
@@ -87,9 +91,10 @@
   cursor: pointer;
   border: none;
   background: transparent;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   color: #374151;
+  white-space: nowrap;
   transition: all 0.2s ease;
 }
 
@@ -115,9 +120,11 @@
 }
 
 .vd-main {
-  margin-left: 260px;
+  margin-left: 288px;
   padding: 20px;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   overflow-x: hidden;
   overflow-y: auto;
   box-sizing: border-box;
@@ -135,6 +142,14 @@
   border-radius: 12px;
   margin-bottom: 20px;
   border: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.vd-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
 }
 
 .vd-header-right {
@@ -209,7 +224,13 @@
 }
 
 .vd-section.active {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0; /* allows this flex item to actually shrink/grow correctly
+                    instead of being forced to its content's natural size —
+                    this is what lets the cards below stretch to fill the
+                    remaining viewport height like production */
 }
 
 .vd-card {
@@ -265,14 +286,12 @@
 }
 
 .vd-plan-card {
-  position: absolute;
-  left: 20px;
-  right: 20px;
-  bottom: 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px 18px;
+  flex-shrink: 0;
+  margin-top: 12px;
+  padding: 10px 14px;
   background: #ffffff;
   border: none;
   border-radius: 16px;
@@ -282,7 +301,7 @@
 
 .vd-plan-card #vdSidebarPlan {
   margin: 0;
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 600;
   line-height: 1.1;
   color: #0f172a;
@@ -293,14 +312,15 @@
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
-  font-size: 16px;
+  padding: 8px;
+  font-size: 14px;
   font-weight: 700;
 }
 
 .vd-plan-label {
-  font-size: 14px;
+  font-size: 12px;
   color: #777;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 .vd-upgrade-btn {
@@ -323,12 +343,21 @@
 
 .vd-nav-wrapper {
   flex: 1;
+  min-height: 0; /* lets this flex item shrink below its content size so
+                    overflow-y:auto can actually engage on very short
+                    screens, instead of forcing the plan card off-screen */
+  overflow-y: auto;
 }
 
 .vd-overview-layout {
   display: grid;
   grid-template-columns: 320px 1fr;
   gap: 20px;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0; /* same flex fix as above, applied to the grid so its row
+                    can actually stretch to the full available height
+                    instead of being clamped to its content's height */
 }
 
 .vd-overview-right {
@@ -385,6 +414,13 @@
   margin-bottom: 15px;
 }
 
+.vd-card-header h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
 .vd-card-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -435,6 +471,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  height: 100%;
 }
 
 .vd-status-icon {
@@ -459,6 +496,7 @@
   background: #e5e7eb;
   border-radius: 10px;
   overflow: hidden;
+  margin-top: 16px;
 }
 
 .vd-progress-fill {
@@ -508,6 +546,13 @@
 
 .vd-status-main {
   flex: 1;
+}
+
+.vd-status-main h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 4px 0 2px;
 }
 
 .vd-plan-icon {
@@ -1721,10 +1766,6 @@
     height: auto;
   }
   .vd-plan-card {
-    position: relative;
-    left: auto;
-    right: auto;
-    bottom: auto;
     margin-top: 20px;
   }
   .vd-main {
@@ -1868,4 +1909,131 @@
     max-width: 100%;
     box-sizing: border-box;
   }
+}
+
+/* ========================= */
+/* AI DESCRIPTION GENERATOR MODAL (ported from production — */
+/* .vd-ai-generate-btn already existed here, this modal/toast */
+/* CSS was missing) */
+/* ========================= */
+
+.ai-desc-modal {
+  position: fixed;
+  inset: 0;
+
+  background: rgba(0,0,0,0.6);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 99999;
+}
+
+.ai-desc-modal-content {
+  width: 90%;
+  max-width: 420px;
+
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+
+  position: relative;
+
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.ai-desc-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+
+  border: none;
+  background: none;
+
+  font-size: 22px;
+  cursor: pointer;
+
+  color: #6b7280;
+}
+
+.ai-desc-modal-content h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.ai-desc-subtext {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 18px;
+}
+
+.ai-desc-modal-content label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 14px 0 4px;
+}
+
+.ai-desc-nudge {
+  margin: 0 0 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.ai-desc-modal-content input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.ai-desc-error {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 13px;
+}
+
+#aiDescSubmit {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.ai-desc-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+
+  background: #111827;
+  color: #fff;
+
+  padding: 12px 20px;
+  border-radius: 999px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  opacity: 0;
+  pointer-events: none;
+
+  transition: opacity 0.3s ease, transform 0.3s ease;
+
+  z-index: 999999;
+}
+
+.ai-desc-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }

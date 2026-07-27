@@ -15,8 +15,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import ProfileTab from "./ProfileTab";
+import SubscriptionTab from "./SubscriptionTab";
 
-type Vendor = {
+export type Vendor = {
   id: string;
   name: string | null;
   email: string | null;
@@ -36,6 +38,15 @@ type Vendor = {
   latitude: number | null;
   longitude: number | null;
   trial_started_at: string | null;
+  category_id: string | null;
+  subcategory_id: string | null;
+  state: string | null;
+  lga: string | null;
+  open_time: string | null;
+  close_time: string | null;
+  business_days: string | null;
+  subscription_status: string | null;
+  expires_at: string | null;
   [key: string]: unknown;
 };
 
@@ -499,10 +510,15 @@ export default function VendorDashboardPage() {
           </div>
         </section>
 
-        {/* ============ STUB SECTIONS (built in later modules) ============ */}
+        {/* ============ PROFILE (module 2) ============ */}
         <section className={sec("profile")}>
-          <div className="vd-card"><p style={{ color: "#64748b" }}>Profile editing — coming in the next module.</p></div>
+          <ProfileTab
+            vendor={vendor}
+            onVendorUpdate={(patch) => setVendor((prev) => (prev ? { ...prev, ...patch } : prev))}
+          />
         </section>
+
+        {/* ============ STUB SECTIONS (built in later modules) ============ */}
 
         {showProducts && (
           <section className={sec("products")}>
@@ -516,8 +532,9 @@ export default function VendorDashboardPage() {
           </section>
         )}
 
+        {/* ============ SUBSCRIPTION (module 3) ============ */}
         <section className={sec("subscription")}>
-          <div className="vd-card"><p style={{ color: "#64748b" }}>Subscription &amp; billing — coming in a later module.</p></div>
+          <SubscriptionTab vendor={vendor} />
         </section>
 
         <section className={sec("verification")}>
