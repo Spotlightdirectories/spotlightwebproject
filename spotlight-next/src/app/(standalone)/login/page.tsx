@@ -1,24 +1,5 @@
 "use client";
 
-// ===============================================================
-// src/app/(standalone)/login/page.tsx
-//
-// Vendor login page — ported faithfully from login.html + login.js.
-// Standalone: no shared navbar/footer (focused auth screen).
-//
-// Login flow (matches production exactly):
-// 1. Authenticate with Supabase
-// 2. Fetch vendor record
-// 3. If no vendor → redirect to /getlisted
-// 4. If account closed → show error
-// 5. If free plan → redirect to /vendordashboard
-// 6. If paid plan:
-//    - pending → /payment
-//    - failed  → /payment-failed
-//    - active  → /vendordashboard
-//    - else    → /payment
-// ===============================================================
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -65,7 +46,7 @@ export default function LoginPage() {
       return;
     }
 
-    // 3. No vendor row
+    // 3. No vendor row → go get listed
     if (!vendor) {
       router.replace("/getlisted");
       return;
@@ -79,13 +60,19 @@ export default function LoginPage() {
       return;
     }
 
-    // 5. Free plan
+    // 5. Business type not set yet → must select before dashboard
+    if (!vendor.business_type) {
+      router.replace("/business-type");
+      return;
+    }
+
+    // 6. Free plan → dashboard
     if (vendor.plan_tier === "free") {
       router.replace("/vendordashboard");
       return;
     }
 
-    // 6. Paid plan routing
+    // 7. Paid plan routing
     if (vendor.subscription_status === "pending") {
       router.replace("/payment");
       return;

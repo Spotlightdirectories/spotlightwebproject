@@ -1,14 +1,5 @@
 "use client";
 
-// ===============================================================
-// src/app/(standalone)/business-type/page.tsx
-//
-// Business type selection — ported from business-type.html + .js.
-// Appears once after signup, before the vendor reaches dashboard.
-// If vendor already has a business_type set, redirects straight
-// to vendordashboard (same as production).
-// ===============================================================
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -17,6 +8,8 @@ import styles from "./business-type.module.css";
 export default function BusinessTypePage() {
   const router = useRouter();
   const [vendorId, setVendorId] = useState<string>("");
+  const [planTier, setPlanTier] = useState<string>("free");
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string>("");
   const [selected, setSelected] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -28,7 +21,7 @@ export default function BusinessTypePage() {
 
       const { data: vendor, error } = await supabase
         .from("vendors")
-        .select("id, business_type")
+        .select("id, business_type, plan_tier, subscription_status")
         .eq("auth_user_id", session.user.id)
         .single();
 
@@ -38,17 +31,32 @@ export default function BusinessTypePage() {
         return;
       }
 
-      // Already selected — go straight to dashboard
+      // Already selected — route correctly based on plan
       if (vendor.business_type) {
-        router.replace("/vendordashboard");
+        routeAfterBusinessType(vendor.plan_tier, vendor.subscription_status);
         return;
       }
 
       setVendorId(vendor.id);
+      setPlanTier(vendor.plan_tier);
+      setSubscriptionStatus(vendor.subscription_status);
       setLoading(false);
     }
     load();
   }, [router]);
+
+  function routeAfterBusinessType(plan: string, status: string) {
+    if (plan === "free") {
+      router.replace("/vendordashboard");
+      return;
+    }
+    if (status === "active") {
+      router.replace("/vendordashboard");
+      return;
+    }
+    // Paid plan not yet paid → go to payment
+    router.replace("/payment");
+  }
 
   async function handleContinue() {
     if (!selected) { alert("Select a business type."); return; }
@@ -62,7 +70,7 @@ export default function BusinessTypePage() {
       setSaving(false);
       return;
     }
-    router.replace("/vendordashboard");
+    routeAfterBusinessType(planTier, subscriptionStatus);
   }
 
   if (loading) {

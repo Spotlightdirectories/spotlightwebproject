@@ -295,8 +295,10 @@
 .btnTrial:hover { opacity: 0.9; }
 .btnDark { background: var(--color-dark); color: #ffffff; }
 .btnDark:hover { background: var(--color-primary); color: var(--color-dark); }
-.btnWhite { background: var(--color-surface); color: var(--color-dark); }
-.btnWhite:hover { background: var(--color-primary); }
+
+/* Always white regardless of theme — sits on the dark Custom card */
+.btnWhite { background: #ffffff; color: #000000; }
+.btnWhite:hover { background: var(--color-primary); color: #000000; }
 
 .trustNote {
   text-align: center;
@@ -382,8 +384,6 @@
 }
 
 .planBtn:hover { background: var(--color-primary); color: var(--color-dark); }
-
-.compareBody { }
 
 .row {
   display: grid;

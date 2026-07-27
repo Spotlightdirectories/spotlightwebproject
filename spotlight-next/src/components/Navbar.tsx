@@ -1,13 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "./ThemeProvider";
+import { supabase } from "@/lib/supabase";
 import styles from "./Navbar.module.css";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    // Check session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setLoggedIn(!!session);
+    });
+
+    // Listen for auth state changes (login/logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setLoggedIn(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    setLoggedIn(false);
+    setMenuOpen(false);
+    window.location.href = "/";
+  }
 
   return (
     <header className={styles.navbar}>
@@ -47,9 +70,15 @@ export default function Navbar() {
           </li>
 
           <li>
-            <Link href="/login" className={styles.navLoginBtn} onClick={() => setMenuOpen(false)}>
-              Log In
-            </Link>
+            {loggedIn ? (
+              <button className={styles.navLoginBtn} onClick={handleLogout}>
+                Log Out
+              </button>
+            ) : (
+              <Link href="/login" className={styles.navLoginBtn} onClick={() => setMenuOpen(false)}>
+                Log In
+              </Link>
+            )}
           </li>
         </ul>
       </nav>
