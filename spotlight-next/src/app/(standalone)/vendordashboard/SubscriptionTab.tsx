@@ -133,7 +133,10 @@ export default function SubscriptionTab({ vendor }: { vendor: Vendor }) {
   const showManagePaymentMethod = vendor.plan_tier !== "free";
 
   function goUpgrade() {
-    window.location.href = "/getlisted";
+    // ?context=upgrade tells getlisted to show this vendor's current
+    // plan and upgrade/downgrade awareness instead of the plain
+    // anonymous pricing page.
+    window.location.href = "/getlisted?context=upgrade";
   }
 
   function goManageBranches() {

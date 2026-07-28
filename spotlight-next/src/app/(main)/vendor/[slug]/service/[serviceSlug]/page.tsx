@@ -159,7 +159,23 @@ export default function VendorServicePage() {
           vendors(name, verification_status, average_rating, reviews_count, is_sponsored)`)
         .eq("vendor_id", data.vendor_id)
         .neq("slug", data.slug);
-      setMoreServices(more || []);
+      // Same reshape as the product page: Supabase's untyped query
+      // builder infers `vendors` as an array (it can't see this is a
+      // many-to-one embed), even though PostgREST returns a single
+      // object per row at runtime. Flatten into the same
+      // vendorName/vendorVerification/etc. fields the "similar
+      // services" query below already uses.
+      setMoreServices((more || []).map((s: any) => ({
+        slug: s.slug,
+        service_name: s.service_name,
+        starting_price: s.starting_price,
+        representative_image_url: s.representative_image_url,
+        vendorName: s.vendors?.name,
+        vendorVerification: s.vendors?.verification_status,
+        vendorRating: s.vendors?.average_rating,
+        vendorReviews: s.vendors?.reviews_count,
+        sponsored: s.vendors?.is_sponsored,
+      })));
 
       // Similar services from other vendors
       const { data: similar } = await supabase.rpc("get_similar_services", {

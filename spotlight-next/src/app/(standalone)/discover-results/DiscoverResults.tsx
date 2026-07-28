@@ -103,7 +103,10 @@ function applyDistance<T>(
   radius: number,
   enabled: boolean
 ): (T & { distanceKm?: number | null })[] {
-  if (!enabled || userLat == null || userLng == null) return items;
+  // TS can't prove a bare T[] satisfies (T & {optional field})[] just
+  // because the field is optional — this cast is safe: every item
+  // keeps its original shape, distanceKm is simply left unset.
+  if (!enabled || userLat == null || userLng == null) return items as (T & { distanceKm?: number | null })[];
   return items
     .map(i => {
       const d = haversineKm(userLat, userLng, getLat(i), getLng(i));

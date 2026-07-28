@@ -17,6 +17,8 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import ProfileTab from "./ProfileTab";
 import SubscriptionTab from "./SubscriptionTab";
+import VerificationTab from "./VerificationTab";
+import SettingsTab from "./SettingsTab";
 
 export type Vendor = {
   id: string;
@@ -47,6 +49,11 @@ export type Vendor = {
   business_days: string | null;
   subscription_status: string | null;
   expires_at: string | null;
+  verification_status: string | null;
+  account_status: string | null;
+  scheduled_deletion_at: string | null;
+  email_notifications_enabled: boolean | null;
+  lead_alerts_enabled: boolean | null;
   [key: string]: unknown;
 };
 
@@ -281,7 +288,11 @@ export default function VendorDashboardPage() {
     verifyState === "retry" ? "Try Again" :
     "Verify Email";
 
-  const upgrade = () => { window.location.href = "/getlisted"; };
+  // ?context=upgrade tells the getlisted page to fetch this vendor's
+  // current plan and show upgrade/downgrade awareness on each card
+  // instead of the plain anonymous pricing page — see getlisted's
+  // page.tsx module comment for the full reasoning.
+  const upgrade = () => { window.location.href = "/getlisted?context=upgrade"; };
 
   const sec = (tab: TabKey) => `vd-section${activeTab === tab ? " active" : ""}`;
 
@@ -390,8 +401,20 @@ export default function VendorDashboardPage() {
               </button>
 
               <div className={`vd-dropdown${dropdownOpen ? "" : " hidden"}`} onClick={(e) => e.stopPropagation()}>
-                <button type="button" className="vd-dropdown-item">Performance</button>
-                <button type="button" className="vd-dropdown-item">Preferences</button>
+                <button
+                  type="button"
+                  className="vd-dropdown-item"
+                  onClick={() => { setDropdownOpen(false); window.location.href = "/insight"; }}
+                >
+                  Performance
+                </button>
+                <button
+                  type="button"
+                  className="vd-dropdown-item"
+                  onClick={() => { setDropdownOpen(false); switchTab("settings"); }}
+                >
+                  Preferences
+                </button>
                 <button type="button" className="vd-dropdown-item danger" onClick={handleLogout}>Logout</button>
               </div>
             </div>
@@ -537,12 +560,16 @@ export default function VendorDashboardPage() {
           <SubscriptionTab vendor={vendor} />
         </section>
 
+        {/* ============ VERIFICATION (module 4) ============ */}
         <section className={sec("verification")}>
-          <div className="vd-card"><p style={{ color: "#64748b" }}>Verification — coming in a later module.</p></div>
+          <VerificationTab vendor={vendor} />
         </section>
 
         <section className={sec("settings")}>
-          <div className="vd-card"><p style={{ color: "#64748b" }}>Settings &amp; account — coming in a later module.</p></div>
+          <SettingsTab
+            vendor={vendor}
+            onVendorUpdate={(patch) => setVendor((prev) => (prev ? { ...prev, ...patch } : prev))}
+          />
         </section>
 
       </main>

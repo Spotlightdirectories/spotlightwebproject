@@ -542,6 +542,18 @@ export default function VendorProfilePage() {
     if (!vendor) return;
     try { await supabase.from("analytics_events").insert({ vendor_id: vendor.id, event_type: eventType }); }
     catch { /* non-fatal */ }
+
+    // Fire-and-forget: let the vendor know a customer just tried to
+    // contact them, if they have Lead Alerts turned on (Settings
+    // tab). Never blocks or breaks the actual tel:/wa.me link for
+    // the visitor.
+    if (eventType === "phone_click" || eventType === "whatsapp_click") {
+      try {
+        supabase.functions.invoke("notify-lead", {
+          body: { vendor_id: vendor.id, action: eventType === "whatsapp_click" ? "whatsapp" : "call" },
+        });
+      } catch { /* non-fatal */ }
+    }
   }
 
   // ── Compute effective social limit ────────────────────────────

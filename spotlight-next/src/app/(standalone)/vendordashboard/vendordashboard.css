@@ -1191,14 +1191,25 @@
 }
 
 .vd-tier-card ul {
-  padding-left: 18px;
+  padding-left: 0;
   margin: 0;
+  list-style: none;
 }
 
 .vd-tier-card li {
   margin-bottom: 10px;
   font-size: 14px;
   color: #334155;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.vd-tier-card li::before {
+  content: "✓";
+  color: #16a34a;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
 .vd-verification-consent {

@@ -12,6 +12,24 @@
 //    - Saves plan + billing to localStorage
 //    - If already logged in → redirect to /payment
 //    - If not logged in → redirect to /signup
+//
+// PLAN AWARENESS (new — not in production):
+// getlisted is also the public marketing/pricing page (anonymous
+// visitors, referral links), so it deliberately does NOT fetch or
+// branch on vendor state by default — that would slow down and
+// complicate the page for the majority of its traffic, who aren't
+// vendors deciding between plans at all.
+//
+// The one exception: the dashboard's own "Upgrade Plan" / "Compare
+// Plans" buttons link here with ?context=upgrade. Only in that
+// case do we fetch the logged-in vendor's current plan_tier and
+// subscription_status, so someone who came here specifically to
+// change their plan can see which card is theirs, which options are
+// upgrades vs. downgrades, and — for a downgrade — an explicit
+// confirmation of what they'd lose before we send them onward. This
+// is a UX layer only; the actual enforcement (can't re-buy an active
+// plan, mid-cycle-upgrade disclaimer, etc.) still lives downstream
+// on the payment page, same as production.
 // ===============================================================
 
 import { useState, useEffect } from "react";
@@ -158,10 +176,56 @@ const COMPARE_ROWS = [
   { label: "Close your account anytime", values: ["✓", "✓", "✓", "✓", "✓"] },
 ];
 
+// Lowest to highest — used only to work out whether a given plan is
+// an upgrade or a downgrade relative to the vendor's current one.
+const PLAN_ORDER = ["free", "standard", "enterprise", "elite", "custom"];
+const PAID_PLANS = ["standard", "enterprise", "elite", "custom"];
+
+type PlanRelation = "current" | "upgrade" | "downgrade" | null;
+
 export default function GetListedPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [yearly, setYearly] = useState(true);
+
+  // ---------------------------------------------------------------
+  // PLAN AWARENESS — only populated when a logged-in vendor arrives
+  // via ?context=upgrade (see the module comment above). Everyone
+  // else sees the page exactly as before: currentPlanId stays null,
+  // so getPlanRelation() returns null for every card and nothing
+  // about the page changes.
+  // ---------------------------------------------------------------
+  const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
+  const [currentPlanActivePaid, setCurrentPlanActivePaid] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("context") !== "upgrade") return;
+
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: vendor } = await supabase
+        .from("vendors")
+        .select("plan_tier, subscription_status")
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
+
+      if (!vendor) return;
+
+      const planTier = vendor.plan_tier || "free";
+      setCurrentPlanId(planTier);
+      setCurrentPlanActivePaid(
+        PAID_PLANS.includes(planTier) && vendor.subscription_status === "active"
+      );
+    })();
+  }, [searchParams]);
+
+  function getPlanRelation(planId: string): PlanRelation {
+    if (!currentPlanId) return null;
+    if (planId === currentPlanId) return "current";
+    return PLAN_ORDER.indexOf(planId) > PLAN_ORDER.indexOf(currentPlanId) ? "upgrade" : "downgrade";
+  }
 
   // Capture referral code on load
   useEffect(() => {
@@ -174,7 +238,9 @@ export default function GetListedPage() {
           .from("vendors").select("id").eq("auth_user_id", user.id).maybeSingle();
         if (vendor) return; // already listed
       }
-      localStorage.setItem("referral_code", ref);
+      // Non-null: the early `if (!ref) return;` above guarantees this,
+      // but TS doesn't narrow across the nested function boundary.
+      localStorage.setItem("referral_code", ref!);
     }
     checkRef();
   }, [searchParams]);
@@ -184,6 +250,22 @@ export default function GetListedPage() {
       router.push("/contact-us");
       return;
     }
+
+    // Plan awareness: a vendor actively downgrading gets an explicit
+    // heads-up about what they'd lose before we send them onward —
+    // this is the one place we interrupt the flow, since it's the
+    // one outcome that isn't obvious from the pricing cards alone.
+    if (getPlanRelation(planId) === "downgrade") {
+      const currentName = PLANS.find((p) => p.id === currentPlanId)?.name || "current";
+      const targetName = PLANS.find((p) => p.id === planId)?.name || planId;
+
+      const confirmed = window.confirm(
+        `You're currently on the ${currentName} plan. Switching to ${targetName} is a downgrade — you may lose access to things only available on your current plan, such as extra branches, gallery images, social links, or a longer business description. Any existing content beyond ${targetName}'s limits may be hidden or restricted until you upgrade again.\n\nContinue with the downgrade?`
+      );
+
+      if (!confirmed) return;
+    }
+
     localStorage.setItem("selectedPlan", planId);
     localStorage.setItem("billingType", yearly ? "yearly" : "monthly");
 
@@ -230,7 +312,9 @@ export default function GetListedPage() {
 
         {/* PRICING CARDS */}
         <section className={styles.pricingGrid}>
-          {PLANS.map(plan => (
+          {PLANS.map(plan => {
+            const relation = getPlanRelation(plan.id);
+            return (
             <article
               key={plan.id}
               className={[
@@ -238,17 +322,27 @@ export default function GetListedPage() {
                 plan.cardHighlight ? styles.cardHighlight : "",
                 plan.cardDark ? styles.cardDark : "",
                 plan.cardTrial ? styles.cardTrial : "",
+                relation === "current" ? styles.currentPlanCard : "",
               ].filter(Boolean).join(" ")}
             >
-              {plan.badge && (
-                <div className={`${styles.badge} ${plan.badgeTrial ? styles.badgeTrial : ""}`}>
-                  {plan.badge}
-                </div>
+              {relation === "current" ? (
+                <div className={`${styles.badge} ${styles.currentPlanBadge}`}>Your Current Plan</div>
+              ) : (
+                plan.badge && (
+                  <div className={`${styles.badge} ${plan.badgeTrial ? styles.badgeTrial : ""}`}>
+                    {plan.badge}
+                  </div>
+                )
               )}
 
               <div className={styles.cardTop}>
                 <h2>{plan.name}</h2>
                 <p className={styles.for}>{plan.for}</p>
+                {relation && relation !== "current" && (
+                  <p className={styles.currentPlanNote} style={{ color: relation === "downgrade" ? "var(--color-warning)" : "var(--color-success)" }}>
+                    {relation === "upgrade" ? "Upgrade from your current plan" : "Downgrade from your current plan"}
+                  </p>
+                )}
               </div>
 
               <p className={`${styles.price} ${plan.id === "custom" ? styles.letsTalk : ""}`}>
@@ -279,7 +373,11 @@ export default function GetListedPage() {
 
               {plan.trialNote && <p className={styles.trialNote}>{plan.trialNote}</p>}
 
-              {plan.btnHref ? (
+              {relation === "current" ? (
+                <button type="button" className={`${styles.btn} ${styles.btnCurrent}`} disabled>
+                  Your Current Plan
+                </button>
+              ) : plan.btnHref ? (
                 <a href={plan.btnHref} className={`${styles.btn} ${styles[`btn${plan.btnClass.charAt(0).toUpperCase() + plan.btnClass.slice(1)}`]}`}>
                   {plan.btnText}
                 </a>
@@ -289,13 +387,25 @@ export default function GetListedPage() {
                   className={`${styles.btn} ${styles[`btn${plan.btnClass.charAt(0).toUpperCase() + plan.btnClass.slice(1)}`]}`}
                   onClick={() => handlePlanClick(plan.id)}
                 >
-                  {plan.btnText}
+                  {relation === "upgrade"
+                    ? `Upgrade to ${plan.name}`
+                    : relation === "downgrade"
+                    ? `Downgrade to ${plan.name}`
+                    : plan.btnText}
                 </button>
+              )}
+
+              {relation === "upgrade" && currentPlanActivePaid && plan.id !== "free" && (
+                <p className={styles.upgradeNote}>Switching plans starts a new billing cycle.</p>
+              )}
+
+              {relation === "downgrade" && (
+                <p className={styles.downgradeNote}>You may lose features only available on your current plan.</p>
               )}
 
               {plan.micro && <p className={styles.microTrust}>{plan.micro}</p>}
             </article>
-          ))}
+          );})}
         </section>
 
         <p className={styles.trustNote}>
@@ -311,19 +421,29 @@ export default function GetListedPage() {
               {/* HEADER */}
               <div className={styles.compareHeader}>
                 <div className={styles.featureCol}></div>
-                {PLANS.map((plan, i) => (
+                {PLANS.map((plan, i) => {
+                  const relation = getPlanRelation(plan.id);
+                  return (
                   <div key={plan.id} className={`${styles.planCol} ${plan.cardHighlight ? styles.planColHighlight : ""}`}>
-                    {plan.cardHighlight && <span className={styles.colBadge}>Most popular</span>}
+                    {relation === "current" ? (
+                      <span className={`${styles.colBadge} ${styles.currentPlanBadge}`}>Your Plan</span>
+                    ) : (
+                      plan.cardHighlight && <span className={styles.colBadge}>Most popular</span>
+                    )}
                     <h3>{plan.name}</h3>
-                    {plan.btnHref ? (
+                    {relation === "current" ? (
+                      <button type="button" className={`${styles.planBtn} ${styles.planBtnCurrent}`} disabled>
+                        Current Plan
+                      </button>
+                    ) : plan.btnHref ? (
                       <a href={plan.btnHref} className={styles.planBtn}>Go Unlimited</a>
                     ) : (
                       <button type="button" className={styles.planBtn} onClick={() => handlePlanClick(plan.id)}>
-                        {plan.id === "free" ? "Get Started" : "Choose Plan"}
+                        {relation === "upgrade" ? "Upgrade" : relation === "downgrade" ? "Downgrade" : plan.id === "free" ? "Get Started" : "Choose Plan"}
                       </button>
                     )}
                   </div>
-                ))}
+                  );})}
               </div>
 
               {/* ROWS */}

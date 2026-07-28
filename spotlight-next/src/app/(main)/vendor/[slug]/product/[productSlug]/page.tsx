@@ -154,7 +154,24 @@ export default function VendorProductPage() {
         .eq("vendor_id", data.vendor_id)
         .neq("id", data.id)
         .order("display_order", { ascending: true });
-      setMoreProducts(more || []);
+      // Supabase's untyped query builder can't tell this is a
+      // many-to-one embed (each product has exactly one vendor), so
+      // it infers `vendors` as an array at the type level even
+      // though PostgREST returns a single object at runtime. Reshape
+      // into the same flat vendorName/vendorVerification/etc. fields
+      // the "similar products" query below already uses, instead of
+      // fighting the mistyped nested shape.
+      setMoreProducts((more || []).map((p: any) => ({
+        slug: p.slug,
+        product_name: p.product_name,
+        price: p.price,
+        primary_image_url: p.primary_image_url,
+        vendorName: p.vendors?.name,
+        vendorVerification: p.vendors?.verification_status,
+        vendorRating: p.vendors?.average_rating,
+        vendorReviews: p.vendors?.reviews_count,
+        sponsored: p.vendors?.is_sponsored,
+      })));
 
       // Similar products from other vendors
       const { data: similar } = await supabase.rpc("get_similar_products", {

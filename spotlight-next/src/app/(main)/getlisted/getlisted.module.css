@@ -300,6 +300,53 @@
 .btnWhite { background: #ffffff; color: #000000; }
 .btnWhite:hover { background: var(--color-primary); color: #000000; }
 
+/* ===============================================================
+   PLAN AWARENESS (only rendered when a logged-in vendor arrives via
+   /getlisted?context=upgrade from the dashboard — see page.tsx)
+   =============================================================== */
+
+.currentPlanCard {
+  border: 2px solid var(--color-success);
+}
+
+.currentPlanBadge {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.currentPlanNote {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--color-success);
+  margin: -6px 0 var(--spacing-sm);
+}
+
+.btnCurrent {
+  background: var(--color-border-light);
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+.btnCurrent:hover {
+  background: var(--color-border-light);
+  color: var(--color-text-muted);
+}
+
+.upgradeNote {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  text-align: center;
+  margin-top: 8px;
+}
+
+.downgradeNote {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--color-warning);
+  text-align: center;
+  margin-top: 8px;
+}
+
 .trustNote {
   text-align: center;
   color: var(--color-text-muted);
@@ -384,6 +431,17 @@
 }
 
 .planBtn:hover { background: var(--color-primary); color: var(--color-dark); }
+
+.planBtnCurrent {
+  background: var(--color-border-light);
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+.planBtnCurrent:hover {
+  background: var(--color-border-light);
+  color: var(--color-text-muted);
+}
 
 .row {
   display: grid;
