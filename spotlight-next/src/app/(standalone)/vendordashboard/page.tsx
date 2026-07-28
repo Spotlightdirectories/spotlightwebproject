@@ -16,6 +16,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import ProfileTab from "./ProfileTab";
+import ProductsTab from "./ProductsTab";
+import PortfolioTab from "./PortfolioTab";
 import SubscriptionTab from "./SubscriptionTab";
 import VerificationTab from "./VerificationTab";
 import SettingsTab from "./SettingsTab";
@@ -62,6 +64,7 @@ type TabKey =
   | "profile"
   | "products"
   | "services"
+  | "portfolio"
   | "subscription"
   | "verification"
   | "settings";
@@ -71,6 +74,7 @@ const TAB_TITLES: Record<TabKey, string> = {
   profile: "Profile",
   products: "Products",
   services: "Services",
+  portfolio: "Portfolio",
   subscription: "Subscription",
   verification: "Verification",
   settings: "Settings",
@@ -244,6 +248,11 @@ export default function VendorDashboardPage() {
   const businessType = vendor.business_type;
   const showProducts = businessType === "product" || businessType === "hybrid";
   const showServices = businessType === "service" || businessType === "hybrid";
+  // Same audience as Services (Cyril: "only for Service businesses or
+  // hybrid") — kept as its own variable rather than reusing
+  // showServices directly, since the two happen to match today but
+  // represent different concepts (what you sell vs. your work history).
+  const showPortfolio = businessType === "service" || businessType === "hybrid";
 
   const emailVerified = vendor.email_verified === true;
 
@@ -326,6 +335,11 @@ export default function VendorDashboardPage() {
               {showServices && (
                 <button className={`vd-nav-item${activeTab === "services" ? " active" : ""}`} onClick={() => switchTab("services")}>
                   <i className="fa-solid fa-briefcase"></i><span>Services</span>
+                </button>
+              )}
+              {showPortfolio && (
+                <button className={`vd-nav-item${activeTab === "portfolio" ? " active" : ""}`} onClick={() => switchTab("portfolio")}>
+                  <i className="fa-solid fa-layer-group"></i><span>Portfolio</span>
                 </button>
               )}
               <button
@@ -541,17 +555,27 @@ export default function VendorDashboardPage() {
           />
         </section>
 
-        {/* ============ STUB SECTIONS (built in later modules) ============ */}
+        {/* ============ PRODUCTS ============ */}
 
         {showProducts && (
           <section className={sec("products")}>
-            <div className="vd-card"><p style={{ color: "#64748b" }}>Products management — coming in a later module.</p></div>
+            <ProductsTab vendor={vendor} />
           </section>
         )}
+
+        {/* ============ STUB SECTIONS (built in later modules) ============ */}
 
         {showServices && (
           <section className={sec("services")}>
             <div className="vd-card"><p style={{ color: "#64748b" }}>Services management — coming in a later module.</p></div>
+          </section>
+        )}
+
+        {/* ============ PORTFOLIO ============ */}
+
+        {showPortfolio && (
+          <section className={sec("portfolio")}>
+            <PortfolioTab vendor={vendor} />
           </section>
         )}
 

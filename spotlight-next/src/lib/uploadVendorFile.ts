@@ -23,6 +23,7 @@ export type UploadCategory =
   | "gallery"
   | "cover"
   | "logo"
+  | "portfolio"
   | "verification"
   | "receipt"
   | "sponsorship_receipt";

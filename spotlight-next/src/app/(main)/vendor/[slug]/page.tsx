@@ -18,6 +18,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { uploadVendorFile } from "@/lib/uploadVendorFile";
 import styles from "./vendor-profile.module.css";
 
 // ── Plan limits (ported exactly from vendor-profile.js) ───────
@@ -87,6 +88,16 @@ interface Vendor {
   trial_started_at: string | null;
   auth_user_id: string;
   is_sponsored: boolean;
+  business_type: string | null;
+}
+
+interface PortfolioItem {
+  id: string;
+  title: string;
+  description: string | null;
+  client_name: string | null;
+  completed_on: string | null;
+  image_url: string;
 }
 
 interface Product {
@@ -196,6 +207,8 @@ export default function VendorProfilePage() {
   const [similarBusinesses, setSimilarBusinesses] = useState<SimilarBusiness[]>([]);
   const [videoRecord, setVideoRecord] = useState<VideoRecord | null>(null);
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
+  const [showAllPortfolio, setShowAllPortfolio] = useState(false);
 
   // Owner edit state
   const [description, setDescription] = useState("");
@@ -288,6 +301,7 @@ export default function VendorProfilePage() {
       loadReviews(vendorData.id, false);
       loadSimilarBusinesses(vendorData);
       loadVideo(vendorData.id, vendorData.plan_tier);
+      loadPortfolio(vendorData.id, vendorData.business_type);
     }
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -301,6 +315,17 @@ export default function VendorProfilePage() {
       .eq("vendor_id", vendorId)
       .order("display_order", { ascending: true });
     setProducts(data || []);
+  }
+
+  // ── Load portfolio (Service / Hybrid vendors only) ────────────
+  async function loadPortfolio(vendorId: string, businessType: string | null | undefined) {
+    if (businessType !== "service" && businessType !== "hybrid") return;
+    const { data } = await supabase
+      .from("vendor_portfolio_items")
+      .select("*")
+      .eq("vendor_id", vendorId)
+      .order("display_order", { ascending: true });
+    setPortfolioItems(data || []);
   }
 
   // ── Load services ────────────────────────────────────────────
@@ -414,41 +439,80 @@ export default function VendorProfilePage() {
   }
 
   // ── Cover/logo upload ────────────────────────────────────────
+  // The "vendor-branding" storage bucket had SELECT/DELETE policies
+  // but NO insert (or update, for upsert:true) policy at all — every
+  // upload was silently rejected by storage RLS. The existing
+  // policies also compared auth.uid() directly to the path's first
+  // folder segment, which is vendor.id (the vendors table's own
+  // primary key) — never equal to auth_user_id, so even delete would
+  // have failed. Needs a migration (see chat) adding correct
+  // insert/update/delete policies that join through vendors.
+  // Below: the upload calls now check `error` and surface it instead
+  // of silently continuing to write a public URL for a file that was
+  // never actually saved.
   async function handleCoverUpload(file: File) {
     if (!vendor) return;
-    if (file.size > 1 * 1024 * 1024) { alert("Cover image must be 1MB or smaller."); return; }
+    let uploadResult;
+    try {
+      // Goes through the validate-upload Edge Function (service-role,
+      // server-side type/dimension/size checks + resize), same as
+      // production and every other upload in this codebase — NOT a
+      // direct client-side supabase.storage.upload() call. That direct
+      // call was the actual bug: the vendor-branding bucket has no
+      // INSERT policy in storage RLS, so every upload was silently
+      // rejected while the code still went on to save a public URL for
+      // a file that was never written. Edge Function bypasses that
+      // client-side RLS entirely (it uses the service role key), which
+      // is exactly why production's equivalent flow already works.
+      uploadResult = await uploadVendorFile(file, "cover");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Cover upload failed.");
+      return;
+    }
     if (vendor.cover_url) {
       const oldPath = vendor.cover_url.split("/vendor-branding/")[1];
-      if (oldPath) await supabase.storage.from("vendor-branding").remove([oldPath]);
+      if (oldPath) {
+        const { error } = await supabase.storage.from("vendor-branding").remove([oldPath]);
+        if (error) console.error("Cover delete (storage) error:", error);
+      }
     }
-    const path = `${vendor.id}/cover/cover-${Date.now()}.${file.name.split(".").pop()}`;
-    await supabase.storage.from("vendor-branding").upload(path, file, { upsert: true });
-    const { data: urlData } = supabase.storage.from("vendor-branding").getPublicUrl(path);
-    await supabase.from("vendors").update({ cover_url: urlData.publicUrl }).eq("id", vendor.id);
-    setVendor(v => v ? { ...v, cover_url: urlData.publicUrl } : v);
+    const { error: updateError } = await supabase.from("vendors").update({ cover_url: uploadResult.publicUrl }).eq("id", vendor.id);
+    if (updateError) { alert(`Uploaded, but could not save cover image: ${updateError.message}`); return; }
+    setVendor(v => v ? { ...v, cover_url: uploadResult.publicUrl } : v);
   }
 
   async function handleLogoUpload(file: File) {
     if (!vendor) return;
-    if (file.size > 1 * 1024 * 1024) { alert("Logo image must be 1MB or smaller."); return; }
+    let uploadResult;
+    try {
+      uploadResult = await uploadVendorFile(file, "logo");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Logo upload failed.");
+      return;
+    }
     if (vendor.logo_url) {
       const oldPath = vendor.logo_url.split("/vendor-branding/")[1];
-      if (oldPath) await supabase.storage.from("vendor-branding").remove([oldPath]);
+      if (oldPath) {
+        const { error } = await supabase.storage.from("vendor-branding").remove([oldPath]);
+        if (error) console.error("Logo delete (storage) error:", error);
+      }
     }
-    const path = `${vendor.id}/logo/logo-${Date.now()}.${file.name.split(".").pop()}`;
-    await supabase.storage.from("vendor-branding").upload(path, file, { upsert: true });
-    const { data: urlData } = supabase.storage.from("vendor-branding").getPublicUrl(path);
-    await supabase.from("vendors").update({ logo_url: urlData.publicUrl }).eq("id", vendor.id);
-    setVendor(v => v ? { ...v, logo_url: urlData.publicUrl } : v);
+    const { error: updateError } = await supabase.from("vendors").update({ logo_url: uploadResult.publicUrl }).eq("id", vendor.id);
+    if (updateError) { alert(`Uploaded, but could not save logo: ${updateError.message}`); return; }
+    setVendor(v => v ? { ...v, logo_url: uploadResult.publicUrl } : v);
   }
 
   async function handleDeleteCover() {
     if (!vendor || !confirm("Delete cover image?")) return;
     if (vendor.cover_url) {
       const oldPath = vendor.cover_url.split("/vendor-branding/")[1];
-      if (oldPath) await supabase.storage.from("vendor-branding").remove([oldPath]);
+      if (oldPath) {
+        const { error } = await supabase.storage.from("vendor-branding").remove([oldPath]);
+        if (error) console.error("Cover delete (storage) error:", error);
+      }
     }
-    await supabase.from("vendors").update({ cover_url: null }).eq("id", vendor.id);
+    const { error } = await supabase.from("vendors").update({ cover_url: null }).eq("id", vendor.id);
+    if (error) { alert(`Could not remove cover image: ${error.message}`); return; }
     setVendor(v => v ? { ...v, cover_url: null } : v);
   }
 
@@ -456,9 +520,13 @@ export default function VendorProfilePage() {
     if (!vendor || !confirm("Delete logo image?")) return;
     if (vendor.logo_url) {
       const oldPath = vendor.logo_url.split("/vendor-branding/")[1];
-      if (oldPath) await supabase.storage.from("vendor-branding").remove([oldPath]);
+      if (oldPath) {
+        const { error } = await supabase.storage.from("vendor-branding").remove([oldPath]);
+        if (error) console.error("Logo delete (storage) error:", error);
+      }
     }
-    await supabase.from("vendors").update({ logo_url: null }).eq("id", vendor.id);
+    const { error } = await supabase.from("vendors").update({ logo_url: null }).eq("id", vendor.id);
+    if (error) { alert(`Could not remove logo: ${error.message}`); return; }
     setVendor(v => v ? { ...v, logo_url: null } : v);
   }
 
@@ -494,22 +562,28 @@ export default function VendorProfilePage() {
     }
 
     const videoPath = `${vendor.id}/video/video-${Date.now()}.mp4`;
-    await supabase.storage.from("vendor-videos").upload(videoPath, file);
+    const { error: uploadError } = await supabase.storage.from("vendor-videos").upload(videoPath, file);
+    if (uploadError) { alert(`Could not upload video: ${uploadError.message}`); return; }
     const { data: urlData } = supabase.storage.from("vendor-videos").getPublicUrl(videoPath);
-    await supabase.from("vendor_media").insert({
+    const { error: insertError } = await supabase.from("vendor_media").insert({
       vendor_id: vendor.id,
       media_type: "video",
       file_url: urlData.publicUrl,
       display_order: Math.floor(Date.now() / 1000),
     });
+    if (insertError) { alert(`Uploaded, but could not save video: ${insertError.message}`); return; }
     loadVideo(vendor.id, vendor.plan_tier);
   }
 
   async function handleDeleteVideo() {
     if (!vendor || !videoRecord || !confirm("Delete this video?")) return;
     const oldPath = videoRecord.file_url.split("/vendor-videos/")[1];
-    if (oldPath) await supabase.storage.from("vendor-videos").remove([oldPath]);
-    await supabase.from("vendor_media").delete().eq("id", videoRecord.id);
+    if (oldPath) {
+      const { error: removeError } = await supabase.storage.from("vendor-videos").remove([oldPath]);
+      if (removeError) console.error("Video delete (storage) error:", removeError);
+    }
+    const { error } = await supabase.from("vendor_media").delete().eq("id", videoRecord.id);
+    if (error) { alert(`Could not remove video: ${error.message}`); return; }
     setVideoRecord(null);
   }
 
@@ -624,7 +698,7 @@ export default function VendorProfilePage() {
           )}
           {isOwner && !vendor.cover_url && (
             <div className={styles.coverPlaceholder} style={{ display: "flex" }}>
-              Recommended size: 920 × 300px<br />Max size: 1MB<br />Formats: JPG, PNG, WEBP
+              Recommended size: 920 × 300px<br />Max size: 1MB<br />Formats: JPG, PNG
             </div>
           )}
           {isOwner && (
@@ -650,7 +724,7 @@ export default function VendorProfilePage() {
                   <img src={vendor.logo_url} alt={vendor.name} />
                 ) : (
                   <div className={styles.logoPlaceholder}>
-                    112 × 112px<br />Max: 1MB<br />JPG, PNG, WEBP
+                    112 × 112px<br />Max: 1MB<br />JPG, PNG
                   </div>
                 )}
                 {isOwner && (
@@ -865,6 +939,44 @@ export default function VendorProfilePage() {
           )}
         </div>
       </section>
+
+      {/* PORTFOLIO — CV of past work, Service/Hybrid vendors only */}
+      {(vendor.business_type === "service" || vendor.business_type === "hybrid") && portfolioItems.length > 0 && (
+        <section className={styles.profileCard}>
+          <h2>Portfolio</h2>
+          <p className={styles.mediaHint}>A look at past work — completed projects for previous clients.</p>
+
+          <div className={styles.galleryGrid}>
+            {(showAllPortfolio ? portfolioItems : portfolioItems.slice(0, 2)).map(item => (
+              <div key={item.id} className={styles.productCard}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={item.image_url || "/images/spotlightlogo-512.png"}
+                  alt={item.title}
+                  className={styles.productImage}
+                />
+                <h3 className={styles.productTitle}>{item.title}</h3>
+                {item.description && <p className={styles.productPrice}>{item.description}</p>}
+                {(item.client_name || item.completed_on) && (
+                  <div className={styles.productVendor}>
+                    <span>{[item.client_name, item.completed_on].filter(Boolean).join(" · ")}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {portfolioItems.length > 2 && (
+            <button
+              type="button"
+              className={styles.viewAllBtn}
+              onClick={() => setShowAllPortfolio(v => !v)}
+            >
+              {showAllPortfolio ? "Show less" : `See More (${portfolioItems.length - 2} more)`}
+            </button>
+          )}
+        </section>
+      )}
 
       {/* MEDIA — Products, Services, Video */}
       {(products.length > 0 || services.length > 0 || (videoLimits?.allowed)) && (
