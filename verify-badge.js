@@ -68,21 +68,27 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // Show correct badge fields based on type
+  const utilityFileHint = document.getElementById("utilityFileHint");
+
   if (badgeType === "gray") {
     if (badgeTitle) badgeTitle.textContent = "Gray Badge Verification";
     if (badgeRequirements) badgeRequirements.textContent =
-      "Gray badge builds trust. Requires Government ID and Passport photo.";
+      "Gray badge builds trust. Requires Government ID (NIN), a Utility Bill (business or residential address), and a Passport Photograph (Recent - within the last 6 months).";
     grayOnly.forEach(el => el.style.display = "block");
-    if (applicantNameField) applicantNameField.placeholder = "Name must match the Government ID";
+    if (applicantNameField) applicantNameField.placeholder = "Name must match the Government ID (NIN)";
+    if (utilityFileHint) utilityFileHint.textContent =
+      "Upload a utility bill issued within the last 6 months, for either your business address or your residential address.";
   }
 
   if (badgeType === "blue") {
     if (badgeTitle) badgeTitle.textContent = "Blue Badge Verification";
     if (badgeRequirements) badgeRequirements.textContent =
-      "Blue badge verifies registered businesses. Requires Government ID, CAC Certificate, MEMART, Status Report and Utility Bill.";
+      "Blue badge verifies registered businesses. Requires Government ID (NIN), CAC Certificate, Utility Bill (business address as per registration), MEMART and CAC Status Report.";
     blueOnly.forEach(el => el.style.display = "block");
     if (applicantNameField) applicantNameField.placeholder =
       "Name (must be a Director or Shareholder in the CAC registration)";
+    if (utilityFileHint) utilityFileHint.textContent =
+      "Upload a utility bill issued within the last 6 months. The address must match the operating (business) address used in your vendor listing.";
   }
 
 
@@ -131,18 +137,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     const cacNumber = cacNumberField ? cacNumberField.value.trim() : null;
 
     const idFile = document.getElementById("idFile")?.files[0];
-    const passportFile = document.getElementById("passportFile")?.files[0];
     const cacFile = document.getElementById("cacFile")?.files[0];
     const utilityFile = document.getElementById("utilityFile")?.files[0];
     const memartFile = document.getElementById("memartFile")?.files[0];
     const statusReportFile = document.getElementById("statusReportFile")?.files[0];
+    const passportFile = document.getElementById("passportFile")?.files[0];
 
     if (!applicantName) markRequired("applicantName", "Full name is required");
     if (!phone) markRequired("phone", "Phone number is required");
-    if (!idFile) markRequired("idFile", "Government ID is required");
+    if (!idFile) markRequired("idFile", "Government ID (NIN) is required");
 
     if (badgeType === "gray") {
-      if (!passportFile) markRequired("passportFile", "Passport photograph is required");
+      if (!utilityFile) markRequired("utilityFile", "Utility Bill is required");
+      if (!passportFile) markRequired("passportFile", "Passport Photograph is required");
     }
 
     if (badgeType === "blue") {
@@ -180,11 +187,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       // --- UPLOAD ALL FILES ---
       const idUrl = await upload(idFile, "id");
-      const passportUrl = await upload(passportFile, "passport");
       const cacUrl = await upload(cacFile, "cac");
       const utilityUrl = await upload(utilityFile, "utility");
       const memartUrl = await upload(memartFile, "memart");
       const statusReportUrl = await upload(statusReportFile, "status-report");
+      const passportUrl = await upload(passportFile, "photo");
 
       // --- INSERT VERIFICATION RECORD ---
       const { error } = await supabase
@@ -198,11 +205,11 @@ document.addEventListener("DOMContentLoaded", async () => {
           id_number: idNumber,
           cac_number: cacNumber,
           id_url: idUrl,
-          passport_photo_url: passportUrl,
           cac_url: cacUrl,
           utility_url: utilityUrl,
           memart_url: memartUrl,
           status_report_url: statusReportUrl,
+          passport_photo_url: passportUrl,
           status: "pending",
           consent_accepted: true,
           consent_accepted_at: new Date().toISOString(),
@@ -247,7 +254,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.error("Error message:", err?.message);
       console.error("Error details:", err?.details);
       console.error("Error hint:", err?.hint);
-      verifyMsg.textContent = "Upload failed. Please try again.";
+      // Show the real reason when we have one (e.g. "File exceeds the
+      // 2MB limit for this upload type.") instead of a generic
+      // message — a vendor can't fix what they can't see.
+      verifyMsg.textContent = err?.message || "Upload failed. Please try again.";
       verifyMsg.style.color = "#dc2626";
       if (submitBtn) {
         submitBtn.disabled = false;

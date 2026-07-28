@@ -997,6 +997,17 @@ function applyLocationView(locationData) {
         } catch (analyticsErr) {
           console.error("WhatsApp click analytics error:", analyticsErr);
         }
+
+        // Fire-and-forget: let the vendor know a customer just tried
+        // to message them, if they have Lead Alerts turned on. Never
+        // blocks or breaks the actual wa.me link for the visitor.
+        try {
+          supabase.functions.invoke("notify-lead", {
+            body: { vendor_id: vendor.id, action: "whatsapp" }
+          });
+        } catch (notifyErr) {
+          console.error("Lead alert notify error:", notifyErr);
+        }
       };
     } else {
       whatsapp.style.display = "none";
@@ -1018,6 +1029,17 @@ function applyLocationView(locationData) {
           });
         } catch (analyticsErr) {
           console.error("Phone click analytics error:", analyticsErr);
+        }
+
+        // Fire-and-forget: let the vendor know a customer just tried
+        // to call, if they have Lead Alerts turned on. Never blocks
+        // or breaks the actual tel: link for the visitor.
+        try {
+          supabase.functions.invoke("notify-lead", {
+            body: { vendor_id: vendor.id, action: "call" }
+          });
+        } catch (notifyErr) {
+          console.error("Lead alert notify error:", notifyErr);
         }
       };
     } else {

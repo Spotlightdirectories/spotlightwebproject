@@ -3033,6 +3033,27 @@ if (profileBtn && dropdown) {
 }
 
 /* ===============================
+PROFILE DROPDOWN - PERFORMANCE / PREFERENCES
+(previously dead buttons - no id, no listener)
+=============================== */
+
+const dropdownPerformanceBtn = document.getElementById("dropdownPerformanceBtn");
+if (dropdownPerformanceBtn) {
+  dropdownPerformanceBtn.addEventListener("click", () => {
+    window.location.href = "insight.html";
+  });
+}
+
+const dropdownPreferencesBtn = document.getElementById("dropdownPreferencesBtn");
+if (dropdownPreferencesBtn) {
+  dropdownPreferencesBtn.addEventListener("click", () => {
+    if (dropdown) dropdown.classList.add("hidden");
+    const settingsNavItem = document.querySelector('.vd-nav-item[data-tab="settings"]');
+    if (settingsNavItem) settingsNavItem.click();
+  });
+}
+
+/* ===============================
 LOGOUT
 =============================== */
 
@@ -5620,6 +5641,65 @@ if (restoreAccountBtn) {
       }
     );
 
+}
+
+/* ================================= */
+/* SETTINGS - NOTIFICATION PREFERENCES */
+/* ================================= */
+//
+// Previously dead UI (hardcoded `checked`, no id, no JS at all).
+// Now backed by two real vendors columns: email_notifications_enabled
+// (weekly performance report emails) and lead_alerts_enabled (instant
+// email when a customer clicks Call). Both default to true, matching
+// the checkbox's previous hardcoded state.
+
+const emailNotificationsToggle =
+  document.getElementById("emailNotificationsToggle");
+
+const leadAlertsToggle =
+  document.getElementById("leadAlertsToggle");
+
+if (emailNotificationsToggle && vendor) {
+  emailNotificationsToggle.checked =
+    vendor.email_notifications_enabled !== false;
+
+  emailNotificationsToggle.addEventListener("change", async () => {
+    const newValue = emailNotificationsToggle.checked;
+    const { error } = await supabase
+      .from("vendors")
+      .update({ email_notifications_enabled: newValue })
+      .eq("id", vendor.id);
+
+    if (error) {
+      console.error("Unable to update email notifications preference:", error);
+      // Revert the toggle visually if the save failed
+      emailNotificationsToggle.checked = !newValue;
+      return;
+    }
+
+    vendor.email_notifications_enabled = newValue;
+  });
+}
+
+if (leadAlertsToggle && vendor) {
+  leadAlertsToggle.checked =
+    vendor.lead_alerts_enabled !== false;
+
+  leadAlertsToggle.addEventListener("change", async () => {
+    const newValue = leadAlertsToggle.checked;
+    const { error } = await supabase
+      .from("vendors")
+      .update({ lead_alerts_enabled: newValue })
+      .eq("id", vendor.id);
+
+    if (error) {
+      console.error("Unable to update lead alerts preference:", error);
+      leadAlertsToggle.checked = !newValue;
+      return;
+    }
+
+    vendor.lead_alerts_enabled = newValue;
+  });
 }
 
 /* ========================= */

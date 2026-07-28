@@ -312,7 +312,7 @@ const EmailTemplates = (() => {
       ${reason ? infoTable(infoRow("Reason", reason)) : ""}
       ${paragraph("Please review your documents and submit again. Make sure all documents are clear, current, and match the requirements for your chosen badge tier.")}
       ${primaryButton("Resubmit Documents", "https://spotlightdirectories.com/login.html")}
-      ${alertBox("Gray Badge requires: Government ID + Passport Photograph.<br/>Blue Badge requires: Government ID + CAC Certificate + Utility Bill + MEMART + CAC Status Report.", "info")}
+      ${alertBox("Gray Badge requires: Government ID (NIN) + Utility Bill (business or residential address) + Passport Photograph (Recent - within last 6 months).<br/>Blue Badge requires: Government ID (NIN) + CAC Certificate + Utility Bill (business address as per registration) + MEMART + CAC Status Report.", "info")}
     `;
     return base({
       preheader: "Your Spotlight verification could not be approved. Please review and resubmit.",

@@ -14,9 +14,32 @@
 // using the file's real bytes (not just its claimed type), before
 // anything reaches storage.
 //
-// NOTE: This function is not yet wired into the four upload points.
-// That happens in Block 4 item 17 (consolidating the upload handlers).
-// For now this function can be tested on its own.
+// UPDATE (this revision): dropped "image/webp" from the accepted
+// types for every category that goes through the decode/resize step
+// (product, service, gallery, cover, logo). The imagescript library
+// used below to decode+resize+recompress images has unreliable WEBP
+// decode support -- a structurally valid WEBP file (confirmed valid
+// by the real-bytes magic-number check) could still fail at
+// Image.decode(), surfacing as "Could not read image file. It may be
+// corrupted." even though the file was never corrupted at all. Every
+// image is re-encoded as JPEG on the way out regardless of input
+// type, so accepting WEBP as input only ever mattered for decode
+// compatibility -- removing it here is the actual fix, not a
+// workaround. JPEG/PNG decode is solid in this library, so those
+// remain the only accepted image formats.
+//
+// PRIOR UPDATE: verification/receipt/sponsorship_receipt categories
+// previously capped the ORIGINAL upload at 300KB, checked BEFORE any
+// server-side compression -- meaning a normal phone photo of an ID or
+// utility bill (typically 1-6MB straight out of the camera) was
+// rejected before this function ever got a chance to shrink it.
+// Vendors have no practical way to resize a photo themselves, so that
+// cap effectively blocked most real uploads. Fixed by: (1) accepting
+// a much larger original for these categories, (2) resizing +
+// recompressing them exactly like product/service images already do,
+// so the FINAL stored file still ends up small. PDFs bypass that
+// resize/recompress step entirely (they're stored as-is), so they
+// keep their own, tighter cap via the new `maxPdfBytes` rule field.
 // ===============================================================
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
@@ -32,12 +55,16 @@ const corsHeaders = {
 
 // ===============================================================
 // RULES PER UPLOAD CATEGORY
-// (matches the specs agreed in Block 4 planning)
+// (matches the specs agreed in Block 4 planning, revised for
+// verification/receipt/sponsorship_receipt per founder decision, and
+// with WEBP dropped from image-processing categories per the WEBP
+// decode-reliability fix above)
 // ===============================================================
 
 type Rule = {
   allowedTypes: string[];
-  maxBytes: number;
+  maxBytes: number; // cap for images (and for PDFs, when maxPdfBytes isn't set)
+  maxPdfBytes?: number; // separate, tighter cap for PDFs — they are stored as-is, never compressed
   minWidth?: number;
   minHeight?: number;
   resizeTo?: number; // longest side, in px — images only
@@ -48,7 +75,7 @@ type Rule = {
 
 const RULES: Record<string, Rule> = {
   product: {
-    allowedTypes: ["image/jpeg", "image/png", "image/webp"],
+    allowedTypes: ["image/jpeg", "image/png"],
     maxBytes: 2 * 1024 * 1024,
     minWidth: 800,
     minHeight: 800,
@@ -58,7 +85,7 @@ const RULES: Record<string, Rule> = {
     isPublic: true,
   },
   service: {
-    allowedTypes: ["image/jpeg", "image/png", "image/webp"],
+    allowedTypes: ["image/jpeg", "image/png"],
     maxBytes: 2 * 1024 * 1024,
     minWidth: 800,
     minHeight: 800,
@@ -68,15 +95,25 @@ const RULES: Record<string, Rule> = {
     isPublic: true,
   },
   gallery: {
-    allowedTypes: ["image/jpeg", "image/png", "image/webp"],
+    allowedTypes: ["image/jpeg", "image/png"],
     maxBytes: 750 * 1024,
     resizeTo: 1200,
     bucket: "vendor-branding",
     folder: "gallery",
     isPublic: true,
   },
+  portfolio: {
+    allowedTypes: ["image/jpeg", "image/png"],
+    maxBytes: 2 * 1024 * 1024,
+    minWidth: 800,
+    minHeight: 800,
+    resizeTo: 1600,
+    bucket: "vendor-gallery",
+    folder: "portfolio",
+    isPublic: true,
+  },
   cover: {
-    allowedTypes: ["image/jpeg", "image/png", "image/webp"],
+    allowedTypes: ["image/jpeg", "image/png"],
     maxBytes: 1024 * 1024,
     resizeTo: 1200,
     bucket: "vendor-branding",
@@ -84,7 +121,7 @@ const RULES: Record<string, Rule> = {
     isPublic: true,
   },
   logo: {
-    allowedTypes: ["image/jpeg", "image/png", "image/webp"],
+    allowedTypes: ["image/jpeg", "image/png"],
     maxBytes: 1024 * 1024,
     resizeTo: 1200,
     bucket: "vendor-branding",
@@ -93,21 +130,27 @@ const RULES: Record<string, Rule> = {
   },
   verification: {
     allowedTypes: ["image/jpeg", "image/png", "application/pdf"],
-    maxBytes: 300 * 1024,
+    maxBytes: 4 * 1024 * 1024, // accepted as-is from the phone; resized+recompressed below
+    maxPdfBytes: 2 * 1024 * 1024, // PDFs are stored as-is — no server-side compression
+    resizeTo: 1600,
     bucket: "vendor-verifications",
     folder: "documents",
     isPublic: false,
   },
   receipt: {
     allowedTypes: ["image/jpeg", "image/png", "application/pdf"],
-    maxBytes: 300 * 1024,
+    maxBytes: 4 * 1024 * 1024,
+    maxPdfBytes: 2 * 1024 * 1024,
+    resizeTo: 1600,
     bucket: "payment-receipts",
     folder: "bank-receipts",
     isPublic: false,
   },
   sponsorship_receipt: {
     allowedTypes: ["image/jpeg", "image/png", "application/pdf"],
-    maxBytes: 300 * 1024,
+    maxBytes: 4 * 1024 * 1024,
+    maxPdfBytes: 2 * 1024 * 1024,
+    resizeTo: 1600,
     bucket: "sponsorship-receipts",
     folder: "bank-receipts",
     isPublic: false,
@@ -159,6 +202,16 @@ function extensionFor(type: string): string {
   if (type === "image/webp") return "webp";
   if (type === "application/pdf") return "pdf";
   return "bin";
+}
+
+// Human-readable size for error messages — KB below 1MB, MB above,
+// so a 4MB limit reads as "4MB" instead of "4096KB".
+function formatSize(bytes: number): string {
+  if (bytes >= 1024 * 1024) {
+    const mb = bytes / (1024 * 1024);
+    return `${Number.isInteger(mb) ? mb.toFixed(0) : mb.toFixed(1)}MB`;
+  }
+  return `${(bytes / 1024).toFixed(0)}KB`;
 }
 
 serve(async (req) => {
@@ -249,20 +302,9 @@ serve(async (req) => {
     // Decode base64 → raw bytes
     const bytes = Uint8Array.from(atob(fileBase64), (c) => c.charCodeAt(0));
 
-    // ---- SIZE CHECK ----
-    if (bytes.length > rule.maxBytes) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: `File exceeds the ${(rule.maxBytes / 1024).toFixed(
-            0
-          )}KB limit for this upload type.`,
-        }),
-        { status: 400, headers: corsHeaders }
-      );
-    }
-
     // ---- REAL TYPE CHECK (ignores the claimed content-type entirely) ----
+    // Done before the size check now, since PDFs and images can have
+    // different size caps (PDFs aren't compressed below, images are).
     const realType = detectRealType(bytes);
 
     if (!realType || !rule.allowedTypes.includes(realType)) {
@@ -270,7 +312,27 @@ serve(async (req) => {
         JSON.stringify({
           success: false,
           error:
-            "File type not recognized or not allowed for this upload type.",
+            realType === "image/webp"
+              ? "WEBP is not supported for this upload — please use JPG or PNG."
+              : "File type not recognized or not allowed for this upload type.",
+        }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    // ---- SIZE CHECK ----
+    const effectiveMaxBytes =
+      realType === "application/pdf" && rule.maxPdfBytes
+        ? rule.maxPdfBytes
+        : rule.maxBytes;
+
+    if (bytes.length > effectiveMaxBytes) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `File exceeds the ${formatSize(
+            effectiveMaxBytes
+          )} limit for this upload type.`,
         }),
         { status: 400, headers: corsHeaders }
       );
@@ -289,7 +351,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({
             success: false,
-            error: "Could not read image file. It may be corrupted.",
+            error: "Could not read image file. Please try a different JPG or PNG.",
           }),
           { status: 400, headers: corsHeaders }
         );

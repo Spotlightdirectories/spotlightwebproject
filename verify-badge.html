@@ -96,11 +96,11 @@
 </div>
 
 <div class="form-group gray-only" style="display:none">
-  <label for="idNumber">ID Number *</label>
-  <input 
-    type="text" 
-    id="idNumber" 
-    placeholder="Government ID number"
+  <label for="idNumber">NIN (National Identification Number) *</label>
+  <input
+    type="text"
+    id="idNumber"
+    placeholder="11-digit National Identification Number"
   />
 </div>
 
@@ -114,31 +114,39 @@
 </div>
 
     <div class="form-group">
-      <label for="idFile">Government ID * <input type="file" id="idFile" required /></label>
-    </div>
-
-    <div class="form-group gray-only" style="display:none">
-      <label for="passportFile">Passport Photograph * <input type="file" id="passportFile" /></label>
+      <label for="idFile">Government ID (NIN) *</label>
+      <small>Accepted formats: JPG, PNG or PDF. Just upload the photo as-is — it's resized automatically. PDF files: max 2MB.</small>
+      <input type="file" id="idFile" required />
     </div>
 
     <div class="form-group blue-only" style="display:none">
       <label for="cacFile">CAC Certificate *</label>
+      <small>Accepted formats: JPG, PNG or PDF. Just upload the photo as-is — it's resized automatically. PDF files: max 2MB.</small>
       <input type="file" id="cacFile" />
     </div>
 
-    <div class="form-group blue-only" style="display:none">
+    <div class="form-group gray-only blue-only" style="display:none">
       <label for="utilityFile">Utility Bill *</label>
-      <small>Upload a utility bill issued within the last 6 months. The address must match the operating address used in your vendor listing.</small>
+      <small id="utilityFileHint">Upload a utility bill issued within the last 6 months.</small>
+      <small>Accepted formats: JPG, PNG or PDF. Just upload the photo as-is — it's resized automatically. PDF files: max 2MB.</small>
       <input type="file" id="utilityFile" />
+    </div>
+
+    <div class="form-group gray-only" style="display:none">
+      <label for="passportFile">Passport Photograph (Recent - within last 6 months) *</label>
+      <small>Accepted formats: JPG, PNG or PDF. Just upload the photo as-is — it's resized automatically. PDF files: max 2MB.</small>
+      <input type="file" id="passportFile" />
     </div>
 
     <div class="form-group blue-only" style="display:none">
       <label for="memartFile">MEMART (Memorandum & Articles of Association) *</label>
+      <small>Accepted formats: JPG, PNG or PDF. Just upload the photo as-is — it's resized automatically. PDF files: max 2MB.</small>
       <input type="file" id="memartFile" />
     </div>
 
     <div class="form-group blue-only" style="display:none">
       <label for="statusReportFile">CAC Status Report *</label>
+      <small>Accepted formats: JPG, PNG or PDF. Just upload the photo as-is — it's resized automatically. PDF files: max 2MB.</small>
       <input type="file" id="statusReportFile" />
     </div>
 
