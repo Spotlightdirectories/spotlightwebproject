@@ -314,18 +314,161 @@ in `/insight`).
   all reviews" button) revealing the remaining up to 4.
 - **`uploadVendorFile.ts`:** added `"portfolio"` to the
   `UploadCategory` union.
-- **Still pending / not yet done:**
-  1. The `vendor_portfolio_items` table + RLS migration has been
-     drafted (mirrors `vendor_products`'s SELECT/INSERT/UPDATE/DELETE
-     policy pattern, with a `count_vendor_portfolio_items() < 6` check
-     instead of a plan-tier lookup, plus the same
-     `business_type IN ('service','hybrid')` check) but has **not yet
-     been applied** — `apply_migration` is read-only from this tool,
-     so it must be pasted into the Supabase SQL editor by Cyril.
-  2. The `portfolio` rule in `validate-upload/index.ts` ships bundled
-     with the WEBP fix above — same pending manual paste-deploy.
-  3. Build not yet re-verified with `tsc`/`next build` — the sandbox
-     (`mcp__workspace__bash`) was down for this entire build. Reviewed
-     all new/edited files by hand instead. Run `npx tsc --noEmit` and
-     a manual click-through (dashboard add/edit/delete, public 2-then-
-     see-more reveal) first thing next session.
+- **Shipped and live-tested (2026-07-28):** Cyril ran the
+  `vendor_portfolio_items` table + RLS migration (mirrors
+  `vendor_products`'s SELECT/INSERT/UPDATE/DELETE pattern, with
+  `count_vendor_portfolio_items() < 6` instead of a plan-tier limit)
+  and redeployed `validate-upload` with the new `portfolio` rule +
+  WEBP fix bundled in. `npx tsc --noEmit` came back clean. Tested live
+  on `remedux-prime-ltd` (hybrid): add/edit/save worked, and the
+  public profile correctly showed 2 items with a working "See More."
+
+- **Round 2 fixes, from Cyril's live-test feedback (2026-07-28):**
+  1. **Typography bug:** the public card's description line reused
+     `.productPrice` (bold, green — meant for prices), so a portfolio
+     description rendered like a price tag. Added dedicated
+     `.portfolioCard`/`.portfolioTitle`/`.portfolioDescription`/
+     `.portfolioMeta` classes in `vendor-profile.module.css`
+     (deliberately separate from the `.product*` classes, which stay
+     untouched for actual Products) — title bold, description plain
+     muted text, client/date as a small meta line. Same fix mirrored
+     in the dashboard's own pending/saved-item previews via an inline
+     style rather than a new global class (`vd-product-price` is
+     shared with the real Products/Services tabs and shouldn't
+     change).
+  2. **Image made optional, not required.** Cyril's reasoning, which
+     I agreed with: most services (financial statements, legal
+     filings, training, consulting) have no meaningful "product shot"
+     — requiring one was forcing vendors to attach unrelated stock/ad
+     graphics just to satisfy the form (visible in his first test:
+     two of three cards had generic marketing banners, not real work
+     photos). Cards with no image now fall back to the Spotlight
+     mark, same as before. **Requires one manual step:** the table
+     Cyril already created has `image_url text not null` — he still
+     needs to run
+     `alter table vendor_portfolio_items alter column image_url drop not null;`
+     before saving an item with no image will work. Given to him as a
+     one-line SQL snippet, not yet confirmed run.
+  3. **"Completed" is now a real date picker,** not free text — the
+     dashboard form uses `<input type="date">` instead of a text
+     field, and the public/dashboard displays always render a fixed
+     `Completed: ` label followed by a formatted date (e.g. "28 July
+     2026"), rather than whatever phrasing a vendor typed. Old test
+     entries saved as free text (e.g. "Completed 28th July, 2026")
+     don't match the `YYYY-MM-DD` shape the picker needs, so editing
+     one of those leaves the date field blank rather than showing
+     garbage — re-enter the date once to convert it.
+  4. **Considered and declined (for now):** Cyril also floated
+     replacing the image with a client reference block (name/contact/
+     company/job done) instead. Flagged a privacy concern instead of
+     building it as asked: publishing a real client's personal
+     contact details on a public profile without their explicit
+     consent is a real liability, not just a design choice — a
+     featured client didn't necessarily agree to be contactable by
+     strangers. Recommended keeping `client_name` (company reference)
+     as the credibility signal, and, if more social proof is wanted
+     later, adding an actual client-quote/testimonial field instead of
+     raw contact info. Not built — revisit if Cyril wants to pursue
+     the testimonial idea.
+  5. Not yet re-verified after this round — sandbox was down again
+     for this pass, reviewed by hand. Cyril should re-run
+     `npx tsc --noEmit` and click through once more (add an item with
+     no image, add one with a date) next session.
+
+- **Round 3 fixes, from Cyril's second look (2026-07-28):** the
+  optional-image compromise from Round 2 wasn't the actual ask — Cyril
+  pushed further: drop the image entirely (a generic placeholder
+  "does not look professional"), make Portfolio a flat row list like
+  Reviews (no bordered card), and fix Title/Description reading as
+  duplicates of each other ("job done can be repeated").
+  1. **Image upload removed entirely** from `PortfolioTab.tsx` — no
+     upload field, no `image_url` writes, no `uploadVendorFile`
+     import. Visual identity is now an auto-generated initials avatar
+     (from client name, falling back to title), matching the Reviews
+     section's avatar exactly in color/size. The Round 2 "drop NOT
+     NULL on image_url" SQL is now moot — the column is simply unused
+     going forward; no need to run it (or drop the column — either is
+     fine, no rush).
+  2. **Public layout rebuilt as a row list**, not a product-style
+     grid: new `.portfolioList`/`.portfolioRow`/`.portfolioAvatar`/
+     `.portfolioRowHeader`/`.portfolioRowTop`/`.portfolioDate` classes
+     in `vendor-profile.module.css`, deliberately mirroring the
+     `.review*` classes' exact values (same avatar colors/size, same
+     flat-row-no-border treatment) so Portfolio and Reviews read as
+     one consistent design language, while staying separate classes
+     so future changes to one don't silently affect the other.
+  3. **Title vs. Description redundancy fixed** with real persistent
+     labels (not just placeholders, which vanish once typing starts):
+     "Project title" vs. "What did you do?", with the description
+     placeholder explicitly saying "don't just repeat the title
+     above."
+  4. Sandbox was down for this pass too — reviewed both files by hand
+     (confirmed no leftover references to removed image state/handlers
+     via grep). Cyril should run `npx tsc --noEmit` once more next
+     session.
+
+## Recommendation flow (Upwork-style) — built, migration pending (2026-07-28)
+
+Cyril's ask: rather than a vendor typing a client's name into Portfolio
+themselves (self-reported, unverifiable), replicate Upwork's pattern —
+the vendor requests a recommendation from an actual past client, and
+the client submits it themselves. Confirmed scope with Cyril via a
+direct question: **tied to a specific portfolio item**, and a verified
+recommendation takes priority over the vendor's own typed "Client /
+company" text for that item once one exists. This also elegantly
+resolves a privacy concern raised earlier in the same conversation
+(publishing a real client's info without consent) — since the client
+is the one voluntarily submitting after receiving a request, consent
+is baked into the flow itself, unlike a vendor publishing someone
+else's info unprompted.
+
+- **Delivery mechanism:** `send-email` (Resend-backed, confirmed
+  `ACTIVE`, `verify_jwt: false` via `list_edge_functions`) — no new
+  email infrastructure needed, reused as-is with the same
+  fetch-with-no-auth-header pattern already used in `verify-badge` and
+  `signup`.
+- **Security model:** the new table (`vendor_recommendation_requests`)
+  holds the client's email, so it is NEVER exposed to public
+  SELECT — only the vendor-owner can read their own rows (for
+  dashboard status). All public-facing reads/writes go through three
+  `SECURITY DEFINER` Postgres functions (matching this codebase's
+  existing convention — see `count_vendor_products` /
+  `get_vendor_plan_limits`), each returning/accepting only what's safe
+  for a stranger holding a token link:
+  - `get_recommendation_request_by_token(p_token)` — returns vendor
+    name, portfolio item title, and status only (recommend page).
+  - `submit_recommendation(p_token, p_name, p_company, p_message)` —
+    the ONLY write path for a client's submission; internally enforces
+    one-time use (`status = 'pending'`) and a 30-day expiry.
+  - `get_portfolio_recommendation(p_portfolio_item_id)` — returns
+    name/company/message for a submitted recommendation (public
+    profile page), never the email.
+- **Dashboard (`PortfolioTab.tsx`):** each saved item now has a
+  "Request recommendation from client" action — opens an inline email
+  field, on send: inserts a request row (token auto-generated), emails
+  the client via `send-email` with a `/recommend/{token}` link, then
+  shows a pending/verified status inline per item. Fails quietly (logs
+  only) if the table doesn't exist yet, so Portfolio itself isn't
+  blocked by this feature being mid-rollout.
+- **New public page:** `(standalone)/recommend/[token]/page.tsx` — no
+  login required. Loads via `get_recommendation_request_by_token`,
+  shows a short form (name, company, recommendation text), submits via
+  `submit_recommendation`. Handles invalid/expired/already-used links
+  and a distinct "already submitted, thank you" state.
+- **Public profile (`vendor/[slug]/page.tsx`):** each Portfolio row now
+  fetches its verified recommendation (if any) via
+  `get_portfolio_recommendation` and, when present, shows the client's
+  real name + company with a "Verified" badge (reusing `.verifiedBadge`
+  from Reviews) in place of the vendor's typed client name, plus the
+  client's own quote in italics below the vendor's own description.
+  Falls back to the vendor's typed client name when no recommendation
+  exists yet, so a portfolio entry never looks empty while a
+  recommendation is pending.
+- **Still pending:** the DB migration (table + RLS + 3 functions) has
+  been drafted and handed to Cyril to run manually — same
+  never-apply-directly constraint as every other migration this
+  session. Not yet live-tested (needs the migration run first). Sandbox
+  was down for this whole build — reviewed by hand; run
+  `npx tsc --noEmit` and a full click-through (request → check email →
+  submit → confirm it shows verified on the public profile) next
+  session.

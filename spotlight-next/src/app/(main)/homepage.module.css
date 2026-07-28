@@ -18,7 +18,28 @@
 .ldBtnPrimary { background: var(--color-dark); color: #ffffff; }
 .ldBtnPrimary:hover { background: var(--color-primary); color: var(--color-dark); }
 .ldBtnOutline { background: var(--color-surface); color: var(--color-text-primary); border: 1.5px solid var(--color-dark); }
-.ldBtnOutline:hover { background: var(--color-dark); color: #ffffff; }
+/* Was background: var(--color-dark) — in dark mode --color-surface
+   (#111111) and --color-dark (#000000) are nearly identical, so the
+   hover was invisible against a dark page. Using the brand gold
+   instead guarantees visible contrast in both light and dark mode,
+   since --color-primary doesn't change between themes. */
+.ldBtnOutline:hover { background: var(--color-primary); color: var(--color-dark); border-color: var(--color-primary); }
+
+/* DARK MODE ONLY: same problem as the hover fix above, but for the
+   buttons' resting state. --color-dark (#000000) sitting on
+   --color-background (#0b0b0b) has almost no edge definition — the
+   button shape is only readable from its text, not its outline.
+   --color-border (#2d2d2d in dark mode) is a lighter, visible gray
+   that still reads as subtle, not harsh. Left untouched in light
+   mode, where the existing black-on-white / white-on-black contrast
+   already defines the buttons clearly without a border. */
+[data-theme="dark"] .ldBtnPrimary {
+  border: 1.5px solid var(--color-border);
+}
+
+[data-theme="dark"] .ldBtnOutline {
+  border-color: var(--color-border);
+}
 
 .ldEyebrow {
   color: var(--color-primary);

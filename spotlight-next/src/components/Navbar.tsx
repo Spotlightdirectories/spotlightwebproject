@@ -69,11 +69,37 @@ export default function Navbar() {
             </button>
           </li>
 
-          <li>
+          {/* MOBILE ONLY — hidden at the ≥1024px desktop breakpoint
+              (see .dashboardMobileOnly in Navbar.module.css), since
+              there's no hover on touch to reveal the desktop dropdown
+              below. Cyril's ask (2026-07-28): show it as its own
+              always-visible item, right before Log Out. Only rendered
+              when logged in — a logged-out visitor has no dashboard
+              to go to. */}
+          {loggedIn && (
+            <li className={styles.dashboardMobileOnly}>
+              <Link href="/vendordashboard" onClick={() => setMenuOpen(false)}>
+                <i className="fa-solid fa-gauge"></i> Dashboard
+              </Link>
+            </li>
+          )}
+
+          <li className={loggedIn ? styles.accountMenu : undefined}>
             {loggedIn ? (
-              <button className={styles.navLoginBtn} onClick={handleLogout}>
-                Log Out
-              </button>
+              <>
+                <button className={styles.navLoginBtn} onClick={handleLogout}>
+                  Log Out
+                </button>
+                {/* DESKTOP ONLY (≥1024px) — hover reveals this
+                    "Dashboard" shortcut instead of the always-visible
+                    mobile item above. Clicking "Log Out" itself is
+                    unchanged — it still logs out immediately. */}
+                <div className={styles.accountDropdown}>
+                  <Link href="/vendordashboard" onClick={() => setMenuOpen(false)}>
+                    <i className="fa-solid fa-gauge"></i> Dashboard
+                  </Link>
+                </div>
+              </>
             ) : (
               <Link href="/login" className={styles.navLoginBtn} onClick={() => setMenuOpen(false)}>
                 Log In

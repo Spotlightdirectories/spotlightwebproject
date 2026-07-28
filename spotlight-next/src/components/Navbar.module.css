@@ -141,8 +141,76 @@
   background: var(--color-surface-hover);
 }
 
+/* ACCOUNT MENU (Log Out + "Dashboard" shortcut) — desktop only.
+   Cyril's ask (2026-07-28): a vendor who's still logged in from a
+   previous visit and lands on the homepage only sees "Log Out," with
+   no way back to their dashboard short of logging out and back in.
+   Hovering reveals a small dropdown with a "Dashboard" link. Scoped
+   to the same 1024px breakpoint as the rest of desktop nav, since
+   hover doesn't exist on touch — the mobile menu keeps today's
+   behavior (tap Log Out to log out) unchanged for now. */
+.accountMenu {
+  position: relative;
+}
+
+.accountDropdown {
+  display: none;
+}
+
+/* Always visible on mobile (right before Log Out); hidden on desktop
+   at the ≥1024px breakpoint below, where the hover dropdown takes
+   over instead. */
+.dashboardMobileOnly a {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+
 /* DESKTOP */
 @media (min-width: 1024px) {
+  .dashboardMobileOnly {
+    display: none;
+  }
+
+  .accountDropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    /* Was margin-top: 8px — a real gap OUTSIDE this box, so moving
+       the cursor from the button down into the dropdown passed
+       through a dead zone with nothing hovered, closing the menu
+       before a click could land. The box now sits flush against the
+       button (no gap) so hover never breaks; padding-top adds the
+       same visual breathing room from the INSIDE instead. */
+    padding-top: 6px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    min-width: 170px;
+    z-index: var(--z-dropdown);
+  }
+
+  .accountMenu:hover .accountDropdown {
+    display: block;
+  }
+
+  .accountDropdown a {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-primary) !important;
+    font-size: 0.9rem !important;
+    white-space: nowrap;
+  }
+
+  .accountDropdown a:hover {
+    background: var(--color-surface-alt);
+    color: var(--color-text-primary) !important;
+  }
+
   .menuOpen {
     display: none;
   }

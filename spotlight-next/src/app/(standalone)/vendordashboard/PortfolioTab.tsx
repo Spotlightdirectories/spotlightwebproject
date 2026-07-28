@@ -19,16 +19,35 @@
 // "show 2 then See More" behavior lives on the PUBLIC profile page,
 // not here — this tab just manages the underlying up-to-6 list.
 //
-// Modeled directly on ProductsTab.tsx's pending → batch-save pattern
-// for consistency, but with a single image per item instead of three,
-// and CV-style fields (client name, completed date) instead of price
-// and key details.
+// ROUND 2 (2026-07-28) — Cyril's live-test feedback led to two more
+// changes on top of the original build:
+// 1. The image upload was dropped ENTIRELY. First pass made it
+//    optional; Cyril's follow-up made clear that wasn't enough — a
+//    generic Spotlight-logo placeholder "does not look professional,"
+//    and most services genuinely have nothing to photograph. Identity
+//    now comes from an auto-generated initials avatar (same visual
+//    pattern as the Reviews section's reviewer avatar), never a photo.
+// 2. Title and Description were reading as duplicates of each other
+//    ("job done can be repeated," in Cyril's words) — both prompts
+//    effectively asked "what did you do?" with no persistent label to
+//    tell a vendor the two fields serve different purposes once the
+//    placeholder text disappears. Added real labels above each field
+//    ("Project title" vs. "What did you do?") and reworded the
+//    description placeholder to explicitly say don't repeat the title.
+//
+// ROUND 3 (2026-07-28) — Cyril wants recommendations to come directly
+// from the client, Upwork-style, instead of a vendor typing a client's
+// name themselves. Added a "Request recommendation" action per saved
+// item: sends the client a one-time link (via the existing send-email
+// function) to a public page where THEY write the recommendation.
+// Once submitted, it's verified (came from the client, not the
+// vendor) and shown on the public profile in place of the typed
+// "Client / company" text for that item.
 // ===============================================================
 
 import { useEffect, useRef, useState } from "react";
-import type { ChangeEvent } from "react";
+import type { CSSProperties } from "react";
 import { supabase } from "@/lib/supabase";
-import { uploadVendorFile } from "@/lib/uploadVendorFile";
 import type { Vendor } from "./page";
 
 type PortfolioItem = {
@@ -37,7 +56,16 @@ type PortfolioItem = {
   description: string | null;
   client_name: string | null;
   completed_on: string | null;
-  image_url: string;
+};
+
+type RecommendationRequest = {
+  id: string;
+  portfolio_item_id: string;
+  status: "pending" | "submitted" | "expired";
+  recommender_email: string;
+  recommender_name: string | null;
+  recommender_company: string | null;
+  message: string | null;
 };
 
 type PendingPortfolioItem = {
@@ -45,21 +73,51 @@ type PendingPortfolioItem = {
   description: string;
   client_name: string;
   completed_on: string;
-  image_url: string;
 };
 
 const PORTFOLIO_LIMIT = 6;
 
-const IMAGE_HINT = "Accepted: JPG, JPEG, PNG • Max: 2 MB • Minimum: 800 × 800 px";
+// Small, local meta-text style — deliberately NOT vd-product-price
+// (that class is green/bold, meant for prices; reusing it here for
+// client name + date read like a price tag, which Cyril flagged as
+// confusing on the public page). Kept inline rather than adding a new
+// global class, since vd-product-price/vd-service-description are
+// shared with the real Products/Services tabs and shouldn't change.
+const metaTextStyle: CSSProperties = { fontSize: 12, color: "#64748b", marginTop: 2 };
 
-function storagePathFromUrl(url: string | null | undefined): string | null {
-  if (!url) return null;
-  try {
-    const path = new URL(url).pathname.split("/object/public/vendor-gallery/")[1];
-    return path ? decodeURIComponent(path) : null;
-  } catch {
-    return null;
-  }
+const avatarStyle: CSSProperties = {
+  width: 40,
+  height: 40,
+  borderRadius: "50%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  flexShrink: 0,
+  fontSize: 13,
+  fontWeight: 700,
+  background: "#dbeafe",
+  color: "#1e3a8a",
+  marginRight: 12,
+};
+
+function getInitials(source: string): string {
+  return (source || "")
+    .split(" ")
+    .map((p) => p.charAt(0))
+    .join("")
+    .substring(0, 2)
+    .toUpperCase() || "?";
+}
+
+// Formats a "YYYY-MM-DD" value (what the date picker below produces)
+// into "28 July 2026". Falls back to showing whatever was stored
+// as-is for older entries typed before this was a real date field.
+function formatCompletedDate(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return value;
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 }
 
 export default function PortfolioTab({ vendor }: { vendor: Vendor }) {
@@ -70,16 +128,20 @@ export default function PortfolioTab({ vendor }: { vendor: Vendor }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const [imageUrl, setImageUrl] = useState("");
-  const [imagePreview, setImagePreview] = useState("");
-  const [imageUploading, setImageUploading] = useState(false);
-  const [imageLabel, setImageLabel] = useState("No file chosen");
+  // Recommendation requests, keyed by portfolio_item_id — at most one
+  // meaningful request per item for this first version (if it's
+  // pending or submitted, the "Request recommendation" button is
+  // replaced by a status line instead of letting a second request
+  // stack up).
+  const [recommendations, setRecommendations] = useState<Record<string, RecommendationRequest>>({});
+  const [requestingId, setRequestingId] = useState<string | null>(null);
+  const [requestEmail, setRequestEmail] = useState("");
+  const [sendingRequest, setSendingRequest] = useState(false);
 
   const titleRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const clientRef = useRef<HTMLInputElement>(null);
   const completedRef = useRef<HTMLInputElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const totalCount = savedItems.length + pendingItems.length;
 
@@ -103,17 +165,102 @@ export default function PortfolioTab({ vendor }: { vendor: Vendor }) {
       setLoadingItems(false);
     }
 
+    async function loadRecommendations() {
+      const { data, error } = await supabase
+        .from("vendor_recommendation_requests")
+        .select("id, portfolio_item_id, status, recommender_email, recommender_name, recommender_company, message")
+        .eq("vendor_id", vendor.id);
+
+      if (cancelled) return;
+
+      if (error) {
+        // Table may not exist yet if Cyril hasn't run the migration —
+        // fail quietly rather than blocking the rest of the tab.
+        console.error("Fetch recommendation requests error:", error);
+        return;
+      }
+
+      const byItem: Record<string, RecommendationRequest> = {};
+      for (const row of (data as RecommendationRequest[]) || []) {
+        byItem[row.portfolio_item_id] = row;
+      }
+      setRecommendations(byItem);
+    }
+
     load();
+    loadRecommendations();
     return () => {
       cancelled = true;
     };
   }, [vendor.id]);
 
-  function resetImage() {
-    setImageUrl("");
-    setImagePreview("");
-    setImageLabel("No file chosen");
-    if (imageInputRef.current) imageInputRef.current.value = "";
+  function openRequestForm(itemId: string) {
+    setRequestingId(itemId);
+    setRequestEmail("");
+  }
+
+  async function handleSendRequest(item: PortfolioItem) {
+    const email = requestEmail.trim();
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert("Enter a valid email address for the client.");
+      return;
+    }
+
+    setSendingRequest(true);
+
+    try {
+      const { data, error } = await supabase
+        .from("vendor_recommendation_requests")
+        .insert({
+          vendor_id: vendor.id,
+          portfolio_item_id: item.id,
+          recommender_email: email,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const token = data.token as string;
+      const link = `${window.location.origin}/recommend/${token}`;
+
+      const emailResponse = await fetch(
+        "https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/send-email",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: email,
+            subject: `${vendor.name} would like your recommendation`,
+            html: `<p>Hi,</p><p><strong>${vendor.name}</strong> has asked you to leave a short recommendation for work done: <strong>${item.title}</strong>.</p><p>It only takes a minute, and it helps future clients trust their work.</p><p><a href="${link}">Click here to leave your recommendation</a></p><p>If you weren't expecting this, you can safely ignore this email.</p>`,
+          }),
+        }
+      );
+
+      if (!emailResponse.ok) {
+        console.error("send-email failed:", await emailResponse.text());
+        alert(
+          "The request was saved, but the email may not have sent. You can try again, or share this link with your client directly: " +
+            link
+        );
+      } else {
+        alert("Request sent — you'll see it here once your client responds.");
+      }
+
+      setRecommendations((prev) => ({ ...prev, [item.id]: data as RecommendationRequest }));
+      setRequestingId(null);
+      setRequestEmail("");
+    } catch (err) {
+      console.error("Request recommendation error:", err);
+      alert(
+        err instanceof Error && err.message.includes("vendor_recommendation_requests")
+          ? "Recommendations aren't set up on the database yet — ask your developer to run the pending migration."
+          : "Unable to send the request. Please try again."
+      );
+    } finally {
+      setSendingRequest(false);
+    }
   }
 
   function resetForm() {
@@ -121,32 +268,7 @@ export default function PortfolioTab({ vendor }: { vendor: Vendor }) {
     if (descriptionRef.current) descriptionRef.current.value = "";
     if (clientRef.current) clientRef.current.value = "";
     if (completedRef.current) completedRef.current.value = "";
-    resetImage();
     setEditingId(null);
-  }
-
-  async function handleImageChange(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setImagePreview(URL.createObjectURL(file));
-    setImageLabel("Uploading...");
-    setImageUploading(true);
-
-    try {
-      const result = await uploadVendorFile(file, "portfolio");
-      setImageUrl(result.publicUrl || "");
-      setImagePreview(result.publicUrl || "");
-      setImageLabel(file.name);
-    } catch (err) {
-      console.error("Portfolio image upload error:", err);
-      alert(err instanceof Error ? err.message : "Image upload failed.");
-      setImageLabel("No file chosen");
-      setImagePreview("");
-      if (imageInputRef.current) imageInputRef.current.value = "";
-    } finally {
-      setImageUploading(false);
-    }
   }
 
   function handleAddToPending() {
@@ -156,12 +278,7 @@ export default function PortfolioTab({ vendor }: { vendor: Vendor }) {
     const completed = completedRef.current?.value.trim() || "";
 
     if (!title) {
-      alert("A title for this work is required.");
-      return;
-    }
-
-    if (!imageUrl) {
-      alert("A representative image is required.");
+      alert("A project title is required.");
       return;
     }
 
@@ -177,7 +294,6 @@ export default function PortfolioTab({ vendor }: { vendor: Vendor }) {
         description,
         client_name: client,
         completed_on: completed,
-        image_url: imageUrl,
       },
     ]);
 
@@ -195,23 +311,17 @@ export default function PortfolioTab({ vendor }: { vendor: Vendor }) {
     if (titleRef.current) titleRef.current.value = item.title || "";
     if (descriptionRef.current) descriptionRef.current.value = item.description || "";
     if (clientRef.current) clientRef.current.value = item.client_name || "";
-    if (completedRef.current) completedRef.current.value = item.completed_on || "";
-
-    setImageUrl(item.image_url || "");
-    setImagePreview(item.image_url || "");
-    setImageLabel(item.image_url ? `Current: ${item.image_url.split("/").pop()}` : "No file chosen");
+    // Date inputs only accept a "YYYY-MM-DD" value. Older items saved
+    // before this was a real date picker may hold free text (e.g.
+    // "Completed 28th July, 2026") that won't fit that shape — leave
+    // the picker blank in that case rather than showing garbage.
+    if (completedRef.current) {
+      completedRef.current.value = /^\d{4}-\d{2}-\d{2}$/.test(item.completed_on || "") ? item.completed_on! : "";
+    }
   }
 
   async function handleDeleteSaved(id: string) {
     if (!confirm("Delete this portfolio item?")) return;
-
-    const item = savedItems.find((p) => p.id === id);
-    const storagePath = storagePathFromUrl(item?.image_url);
-
-    if (storagePath) {
-      const { error: storageError } = await supabase.storage.from("vendor-gallery").remove([storagePath]);
-      if (storageError) console.error(storageError);
-    }
 
     const { error } = await supabase.from("vendor_portfolio_items").delete().eq("id", id);
 
@@ -250,7 +360,6 @@ export default function PortfolioTab({ vendor }: { vendor: Vendor }) {
             description,
             client_name: client || null,
             completed_on: completed || null,
-            image_url: imageUrl,
           })
           .eq("id", editingId);
 
@@ -265,7 +374,6 @@ export default function PortfolioTab({ vendor }: { vendor: Vendor }) {
                   description,
                   client_name: client || null,
                   completed_on: completed || null,
-                  image_url: imageUrl,
                 }
               : p
           )
@@ -282,7 +390,6 @@ export default function PortfolioTab({ vendor }: { vendor: Vendor }) {
         description: p.description || null,
         client_name: p.client_name || null,
         completed_on: p.completed_on || null,
-        image_url: p.image_url,
         display_order: savedItems.length + index,
       }));
 
@@ -319,67 +426,42 @@ export default function PortfolioTab({ vendor }: { vendor: Vendor }) {
 
       <div className={`vd-inline-editor${formOpen ? " active" : ""}`}>
         <div className="vd-service-add-row">
-          <input type="text" ref={titleRef} className="vd-input" placeholder="e.g. Office rebrand for Acme Ltd" />
+          <label style={{ display: "block", fontSize: 13, color: "#64748b", marginBottom: 4 }}>
+            Project title
+          </label>
+          <input
+            type="text"
+            ref={titleRef}
+            className="vd-input"
+            placeholder="A short name for the job, e.g. Office rebrand for Acme Ltd"
+          />
         </div>
 
         <div className="vd-service-description-row">
+          <label style={{ display: "block", fontSize: 13, color: "#64748b", marginBottom: 4 }}>
+            What did you do?
+          </label>
           <textarea
             ref={descriptionRef}
             className="vd-textarea"
             rows={3}
-            placeholder="Briefly describe the work you did"
+            placeholder="Explain the work, your approach, or the result — don't just repeat the title above"
           />
         </div>
 
         <div className="vd-service-add-row">
-          <input type="text" ref={clientRef} className="vd-input" placeholder="Client name (optional)" />
-        </div>
-
-        <div className="vd-service-add-row">
-          <input
-            type="text"
-            ref={completedRef}
-            className="vd-input"
-            placeholder="Completed (e.g. March 2026, optional)"
-          />
-        </div>
-
-        <div className="vd-product-image-row">
-          <div className="vd-product-image-label">Representative Image</div>
-
-          <label htmlFor="portfolioImage" className="vd-product-image-btn">
-            Choose Image
+          <label style={{ display: "block", fontSize: 13, color: "#64748b", marginBottom: 4 }}>
+            Client / company (optional)
           </label>
-
-          <input
-            type="file"
-            id="portfolioImage"
-            accept="image/*"
-            ref={imageInputRef}
-            onChange={handleImageChange}
-          />
-
-          <span className="vd-product-image-name">{imageLabel}</span>
-
-          {imagePreview && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={imagePreview}
-              alt="Portfolio item preview"
-              style={{
-                width: 56,
-                height: 56,
-                objectFit: "cover",
-                borderRadius: 8,
-                border: "1px solid #e5e7eb",
-                marginLeft: 10,
-                opacity: imageUploading ? 0.5 : 1,
-              }}
-            />
-          )}
+          <input type="text" ref={clientRef} className="vd-input" placeholder="e.g. Acme Ltd" />
         </div>
 
-        <p className="vd-product-image-hint">{IMAGE_HINT}</p>
+        <div className="vd-service-add-row">
+          <label style={{ display: "block", fontSize: 13, color: "#64748b", marginBottom: 4 }}>
+            Completed on (optional)
+          </label>
+          <input type="date" ref={completedRef} className="vd-input" max={new Date().toISOString().slice(0, 10)} />
+        </div>
 
         <div className="vd-service-add-actions">
           <button type="button" className="vd-service-btn" disabled={!!editingId} onClick={handleAddToPending}>
@@ -392,14 +474,19 @@ export default function PortfolioTab({ vendor }: { vendor: Vendor }) {
         {/* PENDING ITEMS */}
         <div className="vd-pending-services">
           {pendingItems.map((item, index) => (
-            <div className="vd-service-pill" key={index}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="vd-service-image" src={item.image_url} alt={item.title} />
+            <div className="vd-service-pill" key={index} style={{ display: "flex", alignItems: "center" }}>
+              <div style={avatarStyle}>{getInitials(item.client_name || item.title)}</div>
 
               <div className="vd-service-content">
                 <div className="vd-service-name">{item.title}</div>
                 {item.description && <div className="vd-service-description">{item.description}</div>}
-                {item.client_name && <div className="vd-product-price">{item.client_name}</div>}
+                {(item.client_name || item.completed_on) && (
+                  <div style={metaTextStyle}>
+                    {[item.client_name, item.completed_on && `Completed: ${formatCompletedDate(item.completed_on)}`]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </div>
+                )}
               </div>
 
               <button type="button" className="vd-remove-product-btn" onClick={() => handleRemovePending(index)}>
@@ -416,34 +503,91 @@ export default function PortfolioTab({ vendor }: { vendor: Vendor }) {
           ) : savedItems.length === 0 ? (
             <div className="vd-empty-services">No saved portfolio items yet.</div>
           ) : (
-            savedItems.map((item) => (
-              <div className="vd-service-pill saved" key={item.id}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="vd-product-thumb" src={item.image_url} alt={item.title} />
+            savedItems.map((item) => {
+              const rec = recommendations[item.id];
+              return (
+                <div className="vd-service-pill saved" key={item.id} style={{ flexDirection: "column", alignItems: "stretch" }}>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <div style={avatarStyle}>{getInitials(item.client_name || item.title)}</div>
 
-                <div className="vd-service-content">
-                  <div className="vd-service-name">{item.title}</div>
-                  <div className="vd-service-description">
-                    {(item.description || "").length > 200
-                      ? `${(item.description || "").slice(0, 200)}...`
-                      : item.description || ""}
-                  </div>
-                  {(item.client_name || item.completed_on) && (
-                    <div className="vd-product-price">
-                      {[item.client_name, item.completed_on].filter(Boolean).join(" · ")}
+                    <div className="vd-service-content">
+                      <div className="vd-service-name">{item.title}</div>
+                      <div className="vd-service-description">
+                        {(item.description || "").length > 200
+                          ? `${(item.description || "").slice(0, 200)}...`
+                          : item.description || ""}
+                      </div>
+                      {(item.client_name || item.completed_on) && (
+                        <div style={metaTextStyle}>
+                          {[item.client_name, item.completed_on && `Completed: ${formatCompletedDate(item.completed_on)}`]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </div>
+                      )}
                     </div>
-                  )}
+
+                    <button type="button" className="vd-edit-product-btn" onClick={() => handleEditSaved(item)}>
+                      Edit
+                    </button>
+
+                    <button type="button" className="vd-delete-product-btn" onClick={() => handleDeleteSaved(item.id)}>
+                      ×
+                    </button>
+                  </div>
+
+                  {/* RECOMMENDATION — request it, show its status, or show what came back */}
+                  <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #e5e7eb" }}>
+                    {!rec && requestingId !== item.id && (
+                      <button
+                        type="button"
+                        className="vd-edit-product-btn"
+                        onClick={() => openRequestForm(item.id)}
+                      >
+                        <i className="fa-solid fa-envelope"></i> Request recommendation from client
+                      </button>
+                    )}
+
+                    {!rec && requestingId === item.id && (
+                      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                        <input
+                          type="email"
+                          className="vd-input"
+                          style={{ maxWidth: 260 }}
+                          placeholder="Client's email address"
+                          value={requestEmail}
+                          onChange={(e) => setRequestEmail(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          className="vd-service-btn"
+                          disabled={sendingRequest}
+                          onClick={() => handleSendRequest(item)}
+                        >
+                          {sendingRequest ? "Sending..." : "Send"}
+                        </button>
+                        <button type="button" className="vd-edit-product-btn" onClick={() => setRequestingId(null)}>
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+
+                    {rec && rec.status === "pending" && (
+                      <div style={metaTextStyle}>
+                        <i className="fa-regular fa-clock"></i> Recommendation requested from {rec.recommender_email} — awaiting their response.
+                      </div>
+                    )}
+
+                    {rec && rec.status === "submitted" && (
+                      <div style={{ fontSize: 13, color: "#166534" }}>
+                        <i className="fa-solid fa-circle-check"></i>{" "}
+                        <strong>Verified recommendation from {rec.recommender_name}{rec.recommender_company ? ` (${rec.recommender_company})` : ""}:</strong>{" "}
+                        <span style={{ color: "#374151" }}>&ldquo;{rec.message}&rdquo;</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-
-                <button type="button" className="vd-edit-product-btn" onClick={() => handleEditSaved(item)}>
-                  Edit
-                </button>
-
-                <button type="button" className="vd-delete-product-btn" onClick={() => handleDeleteSaved(item.id)}>
-                  ×
-                </button>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 

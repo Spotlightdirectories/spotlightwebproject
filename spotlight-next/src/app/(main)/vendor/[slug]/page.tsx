@@ -16,6 +16,7 @@
 // ===============================================================
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import type { KeyboardEvent } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { uploadVendorFile } from "@/lib/uploadVendorFile";
@@ -97,7 +98,25 @@ interface PortfolioItem {
   description: string | null;
   client_name: string | null;
   completed_on: string | null;
-  image_url: string;
+  image_url: string | null;
+}
+
+interface PortfolioRecommendation {
+  recommender_name: string;
+  recommender_company: string | null;
+  message: string;
+}
+
+// Formats a "YYYY-MM-DD" value (from the dashboard's date picker) into
+// "28 July 2026". Older test entries typed before this was a real date
+// field won't match that shape — those just render as typed, so
+// nothing already saved silently disappears or breaks.
+function formatCompletedDate(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return value;
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 }
 
 interface Product {
@@ -209,6 +228,7 @@ export default function VendorProfilePage() {
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
   const [showAllPortfolio, setShowAllPortfolio] = useState(false);
+  const [portfolioRecommendations, setPortfolioRecommendations] = useState<Record<string, PortfolioRecommendation>>({});
 
   // Owner edit state
   const [description, setDescription] = useState("");
@@ -325,7 +345,28 @@ export default function VendorProfilePage() {
       .select("*")
       .eq("vendor_id", vendorId)
       .order("display_order", { ascending: true });
-    setPortfolioItems(data || []);
+    const items: PortfolioItem[] = data || [];
+    setPortfolioItems(items);
+
+    // Verified recommendations, one lookup per item via a
+    // SECURITY DEFINER function — never queries the underlying
+    // vendor_recommendation_requests table directly, since that table
+    // also holds the client's email and must stay private. Silently
+    // skipped (Record stays empty) if the migration hasn't been run
+    // yet, so Portfolio still works before Recommendations exists.
+    const entries = await Promise.all(
+      items.map(async (item) => {
+        const { data: rec } = await supabase
+          .rpc("get_portfolio_recommendation", { p_portfolio_item_id: item.id })
+          .maybeSingle();
+        return [item.id, rec] as const;
+      })
+    );
+    const byItem: Record<string, PortfolioRecommendation> = {};
+    for (const [id, rec] of entries) {
+      if (rec) byItem[id] = rec as PortfolioRecommendation;
+    }
+    setPortfolioRecommendations(byItem);
   }
 
   // ── Load services ────────────────────────────────────────────
@@ -406,6 +447,51 @@ export default function VendorProfilePage() {
     const el = document.createElement(tag);
     el.appendChild(range.extractContents());
     range.insertNode(el);
+  }
+
+  // Cyril's report (2026-07-28): "About the Business" reads as one
+  // dense, unformatted block — not encouraging to read. Root cause:
+  // this editor is a plain contentEditable div with no paragraph
+  // handling at all. Pressing Enter in a contentEditable is notoriously
+  // inconsistent across browsers (Chrome wraps lines in <div>s with no
+  // margin, Firefox may use <br> or <p> depending on settings) — with
+  // no CSS spacing rule for any of those, multiple "paragraphs" render
+  // back to back with zero visual gap, i.e. exactly the clustered look
+  // reported. Rather than relying on execCommand (deprecated, and the
+  // rest of this editor already avoids it — see applyFormat above,
+  // which manually wraps a DOM node instead), Enter is intercepted here
+  // and reliably inserts two real <br> elements — a genuine blank line
+  // — regardless of browser. Shift+Enter inserts a single line break
+  // (same line spacing convention as Word/Google Docs: Enter = new
+  // paragraph, Shift+Enter = line break within one paragraph).
+  // NOTE: this only fixes paragraph breaks going forward — existing
+  // descriptions already saved as one dense block won't automatically
+  // gain breaks retroactively (there's no reliable way to guess where
+  // they should go); re-typing Enter once in the existing text fixes it.
+  function handleAboutKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    const selection = window.getSelection();
+    if (!selection?.rangeCount) return;
+    const range = selection.getRangeAt(0);
+    range.deleteContents();
+
+    const fragment = document.createDocumentFragment();
+    const breakCount = e.shiftKey ? 1 : 2;
+    let lastBreak: HTMLBRElement | null = null;
+    for (let i = 0; i < breakCount; i++) {
+      lastBreak = document.createElement("br");
+      fragment.appendChild(lastBreak);
+    }
+    range.insertNode(fragment);
+
+    if (lastBreak) {
+      range.setStartAfter(lastBreak);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
   }
 
   // ── Social link add ──────────────────────────────────────────
@@ -903,6 +989,7 @@ export default function VendorProfilePage() {
             suppressContentEditableWarning
             dangerouslySetInnerHTML={{ __html: description }}
             onBlur={handleDescriptionBlur}
+            onKeyDown={handleAboutKeyDown}
           />
         ) : (
           <div className={styles.aboutView} dangerouslySetInnerHTML={{ __html: vendor.description || "" }} />
@@ -940,30 +1027,66 @@ export default function VendorProfilePage() {
         </div>
       </section>
 
-      {/* PORTFOLIO — CV of past work, Service/Hybrid vendors only */}
+      {/* PORTFOLIO — CV of past work, Service/Hybrid vendors only.
+          Row-based, like Reviews below — no product-style card, no
+          photo. Cyril's call (2026-07-28): a stock/placeholder image
+          "does not look professional," so identity here comes from an
+          initials avatar (same pattern as the Reviews avatar) rather
+          than a photo. */}
       {(vendor.business_type === "service" || vendor.business_type === "hybrid") && portfolioItems.length > 0 && (
         <section className={styles.profileCard}>
           <h2>Portfolio</h2>
           <p className={styles.mediaHint}>A look at past work — completed projects for previous clients.</p>
 
-          <div className={styles.galleryGrid}>
-            {(showAllPortfolio ? portfolioItems : portfolioItems.slice(0, 2)).map(item => (
-              <div key={item.id} className={styles.productCard}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={item.image_url || "/images/spotlightlogo-512.png"}
-                  alt={item.title}
-                  className={styles.productImage}
-                />
-                <h3 className={styles.productTitle}>{item.title}</h3>
-                {item.description && <p className={styles.productPrice}>{item.description}</p>}
-                {(item.client_name || item.completed_on) && (
-                  <div className={styles.productVendor}>
-                    <span>{[item.client_name, item.completed_on].filter(Boolean).join(" · ")}</span>
+          <div className={styles.portfolioList}>
+            {(showAllPortfolio ? portfolioItems : portfolioItems.slice(0, 2)).map(item => {
+              const rec = portfolioRecommendations[item.id];
+              // A verified recommendation (submitted by the actual
+              // client via the emailed link) always takes priority
+              // over the vendor's own typed "Client / company" text —
+              // Cyril's call: this is the whole point of the feature,
+              // self-reported info shouldn't outrank a client's own
+              // confirmation once one exists.
+              const displayName = rec ? rec.recommender_name : item.client_name;
+              const initialsSource = displayName || item.title || "";
+              const initials = initialsSource
+                .split(" ").map(p => p.charAt(0)).join("").substring(0, 2).toUpperCase();
+              return (
+                <div key={item.id} className={styles.portfolioRow}>
+                  <div className={styles.portfolioRowHeader}>
+                    <div className={styles.portfolioAvatar}>{initials}</div>
+                    <div style={{ flex: 1 }}>
+                      <div className={styles.portfolioRowTop}>
+                        <div className={styles.portfolioTitle}>{item.title}</div>
+                        {item.completed_on && (
+                          <div className={styles.portfolioDate}>Completed: {formatCompletedDate(item.completed_on)}</div>
+                        )}
+                      </div>
+                      {displayName && (
+                        <div className={styles.portfolioDate}>
+                          {displayName}
+                          {rec?.recommender_company ? ` · ${rec.recommender_company}` : ""}
+                          {rec && (
+                            <span className={styles.verifiedBadge} style={{ marginLeft: 6 }}>
+                              <i className="fa-solid fa-circle-check"></i> Verified
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
+                  {item.description && <div className={styles.portfolioDescription}>{item.description}</div>}
+                  {rec && (
+                    <div className={styles.portfolioQuote}>
+                      <div className={styles.portfolioQuoteLabel}>
+                        <i className="fa-solid fa-quote-left"></i> Client recommendation
+                      </div>
+                      <div className={styles.portfolioQuoteText}>&ldquo;{rec.message}&rdquo;</div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {portfolioItems.length > 2 && (
