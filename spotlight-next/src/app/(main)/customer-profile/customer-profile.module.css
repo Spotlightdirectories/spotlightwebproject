@@ -1,0 +1,169 @@
+/* ===============================================================
+   customer-profile.module.css
+   Ported from customer-profile.css, using the shared design-token
+   system (dark mode via [data-theme="dark"]).
+=============================================================== */
+
+.cpPage {
+  max-width: 720px;
+  margin: 0 auto 40px;
+  padding: 40px 16px 0;
+}
+
+.cpHeader { margin-bottom: 20px; }
+
+.cpHeader h1 {
+  margin: 0 0 4px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.cpEmail {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.cpVendorSwitch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning);
+  color: var(--color-warning);
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  font-size: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.cpVendorSwitch a {
+  margin-left: auto;
+  color: var(--color-warning);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.cpSection {
+  background: var(--color-surface);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-card);
+}
+
+.cpSection h2 {
+  margin: 0 0 6px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.cpNote {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin: 0 0 14px;
+}
+
+.cpEmpty {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.cpFavoritesList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cpFavoriteCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+  padding: 10px;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.cpFavoriteCard:hover { background: var(--color-surface-hover); }
+
+.cpFavoriteCard img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.cpFavoriteInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cpFavoriteInfo strong {
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
+}
+
+.cpFavoriteInfo span {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.cpFavoriteRating { color: var(--color-primary) !important; }
+.cpFavoriteRating i { color: var(--color-primary); }
+
+.cpReviewsList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cpReviewRow {
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 12px;
+}
+
+.cpReviewRow:last-child { border-bottom: none; padding-bottom: 0; }
+
+.cpReviewTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.cpReviewTop strong { color: var(--color-text-primary); }
+
+.cpReviewStars {
+  color: var(--color-primary);
+  font-size: 0.9rem;
+}
+
+.cpReviewRow p {
+  margin: 4px 0;
+  font-size: 0.9rem;
+  color: var(--color-text-body);
+}
+
+.cpReviewDate {
+  font-size: 0.75rem;
+  color: var(--color-text-faint);
+}
+
+.cpLogoutBtn {
+  background: var(--color-surface-alt);
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.cpLogoutBtn:hover { background: var(--color-border-light); }

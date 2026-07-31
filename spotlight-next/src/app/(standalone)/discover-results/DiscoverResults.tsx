@@ -16,6 +16,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { nigeriaData } from "@/lib/nigeria-data.js";
+import ProfileNav from "@/components/ProfileNav";
 import styles from "./discover-results.module.css";
 
 // ── Types ─────────────────────────────────────────────────────
@@ -992,10 +993,7 @@ export default function DiscoverResultsPage() {
           <i className="fa-solid fa-compass"></i>
           <span>Explore</span>
         </a>
-        <button type="button" className={styles.bottomItem}>
-          <i className="fa-regular fa-user"></i>
-          <span>Profile</span>
-        </button>
+        <ProfileNav buttonClassName={styles.bottomItem} />
       </nav>
 
     </main>

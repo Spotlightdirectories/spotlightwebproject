@@ -11,8 +11,9 @@
 //   - Owner view: the logged-in vendor who owns this profile
 //     (editable about, cover/logo upload, social links, etc.)
 //
-// Per Cyril's instruction: branches section NOT included here —
-// that belongs in vendordashboard only.
+// Branch CRUD (add/edit/delete) lives only in dashboard-branches —
+// this page just shows the faithful read-only list of active
+// branches under Reviews, matching production's vendor-profile.js.
 // ===============================================================
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -37,6 +38,10 @@ const VIDEO_LIMITS: Record<string, { allowed: boolean; maxDuration: number; maxS
 
 const DESCRIPTION_WORD_LIMITS: Record<string, number> = {
   free: 50, standard: 100, enterprise: 150, elite: 200, custom: 250
+};
+
+const BRANCH_LIMITS: Record<string, number> = {
+  free: 0, standard: 0, enterprise: 10, elite: 30, custom: Infinity
 };
 
 const SOCIAL_ICONS: Record<string, string> = {
@@ -170,6 +175,14 @@ interface VideoRecord {
   file_url: string;
 }
 
+interface Branch {
+  id: string;
+  branch_name: string | null;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+}
+
 // ── Badge helper ──────────────────────────────────────────────
 function Badge({ status }: { status: string }) {
   if (status === "blue") return <img src="/images/bluebadge.png" alt="Verified Business" style={{ width: 30, height: 30 }} />;
@@ -224,7 +237,33 @@ export default function VendorProfilePage() {
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [similarBusinesses, setSimilarBusinesses] = useState<SimilarBusiness[]>([]);
+  const [similarBusinessesLoaded, setSimilarBusinessesLoaded] = useState(false);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [videoRecord, setVideoRecord] = useState<VideoRecord | null>(null);
+  // Faithful port fix (2026-07-31): production dims the video player to
+  // 50% opacity while the browser buffers it, then restores full opacity
+  // on the "loadeddata" event, so the loading state reads as "loading"
+  // rather than "possibly broken." Staging's <video> element had no
+  // equivalent — Cyril saw an indefinitely grayed-out player and asked
+  // us to check it (the video itself was fine; only the loading feedback
+  // was missing). Reset to false whenever a new/different video loads.
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  // Cyril's ask (2026-07-31): make the video "Choose File" control a
+  // real styled button instead of the native gray one — this state
+  // tracks the picked filename since the native input is now hidden.
+  const [videoFileName, setVideoFileName] = useState("No file chosen");
+
+  // Cyril's ask (2026-07-31): cover and logo uploaders gave no feedback
+  // between picking a file and the new image appearing — they just sat
+  // static. These drive a spinner overlay for the duration of each upload.
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
+  // Cyril's ask (2026-07-31): the video "spinner" (loading-dim) only
+  // appeared once the whole upload pipeline (client-side duration/
+  // resolution checks, old-file cleanup, storage upload, DB insert) had
+  // already finished — several seconds of silence first. This fires the
+  // instant a file is picked, before any of that work starts.
+  const [videoUploading, setVideoUploading] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
   const [showAllPortfolio, setShowAllPortfolio] = useState(false);
@@ -239,10 +278,25 @@ export default function VendorProfilePage() {
   // Review modal
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [reviewerName, setReviewerName] = useState("");
+  const [reviewerEmail, setReviewerEmail] = useState("");
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewHover, setReviewHover] = useState(0);
   const [submittingReview, setSubmittingReview] = useState(false);
+  // Faithful port of reviews-utils.js's cachedReviewingCustomer: checked
+  // once per page load (undefined = not yet checked, null = anonymous),
+  // then re-applied every time the modal opens.
+  const [reviewingCustomer, setReviewingCustomer] = useState<
+    { id: string; name: string; email: string } | null | undefined
+  >(undefined);
+  const [reviewFieldsLocked, setReviewFieldsLocked] = useState(false);
+
+  // Favorite/"Save" button — visible only to a logged-in customer
+  // viewing someone else's profile (never the owner, never anonymous).
+  const [favoriteVisible, setFavoriteVisible] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [favoriteCustomerId, setFavoriteCustomerId] = useState<string | null>(null);
+  const [favoriteBusy, setFavoriteBusy] = useState(false);
 
   const aboutEditorRef = useRef<HTMLDivElement>(null);
 
@@ -320,12 +374,64 @@ export default function VendorProfilePage() {
       loadSocialLinks(vendorData.id);
       loadReviews(vendorData.id, false);
       loadSimilarBusinesses(vendorData);
+      loadBranches(vendorData);
       loadVideo(vendorData.id, vendorData.plan_tier);
       loadPortfolio(vendorData.id, vendorData.business_type);
     }
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
+
+  // ── Favorite/"Save" button init (faithful port of production's
+  // initFavoriteButton, item 54) — only shown to a logged-in customer,
+  // never the vendor viewing their own profile, never an anonymous
+  // visitor. Depends on vendor.id (not the whole vendor object) so it
+  // doesn't re-run every time vendor gets a minor field update. ────
+  useEffect(() => {
+    if (!vendor?.id || isOwner) return;
+    let cancelled = false;
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || cancelled) return;
+      const { data: customer } = await supabase
+        .from("customers")
+        .select("id")
+        .eq("auth_user_id", session.user.id)
+        .maybeSingle();
+      if (!customer || cancelled) return; // logged in as a vendor only
+      const { data: existingFavorite } = await supabase
+        .from("customer_favorites")
+        .select("id")
+        .eq("customer_id", customer.id)
+        .eq("vendor_id", vendor.id)
+        .maybeSingle();
+      if (cancelled) return;
+      setFavoriteCustomerId(customer.id);
+      setIsFavorited(!!existingFavorite);
+      setFavoriteVisible(true);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vendor?.id, isOwner]);
+
+  async function toggleFavorite() {
+    if (!vendor || !favoriteCustomerId || favoriteBusy) return;
+    setFavoriteBusy(true);
+    if (isFavorited) {
+      const { error } = await supabase
+        .from("customer_favorites")
+        .delete()
+        .eq("customer_id", favoriteCustomerId)
+        .eq("vendor_id", vendor.id);
+      if (!error) setIsFavorited(false);
+    } else {
+      const { error } = await supabase
+        .from("customer_favorites")
+        .insert({ customer_id: favoriteCustomerId, vendor_id: vendor.id });
+      if (!error) setIsFavorited(true);
+    }
+    setFavoriteBusy(false);
+  }
 
   // ── Load products ────────────────────────────────────────────
   async function loadProducts(vendorId: string) {
@@ -401,12 +507,34 @@ export default function VendorProfilePage() {
 
   // ── Load similar businesses ──────────────────────────────────
   async function loadSimilarBusinesses(v: Vendor) {
-    const { data } = await supabase.rpc("get_similar_businesses", {
+    const { data, error } = await supabase.rpc("get_similar_businesses", {
       p_exclude_vendor_id: v.id,
       p_target_category: v.category,
       p_limit: 6,
     });
+    if (error) {
+      console.error("Similar businesses error:", error.message);
+      return;
+    }
     setSimilarBusinesses(data || []);
+    setSimilarBusinessesLoaded(true);
+  }
+
+  // ── Load branches (read-only list, faithful port of loadBranches
+  // in vendor-profile.js) ───────────────────────────────────────
+  async function loadBranches(v: Vendor) {
+    const { data } = await supabase
+      .from("branches")
+      .select("id, branch_name, address, latitude, longitude")
+      .eq("vendor_id", v.id)
+      .eq("account_status", "active");
+
+    const limit = BRANCH_LIMITS[v.plan_tier] ?? 0;
+    if (!data || data.length === 0 || limit === 0) {
+      setBranches([]);
+      return;
+    }
+    setBranches(data.slice(0, limit));
   }
 
   // ── Load video ───────────────────────────────────────────────
@@ -419,6 +547,7 @@ export default function VendorProfilePage() {
       .eq("vendor_id", vendorId)
       .eq("media_type", "video")
       .limit(1);
+    setVideoLoaded(false);
     setVideoRecord(data?.[0] || null);
   }
 
@@ -537,55 +666,65 @@ export default function VendorProfilePage() {
   // of silently continuing to write a public URL for a file that was
   // never actually saved.
   async function handleCoverUpload(file: File) {
-    if (!vendor) return;
-    let uploadResult;
+    if (!vendor || coverUploading) return;
+    setCoverUploading(true);
     try {
-      // Goes through the validate-upload Edge Function (service-role,
-      // server-side type/dimension/size checks + resize), same as
-      // production and every other upload in this codebase — NOT a
-      // direct client-side supabase.storage.upload() call. That direct
-      // call was the actual bug: the vendor-branding bucket has no
-      // INSERT policy in storage RLS, so every upload was silently
-      // rejected while the code still went on to save a public URL for
-      // a file that was never written. Edge Function bypasses that
-      // client-side RLS entirely (it uses the service role key), which
-      // is exactly why production's equivalent flow already works.
-      uploadResult = await uploadVendorFile(file, "cover");
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Cover upload failed.");
-      return;
-    }
-    if (vendor.cover_url) {
-      const oldPath = vendor.cover_url.split("/vendor-branding/")[1];
-      if (oldPath) {
-        const { error } = await supabase.storage.from("vendor-branding").remove([oldPath]);
-        if (error) console.error("Cover delete (storage) error:", error);
+      let uploadResult;
+      try {
+        // Goes through the validate-upload Edge Function (service-role,
+        // server-side type/dimension/size checks + resize), same as
+        // production and every other upload in this codebase — NOT a
+        // direct client-side supabase.storage.upload() call. That direct
+        // call was the actual bug: the vendor-branding bucket has no
+        // INSERT policy in storage RLS, so every upload was silently
+        // rejected while the code still went on to save a public URL for
+        // a file that was never written. Edge Function bypasses that
+        // client-side RLS entirely (it uses the service role key), which
+        // is exactly why production's equivalent flow already works.
+        uploadResult = await uploadVendorFile(file, "cover");
+      } catch (err) {
+        alert(err instanceof Error ? err.message : "Cover upload failed.");
+        return;
       }
+      if (vendor.cover_url) {
+        const oldPath = vendor.cover_url.split("/vendor-branding/")[1];
+        if (oldPath) {
+          const { error } = await supabase.storage.from("vendor-branding").remove([oldPath]);
+          if (error) console.error("Cover delete (storage) error:", error);
+        }
+      }
+      const { error: updateError } = await supabase.from("vendors").update({ cover_url: uploadResult.publicUrl }).eq("id", vendor.id);
+      if (updateError) { alert(`Uploaded, but could not save cover image: ${updateError.message}`); return; }
+      setVendor(v => v ? { ...v, cover_url: uploadResult.publicUrl } : v);
+    } finally {
+      setCoverUploading(false);
     }
-    const { error: updateError } = await supabase.from("vendors").update({ cover_url: uploadResult.publicUrl }).eq("id", vendor.id);
-    if (updateError) { alert(`Uploaded, but could not save cover image: ${updateError.message}`); return; }
-    setVendor(v => v ? { ...v, cover_url: uploadResult.publicUrl } : v);
   }
 
   async function handleLogoUpload(file: File) {
-    if (!vendor) return;
-    let uploadResult;
+    if (!vendor || logoUploading) return;
+    setLogoUploading(true);
     try {
-      uploadResult = await uploadVendorFile(file, "logo");
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Logo upload failed.");
-      return;
-    }
-    if (vendor.logo_url) {
-      const oldPath = vendor.logo_url.split("/vendor-branding/")[1];
-      if (oldPath) {
-        const { error } = await supabase.storage.from("vendor-branding").remove([oldPath]);
-        if (error) console.error("Logo delete (storage) error:", error);
+      let uploadResult;
+      try {
+        uploadResult = await uploadVendorFile(file, "logo");
+      } catch (err) {
+        alert(err instanceof Error ? err.message : "Logo upload failed.");
+        return;
       }
+      if (vendor.logo_url) {
+        const oldPath = vendor.logo_url.split("/vendor-branding/")[1];
+        if (oldPath) {
+          const { error } = await supabase.storage.from("vendor-branding").remove([oldPath]);
+          if (error) console.error("Logo delete (storage) error:", error);
+        }
+      }
+      const { error: updateError } = await supabase.from("vendors").update({ logo_url: uploadResult.publicUrl }).eq("id", vendor.id);
+      if (updateError) { alert(`Uploaded, but could not save logo: ${updateError.message}`); return; }
+      setVendor(v => v ? { ...v, logo_url: uploadResult.publicUrl } : v);
+    } finally {
+      setLogoUploading(false);
     }
-    const { error: updateError } = await supabase.from("vendors").update({ logo_url: uploadResult.publicUrl }).eq("id", vendor.id);
-    if (updateError) { alert(`Uploaded, but could not save logo: ${updateError.message}`); return; }
-    setVendor(v => v ? { ...v, logo_url: uploadResult.publicUrl } : v);
   }
 
   async function handleDeleteCover() {
@@ -618,47 +757,52 @@ export default function VendorProfilePage() {
 
   // ── Video upload ─────────────────────────────────────────────
   async function handleVideoUpload(file: File) {
-    if (!vendor) return;
-    const limits = VIDEO_LIMITS[vendor.plan_tier];
-    if (!limits.allowed) { alert("Video upload not available on this plan."); return; }
-    if (file.type !== "video/mp4") { alert("Only MP4 videos are allowed."); return; }
-    if (file.size > limits.maxSize) { alert("Video file exceeds the maximum size allowed for your plan."); return; }
+    if (!vendor || videoUploading) return;
+    setVideoUploading(true);
+    try {
+      const limits = VIDEO_LIMITS[vendor.plan_tier];
+      if (!limits.allowed) { alert("Video upload not available on this plan."); return; }
+      if (file.type !== "video/mp4") { alert("Only MP4 videos are allowed."); return; }
+      if (file.size > limits.maxSize) { alert("Video file exceeds the maximum size allowed for your plan."); return; }
 
-    const video = document.createElement("video");
-    video.preload = "metadata";
-    video.src = URL.createObjectURL(file);
-    await new Promise(resolve => { video.onloadedmetadata = resolve; });
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.src = URL.createObjectURL(file);
+      await new Promise(resolve => { video.onloadedmetadata = resolve; });
 
-    if (video.duration > limits.maxDuration) {
-      alert("Video duration exceeds the maximum allowed for your plan.");
-      return;
+      if (video.duration > limits.maxDuration) {
+        alert("Video duration exceeds the maximum allowed for your plan.");
+        return;
+      }
+      const long = Math.max(video.videoWidth, video.videoHeight);
+      const short = Math.min(video.videoWidth, video.videoHeight);
+      if (long > 1280 || short > 720) {
+        alert("Video resolution must be 720p or lower.");
+        return;
+      }
+
+      // Remove existing video
+      if (videoRecord) {
+        const oldPath = videoRecord.file_url.split("/vendor-videos/")[1];
+        if (oldPath) await supabase.storage.from("vendor-videos").remove([oldPath]);
+        await supabase.from("vendor_media").delete().eq("id", videoRecord.id);
+      }
+
+      const videoPath = `${vendor.id}/video/video-${Date.now()}.mp4`;
+      const { error: uploadError } = await supabase.storage.from("vendor-videos").upload(videoPath, file);
+      if (uploadError) { alert(`Could not upload video: ${uploadError.message}`); return; }
+      const { data: urlData } = supabase.storage.from("vendor-videos").getPublicUrl(videoPath);
+      const { error: insertError } = await supabase.from("vendor_media").insert({
+        vendor_id: vendor.id,
+        media_type: "video",
+        file_url: urlData.publicUrl,
+        display_order: Math.floor(Date.now() / 1000),
+      });
+      if (insertError) { alert(`Uploaded, but could not save video: ${insertError.message}`); return; }
+      await loadVideo(vendor.id, vendor.plan_tier);
+    } finally {
+      setVideoUploading(false);
     }
-    const long = Math.max(video.videoWidth, video.videoHeight);
-    const short = Math.min(video.videoWidth, video.videoHeight);
-    if (long > 1280 || short > 720) {
-      alert("Video resolution must be 720p or lower.");
-      return;
-    }
-
-    // Remove existing video
-    if (videoRecord) {
-      const oldPath = videoRecord.file_url.split("/vendor-videos/")[1];
-      if (oldPath) await supabase.storage.from("vendor-videos").remove([oldPath]);
-      await supabase.from("vendor_media").delete().eq("id", videoRecord.id);
-    }
-
-    const videoPath = `${vendor.id}/video/video-${Date.now()}.mp4`;
-    const { error: uploadError } = await supabase.storage.from("vendor-videos").upload(videoPath, file);
-    if (uploadError) { alert(`Could not upload video: ${uploadError.message}`); return; }
-    const { data: urlData } = supabase.storage.from("vendor-videos").getPublicUrl(videoPath);
-    const { error: insertError } = await supabase.from("vendor_media").insert({
-      vendor_id: vendor.id,
-      media_type: "video",
-      file_url: urlData.publicUrl,
-      display_order: Math.floor(Date.now() / 1000),
-    });
-    if (insertError) { alert(`Uploaded, but could not save video: ${insertError.message}`); return; }
-    loadVideo(vendor.id, vendor.plan_tier);
   }
 
   async function handleDeleteVideo() {
@@ -670,26 +814,84 @@ export default function VendorProfilePage() {
     }
     const { error } = await supabase.from("vendor_media").delete().eq("id", videoRecord.id);
     if (error) { alert(`Could not remove video: ${error.message}`); return; }
+    // Faithful port fix (2026-07-31): production explicitly clears the
+    // player (src = "", removeAttribute("src"), player.load()) after a
+    // delete, because just dropping the src via a state update doesn't
+    // reliably clear the last-rendered frame in every browser — the old
+    // video kept visibly "standing there" until a full page refresh,
+    // which is what Cyril reported. setVideoRecord(null) below removes
+    // it from the DB, and the <video> element's `key` (set from
+    // videoRecord?.id) forces React to fully unmount and recreate the
+    // element instead of patching the existing one, which is the React
+    // equivalent of production's manual .load() reset.
+    setVideoLoaded(false);
     setVideoRecord(null);
+  }
+
+  // ── Reviewing-customer lookup (faithful port of reviews-utils.js's
+  // getReviewingCustomer — cached across modal opens per page load) ──
+  async function getReviewingCustomer() {
+    if (reviewingCustomer !== undefined) return reviewingCustomer;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { setReviewingCustomer(null); return null; }
+    const { data: customer } = await supabase
+      .from("customers")
+      .select("id, name, email")
+      .eq("auth_user_id", session.user.id)
+      .maybeSingle();
+    const result = customer || null;
+    setReviewingCustomer(result);
+    return result;
+  }
+
+  // Applies on every "Rate" click (not just first check) — auto-fills
+  // and locks name/email for a signed-in customer, or clears the lock
+  // for an anonymous submitter. Matches applyReviewerIdentity().
+  async function openReviewModal() {
+    const customer = await getReviewingCustomer();
+    if (customer) {
+      setReviewerName(customer.name || "");
+      setReviewerEmail(customer.email || "");
+      setReviewFieldsLocked(true);
+    } else {
+      setReviewFieldsLocked(false);
+    }
+    setReviewModalOpen(true);
   }
 
   // ── Review submit ────────────────────────────────────────────
   async function handleSubmitReview() {
-    if (!vendor || !reviewRating || !reviewerName.trim() || !reviewText.trim()) {
-      alert("Please fill in your name, rating, and review.");
+    if (!vendor || !reviewRating || !reviewerName.trim() || !reviewerEmail.trim() || !reviewText.trim()) {
+      alert("Please fill in your name, email, rating, and review.");
       return;
     }
     setSubmittingReview(true);
+    const currentReviewingCustomer = await getReviewingCustomer();
     const { error } = await supabase.from("vendor_reviews").insert({
       vendor_id: vendor.id,
       reviewer_name: reviewerName.trim(),
+      reviewer_email: reviewerEmail.trim(),
       review_text: reviewText.trim(),
       rating: reviewRating,
+      customer_id: currentReviewingCustomer?.id || null,
     });
     setSubmittingReview(false);
-    if (error) { alert("Could not submit review. Please try again."); return; }
+    if (error) {
+      console.error(error);
+      // Postgres 42501 here is the self-review RLS guard — the
+      // customer_id sent is always the reviewer's own real one, so
+      // this only ever fires for a genuine self-review attempt.
+      if (error.code === "42501") {
+        alert("You cannot submit a review for yourself.");
+      } else {
+        alert("Unable to submit review.");
+      }
+      return;
+    }
+    // Only logged after the review itself is confirmed saved.
+    await logEvent("review_submitted");
     setReviewModalOpen(false);
-    setReviewerName(""); setReviewText(""); setReviewRating(0);
+    setReviewerName(""); setReviewerEmail(""); setReviewText(""); setReviewRating(0);
     loadReviews(vendor.id, showAllReviews);
     // Update vendor rating display
     const { data: updatedVendor } = await supabase
@@ -787,10 +989,16 @@ export default function VendorProfilePage() {
               Recommended size: 920 × 300px<br />Max size: 1MB<br />Formats: JPG, PNG
             </div>
           )}
+          {coverUploading && (
+            <div className={styles.uploadOverlay}>
+              <div className={styles.uploadSpinner}></div>
+              Uploading...
+            </div>
+          )}
           {isOwner && (
             <label className={styles.cameraOverlay}>
               📷
-              <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) handleCoverUpload(f); e.target.value = ""; }} />
+              <input type="file" accept="image/*" hidden disabled={coverUploading} onChange={e => { const f = e.target.files?.[0]; if (f) handleCoverUpload(f); e.target.value = ""; }} />
             </label>
           )}
           {isOwner && vendor.cover_url && (
@@ -813,11 +1021,16 @@ export default function VendorProfilePage() {
                     112 × 112px<br />Max: 1MB<br />JPG, PNG
                   </div>
                 )}
+                {logoUploading && (
+                  <div className={styles.uploadOverlay}>
+                    <div className={styles.uploadSpinner}></div>
+                  </div>
+                )}
                 {isOwner && (
                   <>
                     <label className={`${styles.cameraOverlay} ${styles.cameraOverlaySmall}`}>
                       📷
-                      <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) handleLogoUpload(f); e.target.value = ""; }} />
+                      <input type="file" accept="image/*" hidden disabled={logoUploading} onChange={e => { const f = e.target.files?.[0]; if (f) handleLogoUpload(f); e.target.value = ""; }} />
                     </label>
                     {vendor.logo_url && (
                       <button type="button" className={styles.logoDelete} onClick={handleDeleteLogo}>×</button>
@@ -919,6 +1132,17 @@ export default function VendorProfilePage() {
               <i className="fas fa-book-open"></i>
               <span>Catalog</span>
             </button>
+            {favoriteVisible && (
+              <button
+                type="button"
+                className={styles.quickAction}
+                onClick={toggleFavorite}
+                disabled={favoriteBusy}
+              >
+                <i className={isFavorited ? "fa-solid fa-heart" : "fa-regular fa-heart"}></i>
+                <span>{isFavorited ? "Saved" : "Save"}</span>
+              </button>
+            )}
           </div>
 
           {/* SOCIAL EDITOR (owner only) */}
@@ -1188,14 +1412,38 @@ export default function VendorProfilePage() {
           {videoLimits?.allowed && (isOwner || videoRecord) && (
             <div className={styles.videoWrap}>
               <h3>Business Video</h3>
-              {!isOwner && <p className={styles.mediaHint}>MP4 only • Duration and size depend on subscription plan.</p>}
-              {videoRecord && (
+              {/* Faithful port fix (2026-07-31): production's #vendorVideo
+                  element is always present in the DOM once this wrap is
+                  visible — an empty player box shows before any video is
+                  uploaded, same as the static hint text above it, which
+                  is never conditional on owner/public. Staging had wrongly
+                  omitted the <video> element entirely (and the hint text
+                  for owners) until a video existed, so an owner with no
+                  video yet saw nothing here instead of production's
+                  always-present empty player. Matched exactly: hint text
+                  always shown, <video> always rendered, src only set (and
+                  the loading dim only applied) once a video exists. */}
+              <p className={styles.mediaHint}>MP4 only • Maximum duration and file size depend on your subscription plan.</p>
+              <div className={styles.videoPlayerWrap}>
+                {/* key forces React to fully unmount/recreate this element
+                    whenever the underlying video changes (new upload or
+                    delete back to empty) — see handleDeleteVideo comment
+                    above for why this matters. */}
                 <video
+                  key={videoRecord?.id ?? "empty"}
                   className={styles.vendorVideoPlayer}
                   controls
-                  src={videoRecord.file_url}
+                  src={videoRecord?.file_url || undefined}
+                  style={videoRecord ? { opacity: videoLoaded ? 1 : 0.5, transition: "opacity 0.2s" } : undefined}
+                  onLoadedData={() => setVideoLoaded(true)}
                 />
-              )}
+                {videoUploading && (
+                  <div className={styles.uploadOverlay}>
+                    <div className={styles.uploadSpinner}></div>
+                    Uploading...
+                  </div>
+                )}
+              </div>
               {isOwner && videoRecord && (
                 <div style={{ marginTop: 10, textAlign: "center" }}>
                   <button type="button" className={styles.deleteVideoBtn} onClick={handleDeleteVideo}>
@@ -1208,12 +1456,27 @@ export default function VendorProfilePage() {
                   <label htmlFor="videoInput" style={{ display: "block", fontWeight: 600, fontSize: "0.9rem", color: "var(--color-text-primary)", cursor: "pointer" }}>
                     Upload Video
                   </label>
-                  <input
-                    id="videoInput"
-                    type="file"
-                    accept="video/mp4"
-                    onChange={e => { const f = e.target.files?.[0]; if (f) handleVideoUpload(f); e.target.value = ""; }}
-                  />
+                  <div className={styles.videoChooseRow}>
+                    <label htmlFor="videoInput" className={styles.videoChooseBtn}>
+                      Choose File
+                    </label>
+                    <span className={styles.videoFileName}>{videoFileName}</span>
+                    <input
+                      id="videoInput"
+                      type="file"
+                      accept="video/mp4"
+                      hidden
+                      disabled={videoUploading}
+                      onChange={e => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        setVideoFileName(f.name);
+                        setVideoUploading(true);
+                        handleVideoUpload(f);
+                        e.target.value = "";
+                      }}
+                    />
+                  </div>
                   <p className={styles.mediaNoteText}>
                     MP4 only • Max {videoLimits.maxDuration}s • Max {videoLimits.maxSize / (1024 * 1024)}MB
                   </p>
@@ -1228,11 +1491,16 @@ export default function VendorProfilePage() {
       <section className={styles.profileCard}>
         <div className={styles.reviewsHeader}>
           <h2>Reviews</h2>
-          {!isOwner && (
-            <button type="button" className={styles.rateBtn} onClick={() => setReviewModalOpen(true)}>
-              Rate
-            </button>
-          )}
+          {/* Faithful port fix (2026-07-31): production's rateVendorBtn has
+              no owner check at all — it's always rendered and clickable
+              regardless of who's viewing, gated only by whether
+              window.ReviewsUtils exists. Staging had wrongly hidden this
+              for the owner, which is what Cyril reported ("no button to
+              do the review") — he was viewing his own profile. Matched
+              production exactly: always show it. */}
+          <button type="button" className={styles.rateBtn} onClick={openReviewModal}>
+            Rate
+          </button>
         </div>
 
         <div className={styles.reviewsSummary}>
@@ -1289,10 +1557,14 @@ export default function VendorProfilePage() {
         )}
       </section>
 
-      {/* SIMILAR BUSINESSES */}
-      {similarBusinesses.length > 0 && (
-        <section className={styles.profileCard}>
-          <h2>Explore Similar Businesses</h2>
+      {/* SIMILAR BUSINESSES — section itself is always shown, matching
+          production (which never hides it, even with zero matches);
+          only the placeholder/grid content changes on load. */}
+      <section className={styles.profileCard}>
+        <h2>Explore Similar Businesses</h2>
+        {!similarBusinessesLoaded ? (
+          <div className={styles.similarPlaceholder}>Similar businesses will appear here.</div>
+        ) : similarBusinesses.length > 0 ? (
           <div className={styles.similarGrid}>
             {similarBusinesses.map(b => (
               <a
@@ -1317,6 +1589,34 @@ export default function VendorProfilePage() {
               </a>
             ))}
           </div>
+        ) : null}
+      </section>{/* No "no matches" message — matches production, which
+          leaves the container empty when the query returns nothing. */}
+
+      {/* BRANCHES (read-only list; management lives in dashboard-branches) */}
+      {branches.length > 0 && (
+        <section className={styles.profileCard}>
+          <h2>Branches</h2>
+          <div className={styles.branchesList}>
+            {branches.map(branch => (
+              <div key={branch.id} className={styles.branchItem}>
+                <div className={styles.branchName}>{branch.branch_name || ""}</div>
+                <div className={styles.branchAddress}>{branch.address || ""}</div>
+                <a
+                  href={
+                    branch.latitude && branch.longitude
+                      ? `https://www.google.com/maps/search/?api=1&query=${branch.latitude},${branch.longitude}`
+                      : "#"
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.branchMapLink}
+                >
+                  View on Map
+                </a>
+              </div>
+            ))}
+          </div>
         </section>
       )}
 
@@ -1325,6 +1625,13 @@ export default function VendorProfilePage() {
         <div className={styles.modalOverlay} onClick={e => { if (e.target === e.currentTarget) setReviewModalOpen(false); }}>
           <div className={styles.modal}>
             <h3 className={styles.modalTitle}>Leave a Review</h3>
+            {reviewingCustomer === null && (
+              <div className={styles.reviewAnonNotice}>
+                Reviews from signed-in Spotlight customers are marked <strong>Verified Customer</strong> and
+                carry more weight with other shoppers. You can still submit without signing in, or{" "}
+                <a href="/customer-login">log in</a> / <a href="/customer-signup">sign up</a> first.
+              </div>
+            )}
             <div className={styles.starPicker}>
               {[1,2,3,4,5].map(n => (
                 <span
@@ -1341,6 +1648,15 @@ export default function VendorProfilePage() {
               placeholder="Your name"
               value={reviewerName}
               onChange={e => setReviewerName(e.target.value)}
+              readOnly={reviewFieldsLocked}
+            />
+            <input
+              className={styles.modalInput}
+              type="email"
+              placeholder="Your email"
+              value={reviewerEmail}
+              onChange={e => setReviewerEmail(e.target.value)}
+              readOnly={reviewFieldsLocked}
             />
             <textarea
               className={styles.modalTextarea}

@@ -1,0 +1,42 @@
+/* ===============================================================
+   verify-email.module.css
+   Ported from verify-email.html's inline <style> block, using the
+   shared design-token system for dark mode.
+=============================================================== */
+
+.wrapper {
+  font-family: system-ui, sans-serif;
+  background: var(--color-surface-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.verifyCard {
+  background: var(--color-surface);
+  padding: 40px;
+  border-radius: 16px;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-xl);
+}
+
+.verifyCard h1 {
+  margin: 0 0 10px;
+  font-size: 1.5rem;
+  color: var(--color-text-primary);
+}
+
+.verifyCard p {
+  color: var(--color-text-body);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.success { color: var(--color-success); font-weight: 700; }
+.error { color: var(--color-error); font-weight: 700; }

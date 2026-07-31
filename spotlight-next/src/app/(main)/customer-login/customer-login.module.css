@@ -1,0 +1,156 @@
+/* ===============================================================
+   customer-login.module.css
+   Ported from auth.css — design tokens for dark/light mode, same
+   pattern as the vendor login page's login.module.css.
+=============================================================== */
+
+.authWrapper {
+  width: 100%;
+  min-height: calc(100vh - var(--header-height));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-alt);
+  padding: 40px 24px;
+}
+
+.authCard {
+  width: 100%;
+  max-width: 420px;
+  background: var(--color-surface);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: var(--shadow-xl);
+}
+
+.authTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: var(--color-text-primary);
+}
+
+.authSubtitle {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  margin: 0 0 24px;
+}
+
+.authError {
+  font-size: 0.85rem;
+  color: #dc2626;
+  background: #fee2e2;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.authForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.authForm label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-body);
+  margin-bottom: 4px;
+}
+
+.authForm input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  font-size: 0.95rem;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-sizing: border-box;
+}
+
+.authForm input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(230, 194, 0, 0.15);
+}
+
+.passwordWrap { position: relative; }
+
+.passwordWrap input { padding-right: 44px; }
+
+.togglePassword {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+}
+
+.authBtn {
+  margin-top: 4px;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background: var(--color-dark);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.authBtn:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: #000000;
+}
+
+.authBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.authLink {
+  margin: 16px 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.authLink a {
+  color: var(--color-info);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.authLink a:hover { text-decoration: underline; }
+
+.authFooter {
+  margin-top: 16px;
+  font-size: 0.9rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.authFooter a {
+  color: var(--color-info);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.authFooter a:hover { text-decoration: underline; }
+
+/* DARK MODE */
+:global([data-theme="dark"]) .authError {
+  background: rgba(220, 38, 38, 0.15);
+  color: #fca5a5;
+}
+
+@media (max-width: 480px) {
+  .authCard { padding: 24px 16px; }
+  .authTitle { font-size: 1.3rem; }
+}

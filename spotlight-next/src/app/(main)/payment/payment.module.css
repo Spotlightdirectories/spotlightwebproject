@@ -1,0 +1,166 @@
+/* ===============================================================
+   payment.module.css
+   Ported from payment.html's inline styles, restyled with the
+   site's design tokens (dark mode, brand gold) instead of hardcoded
+   colors — same treatment given to every other ported page.
+=============================================================== */
+
+.page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 32px 16px 60px;
+  font-family: inherit;
+}
+
+.page h1 {
+  color: var(--color-text-primary);
+}
+
+.loading {
+  color: var(--color-text-muted);
+}
+
+.planSummary {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+}
+
+.upgradeDisclaimer {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(230, 194, 0, 0.08);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+}
+
+.upgradeDisclaimer p {
+  margin: 0 0 10px 0;
+  font-size: 0.92rem;
+  color: var(--color-text-primary);
+}
+
+.upgradeDisclaimer a { color: var(--color-primary); }
+
+.upgradeDisclaimer label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+}
+
+.paymentActions {
+  margin-top: 2rem;
+  display: flex;
+  gap: 12px;
+}
+
+.actionBtn,
+.actionBtnSecondary {
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.actionBtn {
+  background: var(--color-primary);
+  color: #000000;
+}
+
+.actionBtn:disabled { opacity: 0.6; cursor: default; }
+
+.actionBtnSecondary {
+  background: var(--color-surface-alt);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.actionBtnSecondary:disabled { opacity: 0.6; cursor: default; }
+
+.bankSection {
+  margin-top: 2rem;
+}
+
+.bankSection h3 { color: var(--color-text-primary); }
+
+.bankSection p {
+  color: var(--color-text-primary);
+}
+
+.bankNote {
+  margin-top: 1rem;
+  color: var(--color-text-muted);
+}
+
+.chooseRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.chooseBtn {
+  display: inline-block;
+  padding: 8px 18px;
+  background: var(--color-primary);
+  color: #000000;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.chooseBtn:hover { opacity: 0.85; }
+
+.chooseFileName {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.fieldLabel {
+  display: block;
+  margin-top: 1rem;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.bankSection input[type="file"] {
+  color: var(--color-text-primary);
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.bankSection .actionBtn {
+  margin-top: 1rem;
+}
+
+/* SUCCESS OVERLAY */
+.successOverlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--color-background);
+}
+
+.successCard {
+  background: var(--color-surface);
+  padding: 40px;
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  max-width: 420px;
+}
+
+.successCard h2 { margin-bottom: 15px; color: #16a34a; }
+.successCard p { color: var(--color-text-muted); }

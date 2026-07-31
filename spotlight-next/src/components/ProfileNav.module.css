@@ -1,0 +1,37 @@
+/* ===============================================================
+   ProfileNav.module.css
+   Ported from discover.css's .profile-nav-menu / .profile-nav-menu-item.
+=============================================================== */
+
+.profileNavMenu {
+  background: var(--color-surface);
+  border-radius: 12px;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
+  padding: 6px;
+  min-width: 220px;
+  z-index: 2000;
+}
+
+.profileNavMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: none;
+  background: none;
+  text-align: left;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.profileNavMenuItem:hover {
+  background: var(--color-surface-hover);
+}
+
+.profileNavMenuItem i {
+  color: var(--color-primary);
+  width: 16px;
+}

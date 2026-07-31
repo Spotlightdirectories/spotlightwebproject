@@ -218,6 +218,39 @@
 
 .cameraOverlay:hover { background: rgba(0,0,0,0.85); }
 
+/* ── UPLOAD FEEDBACK (cover/logo) ──────────────────────────────── */
+/* Cyril's ask (2026-07-31): cover and logo previously stayed static
+   with no indication anything was happening between picking a file
+   and the new image appearing. This overlay + spinner covers the
+   image area for the duration of the upload. */
+.uploadOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.uploadSpinner {
+  width: 26px;
+  height: 26px;
+  border: 3px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: uploadSpin 0.7s linear infinite;
+}
+
+@keyframes uploadSpin {
+  to { transform: rotate(360deg); }
+}
+
 .cameraOverlaySmall {
   width: 36px;
   height: 36px;
@@ -417,6 +450,8 @@
 
 .profileCard h2 {
   font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.3;
   margin-bottom: 12px;
   color: var(--color-text-primary);
 }
@@ -798,15 +833,25 @@
   color: var(--color-text-primary);
 }
 
+.videoPlayerWrap {
+  position: relative;
+  max-width: 640px;
+  margin: 12px auto 0;
+}
+
 .vendorVideoPlayer {
   width: 100%;
   max-width: 640px;
   height: auto;
   max-height: 400px;
   display: block;
-  margin: 12px auto 0;
+  margin: 0;
   border-radius: 10px;
   background: #000;
+}
+
+.videoPlayerWrap .uploadOverlay {
+  border-radius: 10px;
 }
 
 .mediaHint {
@@ -965,6 +1010,12 @@
 .starPartialFill { position: absolute; top: 0; left: 0; color: var(--color-primary); overflow: hidden; width: 0; }
 
 /* ── SIMILAR BUSINESSES ────────────────────────────────────────── */
+.similarPlaceholder {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin-top: 8px;
+}
+
 .similarGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -1014,6 +1065,44 @@
 
 .similarStar { color: var(--color-primary); }
 
+/* ── BRANCHES ──────────────────────────────────────────────────── */
+.branchesList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.branchItem {
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.branchName {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
+}
+
+.branchAddress {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.branchMapLink {
+  font-size: 0.85rem;
+  color: var(--color-primary);
+  text-decoration: none;
+  margin-top: 2px;
+}
+
+.branchMapLink:hover { text-decoration: underline; }
+
 /* ── REVIEW MODAL ──────────────────────────────────────────────── */
 .modalOverlay {
   position: fixed;
@@ -1043,6 +1132,19 @@
   color: var(--color-text-primary);
 }
 
+.reviewAnonNotice {
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.reviewAnonNotice a { color: var(--color-primary); font-weight: 600; }
+
 .starPicker {
   display: flex;
   gap: 8px;
@@ -1069,6 +1171,8 @@
 }
 
 .modalTextarea { min-height: 100px; resize: vertical; }
+
+.modalInput:read-only { background: var(--color-surface-alt); color: var(--color-text-muted); }
 
 .modalActions {
   display: flex;
@@ -1102,11 +1206,45 @@
 /* ── VIDEO UPLOADER ────────────────────────────────────────────── */
 .videoUploader { margin-top: 10px; }
 
-.videoUploader label {
+.videoUploader > label {
   display: block;
   font-weight: 600;
   font-size: 0.9rem;
   color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+/* Cyril's ask (2026-07-31): the raw browser file input ("Choose File")
+   read as an afterthought next to "Upload Video." Styled as a proper
+   pill button (same treatment as the dashboard's image-upload buttons)
+   instead of the native gray control. */
+.videoChooseRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.videoChooseBtn {
+  display: inline-block;
+  padding: 8px 18px;
+  background: var(--color-primary);
+  color: #000000;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.videoChooseBtn:hover {
+  opacity: 0.85;
+}
+
+.videoFileName {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
 }
 
 /* ── DARK MODE TOUCH-UPS ───────────────────────────────────────── */

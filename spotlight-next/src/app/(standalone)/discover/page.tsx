@@ -24,6 +24,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { nigeriaData } from "@/lib/nigeria-data.js";
+import ProfileNav from "@/components/ProfileNav";
 import styles from "./discover.module.css";
 
 // ── Types ────────────────────────────────────────────────────
@@ -527,10 +528,7 @@ export default function DiscoverPage() {
           <i className="fa-solid fa-compass"></i>
           <span>Explore</span>
         </a>
-        <button type="button" className={styles.discoverBottomItem}>
-          <i className="fa-regular fa-user"></i>
-          <span>Profile</span>
-        </button>
+        <ProfileNav buttonClassName={styles.discoverBottomItem} />
       </nav>
 
       {/* FILTER DRAWER */}

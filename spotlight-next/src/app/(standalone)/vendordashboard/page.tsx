@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import ProfileTab from "./ProfileTab";
 import ProductsTab from "./ProductsTab";
+import ServicesTab from "./ServicesTab";
 import PortfolioTab from "./PortfolioTab";
 import SubscriptionTab from "./SubscriptionTab";
 import VerificationTab from "./VerificationTab";
@@ -563,11 +564,11 @@ export default function VendorDashboardPage() {
           </section>
         )}
 
-        {/* ============ STUB SECTIONS (built in later modules) ============ */}
+        {/* ============ SERVICES ============ */}
 
         {showServices && (
           <section className={sec("services")}>
-            <div className="vd-card"><p style={{ color: "#64748b" }}>Services management — coming in a later module.</p></div>
+            <ServicesTab vendor={vendor} />
           </section>
         )}
 

@@ -1,0 +1,238 @@
+/* ===============================================================
+   dashboard-branches.module.css
+   Ported from dashboard-branches.css, restyled with the site's
+   design tokens (dark mode, brand gold) instead of production's
+   hardcoded blue-on-white — same treatment given to every other
+   ported page this migration.
+=============================================================== */
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 16px 60px;
+}
+
+.page h1 {
+  margin-bottom: 6px;
+  color: var(--color-text-primary);
+}
+
+.note {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin-bottom: 20px;
+}
+
+/* ── CARDS ───────────────────────────────────────────────────── */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-card);
+}
+
+.card h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+  margin-bottom: 14px;
+  color: var(--color-text-primary);
+}
+
+/* ── FORM INPUTS ─────────────────────────────────────────────── */
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.fieldLabel {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 6px;
+}
+
+.fieldHint {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin: -4px 0 12px;
+  line-height: 1.4;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(230, 194, 0, 0.2);
+}
+
+.regionRow {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.select {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(230, 194, 0, 0.2);
+}
+
+.hoursRow {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.hoursLabel {
+  flex: 1;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.daysRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: 0.8rem;
+  color: var(--color-text-primary);
+}
+
+/* ── BUTTONS ─────────────────────────────────────────────────── */
+.formActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.primaryBtn {
+  background: var(--color-primary);
+  color: #000000;
+  border: none;
+  padding: 10px 18px;
+  border-radius: var(--radius-full);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primaryBtn:hover { opacity: 0.85; }
+.primaryBtn:disabled { opacity: 0.6; cursor: default; }
+
+.cancelBtn {
+  background: var(--color-surface-alt);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  padding: 10px 18px;
+  border-radius: var(--radius-full);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.cancelBtn:hover { background: var(--color-surface-hover); }
+
+/* ── HELPER TEXT ─────────────────────────────────────────────── */
+.mapHelper {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin: 10px 0;
+  background: var(--color-surface-alt);
+  padding: 10px;
+  border-radius: var(--radius-md);
+}
+
+.mapHelper a { color: var(--color-primary); }
+
+/* ── BRANCH LIST ─────────────────────────────────────────────── */
+.empty {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.branchRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border);
+  gap: 10px;
+}
+
+.branchRow:last-child { border-bottom: none; }
+
+.branchName {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.branchAddress {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.branchRegion {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.branchActions {
+  display: flex;
+  gap: 8px;
+}
+
+.editBtn {
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.editBtn:hover { background: var(--color-surface-hover); }
+
+.deleteBtn {
+  background: var(--color-error);
+  border: none;
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.deleteBtn:hover { opacity: 0.85; }
+
+@media (max-width: 768px) {
+  .branchRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}
