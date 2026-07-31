@@ -48,6 +48,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { supabase } from "@/lib/supabase";
+import { EmailTemplates } from "@/lib/emailTemplates";
 import type { Vendor } from "./page";
 
 type PortfolioItem = {
@@ -233,7 +234,11 @@ export default function PortfolioTab({ vendor }: { vendor: Vendor }) {
           body: JSON.stringify({
             to: email,
             subject: `${vendor.name} would like your recommendation`,
-            html: `<p>Hi,</p><p><strong>${vendor.name}</strong> has asked you to leave a short recommendation for work done: <strong>${item.title}</strong>.</p><p>It only takes a minute, and it helps future clients trust their work.</p><p><a href="${link}">Click here to leave your recommendation</a></p><p>If you weren't expecting this, you can safely ignore this email.</p>`,
+            html: EmailTemplates.recommendationRequest({
+              vendorName: vendor.name || "",
+              itemTitle: item.title,
+              recommendLink: link,
+            }),
           }),
         }
       );

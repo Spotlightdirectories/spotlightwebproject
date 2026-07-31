@@ -19,6 +19,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { getViewingCustomerId } from "@/lib/getViewingCustomerId";
 import styles from "./vendor-service.module.css";
 
 interface Service {
@@ -145,10 +146,12 @@ export default function VendorServicePage() {
 
       // Analytics
       try {
+        const customerId = await getViewingCustomerId();
         await supabase.from("analytics_events").insert({
           vendor_id: data.vendor_id,
           service_id: data.id,
           event_type: "service_view",
+          customer_id: customerId,
         });
       } catch { /* non-fatal */ }
 
@@ -199,6 +202,22 @@ export default function VendorServicePage() {
     }
     load();
   }, [serviceSlug]);
+
+  // Fires on WhatsApp/Call tap — production never logged these at
+  // all (plain links, no handler). Fire-and-forget, doesn't block the
+  // actual wa.me/tel: navigation.
+  async function logContactClick(eventType: "whatsapp_click" | "phone_click") {
+    if (!service) return;
+    try {
+      const customerId = await getViewingCustomerId();
+      await supabase.from("analytics_events").insert({
+        vendor_id: service.vendor_id,
+        service_id: service.id,
+        event_type: eventType,
+        customer_id: customerId,
+      });
+    } catch { /* non-fatal */ }
+  }
 
   async function handleShare() {
     const shareData = {
@@ -343,6 +362,7 @@ export default function VendorServicePage() {
                 className={`${styles.vsActionBtn} ${styles.vsWhatsappBtn}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => logContactClick("whatsapp_click")}
               >
                 <i className="fab fa-whatsapp"></i>
                 Chat Vendor
@@ -353,6 +373,7 @@ export default function VendorServicePage() {
               <a
                 href={`tel:${vendor?.telephone || vendor?.whatsapp}`}
                 className={`${styles.vsActionBtn} ${styles.vsCallBtn}`}
+                onClick={() => logContactClick("phone_click")}
               >
                 <i className="fas fa-phone"></i>
                 Call Vendor

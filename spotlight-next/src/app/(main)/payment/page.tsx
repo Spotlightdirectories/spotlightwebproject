@@ -332,8 +332,29 @@ export default function PaymentPage() {
       return;
     }
 
-    await supabase.from("vendor_payments").update({ transfer_proof_url: uploadResult.path }).eq("id", paymentData.id);
-    await supabase.from("vendors").update({ subscription_status: "pending" }).eq("id", vendor.id);
+    const { error: receiptLinkError } = await supabase
+      .from("vendor_payments")
+      .update({ transfer_proof_url: uploadResult.path })
+      .eq("id", paymentData.id);
+
+    if (receiptLinkError) {
+      console.error("Failed to attach receipt to payment record:", receiptLinkError);
+      alert("Your receipt file uploaded, but we couldn't attach it to your payment record. Please contact support@spotlightdirectories.com so we can complete this manually.");
+      setSubmittingReceipt(false);
+      return;
+    }
+
+    const { error: statusError } = await supabase
+      .from("vendors")
+      .update({ subscription_status: "pending" })
+      .eq("id", vendor.id);
+
+    if (statusError) {
+      console.error("Failed to mark subscription as pending:", statusError);
+      alert("Your receipt was received, but we couldn't update your account status. Please contact support@spotlightdirectories.com so we can complete this manually.");
+      setSubmittingReceipt(false);
+      return;
+    }
 
     router.replace("/payment-status");
   }

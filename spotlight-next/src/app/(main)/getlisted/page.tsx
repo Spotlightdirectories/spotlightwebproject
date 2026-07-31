@@ -203,7 +203,16 @@ export default function GetListedPage() {
 
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        // An existing vendor's session lapsed (e.g. an old "upgrade
+        // your plan" email link clicked after logging out). Sending
+        // them to /login instead of silently rendering the plain
+        // first-time pricing page avoids the confusing follow-up
+        // where clicking a paid plan would otherwise route them to
+        // /signup (creating a second account) instead of /payment.
+        router.replace("/login");
+        return;
+      }
 
       const { data: vendor } = await supabase
         .from("vendors")

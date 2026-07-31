@@ -22,6 +22,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { EmailTemplates } from "@/lib/emailTemplates";
 import styles from "./signup.module.css";
 
 export default function SignupPage() {
@@ -133,7 +134,11 @@ export default function SignupPage() {
           body: JSON.stringify({
             to: email,
             subject: "Welcome to Spotlight Directories",
-            html: `<p>Hi ${businessName}, welcome to Spotlight Directories! Your account is ready.</p>`,
+            html: EmailTemplates.welcomeVendor({
+              vendorName: businessName,
+              plan: selectedPlan,
+              loginUrl: `${window.location.origin}/login`,
+            }),
           }),
         }
       );

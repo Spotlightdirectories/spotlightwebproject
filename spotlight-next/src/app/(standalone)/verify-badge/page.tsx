@@ -38,6 +38,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { uploadVendorFile } from "@/lib/uploadVendorFile";
+import { EmailTemplates } from "@/lib/emailTemplates";
 import styles from "./verify-badge.module.css";
 
 type BadgeType = "gray" | "blue";
@@ -245,7 +246,7 @@ export default function VerifyBadgePage() {
           body: JSON.stringify({
             to: email,
             subject: "Verification Documents Received",
-            html: `<p>Hi ${applicantName}, we have received your ${badgeType} badge verification submission. Our team will review your documents and get back to you within 2–5 business days. You do not need to resubmit — we will email you once the review is complete.</p>`,
+            html: EmailTemplates.badgeSubmitted({ vendorName: applicantName, badgeType }),
           }),
         });
       } catch (err) {

@@ -35,10 +35,11 @@ interface SponsoredVendor {
   logo_url: string | null;
   category: string;
   subcategory: string;
+  lga: string | null;
+  state: string | null;
   verification_status: string;
   average_rating: number | null;
-  latitude: number | null;
-  longitude: number | null;
+  reviews_count: number | null;
 }
 
 interface TrendingItem {
@@ -59,6 +60,12 @@ function getRecentSearches(): string[] {
   } catch {
     return [];
   }
+}
+
+function VendorBadge({ status }: { status: string }) {
+  if (status === "blue") return <img src="/images/bluebadge.png" alt="Verified Business" className={styles.discoverSponsoredBadge} />;
+  if (status === "gray") return <img src="/images/graybadge.png" alt="Verified Identity" className={styles.discoverSponsoredBadge} />;
+  return null;
 }
 
 function saveRecentSearch(keyword: string) {
@@ -187,7 +194,7 @@ export default function DiscoverPage() {
       const { data } = await supabase
         .from("vendors")
         .select(
-          "id, slug, name, logo_url, category, subcategory, verification_status, average_rating, latitude, longitude"
+          "id, slug, name, logo_url, category, subcategory, lga, state, verification_status, average_rating, reviews_count"
         )
         .eq("account_status", "active")
         .in(
@@ -201,6 +208,7 @@ export default function DiscoverPage() {
               .gt("expires_at", new Date().toISOString())
           ).data?.map((s) => s.vendor_id) || []
         )
+        .order("average_rating", { ascending: false })
         .limit(10);
       if (data) setSponsoredVendors(data);
     }
@@ -452,22 +460,58 @@ export default function DiscoverPage() {
           </div>
           <div className={styles.discoverSponsoredScroll}>
             {sponsoredVendors.map((v) => (
-              <a
+              <article
                 key={v.id}
-                href={`/vendor/${v.slug}`}
                 className={styles.discoverSponsoredCard}
+                onClick={() => router.push(`/vendor/${v.slug}`)}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={v.logo_url || "/images/spotlightlogo-512.png"}
-                  alt={v.name}
-                  className={styles.discoverSponsoredLogo}
-                />
-                <div className={styles.discoverSponsoredInfo}>
-                  <p className={styles.discoverSponsoredName}>{v.name}</p>
-                  <p className={styles.discoverSponsoredCat}>{v.subcategory || v.category}</p>
+                <div className={styles.discoverSponsoredTop}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={v.logo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(v.name)}&background=e6c200&color=000000&size=128`}
+                    alt={v.name}
+                    className={styles.discoverSponsoredLogo}
+                  />
+                  <div className={styles.discoverSponsoredInfo}>
+                    <div className={styles.discoverSponsoredTitleRow}>
+                      <p className={styles.discoverSponsoredName}>{v.name}</p>
+                      <VendorBadge status={v.verification_status} />
+                    </div>
+                    <p className={styles.discoverSponsoredCat}>{v.subcategory || "Vendor"}</p>
+                    <div className={styles.discoverSponsoredRatingWrap}>
+                      <i className="fa-solid fa-star"></i>
+                      <span>{Number(v.average_rating || 0).toFixed(1)}</span>
+                      <small>({v.reviews_count || 0})</small>
+                    </div>
+                  </div>
                 </div>
-              </a>
+
+                <div className={styles.discoverSponsoredBottom}>
+                  <span className={styles.discoverSponsoredLocation}>
+                    <i className="fa-solid fa-location-dot"></i>
+                    <span className={styles.discoverSponsoredLocationText}>
+                      {v.lga && <span className={styles.discoverSponsoredLocationLine}>{v.lga}</span>}
+                      {v.state && <span className={styles.discoverSponsoredLocationLine}>{v.state}</span>}
+                    </span>
+                  </span>
+                  <div className={styles.discoverSponsoredActions}>
+                    <button
+                      type="button"
+                      className={styles.reviewTriggerBtn}
+                      onClick={(e) => { e.stopPropagation(); router.push(`/vendor/${v.slug}?review=1`); }}
+                    >
+                      Review
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.viewProfileBtn}
+                      onClick={(e) => { e.stopPropagation(); router.push(`/vendor/${v.slug}`); }}
+                    >
+                      Profile
+                    </button>
+                  </div>
+                </div>
+              </article>
             ))}
           </div>
         </section>

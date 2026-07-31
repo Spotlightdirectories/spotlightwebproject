@@ -599,54 +599,33 @@ async function loadRanking(vendorId: string, category: string, subcategory: stri
   const { currentStart } = getPeriodRanges(period);
   const combinedLabel = `${category} / ${subcategory}`;
 
-  const { data: peers } = await supabase.from("vendors").select("id").eq("category", category).eq("subcategory", subcategory);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const peerIds = (peers || []).map((v: any) => v.id as string);
+  // Fixed 2026-07-31: this used to fetch peer vendor IDs and then
+  // query analytics_events directly filtered to those IDs. That
+  // table's RLS only ever lets a vendor read their OWN rows, so every
+  // peer silently came back with zero events — the comparison was
+  // never real. get_vendor_period_ranking runs the same computation
+  // server-side (SECURITY DEFINER, same pattern as get_vendor_rank),
+  // returning only the aggregate rank numbers.
+  const { data, error } = await supabase
+    .rpc("get_vendor_period_ranking", {
+      p_vendor_id: vendorId,
+      p_category: category,
+      p_subcategory: subcategory,
+      p_period_start: currentStart.toISOString(),
+    })
+    .maybeSingle()
+    .returns<{ view_rank: number | null; sponsored_rank: number | null; total_peers: number } | null>();
 
-  if (!peerIds.length) {
-    return { current: "—", sponsored: null, category: combinedLabel, totalPeers: 0 };
+  if (error || !data || !data.total_peers) {
+    return { current: "—", sponsored: null, category: combinedLabel, totalPeers: data?.total_peers ?? 0 };
   }
 
-  // Both queries only depend on peerIds, not on each other — run
-  // them together rather than one after another.
-  const [{ data: viewEvents }, { data: sponsorEvents }] = await Promise.all([
-    supabase
-      .from("analytics_events")
-      .select("vendor_id")
-      .eq("event_type", "profile_view")
-      .in("vendor_id", peerIds)
-      .gte("created_at", currentStart.toISOString()),
-    supabase
-      .from("analytics_events")
-      .select("vendor_id")
-      .eq("event_type", "sponsored_impression")
-      .in("vendor_id", peerIds)
-      .gte("created_at", currentStart.toISOString()),
-  ]);
-
-  const countMap: Record<string, number> = {};
-  peerIds.forEach((id) => {
-    countMap[id] = 0;
-  });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (viewEvents || []).forEach((r: any) => {
-    if (countMap[r.vendor_id] !== undefined) countMap[r.vendor_id]++;
-  });
-
-  const sortedPeers = Object.entries(countMap).sort((a, b) => b[1] - a[1]);
-  const rankIdx = sortedPeers.findIndex(([id]) => id === vendorId);
-  const current = rankIdx >= 0 ? rankIdx + 1 : sortedPeers.length + 1;
-
-  const sponsorMap: Record<string, number> = {};
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (sponsorEvents || []).forEach((r: any) => {
-    sponsorMap[r.vendor_id] = (sponsorMap[r.vendor_id] || 0) + 1;
-  });
-  const sponsoredSorted = Object.entries(sponsorMap).sort((a, b) => b[1] - a[1]);
-  const sponsoredIdx = sponsoredSorted.findIndex(([id]) => id === vendorId);
-  const sponsored = sponsoredIdx >= 0 ? sponsoredIdx + 1 : null;
-
-  return { current, sponsored, category: combinedLabel, totalPeers: sortedPeers.length };
+  return {
+    current: data.view_rank ?? "—",
+    sponsored: data.sponsored_rank,
+    category: combinedLabel,
+    totalPeers: data.total_peers,
+  };
 }
 
 /* ===========================

@@ -1,0 +1,302 @@
+/* ===============================================================
+   partner-dashboard.css — shared styling for the Partner Dashboard.
+
+   Faithful port of production's admin/partner-dashboard.html visual
+   structure (one long stacked page, not a tabbed shell — production
+   never had tabs here, unlike the admin dashboard), reusing the same
+   header-bar/table/badge language established in admin.css. Classes
+   prefixed "pd-" (loaded globally for the /partner-dashboard route
+   only, via layout.tsx) to avoid colliding with other routes.
+=============================================================== */
+
+.pd-shell {
+  min-height: 100vh;
+  background: var(--color-surface-alt);
+}
+
+.pd-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #000000;
+  color: #ffffff;
+  padding: 12px 20px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pd-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pd-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  object-fit: contain;
+}
+
+.pd-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #e6c200;
+  letter-spacing: 0.3px;
+}
+
+.pd-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pd-name-label { font-size: 13px; color: #cccccc; }
+
+.pd-logout-btn {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid #555555;
+  color: #ffffff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: 0.2s ease;
+}
+
+.pd-logout-btn:hover { background: #c0392b; border-color: #c0392b; }
+
+.pd-content {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* CLOSING NOTICE BANNER */
+.pd-closing-notice {
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #9a3412;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pd-restore-btn {
+  padding: 7px 16px;
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.pd-restore-btn:hover { background: #15803d; }
+
+/* SECTIONS */
+.pd-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.pd-section-heading {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 12px;
+  color: var(--color-text-primary);
+}
+
+.pd-section-note {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  margin: -6px 0 14px;
+  line-height: 1.5;
+}
+
+/* TABLES */
+.pd-table-wrap { overflow-x: auto; }
+
+.pd-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.pd-table thead { background: #111111; color: #ffffff; }
+
+.pd-table th {
+  text-align: left;
+  padding: 12px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+
+.pd-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--color-border-light);
+  color: var(--color-text-body);
+}
+
+.pd-table tbody tr:last-child td { border-bottom: none; }
+.pd-table tbody tr:hover { background: var(--color-surface-hover); }
+
+.pd-empty-cell {
+  color: var(--color-text-faint);
+  font-style: italic;
+  padding: 16px 12px;
+}
+
+/* CONTROLS */
+.pd-controls-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.pd-search,
+.pd-filter {
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  outline: none;
+}
+
+.pd-search { flex: 1; min-width: 200px; }
+.pd-filter { cursor: pointer; }
+
+.pd-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+  background: #111111;
+  color: #ffffff;
+}
+
+.pd-btn:hover { background: #000000; }
+
+.pd-see-more-btn {
+  background: none;
+  border: none;
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-top: 10px;
+  padding: 0;
+  font-size: 13px;
+}
+
+.pd-danger-btn {
+  padding: 9px 18px;
+  border-radius: 6px;
+  border: 1px solid #dc2626;
+  background: transparent;
+  color: #dc2626;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.pd-danger-btn:hover { background: #dc2626; color: #fff; }
+
+/* STATUS BADGES */
+.pd-status-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.pd-status-pending { background: #fff7ed; color: #9a3412; }
+.pd-status-available,
+.pd-status-paid,
+.pd-status-active { background: #dcfce7; color: #166534; }
+.pd-status-closing,
+.pd-status-inactive { background: #fef3c7; color: #92400e; }
+.pd-status-closed { background: #fee2e2; color: #991b1b; }
+
+/* PROGRESS BAR (bonus tracker) */
+.pd-progress-track {
+  width: 100%;
+  height: 10px;
+  background: var(--color-border-light);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.pd-progress-fill {
+  height: 100%;
+  background: #e6c200;
+  transition: width 0.3s ease;
+}
+
+/* SUMMARY CARDS */
+.pd-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.pd-summary-card {
+  background: var(--color-surface-alt);
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+}
+
+.pd-summary-label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 6px;
+}
+
+.pd-summary-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* ACCOUNT SECTION */
+.pd-account-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border-light);
+  font-size: 14px;
+}
+
+.pd-account-row:last-of-type { border-bottom: none; }
+
+.pd-account-actions { margin-top: 16px; }
+
+@media (max-width: 700px) {
+  .pd-content { padding: 16px; }
+  .pd-summary-grid { grid-template-columns: repeat(2, 1fr); }
+}

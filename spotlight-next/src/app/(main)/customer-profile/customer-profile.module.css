@@ -98,6 +98,45 @@
   object-fit: cover;
 }
 
+.cpActivityList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cpActivityCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+  padding: 10px;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.cpActivityCard:hover { background: var(--color-surface-hover); }
+
+.cpActivityCard img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.cpActivityPrice {
+  color: var(--color-text-primary) !important;
+  font-weight: 600;
+}
+
+.cpActivityBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-primary) !important;
+  font-weight: 600;
+}
+
 .cpFavoriteInfo {
   display: flex;
   flex-direction: column;

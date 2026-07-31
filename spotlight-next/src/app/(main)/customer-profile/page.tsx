@@ -17,6 +17,16 @@
 // unchanged: vendor_reviews.customer_id exists and gets populated by
 // the review modal now, but this lookup hasn't been switched over to
 // it yet in production either, so this stays a faithful match.
+//
+// "Recently Viewed" and "My Inquiries" are a genuine new feature
+// added per Cyril's request (2026-07-31) — production never tied
+// product/service views or WhatsApp/Call clicks to a customer
+// account at all. Product/service detail pages now tag those
+// analytics_events rows with customer_id when the viewer is logged
+// in (see getViewingCustomerId.ts); this page reads them back.
+// analytics_events has no FK to vendor_products/vendor_services, so
+// PostgREST can't auto-embed — events are fetched first, then their
+// product/service rows are looked up separately and joined in JS.
 // ===============================================================
 
 import { useState, useEffect } from "react";
@@ -52,6 +62,115 @@ interface ReviewRow {
   vendors: { name: string; slug: string } | null;
 }
 
+interface RawActivityEvent {
+  product_id: string | null;
+  service_id: string | null;
+  event_type: string;
+  created_at: string;
+}
+
+interface ProductRow {
+  id: string;
+  slug: string;
+  product_name: string;
+  price: number | null;
+  primary_image_url: string | null;
+  vendors: { name: string; slug: string } | null;
+}
+
+interface ServiceRow {
+  id: string;
+  slug: string;
+  service_name: string;
+  starting_price: number | null;
+  representative_image_url: string | null;
+  vendors: { name: string; slug: string } | null;
+}
+
+interface ActivityItem {
+  kind: "product" | "service";
+  slug: string;
+  name: string;
+  image: string | null;
+  price: number | null;
+  vendorName: string;
+  vendorSlug: string;
+  eventType: string;
+  occurredAt: string;
+}
+
+// Dedupes events by product/service (keeping the first — the caller
+// already sorts newest-first), then resolves each one against
+// vendor_products/vendor_services since there's no FK for PostgREST
+// to auto-embed through.
+async function resolveActivityItems(events: RawActivityEvent[]): Promise<ActivityItem[]> {
+  const seen = new Set<string>();
+  const deduped: RawActivityEvent[] = [];
+  for (const ev of events) {
+    const key = ev.product_id ? `p:${ev.product_id}` : ev.service_id ? `s:${ev.service_id}` : null;
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(ev);
+  }
+
+  const productIds = deduped.filter(e => e.product_id).map(e => e.product_id as string);
+  const serviceIds = deduped.filter(e => e.service_id).map(e => e.service_id as string);
+
+  const [{ data: products }, { data: services }] = await Promise.all([
+    productIds.length
+      ? supabase
+          .from("vendor_products")
+          .select("id, slug, product_name, price, primary_image_url, vendors(name, slug)")
+          .in("id", productIds)
+          .returns<ProductRow[]>()
+      : Promise.resolve({ data: [] as ProductRow[] }),
+    serviceIds.length
+      ? supabase
+          .from("vendor_services")
+          .select("id, slug, service_name, starting_price, representative_image_url, vendors(name, slug)")
+          .in("id", serviceIds)
+          .returns<ServiceRow[]>()
+      : Promise.resolve({ data: [] as ServiceRow[] }),
+  ]);
+
+  const productMap = new Map((products || []).map(p => [p.id, p]));
+  const serviceMap = new Map((services || []).map(s => [s.id, s]));
+
+  const items: ActivityItem[] = [];
+  for (const ev of deduped) {
+    if (ev.product_id) {
+      const p = productMap.get(ev.product_id);
+      if (!p || !p.vendors) continue;
+      items.push({
+        kind: "product",
+        slug: p.slug,
+        name: p.product_name,
+        image: p.primary_image_url,
+        price: p.price,
+        vendorName: p.vendors.name,
+        vendorSlug: p.vendors.slug,
+        eventType: ev.event_type,
+        occurredAt: ev.created_at,
+      });
+    } else if (ev.service_id) {
+      const s = serviceMap.get(ev.service_id);
+      if (!s || !s.vendors) continue;
+      items.push({
+        kind: "service",
+        slug: s.slug,
+        name: s.service_name,
+        image: s.representative_image_url,
+        price: s.starting_price,
+        vendorName: s.vendors.name,
+        vendorSlug: s.vendors.slug,
+        eventType: ev.event_type,
+        occurredAt: ev.created_at,
+      });
+    }
+  }
+  return items;
+}
+
 export default function CustomerProfilePage() {
   const router = useRouter();
 
@@ -64,6 +183,12 @@ export default function CustomerProfilePage() {
 
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
   const [reviewsError, setReviewsError] = useState(false);
+
+  const [recentlyViewed, setRecentlyViewed] = useState<ActivityItem[]>([]);
+  const [recentlyViewedError, setRecentlyViewedError] = useState(false);
+
+  const [inquiries, setInquiries] = useState<ActivityItem[]>([]);
+  const [inquiriesError, setInquiriesError] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -113,6 +238,45 @@ export default function CustomerProfilePage() {
         setFavoritesError(true);
       } else {
         setFavorites(favData || []);
+      }
+
+      // Recently viewed products/services + inquiries (WhatsApp/Call
+      // clicks), both tagged with this customer's id at the point of
+      // interaction on the product/service detail pages.
+      const [
+        { data: viewEvents, error: viewEventsError },
+        { data: contactEvents, error: contactEventsError },
+      ] = await Promise.all([
+        supabase
+          .from("analytics_events")
+          .select("product_id, service_id, event_type, created_at")
+          .eq("customer_id", customerRow.id)
+          .in("event_type", ["product_view", "service_view"])
+          .order("created_at", { ascending: false })
+          .limit(50)
+          .returns<RawActivityEvent[]>(),
+        supabase
+          .from("analytics_events")
+          .select("product_id, service_id, event_type, created_at")
+          .eq("customer_id", customerRow.id)
+          .in("event_type", ["whatsapp_click", "phone_click"])
+          .order("created_at", { ascending: false })
+          .limit(50)
+          .returns<RawActivityEvent[]>(),
+      ]);
+
+      if (viewEventsError) {
+        console.error("Recently viewed load error:", viewEventsError);
+        setRecentlyViewedError(true);
+      } else {
+        setRecentlyViewed(await resolveActivityItems(viewEvents || []));
+      }
+
+      if (contactEventsError) {
+        console.error("Inquiries load error:", contactEventsError);
+        setInquiriesError(true);
+      } else {
+        setInquiries(await resolveActivityItems(contactEvents || []));
       }
 
       // My reviews — matched by email
@@ -206,6 +370,68 @@ export default function CustomerProfilePage() {
                 </a>
               );
             })
+          )}
+        </div>
+      </section>
+
+      <section className={styles.cpSection}>
+        <h2>Recently Viewed</h2>
+        <div className={styles.cpActivityList}>
+          {recentlyViewedError ? (
+            <p className={styles.cpEmpty}>Couldn't load your recent activity right now.</p>
+          ) : recentlyViewed.length === 0 ? (
+            <p className={styles.cpEmpty}>No products or services viewed yet — items you look at will show up here.</p>
+          ) : (
+            recentlyViewed.map(item => (
+              <a
+                key={`${item.kind}-${item.slug}`}
+                href={`/vendor/${encodeURIComponent(item.vendorSlug)}/${item.kind}/${encodeURIComponent(item.slug)}`}
+                className={styles.cpActivityCard}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={item.image || "/images/spotlightlogo-512.png"} alt={item.name} />
+                <div className={styles.cpFavoriteInfo}>
+                  <strong>{item.name}</strong>
+                  <span>By {item.vendorName}</span>
+                  {item.price != null && (
+                    <span className={styles.cpActivityPrice}>₦{Number(item.price).toLocaleString()}</span>
+                  )}
+                </div>
+              </a>
+            ))
+          )}
+        </div>
+      </section>
+
+      <section className={styles.cpSection}>
+        <h2>My Inquiries</h2>
+        <p className={styles.cpNote}>
+          Products and services you've reached out to a vendor about via WhatsApp or Call.
+        </p>
+        <div className={styles.cpActivityList}>
+          {inquiriesError ? (
+            <p className={styles.cpEmpty}>Couldn't load your inquiries right now.</p>
+          ) : inquiries.length === 0 ? (
+            <p className={styles.cpEmpty}>No inquiries yet — tap WhatsApp or Call on a product or service to reach out to a vendor.</p>
+          ) : (
+            inquiries.map(item => (
+              <a
+                key={`${item.kind}-${item.slug}`}
+                href={`/vendor/${encodeURIComponent(item.vendorSlug)}/${item.kind}/${encodeURIComponent(item.slug)}`}
+                className={styles.cpActivityCard}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={item.image || "/images/spotlightlogo-512.png"} alt={item.name} />
+                <div className={styles.cpFavoriteInfo}>
+                  <strong>{item.name}</strong>
+                  <span>By {item.vendorName}</span>
+                  <span className={styles.cpActivityBadge}>
+                    <i className={item.eventType === "whatsapp_click" ? "fab fa-whatsapp" : "fas fa-phone"}></i>
+                    {item.eventType === "whatsapp_click" ? "WhatsApp" : "Call"}
+                  </span>
+                </div>
+              </a>
+            ))
           )}
         </div>
       </section>

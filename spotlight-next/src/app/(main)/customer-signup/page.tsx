@@ -17,6 +17,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
+import { EmailTemplates } from "@/lib/emailTemplates";
 import styles from "./customer-signup.module.css";
 
 export default function CustomerSignupPage() {
@@ -98,7 +99,10 @@ export default function CustomerSignupPage() {
           body: JSON.stringify({
             to: email.trim(),
             subject: "Welcome to Spotlight",
-            html: `<p>Hi ${fullName.trim()},</p><p>Your Spotlight customer account is ready. Save your favorite vendors and manage your reviews any time you're logged in.</p>`,
+            html: EmailTemplates.welcomeCustomer({
+              customerName: fullName.trim(),
+              loginUrl: `${window.location.origin}/customer-login`,
+            }),
           }),
         }
       );

@@ -13,12 +13,18 @@
 // - WhatsApp, Call, Share actions
 // - More products from same vendor
 // - Similar products from other vendors (get_similar_products RPC)
-// - Analytics: product_view event
+// - Analytics: product_view event, plus whatsapp_click/phone_click
+//   on the contact buttons. Every one of these is tagged with the
+//   viewing customer's customer_id when they're logged in, so their
+//   customer-profile page can show "Recently Viewed" / "My
+//   Inquiries" — added per Cyril's request (2026-07-31), a genuine
+//   new feature, not something production already tracked.
 // ===============================================================
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { getViewingCustomerId } from "@/lib/getViewingCustomerId";
 import styles from "./vendor-product.module.css";
 
 interface Product {
@@ -139,10 +145,12 @@ export default function VendorProductPage() {
 
       // Analytics
       try {
+        const customerId = await getViewingCustomerId();
         await supabase.from("analytics_events").insert({
           vendor_id: data.vendor_id,
           product_id: data.id,
           event_type: "product_view",
+          customer_id: customerId,
         });
       } catch { /* non-fatal */ }
 
@@ -195,6 +203,22 @@ export default function VendorProductPage() {
     }
     load();
   }, [productSlug]);
+
+  // Fires on WhatsApp/Call tap — production never logged these at
+  // all (plain links, no handler). Fire-and-forget, doesn't block the
+  // actual wa.me/tel: navigation.
+  async function logContactClick(eventType: "whatsapp_click" | "phone_click") {
+    if (!product) return;
+    try {
+      const customerId = await getViewingCustomerId();
+      await supabase.from("analytics_events").insert({
+        vendor_id: product.vendor_id,
+        product_id: product.id,
+        event_type: eventType,
+        customer_id: customerId,
+      });
+    } catch { /* non-fatal */ }
+  }
 
   async function handleShare() {
     const shareData = {
@@ -331,6 +355,7 @@ export default function VendorProductPage() {
                 className={`${styles.vpActionBtn} ${styles.vpWhatsappBtn}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => logContactClick("whatsapp_click")}
               >
                 <i className="fab fa-whatsapp"></i>
                 Chat Vendor
@@ -343,6 +368,7 @@ export default function VendorProductPage() {
               <a
                 href={`tel:${vendor?.telephone || vendor?.whatsapp}`}
                 className={`${styles.vpActionBtn} ${styles.vpCallBtn}`}
+                onClick={() => logContactClick("phone_click")}
               >
                 <i className="fas fa-phone"></i>
                 Call Vendor

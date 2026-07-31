@@ -472,3 +472,347 @@ else's info unprompted.
   `npx tsc --noEmit` and a full click-through (request → check email →
   submit → confirm it shows verified on the public profile) next
   session.
+
+## Admin dashboard — build in progress (started 2026-07-31)
+
+Tabbed shell (`(standalone)/admin/page.tsx`) + isolated auth
+(`admin-login`, `admin-signup`, `src/lib/adminSupabase.ts` /
+`adminSignupSupabase.ts`) built first, then all 11 sections one at a
+time per Cyril's explicit request. Faithful port of production's
+single-page `admin-payments.html`/`admin-payments.js`, restructured
+into tabs. Role model: `user_roles` (`super_admin | admin |
+finance_admin | verification_admin`) via `get_my_admin_role()`.
+
+All 11 sections built: StaffTab, SecurityLogTab, PaymentsTab,
+SponsorshipsTab, VerificationsTab, PartnerApprovalsTab,
+PartnerHistoryTab, CommissionsTab, PaymentHistoryTab,
+SponsorshipHistoryTab, VerificationHistoryTab.
+
+Two real backend bugs found and fixed along the way (would have hit
+production too, not just this port): `audit_trigger_func` referenced
+a nonexistent `.id` column on `user_roles` (should be `user_id`), and
+that same trigger's own `audit_log` INSERT was being blocked by
+`audit_log`'s RLS (no INSERT policy existed for anyone) — fixed via
+`SECURITY DEFINER` on the trigger function. Also closed a real
+admin-signup impersonation gap: the `?email=` prefill was cosmetic
+only, so `admin_invitations.id` (already a UUID) was repurposed as a
+secret invite token via a new `get_invitation_by_token` RPC.
+
+All app-wide emails (not just admin) migrated to a shared branded
+template system, `src/lib/emailTemplates.ts` — a faithful port of
+production's unused `email-templates.js`, extended with 6 new
+templates for flows that had none.
+
+**Commissions tab** (2026-07-31): confirmed via direct DB inspection
+(not guesswork) that the commission math already runs live — a
+`SECURITY DEFINER` trigger, `handle_commission_on_payment()`, fires on
+`vendor_payments` confirming: 20% of a vendor's first payment to
+their referring partner, 10% on renewals; a further 5% "override" to
+that partner's own upline (`partners.referred_by`), paid separately,
+never deducted; a flat ₦30,000 bonus every time a partner's yearly-
+plan commissions hit a new multiple of 50 in a month. An hourly
+`pg_cron` job (`unlock-commissions-job`) flips `pending` →
+`available` after each row's 7-day `unlock_date`. `CommissionsTab.tsx`
+is a faithful port of production's summary-by-partner + full ledger +
+`payPartner`, with one improvement: a Type column (Direct/Override/
+Bonus) showing `commissions.type`, which production's query never
+selected even though the trigger has written it all along.
+
+**Deferred to the Partner Dashboard build stage** (flagged to Cyril,
+not fixed yet — explicitly not blocking Admin): production's *current
+live* partner-signup form, `partner-program.js`, does not correctly
+resolve `?ref=CODE` into a partner id. It stores the raw code string
+under `referred_by_code` (a column that doesn't match the schema's
+actual `referred_by` uuid column), while an older, correct version of
+this exact logic already exists in an archived file
+(`partner-program-legacy.js`, lines ~159-186) that does the proper
+`partners.referral_code` lookup and writes the resolved id to
+`referred_by`. Net effect: right now, when a partner refers another
+partner via their partner-referral link, that relationship likely
+isn't being saved, so no override commission would ever be generated
+for that referral. Needs the lookup-and-resolve logic restored (or
+ported fresh, following the legacy file) when Partner Dashboard is
+built — check `referred_by_code` for any orphaned data that needs a
+one-time backfill into `referred_by` at that time.
+
+## Admin dashboard — full audit + fixes (2026-07-31)
+
+With all 11 sections built, ran an independent audit (subagent, fresh
+context, given direct read access to every tab file plus live
+Supabase RLS/schema/advisor data — not just re-reading my own summary
+of what I'd built) before moving on to the getlisted payment page.
+Nothing wrong in the new admin *code* itself — every real issue found
+was in the underlying database, mostly pre-existing and only now
+exposed because the dashboard surfaces this data. Cyril asked to fix
+everything found, including the lower-priority cleanup items. Fixed:
+
+**Code fixes (done directly, live now):**
+- `StaffTab.tsx` — `loadStaff`/`loadInvitations`/`loadAuditLog`
+  previously collapsed any query error into a plain empty array
+  (`error || !data ? [] : data`), so a failed lookup looked identical
+  to "genuinely nothing here yet" — on the one tab controlling who
+  has admin access, that's the wrong place for a silent failure. Now
+  has its own `loadError`/`invitationsError`/`auditError` state,
+  surfaced in the table, matching every other tab's pattern.
+- `StaffTab.tsx` and `SecurityLogTab.tsx`'s audit tables also
+  conflated "table is genuinely empty" with "your search matched
+  nothing" into one message — now distinguished, matching the History
+  tabs' existing convention.
+- `viewSignedUrl` was copy-pasted identically into six files
+  (Payments/Sponsorships/Verifications tabs + their three History
+  counterparts). Diffed all six — byte-identical, no drift — and
+  consolidated into `src/lib/adminSignedUrl.ts`, all six files now
+  import it.
+- Removed `.adm-coming-soon` from `admin.css` — dead now that all 11
+  sections are real (no file references it anymore).
+
+**Database fixes — SQL drafted, Cyril to run**
+(`admin_audit_fixes_2026-07-31.sql`, handed over separately; same
+never-apply-directly convention as every other migration this
+session):
+
+1. **Verification "Revoke" was only blocked by the React component,
+   not the database.** The button only shows for Super Admin, but the
+   live RLS policy on `vendor_verifications` let any Admin or
+   Verification Admin run the identical `UPDATE` — meaning going
+   around the screen (e.g. calling the Supabase client directly from
+   the browser console) would let a non-Super-Admin revoke a badge
+   anyway. Fixed with a `BEFORE UPDATE` trigger that blocks any
+   transition to `status = 'revoked'` unless the caller is Super
+   Admin — regardless of what the UI shows.
+2. **Payment and sponsorship receipts were readable by any logged-in
+   account**, not just the vendor who uploaded them or finance staff
+   — the policy meant to restrict this checked `auth.uid() IS NOT
+   NULL` instead of actually matching the file's owner. Rewritten to
+   properly scope by the vendor's own folder (matching the pattern
+   already used correctly for `vendor-gallery`/`vendor-branding`).
+   While fixing this, found the *exact same* mistake, inverted, on
+   `vendor-verifications`' "read own documents" policy — it compared
+   `auth.uid()` (login id) directly to the storage folder name, but
+   the folder is actually named after `vendors.id` (a different
+   internal id) — so that policy never matched anyone, meaning a
+   vendor could never view their own uploaded verification documents
+   (harmless for admin access, since staff have a separate correct
+   path in, but a real gap for vendors). Fixed the same way.
+3. **Anyone could submit a fake badge-verification application under
+   a vendor that isn't theirs** — a leftover always-allow INSERT
+   policy sat alongside the correct ownership-checked one. Removed
+   the always-allow one.
+4. **Two financial tables were readable by literally anyone, logged
+   in or not** — found while cleaning up what the audit initially
+   flagged as a minor "duplicate policies" performance note: both
+   `vendor_payments` and `commissions` had a leftover `qual: true`
+   policy making the *entire* table public, alongside the correctly-
+   scoped "own record or finance staff" policies already doing the
+   real job. This turned a cosmetic cleanup task into closing an
+   actual data leak — vendor payment amounts and partner commission
+   earnings were technically fetchable by an unauthenticated request
+   using only the public API key. Dropped the wide-open policies and
+   their redundant near-duplicates on `vendor_payments`, `commissions`,
+   and `vendor_sponsorships`. Left `partners`' public-read/public-
+   insert policies alone (only removed the literal duplicates) since
+   that table being world-readable looks intentional — referral code
+   lookups during vendor signup, and the partner application form,
+   both need it.
+5. Added missing indexes on 8 foreign key columns across
+   `admin_audit_log`, `admin_invitations`, `commissions`, `partners`,
+   `user_roles`, `vendor_payments`, `vendor_verifications` (fine at
+   current row counts, will matter as they grow), and dropped one
+   exact duplicate index on `user_roles`.
+
+**Still not run as of this writing** — the SQL file needs Cyril to
+execute it in Studio, then a follow-up verification pass (re-check
+every policy/index via the Supabase connection) before this item is
+fully closed out.
+
+## Getlisted/payment (vendor subscription) audit + fixes (2026-08) — done
+
+Same audit treatment applied to the vendor-listing payment flow
+(`getlisted`, `payment`, `payment-status`, `payment-failed`,
+`paystack-webhook`, `verify-paystack-payment`). Found something more
+serious than the admin audit: a vendor's own logged-in session could
+directly set `subscription_status`/`plan_tier`/`is_premium`/`paid_at`/
+`expires_at`/`spot_id`/`paystack_reference` on their own `vendors` row
+— meaning a vendor could grant themselves an active paid plan without
+ever paying, the same way they'd edit their business description.
+Fixed with a new trigger, `prevent_unauthorized_billing_changes()`
+(BEFORE INSERT OR UPDATE on `vendors`), that exempts admins
+(`get_my_admin_role() IS NOT NULL`) and the two Paystack edge
+functions (`auth.uid() IS NULL`, since both use the service role key)
+completely, and only blocks a vendor's own session from escalating
+INTO active/paid/premium — every existing legitimate vendor-side
+write (signup inserting their chosen plan before paying, the
+"pending payment expired, downgrade to free" self-service cleanup)
+was traced first and confirmed to still work.
+
+Also fixed: both Paystack functions silently skipped their own price-
+verification check for any plan not in the fixed 3-tier price table
+(returned "expected cost = 0", and the old guard treated that as "no
+check needed" instead of "reject") — now rejects unrecognized plans
+outright. Added a reference-reuse check (an old, already-confirmed
+Paystack transaction reference could otherwise be replayed on a new
+`vendor_payments` row to reactivate an expired subscription for
+free) plus a matching unique index on `vendor_payments.gateway_ref`
+(partial — `WHERE gateway_ref IS NOT NULL`, so bank-transfer rows
+with no reference never conflict). Both functions now also overwrite
+`vendor_payments.amount` with Paystack's own verified figure at
+confirmation time, since the commission trigger reads that same
+column — previously it was left as whatever the browser originally
+sent at insert time. Deployed live (versions 46 / 36 respectively),
+confirmed via direct read-back of the deployed source.
+
+One code-only fix applied directly, no migration needed:
+`payment/page.tsx`'s bank-transfer receipt submission now checks the
+two Supabase write's actual errors instead of always redirecting to
+the "success" screen regardless. And `getlisted/page.tsx` now sends
+a logged-out `?context=upgrade` visitor to `/login` instead of
+silently treating them as a first-time signup.
+
+**Consciously deferred, not fixed:** the plan-price table is
+duplicated across four places (`payment/page.tsx`,
+`SubscriptionTab.tsx`, both Paystack functions) with nothing keeping
+them in sync if a price ever changes — real technical debt, but a
+larger refactor than seemed safe to bundle into this pass. The dead
+24-hour card-payment cleanup branch in `payment/page.tsx` (effectively
+unreachable given how `subscription_status` transitions actually
+happen) is harmless and left alone.
+
+## Partner Dashboard — build in progress (started 2026-08)
+
+Fourth major stage, same "auth/entry-points first, then the rest one
+piece at a time" approach as Admin. Scope confirmed via a dedicated
+research pass reading every partner-facing production file
+(`partner-program.js`, the archived `partner-program-legacy.js`,
+`partner-create-account.js`, `partner-legal.html`,
+`admin/partner-dashboard.js`) plus direct schema/RLS checks — this
+was essential, since several things production's code *tries* to do
+turned out to already be broken/non-functional today, not just
+things to port faithfully.
+
+Cyril's decisions (2026-08, via AskUserQuestion): build order same as
+Admin; give partners their own isolated Supabase session
+(`src/lib/partnerSupabase.ts`, storageKey `spotlight-partner-session`
+— production has partners sharing the exact same session as
+vendors/customers, a real same-person conflict risk); fix the broken
+partner self-service writes via dedicated `SECURITY DEFINER`
+functions rather than broadening RLS; drop the "Free Vendor
+Earnings" dashboard stat entirely rather than keep it as a dead
+always-zero placeholder (no code anywhere, in production or the DB
+trigger, actually generates a `free_vendor`-type commission).
+
+**Built so far:**
+- `src/lib/partnerSupabase.ts` — isolated client + `PartnerSession`
+  helpers, mirrors `adminSupabase.ts` exactly.
+- `get_partner_id_by_referral_code(p_code)`, `link_partner_account()`,
+  `close_partner_account()`, `restore_partner_account()` —
+  `SECURITY DEFINER` functions, applied and confirmed live.
+- `/partner-program` (`page.tsx`) — combined application + login
+  page, tab-switched (`#login` hash deep-links to the login tab,
+  matching production). **Ported the CORRECT referral-resolution
+  logic from the archived `partner-program-legacy.js`, not the
+  current live file** — confirmed via direct schema check that the
+  current live `partner-program.js` inserts into columns
+  (`lga`, `referred_by_code`) that don't exist on the real table at
+  all (real columns are `local_government`, `referred_by`), so it
+  cannot successfully create a partner row today, referral or not.
+  Also fixed: duplicate-check now covers both `email` AND `phone`
+  (both have real unique constraints; the live version only checked
+  email), and referral codes are matched case-insensitively via the
+  new RPC (codes are always generated uppercase).
+- `/partner-create-account` — reads `?partner_id=`, readonly email,
+  `signUp()`, links via `link_partner_account()` RPC instead of an
+  unprotected direct update (the exact step confirmed broken in
+  production — no RLS policy has ever permitted it), sends
+  `EmailTemplates.partnerAccountCreated`, and — since signUp already
+  creates a live session — goes straight to `/partner-dashboard`
+  instead of back to a login screen.
+- `/partner-legal` (`page.tsx` + `.module.css`) — public, no-auth
+  6-tab page (Terms, Privacy, Assets, Brand, Calculator, FAQ) with
+  hash deep-linking (`#terms` etc., matching the consent-checkbox
+  links already added on `/partner-program`). Commission numbers,
+  refund window, hold period, and payout schedule are the real,
+  currently-enforced rules (re-confirmed against
+  `handle_commission_on_payment()`/`unlock_commissions()` rather than
+  copied from production's old copy). Deliberately does **not**
+  promise collection of bank details or a NIN for identity/payout
+  purposes — production's old copy mentioned both, but neither field
+  exists anywhere in the schema and nothing collects them today, so
+  promising it here would be a real commitment with nothing behind
+  it. The Calculator tab reuses the exact same plan prices as
+  `payment/page.tsx` and the two edge functions (₦26,982 / ₦113,400 /
+  ₦201,600 yearly) — a 4th hardcoded copy, same already-flagged
+  technical debt as before, not newly introduced here.
+- `/partner-dashboard` (`page.tsx` + `partner-dashboard.css`) — full
+  build, faithful port of `admin/partner-dashboard.js`'s one long
+  stacked page (production never had tabs here). Every section built:
+  referral link (with copy button — the Assets tab above promises
+  this is "shown on your dashboard", so it had to actually be here),
+  earnings summary, performance, monthly bonus tracker + progress bar,
+  earnings breakdown (Vendor/Override/Bonus — no Free Vendor row),
+  reward & bonus history (search/type/status filters, 10-row page +
+  "See more", CSV statement download), downline table, account section
+  (partner-since, computed Active/Inactive/Closing/Closed status,
+  close/restore). Deliberate fixes beyond a faithful port:
+  - **No client-side `unlock_commissions()` call on load** — confirmed
+    redundant, the hourly `pg_cron` job already does this globally.
+  - **Downline table rebuilt, not just de-N+1'd.** Checked the actual
+    `commissions` RLS policy live today: the admin-audit pass earlier
+    this project replaced the old wide-open policy with `"Partners can
+    view their commissions"`, scoped to `partner_id IN (own partner
+    ids)` — meaning a plain partner can no longer read ANOTHER
+    partner's commissions rows at all (correct behavior, not a bug).
+    So production's per-downline-partner "Their Earnings" column is
+    gone; it's replaced with "Your Override Earnings" per downline
+    partner, computed from the current partner's own already-fetched
+    commissions (`type='override'`, grouped by `source_partner_id`) —
+    correct under RLS and one query total instead of N.
+  - Close/Restore call the `close_partner_account()` /
+    `restore_partner_account()` RPCs (built earlier this session)
+    instead of raw `.update()` calls, since `partners` has no UPDATE
+    policy for a plain authenticated user at all.
+  - The close-account confirm dialog is worded honestly around gap #2
+    below (does **not** claim vendors/partners get detached, unlike
+    production's copy).
+  - Added a 3rd read-only case, same root cause as gap #2: if
+    `scheduled_deletion_at` has already passed, there's no RPC to
+    finalize the closure server-side, so the page detects this and
+    shows a plain "Account Closed" screen + signs the partner out,
+    instead of attempting a write that would fail anyway (production's
+    equivalent client-side force-close code most likely already fails
+    silently in production today, for the same reason).
+  - **Not yet build-verified** — the sandbox's isolated Linux
+    environment was down for the whole build ("VM service not
+    running"), so `tsc --noEmit` could not be run this pass. Reviewed
+    the full file manually against the codebase's established
+    patterns (matches `vendordashboard/page.tsx` and `admin/page.tsx`
+    conventions closely) but this still needs an actual build check
+    next session before considering it done.
+
+**Flagged, not fixed in this pass (Cyril asked these be revisited at
+the end of the Partner Dashboard build):**
+1. The entire `partners` table (name, email, phone, DOB — full rows,
+   not just an id) is readable by anyone, logged in or not, via a
+   `qual: true` RLS policy. This predates this build and also
+   currently backs the already-working vendor-signup referral
+   lookup in `signup/page.tsx`, so tightening it isn't a same-file
+   fix — it needs its own pass that updates that existing lookup too
+   (e.g. to use the new `get_partner_id_by_referral_code` RPC
+   instead of a raw table read).
+2. `close_partner_account()` deliberately does NOT detach a closing
+   partner's already-referred vendors or downline partners the way
+   production's version tried to (and silently failed at, for the
+   same "no RLS policy" reason as the account-linking bug). The
+   existing `prevent_referral_update` trigger blocks changing
+   `referred_by`/`referred_by_partner_id` once set, specifically to
+   protect commission history from tampering — worth a deliberate
+   decision (a controlled exception in that trigger, or accepting
+   that closing an account just stops new commissions rather than
+   un-linking history) rather than silently building around it.
+3. No server-side mechanism finalizes a closure once
+   `scheduled_deletion_at` passes (production attempted this
+   client-side, on whichever partner happened to load the dashboard
+   next — itself an odd design — and likely fails silently under RLS
+   today for the same reason as gap #2). Needs a proper answer: either
+   a scheduled server-side job (mirroring the `unlock-commissions-job`
+   `pg_cron` pattern) or a dedicated RPC, resolved together with gap #2
+   since both hinge on the same detach-on-close decision.

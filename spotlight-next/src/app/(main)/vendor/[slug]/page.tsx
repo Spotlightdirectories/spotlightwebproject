@@ -414,6 +414,20 @@ export default function VendorProfilePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vendor?.id, isOwner]);
 
+  // Deep-link support for the Discover page's "Review" button
+  // (?review=1) — opens the review modal automatically once the
+  // vendor has loaded, matching what tapping "Rate" here does.
+  const reviewParamHandled = useRef(false);
+  useEffect(() => {
+    if (reviewParamHandled.current) return;
+    if (!vendor) return;
+    if (searchParams.get("review") === "1") {
+      reviewParamHandled.current = true;
+      openReviewModal();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vendor]);
+
   async function toggleFavorite() {
     if (!vendor || !favoriteCustomerId || favoriteBusy) return;
     setFavoriteBusy(true);
