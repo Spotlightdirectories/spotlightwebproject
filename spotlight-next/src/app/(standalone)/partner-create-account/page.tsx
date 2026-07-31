@@ -27,7 +27,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { partnerSupabase, setPartnerSession } from "@/lib/partnerSupabase";
 import { EmailTemplates } from "@/lib/emailTemplates";
-import styles from "../partner-program/partner-program.module.css";
+import styles from "./partner-create-account.module.css";
 
 export default function PartnerCreateAccountPage() {
   const router = useRouter();

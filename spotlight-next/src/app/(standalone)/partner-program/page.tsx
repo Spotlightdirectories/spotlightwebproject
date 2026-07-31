@@ -3,19 +3,24 @@
 // ===============================================================
 // src/app/(standalone)/partner-program/page.tsx
 //
-// Partner Programme — application form + existing-partner login,
-// combined on one page (tab-switched), matching production's
-// partner-program.html structure.
+// Partner Programme — faithful port of production's partner-program.html
+// (Cyril's explicit request, 2026-08: "this is the most beautiful page,
+// port faithfully — it's for partners, not vendors"). Full structure:
+// Hero (with inline Apply form) -> Rewards (3 cards) -> Resources
+// (4 cards) -> Login (separate section, not a tab). Production simply
+// puts both forms on the same long page, linked by #signup / #login
+// anchors — NOT a tab-switched single card, which is what an earlier
+// pass of this page mistakenly built instead.
 //
-// IMPORTANT — this is a faithful port of the CORRECT referral logic,
-// not of the current live partner-program.js. Research (2026-08)
-// confirmed the current live version writes to columns that don't
-// exist on the real `partners` table (`lga`, `referred_by_code`) —
-// meaning it cannot successfully insert a row at all against the
-// live schema. An older archived file, partner-program-legacy.js,
-// has the correct logic (local_government, referred_by, uppercase
-// referral-code matching, checking both email AND phone for
-// duplicates) — that's what this page follows.
+// IMPORTANT — the DATA logic here is the CORRECT logic, not a port of
+// the current live partner-program.js. Research (2026-08) confirmed
+// the current live version writes to columns that don't exist on the
+// real `partners` table (`lga`, `referred_by_code`) — meaning it
+// cannot successfully insert a row at all against the live schema. An
+// older archived file, partner-program-legacy.js, has the correct
+// logic (local_government, referred_by, uppercase referral-code
+// matching, checking both email AND phone for duplicates) — that's
+// what this page's handlers follow.
 //
 // Referral-code resolution uses a new SECURITY DEFINER RPC,
 // get_partner_id_by_referral_code, instead of a raw
@@ -28,17 +33,25 @@
 //
 // Uses the isolated partnerSupabase client (its own storageKey) so a
 // partner's login never collides with a vendor/customer session in
-// the same browser.
+// the same browser — including in the page's own navbar (see
+// PartnerNavbar.tsx), which production's version got wrong by reading
+// the shared vendor session.
 // ===============================================================
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { partnerSupabase, setPartnerSession } from "@/lib/partnerSupabase";
 import { nigeriaData } from "@/lib/nigeria-data";
 import { EmailTemplates } from "@/lib/emailTemplates";
+import PartnerNavbar from "@/components/PartnerNavbar";
 import styles from "./partner-program.module.css";
 
-type Tab = "apply" | "login";
+const PARTNER_PROGRAM_NAV_LINKS = [
+  { label: "Why Spotlight?", href: "/aboutUs" },
+  { label: "Get Listed", href: "/getlisted" },
+  { label: "Partner Rewards", href: "#rewards", external: true },
+  { label: "Contact Us", href: "/contact-us" },
+];
 
 function isAtLeast18(dob: string): boolean {
   const birth = new Date(dob);
@@ -54,14 +67,7 @@ export default function PartnerProgramPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [tab, setTab] = useState<Tab>("apply");
   const [submitted, setSubmitted] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.location.hash === "#login") {
-      setTab("login");
-    }
-  }, []);
 
   // ---------------------------------------------------------------
   // APPLY FORM STATE
@@ -235,128 +241,291 @@ export default function PartnerProgramPage() {
 
   if (submitted) {
     return (
-      <main className={styles.authWrapper}>
-        <div className={styles.authCard}>
-          <div className={styles.successCard}>
-            <h2>Application Received</h2>
-            <p>
-              Thank you for applying to the Spotlight Partner Programme. We&apos;ve sent a confirmation to your
-              email — our team typically reviews applications within 2–5 business days. You&apos;ll receive an
-              email with next steps once a decision has been made.
-            </p>
-          </div>
-        </div>
-      </main>
+      <>
+        <PartnerNavbar links={PARTNER_PROGRAM_NAV_LINKS} />
+        <main className={styles.page}>
+          <section className={styles.ppHero}>
+            <div className={styles.ppContainer} style={{ maxWidth: 520 }}>
+              <div className={styles.ppCard}>
+                <div className={styles.ppSuccessCard}>
+                  <h2>Application Received</h2>
+                  <p>
+                    Thank you for applying to the Spotlight Partner Programme. We&apos;ve sent a confirmation to
+                    your email — our team typically reviews applications within 2–5 business days. You&apos;ll
+                    receive an email with next steps once a decision has been made.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+        <PartnerFooter />
+      </>
     );
   }
 
   return (
-    <main className={styles.authWrapper}>
-      <div className={styles.authCard}>
-        <h1 className={styles.authTitle}>Spotlight Partner Programme</h1>
-        <p className={styles.authSubtitle}>Earn commissions referring businesses and partners to Spotlight.</p>
+    <>
+      <PartnerNavbar links={PARTNER_PROGRAM_NAV_LINKS} />
+      <main className={styles.page}>
 
-        <div className={styles.tabRow}>
-          <button
-            type="button"
-            className={`${styles.tabBtn} ${tab === "apply" ? styles.active : ""}`}
-            onClick={() => setTab("apply")}
-          >
-            Apply
-          </button>
-          <button
-            type="button"
-            className={`${styles.tabBtn} ${tab === "login" ? styles.active : ""}`}
-            onClick={() => setTab("login")}
-          >
-            Log In
-          </button>
-        </div>
+        {/* HERO / SIGNUP */}
+        <section id="signup" className={styles.ppHero}>
+          <div className={`${styles.ppContainer} ${styles.ppHeroGrid}`}>
 
-        {tab === "apply" ? (
-          <div className={styles.authForm}>
-            <div>
-              <label htmlFor="name">Full Name</label>
-              <input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} />
+            <div className={styles.ppHeroLeft}>
+              <span className={styles.ppBadge}>New Partnership Intake Open</span>
+              <h1>
+                Become a <span className={styles.ldSpotlightGlow}>Spotlight</span> Partner
+              </h1>
+              <p className={styles.ppHeroSub}>
+                Help Nigerian businesses get discovered, and earn real commission for every one you bring on board.
+              </p>
+              <div className={styles.ppHeroImage}></div>
             </div>
-            <div>
-              <label htmlFor="email">Email</label>
-              <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-            </div>
-            <div>
-              <label htmlFor="phone">Phone</label>
-              <input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
-            </div>
-            <div className={styles.fieldRow}>
-              <div>
-                <label htmlFor="state">State</label>
-                <select id="state" value={stateVal} onChange={(e) => handleStateChange(e.target.value)}>
-                  <option value="">Select State</option>
+
+            <div className={styles.ppCard}>
+              <h2 className={styles.ppTextCenter}>Get Started</h2>
+
+              <div className={styles.ppForm}>
+                <label htmlFor="partner-name">Full Name</label>
+                <input id="partner-name" type="text" placeholder="Enter your name" className={styles.ppInput} value={name} onChange={(e) => setName(e.target.value)} />
+
+                <label htmlFor="partner-email">Email Address</label>
+                <input id="partner-email" type="email" placeholder="name@email.com" className={styles.ppInput} value={email} onChange={(e) => setEmail(e.target.value)} />
+
+                <label htmlFor="partner-phone">Phone Number</label>
+                <input id="partner-phone" type="tel" placeholder="+234-802-345-6789" className={styles.ppInput} value={phone} onChange={(e) => setPhone(e.target.value)} />
+
+                <label htmlFor="partner-state">State</label>
+                <select id="partner-state" className={styles.ppInput} value={stateVal} onChange={(e) => handleStateChange(e.target.value)}>
+                  <option value="" disabled>Select State</option>
                   {Object.keys(nigeriaData).map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
-              </div>
-              <div>
-                <label htmlFor="lga">LGA</label>
-                <select id="lga" value={lga} onChange={(e) => setLga(e.target.value)} disabled={!stateVal}>
-                  <option value="">Select LGA</option>
+
+                <label htmlFor="partner-lga">LGA</label>
+                <select id="partner-lga" className={styles.ppInput} value={lga} onChange={(e) => setLga(e.target.value)} disabled={!stateVal}>
+                  <option value="" disabled>Select LGA</option>
                   {lgaOptions.map((l) => (
                     <option key={l} value={l}>{l}</option>
                   ))}
                 </select>
-              </div>
-            </div>
-            <div>
-              <label htmlFor="dob">Date of Birth</label>
-              <input id="dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
-            </div>
-            <label className={styles.consentRow}>
-              <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-              <span>
-                I agree to the{" "}
-                <a href="/partner-legal#terms" target="_blank" rel="noopener noreferrer">Partner Programme Terms</a>{" "}
-                and{" "}
-                <a href="/partner-legal#privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
-              </span>
-            </label>
-            <button type="button" className={styles.authBtn} onClick={handleApply} disabled={applying}>
-              {applying ? "Submitting..." : "Submit Application"}
-            </button>
-            {applyError && <p className={styles.authError}>{applyError}</p>}
-          </div>
-        ) : (
-          <div className={styles.authForm}>
-            <div>
-              <label htmlFor="loginEmail">Email</label>
-              <input id="loginEmail" type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
-            </div>
-            <div>
-              <label htmlFor="loginPassword">Password</label>
-              <div className={styles.passwordWrap}>
-                <input
-                  id="loginPassword"
-                  type={showPassword ? "text" : "password"}
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className={styles.togglePassword}
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? "🙈" : "👁️"}
+
+                <label htmlFor="partner-dob">Date of Birth</label>
+                <input id="partner-dob" type="date" className={styles.ppInput} value={dob} onChange={(e) => setDob(e.target.value)} />
+
+                <button type="button" className={styles.ppBtnPrimary} onClick={handleApply} disabled={applying}>
+                  {applying ? "Submitting..." : "Apply to Join"}
                 </button>
+
+                <label className={styles.ppConsent}>
+                  <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+                  By signing up, you agree to our{" "}
+                  <a href="/partner-legal#terms" target="_blank" rel="noopener noreferrer">Terms</a> and{" "}
+                  <a href="/partner-legal#privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+                </label>
+
+                {applyError && <p className={styles.ppError}>{applyError}</p>}
               </div>
             </div>
-            <button type="button" className={styles.authBtn} onClick={handleLogin} disabled={loggingIn}>
-              {loggingIn ? "Logging in..." : "Log In"}
-            </button>
-            {loginError && <p className={styles.authError}>{loginError}</p>}
+
           </div>
-        )}
+        </section>
+
+        {/* REWARDS */}
+        <section id="rewards" className={`${styles.ppSection} ${styles.ppRewards}`}>
+          <div className={styles.ppContainer}>
+
+            <div className={styles.ppTextCenter}>
+              <h2>Partner Rewards &amp; Bonuses</h2>
+              <p className={styles.ppRewardsSubtext}>We reward performance. As you grow, your earnings grow with you.</p>
+            </div>
+
+            <div className={styles.ppGrid}>
+              <div className={styles.ppRewardCard}>
+                <div className={styles.ppCardIcon}><i className="fa-solid fa-sack-dollar"></i></div>
+                <h3>High Commission</h3>
+                <p>Earn 20% commission on every paid vendor you bring, plus 10% on renewals.</p>
+                <h2 className={styles.ppCardValue}>20%</h2>
+                <small>ON FIRST PAYMENT</small>
+              </div>
+
+              <div className={`${styles.ppRewardCard} ${styles.ppRewardFeatured}`}>
+                <div className={styles.ppBadgeTop}>Monthly Target</div>
+                <div className={styles.ppCardIcon}><i className="fa-solid fa-medal"></i></div>
+                <h3>Monthly Performance Bonus</h3>
+                <p>Hit 50 yearly-paid vendors in a month and earn a ₦30,000 cash bonus.</p>
+                <h2 className={styles.ppCardValue}>₦30,000</h2>
+                <small>PER 50 YEARLY VENDORS</small>
+              </div>
+
+              <div className={styles.ppRewardCard}>
+                <div className={styles.ppCardIcon}><i className="fa-solid fa-users"></i></div>
+                <h3>Growth Rewards</h3>
+                <p>Refer other partners and earn a 5% override on their commissions — paid separately by Spotlight, never deducted from what they earn.</p>
+                <h2 className={styles.ppCardValue}>5%</h2>
+                <small>OVERRIDE ON THEIR COMMISSION</small>
+              </div>
+            </div>
+
+            <p className={styles.ppRewardsNote}>
+              <i className="fa-solid fa-clock"></i>
+              Commissions become available 7 days after a payment is confirmed. Full terms on the{" "}
+              <a href="/partner-legal#terms">Partner Terms page</a>.
+            </p>
+
+          </div>
+        </section>
+
+        {/* RESOURCES */}
+        <section className={styles.ppSection}>
+          <div className={`${styles.ppContainer} ${styles.ppTextCenter}`}>
+            <h2>Everything You Need to Succeed</h2>
+            <p className={styles.ppRewardsSubtext}>Real tools, not just a referral link.</p>
+
+            <div className={styles.ppResourceGrid}>
+              <a href="/partner-legal#assets" className={styles.ppResourceCard}>
+                <i className="fa-solid fa-bullhorn"></i>
+                <h3>Referral Toolkit</h3>
+                <p>Ready-to-use WhatsApp templates and a simple sales script.</p>
+              </a>
+
+              <a href="/partner-legal#brand" className={styles.ppResourceCard}>
+                <i className="fa-solid fa-swatchbook"></i>
+                <h3>Brand Guide</h3>
+                <p>How to represent Spotlight correctly when you promote it.</p>
+              </a>
+
+              <a href="/partner-legal#calculator" className={styles.ppResourceCard}>
+                <i className="fa-solid fa-calculator"></i>
+                <h3>Earning Calculator</h3>
+                <p>See what your real, honest monthly earnings could look like.</p>
+              </a>
+
+              <a href="/partner-legal#assets" className={styles.ppResourceCard}>
+                <i className="fa-solid fa-route"></i>
+                <h3>Onboarding Guide</h3>
+                <p>Step-by-step guidance for getting a new vendor listed.</p>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* LOGIN */}
+        <section id="login" className={styles.ppSection}>
+          <div className={styles.ppContainer}>
+            <div className={styles.ppLogin}>
+
+              <div className={styles.ppLoginLeft}></div>
+
+              <div className={styles.ppLoginRight}>
+                <h2>Already a Partner?</h2>
+                <p className={styles.ppLoginSubtext}>Access your dashboard to track earnings and performance.</p>
+
+                <div className={styles.ppForm}>
+                  <label htmlFor="login-email">Email Address</label>
+                  <input
+                    id="login-email"
+                    type="email"
+                    placeholder="Enter your email address"
+                    className={styles.ppInput}
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                  />
+
+                  <label htmlFor="login-password">Password</label>
+                  <div className={styles.ppPasswordField}>
+                    <input
+                      id="login-password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      className={styles.ppInput}
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className={styles.ppPasswordToggle}
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      <i className={showPassword ? "fa-regular fa-eye-slash" : "fa-regular fa-eye"}></i>
+                    </button>
+                  </div>
+
+                  <button type="button" className={styles.ppBtnPrimary} onClick={handleLogin} disabled={loggingIn}>
+                    {loggingIn ? "Logging in..." : "Login to Dashboard"}
+                  </button>
+
+                  <div className={styles.ppRememberRow}>
+                    <label className={styles.ppRemember}>
+                      <input type="checkbox" /> Remember me
+                    </label>
+                    <a href="/forgot-password?type=partner" className={styles.ppForgotPassword}>Forgot Password?</a>
+                  </div>
+
+                  {loginError && <p className={styles.ppError}>{loginError}</p>}
+                </div>
+
+                <div className={styles.ppLoginFooter}>
+                  <small>New here?</small><br />
+                  <a href="#signup">Apply for an account</a>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <PartnerFooter />
+    </>
+  );
+}
+
+// ===============================================================
+// PartnerFooter — production's exact 3-column branded footer for
+// this page (brand / quick links / partner support), same visual
+// language as the homepage's footer but with partner-relevant links
+// in the middle column instead of the homepage's generic Support set.
+// ===============================================================
+function PartnerFooter() {
+  return (
+    <footer className={styles.hfooter}>
+      <div className={`${styles.hcontainer} ${styles.hfooterGrid}`}>
+        <div className={styles.hfooterBrand}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/whitelogo3.png" alt="Spotlight Directories Logo" className={styles.hfooterLogo} />
+          <p>Dedicated to digitalizing local businesses and making services accessible to everyone, everywhere.</p>
+        </div>
+
+        <div className={styles.hfooterLinks}>
+          <h4>Quick Links</h4>
+          <a href="/">Home</a>
+          <a href="/getlisted">Get Listed</a>
+          <a href="/discover">Search Vendors</a>
+        </div>
+
+        <div className={styles.hfooterSupport}>
+          <h4>Partner Support</h4>
+          <a href="/partner-legal#terms">Program Terms</a>
+          <a href="/partner-legal#privacy">Privacy Policy</a>
+          <a href="/partner-legal#faq">FAQ</a>
+          <a href="/contact-us">Contact Support</a>
+        </div>
       </div>
-    </main>
+
+      <div className={`${styles.hcontainer} ${styles.hfooterBottom}`}>
+        <p>&copy; 2026 Spotlight Digital Services Ltd. All Rights Reserved.</p>
+        <div className={styles.hfooterLegal}>
+          <a href="/terms">Terms</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/disclaimer">Disclaimer</a>
+        </div>
+      </div>
+    </footer>
   );
 }

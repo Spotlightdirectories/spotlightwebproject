@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Partner Programme — Terms, Assets & Brand | Spotlight Directories",
+  title: "Partner Resources | Spotlight Directories",
 };
 
 export default function PartnerLegalLayout({ children }: { children: React.ReactNode }) {

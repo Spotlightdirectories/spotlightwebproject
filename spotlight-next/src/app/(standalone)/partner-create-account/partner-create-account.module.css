@@ -1,0 +1,147 @@
+/* ===============================================================
+   partner-create-account.module.css
+   Simple centered auth-card page (same visual language as
+   admin-login.module.css) — this page is reached only via a direct
+   email link with a ?partner_id=, not part of the marketing site, so
+   it deliberately stays a plain card rather than adopting the full
+   partner-program hero/rewards layout.
+
+   Split out from partner-program.module.css (2026-08) when that file
+   was rebuilt to faithfully match production's actual marketing page
+   structure — the old simple auth-card classes this page depends on
+   no longer exist there.
+=============================================================== */
+
+.authWrapper {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-alt);
+  padding: 24px;
+}
+
+.authCard {
+  width: 100%;
+  max-width: 480px;
+  background: var(--color-surface);
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: var(--shadow-xl);
+}
+
+.authTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--color-text-primary);
+}
+
+.authSubtitle {
+  font-size: 0.9rem;
+  color: var(--color-text-faint);
+  margin: 0 0 20px;
+}
+
+.authForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.authForm label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-body);
+  margin-bottom: 4px;
+}
+
+.authForm input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  font-size: 0.95rem;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-sizing: border-box;
+}
+
+.authForm input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(230, 194, 0, 0.15);
+}
+
+.passwordWrap { position: relative; }
+
+.passwordWrap input { padding-right: 44px; }
+
+.togglePassword {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  opacity: 0.6;
+}
+
+.togglePassword:hover { opacity: 1; }
+
+.authBtn {
+  margin-top: 4px;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #111111;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.authBtn:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: #000000;
+}
+
+.authBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.authError {
+  margin-top: 16px;
+  font-size: 0.85rem;
+  color: #dc2626;
+}
+
+:global([data-theme="dark"]) .authError {
+  color: #fca5a5;
+}
+
+.successCard { text-align: center; }
+
+.successCard h2 {
+  font-size: 1.3rem;
+  margin-bottom: 12px;
+  color: var(--color-text-primary);
+}
+
+.successCard p {
+  color: var(--color-text-body);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 480px) {
+  .authCard { padding: 24px 16px; }
+  .authTitle { font-size: 1.3rem; }
+}
