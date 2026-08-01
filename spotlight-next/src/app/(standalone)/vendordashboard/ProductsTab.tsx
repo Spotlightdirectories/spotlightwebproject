@@ -45,6 +45,8 @@ import { uploadVendorFile } from "@/lib/uploadVendorFile";
 import AiDescribeModal, { useAiDescribeToast } from "@/components/AiDescribeModal";
 import type { Vendor } from "./page";
 
+type Option = { id: string; name: string };
+
 type VendorProduct = {
   id: string;
   product_name: string;
@@ -54,6 +56,12 @@ type VendorProduct = {
   secondary_image_url: string | null;
   tertiary_image_url: string | null;
   key_details: string | null;
+  category_id: string | null;
+  subcategory_id: string | null;
+  brand: string | null;
+  variant: string | null;
+  moderation_status?: string | null;
+  moderation_flag_reason?: string | null;
 };
 
 type PendingProduct = {
@@ -64,15 +72,29 @@ type PendingProduct = {
   secondary_image_url: string | null;
   tertiary_image_url: string | null;
   key_details: string;
+  category_id: string;
+  subcategory_id: string;
+  brand: string;
+  variant: string;
 };
+
+// Composes the product's display name from Brand + Model/Variant +
+// Subcategory (e.g. "Samsung 15-inch Television"), skipping any part
+// the vendor left blank. Subcategory is the only mandatory piece —
+// unlike Services, Products aren't locked to a single name per
+// subcategory, since brand/variant naturally differentiate multiple
+// products in the same subcategory (e.g. two different TV models).
+function composeProductName(brand: string, variant: string, subcategoryName: string): string {
+  return [brand.trim(), variant.trim(), subcategoryName.trim()].filter(Boolean).join(" ");
+}
 
 // Matches production's PRODUCT_LIMITS exactly.
 const PRODUCT_LIMITS: Record<string, number> = {
-  trial: 3,
-  free: 1,
-  standard: 6,
-  enterprise: 12,
-  elite: 24,
+  trial: 5,
+  free: 2,
+  standard: 25,
+  enterprise: 50,
+  elite: 100,
   custom: Infinity,
 };
 
@@ -129,7 +151,14 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
   const [aiModalOpen, setAiModalOpen] = useState(false);
   const { showToast, toastNode } = useAiDescribeToast();
 
-  const nameRef = useRef<HTMLInputElement>(null);
+  // CATEGORY + SUBCATEGORY (products taxonomy only — kind = 'product')
+  const [categories, setCategories] = useState<Option[]>([]);
+  const [subcategories, setSubcategories] = useState<Option[]>([]);
+  const [categoryId, setCategoryId] = useState("");
+  const [subcategoryId, setSubcategoryId] = useState("");
+
+  const brandRef = useRef<HTMLInputElement>(null);
+  const variantRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const priceRef = useRef<HTMLInputElement>(null);
   const keyDetailsRef = useRef<HTMLTextAreaElement>(null);
@@ -138,8 +167,57 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
   const tertiaryInputRef = useRef<HTMLInputElement>(null);
 
   const trialActive = isTrialActive(vendor);
-  const currentLimit = trialActive ? 3 : getProductLimit(vendor.plan_tier || "free");
+  const currentLimit = trialActive ? 5 : getProductLimit(vendor.plan_tier || "free");
   const totalCount = savedProducts.length + pendingProducts.length;
+
+  // Categories already in use (saved or pending) — informational nudge
+  // only, never a block. See ServicesTab for the same pattern/rationale.
+  const usedCategoryIds = new Set([
+    ...savedProducts.map((p) => p.category_id).filter(Boolean),
+    ...pendingProducts.map((p) => p.category_id).filter(Boolean),
+  ]);
+  const isDifferentField = !!categoryId && usedCategoryIds.size > 0 && !usedCategoryIds.has(categoryId);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("id,name")
+        .eq("kind", "product")
+        .order("name", { ascending: true });
+      if (!error) setCategories(data || []);
+    })();
+  }, []);
+
+  // Set by handleEditSaved right before switching categoryId, so the
+  // subcategory can be re-selected once its list loads for that category.
+  const pendingEditSubcategoryId = useRef<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      if (!categoryId) {
+        setSubcategories([]);
+        return;
+      }
+      const { data, error } = await supabase
+        .from("subcategories")
+        .select("id,name")
+        .eq("category_id", categoryId)
+        .order("name", { ascending: true });
+      if (!error) {
+        setSubcategories(data || []);
+        if (pendingEditSubcategoryId.current) {
+          setSubcategoryId(pendingEditSubcategoryId.current);
+          pendingEditSubcategoryId.current = null;
+        }
+      }
+    })();
+  }, [categoryId]);
+
+  function handleCategoryChange(id: string) {
+    setCategoryId(id);
+    setSubcategoryId("");
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -187,7 +265,10 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
   }
 
   function resetForm() {
-    if (nameRef.current) nameRef.current.value = "";
+    setCategoryId("");
+    setSubcategoryId("");
+    if (brandRef.current) brandRef.current.value = "";
+    if (variantRef.current) variantRef.current.value = "";
     if (descriptionRef.current) descriptionRef.current.value = "";
     if (priceRef.current) priceRef.current.value = "";
     if (keyDetailsRef.current) keyDetailsRef.current.value = "";
@@ -232,13 +313,22 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
   }
 
   function handleAddToPending() {
-    const name = nameRef.current?.value.trim() || "";
+    const brand = brandRef.current?.value.trim() || "";
+    const variant = variantRef.current?.value.trim() || "";
     const description = descriptionRef.current?.value.trim() || "";
     const price = priceRef.current?.value.trim() || "";
     const keyDetails = keyDetailsRef.current?.value.trim() || "";
 
-    if (!name || !description || !price) {
-      alert("Product name, description and price are required.");
+    if (!categoryId || !subcategoryId) {
+      alert("Select a category and subcategory for this product.");
+      return;
+    }
+
+    const subcategoryName = subcategories.find((s) => s.id === subcategoryId)?.name || "";
+    const name = composeProductName(brand, variant, subcategoryName);
+
+    if (!description || !price) {
+      alert("Product description and price are required.");
       return;
     }
 
@@ -262,6 +352,10 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
         secondary_image_url: secondaryUrl || null,
         tertiary_image_url: tertiaryUrl || null,
         key_details: keyDetails,
+        category_id: categoryId,
+        subcategory_id: subcategoryId,
+        brand,
+        variant,
       },
     ]);
 
@@ -276,7 +370,12 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
     setEditingId(product.id);
     setFormOpen(true);
 
-    if (nameRef.current) nameRef.current.value = product.product_name || "";
+    pendingEditSubcategoryId.current = product.subcategory_id;
+    setCategoryId(product.category_id || "");
+    if (!product.category_id) setSubcategoryId(product.subcategory_id || "");
+
+    if (brandRef.current) brandRef.current.value = product.brand || "";
+    if (variantRef.current) variantRef.current.value = product.variant || "";
     if (descriptionRef.current) descriptionRef.current.value = product.short_description || "";
     if (priceRef.current) priceRef.current.value = product.price != null ? String(product.price) : "";
     if (keyDetailsRef.current) keyDetailsRef.current.value = product.key_details || "";
@@ -336,7 +435,16 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
 
     try {
       if (editingId) {
-        const name = nameRef.current?.value.trim() || "";
+        if (!categoryId || !subcategoryId) {
+          alert("Select a category and subcategory for this product.");
+          setSaving(false);
+          return;
+        }
+
+        const brand = brandRef.current?.value.trim() || "";
+        const variant = variantRef.current?.value.trim() || "";
+        const subcategoryName = subcategories.find((s) => s.id === subcategoryId)?.name || "";
+        const name = composeProductName(brand, variant, subcategoryName);
         const description = descriptionRef.current?.value.trim() || "";
         const price = Number(priceRef.current?.value || 0);
         const keyDetails = keyDetailsRef.current?.value.trim() || "";
@@ -345,6 +453,10 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
           .from("vendor_products")
           .update({
             product_name: name,
+            category_id: categoryId,
+            subcategory_id: subcategoryId,
+            brand,
+            variant,
             short_description: description,
             price,
             key_details: keyDetails,
@@ -356,25 +468,41 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
 
         if (error) throw error;
 
+        const { data: refreshed } = await supabase
+          .from("vendor_products")
+          .select("moderation_status, moderation_flag_reason")
+          .eq("id", editingId)
+          .single();
+
         setSavedProducts((prev) =>
           prev.map((p) =>
             p.id === editingId
               ? {
                   ...p,
                   product_name: name,
+                  category_id: categoryId,
+                  subcategory_id: subcategoryId,
+                  brand,
+                  variant,
                   short_description: description,
                   price,
                   key_details: keyDetails,
                   primary_image_url: primaryUrl,
                   secondary_image_url: secondaryUrl || null,
                   tertiary_image_url: tertiaryUrl || null,
+                  moderation_status: refreshed?.moderation_status ?? p.moderation_status,
+                  moderation_flag_reason: refreshed?.moderation_flag_reason ?? p.moderation_flag_reason,
                 }
               : p
           )
         );
 
         resetForm();
-        alert("Product updated successfully.");
+        alert(
+          refreshed?.moderation_status === "pending_review"
+            ? "Product updated. It's now pending review because it falls under a regulated category, and will go live once approved."
+            : "Product updated successfully."
+        );
         return;
       }
 
@@ -382,6 +510,10 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
         vendor_id: vendor.id,
         vendor_name: vendor.name,
         product_name: p.product_name,
+        category_id: p.category_id,
+        subcategory_id: p.subcategory_id,
+        brand: p.brand,
+        variant: p.variant,
         short_description: p.short_description,
         price: p.price,
         primary_image_url: p.primary_image_url,
@@ -396,10 +528,16 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
 
       setSavedProducts((prev) => [...prev, ...((data as VendorProduct[]) || [])]);
       setPendingProducts([]);
-      alert("Products saved successfully.");
+
+      const anyPending = ((data as VendorProduct[]) || []).some((p) => p.moderation_status === "pending_review");
+      alert(
+        anyPending
+          ? "Products saved. One or more fall under a regulated category and are pending review — they'll go live once approved."
+          : "Products saved successfully."
+      );
     } catch (err) {
       console.error("Save product error:", err);
-      alert("Unable to save products.");
+      alert(err instanceof Error ? err.message : "Unable to save products.");
     } finally {
       setSaving(false);
     }
@@ -470,8 +608,44 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
       </div>
 
       <div className={`vd-inline-editor${formOpen ? " active" : ""}`}>
+        <p className="vd-helper-text">
+          Choose a category and subcategory, then add the brand and model/variant if this product has one (e.g.
+          Brand: &quot;Samsung&quot;, Model/Variant: &quot;15-inch&quot;, Subcategory: &quot;Television&quot; →
+          &quot;Samsung 15-inch Television&quot;). Brand and model/variant are optional — leave them blank and
+          the subcategory name alone becomes the product name.
+        </p>
+
+        <div className="vd-coordinates-row">
+          <select className="vd-input" value={categoryId} onChange={(e) => handleCategoryChange(e.target.value)}>
+            <option value="">Select Category</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+
+          <select className="vd-input" value={subcategoryId} onChange={(e) => setSubcategoryId(e.target.value)}>
+            <option value="">Select Subcategory</option>
+            {subcategories.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {isDifferentField && (
+          <p className="vd-field-tip">
+            💡 This is a different field from your other products. That&apos;s okay if it&apos;s a real part of
+            your business — just keep each listing genuine and accurate, so customers know exactly what to
+            expect from you.
+          </p>
+        )}
+
         <div className="vd-service-add-row">
-          <input type="text" ref={nameRef} className="vd-input" placeholder="Enter product name" />
+          <input type="text" ref={brandRef} className="vd-input" placeholder="Brand (optional)" />
+          <input type="text" ref={variantRef} className="vd-input" placeholder="Model / Variant (optional)" />
         </div>
 
         <div className="vd-service-description-row">
@@ -535,8 +709,12 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
         <div className="vd-pending-services">
           {pendingProducts.map((product, index) => (
             <div className="vd-service-pill" key={index}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="vd-service-image" src={product.primary_image_url} alt={product.product_name} />
+              {product.primary_image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="vd-service-image" src={product.primary_image_url} alt={product.product_name} />
+              ) : (
+                <div className="vd-service-image-placeholder" aria-hidden="true">🖼️</div>
+              )}
 
               <div className="vd-service-content">
                 <div className="vd-service-name">{product.product_name}</div>
@@ -562,11 +740,27 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
           ) : (
             savedProducts.map((product) => (
               <div className="vd-service-pill saved" key={product.id}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="vd-product-thumb" src={product.primary_image_url} alt={product.product_name} />
+                {product.primary_image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img className="vd-product-thumb" src={product.primary_image_url} alt={product.product_name} />
+                ) : (
+                  <div className="vd-product-thumb-placeholder" aria-hidden="true">🖼️</div>
+                )}
 
                 <div className="vd-service-content">
-                  <div className="vd-service-name">{product.product_name}</div>
+                  <div className="vd-service-name">
+                    {product.product_name}
+                    {product.moderation_status === "pending_review" && (
+                      <span className="vd-pending-review-badge" title={product.moderation_flag_reason || ""}>
+                        Pending Review
+                      </span>
+                    )}
+                    {product.moderation_status === "rejected" && (
+                      <span className="vd-rejected-badge" title={product.moderation_flag_reason || ""}>
+                        Not Approved
+                      </span>
+                    )}
+                  </div>
                   <div className="vd-service-description">
                     {(product.short_description || "").length > 200
                       ? `${(product.short_description || "").slice(0, 200)}...`
@@ -597,7 +791,11 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
       <AiDescribeModal
         open={aiModalOpen}
         type="product"
-        itemName={nameRef.current?.value}
+        itemName={composeProductName(
+          brandRef.current?.value || "",
+          variantRef.current?.value || "",
+          subcategories.find((s) => s.id === subcategoryId)?.name || ""
+        )}
         onClose={() => setAiModalOpen(false)}
         onGenerated={(text, meta) => {
           if (descriptionRef.current) descriptionRef.current.value = text;

@@ -793,6 +793,23 @@ trigger, actually generates a `free_vendor`-type commission).
     patterns (matches `vendordashboard/page.tsx` and `admin/page.tsx`
     conventions closely) but this still needs an actual build check
     next session before considering it done.
+  - **Restructured (2026-08) into a sidebar + tab-per-section shell,
+    matching admin exactly** — Cyril caught that the first pass was a
+    single long scrolling page (a faithful port of production's actual
+    `partner-dashboard.html`, which has never had tabs) and pointed out
+    he'd specifically asked for the admin-style structure via the
+    earlier AskUserQuestion. That question got recorded as "build
+    order same as Admin" at the time — a real ambiguity, not something
+    confirmed back with him — so this was a miscommunication to own,
+    not a case of production simply being followed correctly. Split
+    the single file into `page.tsx` (shell: auth guard, data loading,
+    all derived-total computation, `TABS` array, sidebar nav — mirrors
+    `admin/page.tsx`'s structure 1:1) plus four tab components:
+    `OverviewTab.tsx` (referral link + earnings summary + performance +
+    monthly bonus), `EarningsTab.tsx` (breakdown + reward/bonus history
+    with search/filter/CSV), `DownlineTab.tsx`, `AccountTab.tsx`. Types
+    shared across the shell and tabs live in `types.ts`. All underlying
+    data/RPC logic unchanged — this was purely a UI restructuring.
 
 **Flagged, not fixed in this pass (Cyril asked these be revisited at
 the end of the Partner Dashboard build):**

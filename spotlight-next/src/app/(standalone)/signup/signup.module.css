@@ -31,6 +31,28 @@
   margin-bottom: 16px;
 }
 
+.safetyNotice {
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: #374151;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.safetyNotice strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #111827;
+}
+
+.safetyNotice a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
 .authForm { display: flex; flex-direction: column; gap: 14px; }
 
 .authForm label {

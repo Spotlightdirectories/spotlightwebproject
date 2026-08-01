@@ -17,11 +17,19 @@ export const metadata: Metadata = {
 
 // Runs BEFORE the page paints, so a returning dark-mode user never
 // sees a flash of light mode. Ported from the original theme-toggle.js.
+//
+// UPDATED 2026-08-01: on a visitor's FIRST visit (nothing saved yet in
+// localStorage), this now follows the device/browser's own dark-mode
+// setting (prefers-color-scheme) instead of always defaulting to
+// light. Once someone uses the sun/moon toggle in the navbar, their
+// manual choice is saved and always wins from then on, regardless of
+// what their device is set to.
 const noFlashScript = `
 (function () {
   try {
     var saved = localStorage.getItem("spotlight-theme");
-    if (saved === "dark") {
+    var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (saved === "dark" || (!saved && prefersDark)) {
       document.documentElement.setAttribute("data-theme", "dark");
     }
   } catch (e) {}

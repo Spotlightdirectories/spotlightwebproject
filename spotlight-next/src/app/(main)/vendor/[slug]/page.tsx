@@ -453,6 +453,7 @@ export default function VendorProfilePage() {
       .from("vendor_products")
       .select("*")
       .eq("vendor_id", vendorId)
+      .eq("moderation_status", "approved")
       .order("display_order", { ascending: true });
     setProducts(data || []);
   }
@@ -494,7 +495,8 @@ export default function VendorProfilePage() {
     const { data } = await supabase
       .from("vendor_services")
       .select(`*, vendors(slug, name, category, subcategory, state, lga, verification_status, average_rating, reviews_count)`)
-      .eq("vendor_id", vendorId);
+      .eq("vendor_id", vendorId)
+      .eq("moderation_status", "approved");
     setServices(data || []);
   }
 

@@ -34,6 +34,26 @@
   padding: 28px 32px 60px;
 }
 
+/* DARK MODE (added 2026-08-01) — this page keeps its own local color
+   palette (--ink, --ink-soft, --line, --card, etc.) instead of using
+   the shared globals.css tokens, since it was ported straight from
+   production's insight.css. Re-pointing those same local variables to
+   dark equivalents here cascades through almost every rule below
+   automatically, since nearly all of them already reference --ink /
+   --ink-soft / --line / --card rather than a literal hex value. A
+   handful of rules that used a literal hex directly (not a variable)
+   get their own explicit dark override further down this file. */
+[data-theme="dark"] .page {
+  --ink: #f1f5f9;
+  --ink-soft: #94a3b8;
+  --line: #2d2d2d;
+  --bg: #0b0b0b;
+  --card: #111111;
+  --green-bg: rgba(30, 142, 62, 0.18);
+
+  background: #0b0b0b;
+}
+
 .page * {
   box-sizing: border-box;
 }
@@ -731,7 +751,11 @@
   font-size: 10px;
   font-weight: 600;
   color: #fff;
-  background: var(--ink);
+  /* Intentionally NOT var(--ink) — this is a solid dark CTA pill that
+     should stay dark-on-white-text in both themes (--ink itself flips
+     to a light color in dark mode, which would turn this into an
+     invisible light-on-light button). */
+  background: #1a1a1a;
   border: none;
   border-radius: 6px;
   padding: 5px 8px;
@@ -742,8 +766,11 @@
   color: black;
 }
 .coach-action.sponsor-action {
+  /* Intentionally NOT var(--ink) — same reasoning as .coach-action
+     above: --ink flips to a light color in dark mode, which would
+     make this white-background button's text invisible. */
   background: #fff;
-  color: var(--ink);
+  color: #1a1a1a;
   border: 1px solid var(--line);
 }
 .coach-details {
@@ -926,6 +953,36 @@
   font-size: 13px;
   color: #666;
 }
+
+/* DARK MODE — remaining rules that used a literal hex color directly
+   instead of one of the local --ink/--card/--line variables above, so
+   they didn't pick up the palette swap automatically. */
+[data-theme="dark"] .gauge-track { stroke: #2d2d2d; }
+[data-theme="dark"] .perf-stat,
+[data-theme="dark"] .lead-card,
+[data-theme="dark"] .rank-col { background: #1a1a1a; }
+[data-theme="dark"] .chart-grid-line { stroke: #262626; }
+[data-theme="dark"] .lead-icon-phone { background: rgba(132, 48, 206, 0.18); }
+[data-theme="dark"] .lead-icon-direction { background: rgba(217, 48, 37, 0.18); }
+[data-theme="dark"] .lead-icon-catalog { background: rgba(181, 143, 0, 0.2); }
+[data-theme="dark"] .lead-icon-external { background: rgba(26, 115, 232, 0.18); }
+[data-theme="dark"] .rank-num { background: #262626; }
+[data-theme="dark"] .how-it-works-btn { background: var(--card); color: var(--ink); }
+[data-theme="dark"] .secondary-btn { background: var(--card); color: var(--ink-soft); border-color: #333; }
+[data-theme="dark"] .rank-line { background: #333; }
+[data-theme="dark"] .audience-summary { border-bottom-color: #2d2d2d; }
+[data-theme="dark"] .audience-total { color: var(--ink); }
+[data-theme="dark"] .audience-caption,
+[data-theme="dark"] .audience-count { color: var(--ink-soft); }
+[data-theme="dark"] .kw-bar-track { background: #262626; }
+[data-theme="dark"] .coach-score-tip { background: rgba(230, 184, 0, 0.15); color: #e6c200; }
+[data-theme="dark"] .coach-status.todo { background: #262626; }
+[data-theme="dark"] .coach-progress-track { background: #262626; }
+[data-theme="dark"] .back-dashboard-btn { background: var(--card); color: var(--ink); }
+[data-theme="dark"] .back-dashboard-btn:hover { background: #1a1a1a; }
+[data-theme="dark"] .health-modal-content { background: var(--card); }
+[data-theme="dark"] .health-modal-item { border-bottom-color: #2d2d2d; }
+[data-theme="dark"] .health-modal-note { color: var(--ink-soft); }
 
 /* Responsive */
 @media (max-width: 1000px) {

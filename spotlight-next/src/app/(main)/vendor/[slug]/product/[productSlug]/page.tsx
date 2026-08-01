@@ -135,6 +135,7 @@ export default function VendorProductPage() {
           )
         `)
         .eq("slug", productSlug)
+        .eq("moderation_status", "approved")
         .single();
 
       if (error || !data) { setLoading(false); return; }
@@ -160,6 +161,7 @@ export default function VendorProductPage() {
         .select(`slug, product_name, price, primary_image_url, vendor_id,
           vendors(name, verification_status, average_rating, reviews_count, is_sponsored)`)
         .eq("vendor_id", data.vendor_id)
+        .eq("moderation_status", "approved")
         .neq("id", data.id)
         .order("display_order", { ascending: true });
       // Supabase's untyped query builder can't tell this is a
@@ -182,11 +184,14 @@ export default function VendorProductPage() {
       })));
 
       // Similar products from other vendors
+      // Fixed 2026-08-01: similar products are now matched on the
+      // product's OWN category/subcategory (looked up server-side
+      // inside the RPC from p_exclude_product_id), not the vendor's
+      // overall business category — so this no longer needs to pass
+      // p_target_category/p_target_subcategory at all.
       const { data: similar } = await supabase.rpc("get_similar_products", {
         p_exclude_vendor_id: data.vendor_id,
         p_exclude_product_id: data.id,
-        p_target_subcategory: data.vendors?.subcategory || null,
-        p_target_category: data.vendors?.category || null,
         p_limit: 12,
       });
       setSimilarProducts((similar || []).map((p: any) => ({

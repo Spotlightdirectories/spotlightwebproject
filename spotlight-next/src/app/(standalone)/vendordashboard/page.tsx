@@ -93,6 +93,7 @@ export default function VendorDashboardPage() {
   // Overview-derived state
   const [mediaCount, setMediaCount] = useState(0);
   const [socialCount, setSocialCount] = useState(0);
+  const [categorizedListingCount, setCategorizedListingCount] = useState(0);
 
   // Email verification button state
   const [verifyState, setVerifyState] = useState<"idle" | "sending" | "sent" | "retry">("idle");
@@ -130,14 +131,20 @@ export default function VendorDashboardPage() {
 
       setVendor(v as Vendor);
 
-      // Media + social counts for the profile checklist
-      const [{ count: mCount }, { count: sCount }] = await Promise.all([
+      // Media + social counts for the profile checklist. Category/subcategory
+      // now lives on individual products/services (not on the vendor row
+      // itself), so the checklist counts listings that have been given a
+      // category instead of checking vendor.category/vendor.subcategory.
+      const [{ count: mCount }, { count: sCount }, { count: pCatCount }, { count: sCatCount }] = await Promise.all([
         supabase.from("vendor_media").select("*", { count: "exact", head: true }).eq("vendor_id", v.id),
         supabase.from("vendor_social_links").select("*", { count: "exact", head: true }).eq("vendor_id", v.id),
+        supabase.from("vendor_products").select("*", { count: "exact", head: true }).eq("vendor_id", v.id).not("category_id", "is", null),
+        supabase.from("vendor_services").select("*", { count: "exact", head: true }).eq("vendor_id", v.id).not("category_id", "is", null),
       ]);
 
       setMediaCount(mCount || 0);
       setSocialCount(sCount || 0);
+      setCategorizedListingCount((pCatCount || 0) + (sCatCount || 0));
       setLoading(false);
     }
     load();
@@ -259,7 +266,7 @@ export default function VendorDashboardPage() {
 
   const hasBasic = !!(vendor.name && vendor.email);
   const hasDetails = !!(vendor.address && vendor.description);
-  const hasCategory = !!(vendor.category && vendor.subcategory);
+  const hasCategory = categorizedListingCount > 0;
   const hasContact = !!(vendor.whatsapp && vendor.telephone);
   const hasLocation = !!(vendor.latitude && vendor.longitude);
   const hasMedia = mediaCount > 0;
@@ -282,7 +289,7 @@ export default function VendorDashboardPage() {
   const checklistItems = [
     { label: "Business name & email", ok: hasBasic },
     { label: "Address & description", ok: hasDetails },
-    { label: "Category & subcategory", ok: hasCategory },
+    { label: "At least 1 categorized product or service", ok: hasCategory },
     { label: "WhatsApp & telephone", ok: hasContact },
     { label: "Business location (map)", ok: hasLocation },
     { label: "Email verified", ok: emailVerified },
@@ -530,16 +537,6 @@ export default function VendorDashboardPage() {
                           {verifyLabel}
                         </button>
                       )}
-                    </div>
-                    <div className="vd-cat-grid">
-                      <div>
-                        <p className="vd-label">CATEGORY</p>
-                        <p>{vendor.category || ""}</p>
-                      </div>
-                      <div>
-                        <p className="vd-label">SUBCATEGORY</p>
-                        <p>{vendor.subcategory || ""}</p>
-                      </div>
                     </div>
                   </div>
                 </div>

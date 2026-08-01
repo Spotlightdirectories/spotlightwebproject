@@ -9,7 +9,7 @@
 
 .page {
   min-height: 100vh;
-  background: #fafafa;
+  background: var(--color-surface-alt);
 }
 
 /* Header — same brand mark as /discover (sticky logo + wordmark),
@@ -19,9 +19,9 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: #fff;
+  background: var(--color-surface);
   padding: 18px 16px 14px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -48,7 +48,7 @@
 .brandText {
   font-size: 20px;
   font-weight: 700;
-  color: #111827;
+  color: var(--color-text-primary);
 }
 
 .headerLinks {
@@ -58,14 +58,14 @@
 }
 
 .headerLinks a {
-  color: #374151;
+  color: var(--color-text-body);
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
 }
 
 .headerLinks a:hover {
-  color: #111;
+  color: var(--color-text-primary);
 }
 
 .main {
@@ -79,7 +79,7 @@
 }
 
 .subtext {
-  color: #6b7280;
+  color: var(--color-text-muted);
   margin-bottom: 20px;
 }
 
@@ -107,7 +107,9 @@
 .formGroup input[type="file"] {
   padding: 10px;
   border-radius: 6px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
   font-size: 14px;
 }
 
@@ -116,7 +118,7 @@
 }
 
 .formGroup small {
-  color: #6b7280;
+  color: var(--color-text-muted);
   font-size: 12px;
 }
 
@@ -135,7 +137,7 @@
   gap: 8px;
   align-items: flex-start;
   font-size: 13px;
-  color: #374151;
+  color: var(--color-text-body);
 }
 
 .consentWrap input {
@@ -168,8 +170,8 @@
   margin-bottom: 8px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: #f8fafc;
-  color: #111827;
+  background: var(--color-surface-alt);
+  color: var(--color-text-primary);
   font-size: 0.92rem;
   font-weight: 600;
   line-height: 1.4;

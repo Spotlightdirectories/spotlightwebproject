@@ -54,8 +54,6 @@ type Props = {
   onVendorUpdate: (patch: Partial<Vendor>) => void;
 };
 
-type Option = { id: string; name: string };
-
 export default function ProfileTab({ vendor, onVendorUpdate }: Props) {
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -78,8 +76,6 @@ export default function ProfileTab({ vendor, onVendorUpdate }: Props) {
   const [addressPreview, setAddressPreview] = useState(vendor.address || "—");
   const [statePreview, setStatePreview] = useState(vendor.state || "—");
   const [lgaPreview, setLgaPreview] = useState(vendor.lga || "—");
-  const [categoryPreview, setCategoryPreview] = useState(vendor.category || "—");
-  const [subcategoryPreview, setSubcategoryPreview] = useState(vendor.subcategory || "—");
   const [coordsPreview, setCoordsPreview] = useState(
     vendor.latitude && vendor.longitude
       ? `${Number(vendor.latitude).toFixed(5)}, ${Number(vendor.longitude).toFixed(5)}`
@@ -109,69 +105,6 @@ export default function ProfileTab({ vendor, onVendorUpdate }: Props) {
     if (v.startsWith("0")) v = v.substring(1);
     v = v.slice(0, 10);
     e.target.value = v;
-  }
-
-  // ---------------------------------------------------------------
-  // CATEGORY + SUBCATEGORY
-  // ---------------------------------------------------------------
-  const [categories, setCategories] = useState<Option[]>([]);
-  const [subcategories, setSubcategories] = useState<Option[]>([]);
-  const [categoryId, setCategoryId] = useState("");
-  const [subcategoryId, setSubcategoryId] = useState("");
-  const initialCategoryApplied = useRef(false);
-  const initialSubcategoryApplied = useRef(false);
-
-  useEffect(() => {
-    (async () => {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("id,name")
-        .order("name", { ascending: true });
-      if (!error) setCategories(data || []);
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    (async () => {
-      if (!categoryId) {
-        setSubcategories([]);
-        return;
-      }
-      const { data, error } = await supabase
-        .from("subcategories")
-        .select("id,name")
-        .eq("category_id", categoryId)
-        .order("name", { ascending: true });
-      if (!error) setSubcategories(data || []);
-    })();
-  }, [categoryId]);
-
-  // Hydrate the vendor's saved category once the list has loaded
-  useEffect(() => {
-    if (initialCategoryApplied.current) return;
-    if (categories.length === 0) return;
-    if (vendor.category_id) {
-      initialCategoryApplied.current = true;
-      setCategoryId(vendor.category_id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categories]);
-
-  // Hydrate the vendor's saved subcategory once its list has loaded
-  useEffect(() => {
-    if (initialSubcategoryApplied.current) return;
-    if (subcategories.length === 0) return;
-    if (vendor.subcategory_id && categoryId === vendor.category_id) {
-      initialSubcategoryApplied.current = true;
-      setSubcategoryId(vendor.subcategory_id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subcategories]);
-
-  function handleCategoryChange(id: string) {
-    setCategoryId(id);
-    setSubcategoryId("");
   }
 
   // ---------------------------------------------------------------
@@ -275,12 +208,6 @@ export default function ProfileTab({ vendor, onVendorUpdate }: Props) {
       }
     }
 
-    if (!categoryId || !subcategoryId) {
-      setStatusMsg("Category and subcategory are required.");
-      setSaving(false);
-      return;
-    }
-
     const descriptionHtml = descriptionRef.current?.innerHTML || "";
     const descriptionWordLimit = DESCRIPTION_WORD_LIMITS[vendor.plan_tier || "free"] ?? 100;
     const descriptionWordCount = countWords(descriptionHtml);
@@ -316,8 +243,6 @@ export default function ProfileTab({ vendor, onVendorUpdate }: Props) {
       nextDescription !== (vendor.description || "") ||
       stateVal !== (vendor.state || "") ||
       lgaVal !== (vendor.lga || "") ||
-      categoryId !== (vendor.category_id || "") ||
-      subcategoryId !== (vendor.subcategory_id || "") ||
       nextLatitude !== vendor.latitude ||
       nextLongitude !== vendor.longitude ||
       nextOpenTime !== (vendor.open_time || "") ||
@@ -330,9 +255,6 @@ export default function ProfileTab({ vendor, onVendorUpdate }: Props) {
       return;
     }
 
-    const categoryText = categories.find((c) => c.id === categoryId)?.name || vendor.category;
-    const subcategoryText = subcategories.find((s) => s.id === subcategoryId)?.name || vendor.subcategory;
-
     const payload = {
       whatsapp: whatsappValue,
       telephone: telephoneValue,
@@ -340,10 +262,6 @@ export default function ProfileTab({ vendor, onVendorUpdate }: Props) {
       description: nextDescription,
       latitude: nextLatitude,
       longitude: nextLongitude,
-      category_id: categoryId,
-      subcategory_id: subcategoryId,
-      category: categoryText,
-      subcategory: subcategoryText,
       state: stateVal,
       lga: lgaVal,
       open_time: nextOpenTime || null,
@@ -358,8 +276,6 @@ export default function ProfileTab({ vendor, onVendorUpdate }: Props) {
         (vendor.email || "").trim() &&
         (payload.address || "").trim() &&
         (payload.description || "").trim() &&
-        (payload.category || "").trim() &&
-        (payload.subcategory || "").trim() &&
         (payload.whatsapp || "").trim() &&
         (payload.telephone || "").trim() &&
         payload.latitude &&
@@ -381,8 +297,6 @@ export default function ProfileTab({ vendor, onVendorUpdate }: Props) {
       );
       setStatePreview(payload.state || "—");
       setLgaPreview(payload.lga || "—");
-      setCategoryPreview(categoryText || "—");
-      setSubcategoryPreview(subcategoryText || "—");
       if (payload.latitude && payload.longitude) {
         setCoordsPreview(`${Number(payload.latitude).toFixed(5)}, ${Number(payload.longitude).toFixed(5)}`);
       }
@@ -539,61 +453,6 @@ export default function ProfileTab({ vendor, onVendorUpdate }: Props) {
 
         <div className={editorClass("address")}>
           <textarea ref={addressRef} className="vd-textarea" rows={4} defaultValue={vendor.address || ""} />
-        </div>
-      </div>
-
-      {/* CATEGORY */}
-      <div className="vd-profile-grid vd-editable-group">
-        <div className="vd-profile-row">
-          <div className="vd-profile-row-top">
-            <label>Category</label>
-          </div>
-          <div className="vd-profile-value">
-            <span>{categoryPreview}</span>
-          </div>
-        </div>
-
-        <div className="vd-profile-row">
-          <div className="vd-profile-row-top vd-group-edit-header">
-            <label>Subcategory</label>
-            <button type="button" className="vd-edit-btn" onClick={() => toggleEditor("category")}>
-              <i className="fa-solid fa-pen"></i>
-              Edit
-            </button>
-          </div>
-          <div className="vd-profile-value">
-            <span>{subcategoryPreview}</span>
-          </div>
-
-          <div className={editorClass("category")}>
-            <div className="vd-coordinates-row">
-              <select
-                className="vd-input"
-                value={categoryId}
-                onChange={(e) => handleCategoryChange(e.target.value)}
-              >
-                <option value="">Select Category</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                className="vd-input"
-                value={subcategoryId}
-                onChange={(e) => setSubcategoryId(e.target.value)}
-              >
-                <option value="">Select Subcategory</option>
-                {subcategories.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
         </div>
       </div>
 

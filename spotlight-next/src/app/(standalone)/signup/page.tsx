@@ -214,9 +214,20 @@ export default function SignupPage() {
             </div>
           </div>
 
+          <div className={styles.safetyNotice}>
+            <strong>Before you continue</strong>
+            Spotlight Directories is a discovery platform — we don&apos;t oversee meetings, service delivery, or
+            payments between you and customers. Meet in safe locations, avoid full upfront payment before work
+            starts, and never share your bank PIN or OTP with anyone. You may only list products or services
+            that are legal to sell and advertise in Nigeria — items like firearms, narcotics, counterfeit goods,
+            and unlicensed pharmaceuticals or financial services are not permitted. See the{" "}
+            <a href="/disclaimer" target="_blank" rel="noopener">full safety guidelines and restricted items list</a>{" "}
+            for details.
+          </div>
+
           <label className={styles.checkboxWrap}>
             <input type="checkbox" name="agreeTerms" checked={form.agreeTerms} onChange={handleChange} required />
-            I agree to the <a href="/terms">Terms of Service</a>, <a href="/privacy">Privacy Policy</a>, and <a href="/disclaimer">Disclaimer</a>
+            I agree to the <a href="/terms">Terms of Service</a>, <a href="/privacy">Privacy Policy</a>, and <a href="/disclaimer">Disclaimer</a> (including the Safety Guidelines and Restricted Items sections)
           </label>
 
           <button type="submit" className={styles.authBtn} disabled={submitting}>

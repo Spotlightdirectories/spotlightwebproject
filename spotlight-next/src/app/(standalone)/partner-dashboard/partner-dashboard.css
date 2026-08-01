@@ -1,17 +1,102 @@
 /* ===============================================================
    partner-dashboard.css — shared styling for the Partner Dashboard.
 
-   Faithful port of production's admin/partner-dashboard.html visual
-   structure (one long stacked page, not a tabbed shell — production
-   never had tabs here, unlike the admin dashboard), reusing the same
-   header-bar/table/badge language established in admin.css. Classes
-   prefixed "pd-" (loaded globally for the /partner-dashboard route
-   only, via layout.tsx) to avoid colliding with other routes.
+   Rebuilt (2026-08) as a sidebar + tab-per-section shell, matching
+   the admin dashboard's structure exactly, per Cyril's explicit
+   request — production's actual page was one long stacked scroll
+   with no tabs at all, and an earlier pass ported that literally,
+   but Cyril had specifically asked for the admin-style layout.
+   Reuses the same header-bar/sidebar/table/badge language established
+   in admin.css. Classes prefixed "pd-" (loaded globally for the
+   /partner-dashboard route only, via layout.tsx) to avoid colliding
+   with other routes.
 =============================================================== */
 
 .pd-shell {
   min-height: 100vh;
   background: var(--color-surface-alt);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------------------------------------------------------------
+   BODY LAYOUT — sidebar + content (mirrors .adm-body/.adm-sidebar)
+--------------------------------------------------------------- */
+.pd-body {
+  display: flex;
+  width: 100%;
+  flex: 1;
+}
+
+.pd-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  min-height: calc(100vh - 57px);
+  padding: 16px 0;
+}
+
+.pd-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 20px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-body);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.pd-nav-item i { width: 16px; text-align: center; color: var(--color-text-faint); }
+
+.pd-nav-item:hover { background: var(--color-surface-hover); }
+
+.pd-nav-item.active { background: #111111; color: #ffffff; }
+
+.pd-nav-item.active i { color: #e6c200; }
+
+.pd-mobile-menu-btn {
+  display: none;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.pd-mobile-overlay { display: none; }
+
+@media (max-width: 900px) {
+  .pd-mobile-menu-btn { display: block; }
+
+  .pd-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 400;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: var(--shadow-xl);
+  }
+
+  .pd-sidebar.active { transform: translateX(0); }
+
+  .pd-mobile-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 390;
+  }
+
+  .pd-mobile-overlay.active { display: block; }
 }
 
 .pd-header-bar {
@@ -68,9 +153,13 @@
 .pd-logout-btn:hover { background: #c0392b; border-color: #c0392b; }
 
 .pd-content {
-  max-width: 1080px;
-  margin: 0 auto;
+  flex: 1;
+  min-width: 0;
   padding: 24px;
+}
+
+@media (max-width: 900px) {
+  .pd-content { padding: 16px; }
 }
 
 /* CLOSING NOTICE BANNER */
@@ -86,6 +175,12 @@
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+[data-theme="dark"] .pd-closing-notice {
+  background: #3a2410;
+  border-color: #7c4a1e;
+  color: #fb923c;
 }
 
 .pd-restore-btn {
@@ -238,6 +333,18 @@
 .pd-status-closing,
 .pd-status-inactive { background: #fef3c7; color: #92400e; }
 .pd-status-closed { background: #fee2e2; color: #991b1b; }
+
+/* DARK MODE (added 2026-08-01) — same pastel badges as light mode
+   read as a solid, near-opaque block of color on a dark background,
+   so these use the same low-opacity tint treatment as admin.css's
+   status badges. */
+[data-theme="dark"] .pd-status-pending { background: rgba(154, 52, 18, 0.25); color: #fdba74; }
+[data-theme="dark"] .pd-status-available,
+[data-theme="dark"] .pd-status-paid,
+[data-theme="dark"] .pd-status-active { background: rgba(22, 101, 52, 0.25); color: #86efac; }
+[data-theme="dark"] .pd-status-closing,
+[data-theme="dark"] .pd-status-inactive { background: rgba(146, 64, 14, 0.25); color: #fcd34d; }
+[data-theme="dark"] .pd-status-closed { background: rgba(153, 27, 27, 0.25); color: #fca5a5; }
 
 /* PROGRESS BAR (bonus tracker) */
 .pd-progress-track {

@@ -133,6 +133,7 @@ export default function VendorServicePage() {
           )
         `)
         .eq("slug", serviceSlug)
+        .eq("moderation_status", "approved")
         .single();
 
       if (error || !data) { setLoading(false); return; }
@@ -161,6 +162,7 @@ export default function VendorServicePage() {
         .select(`slug, service_name, starting_price, representative_image_url,
           vendors(name, verification_status, average_rating, reviews_count, is_sponsored)`)
         .eq("vendor_id", data.vendor_id)
+        .eq("moderation_status", "approved")
         .neq("slug", data.slug);
       // Same reshape as the product page: Supabase's untyped query
       // builder infers `vendors` as an array (it can't see this is a
@@ -181,11 +183,14 @@ export default function VendorServicePage() {
       })));
 
       // Similar services from other vendors
+      // Fixed 2026-08-01: similar services are now matched on the
+      // service's OWN category/subcategory (looked up server-side
+      // inside the RPC from p_exclude_service_id), not the vendor's
+      // overall business category — so this no longer needs to pass
+      // p_target_category/p_target_subcategory at all.
       const { data: similar } = await supabase.rpc("get_similar_services", {
         p_exclude_vendor_id: data.vendor_id,
         p_exclude_service_id: data.id,
-        p_target_subcategory: data.vendors?.subcategory || null,
-        p_target_category: data.vendors?.category || null,
         p_limit: 12,
       });
       setSimilarServices((similar || []).map((s: any) => ({

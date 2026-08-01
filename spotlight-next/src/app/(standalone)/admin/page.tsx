@@ -28,6 +28,7 @@ import SecurityLogTab from "./SecurityLogTab";
 import PaymentsTab from "./PaymentsTab";
 import SponsorshipsTab from "./SponsorshipsTab";
 import VerificationsTab from "./VerificationsTab";
+import ListingsModerationTab from "./ListingsModerationTab";
 import PartnerApprovalsTab from "./PartnerApprovalsTab";
 import PartnerHistoryTab from "./PartnerHistoryTab";
 import CommissionsTab from "./CommissionsTab";
@@ -41,6 +42,7 @@ type TabKey =
   | "payments"
   | "sponsorships"
   | "verifications"
+  | "listingsModeration"
   | "partnerApprovals"
   | "partnerHistory"
   | "commissions"
@@ -64,6 +66,7 @@ const TABS: TabDef[] = [
   { key: "payments", label: "Pending Payments", icon: "fa-solid fa-money-check-dollar", roles: ["super_admin", "admin", "finance_admin"], Component: PaymentsTab },
   { key: "sponsorships", label: "Pending Sponsorships", icon: "fa-solid fa-bullhorn", roles: ["super_admin", "admin", "finance_admin"], Component: SponsorshipsTab },
   { key: "verifications", label: "Pending Verifications", icon: "fa-solid fa-certificate", roles: ["super_admin", "admin", "verification_admin"], Component: VerificationsTab },
+  { key: "listingsModeration", label: "Pending Listings", icon: "fa-solid fa-flag", roles: ["super_admin", "admin"], Component: ListingsModerationTab },
   { key: "partnerApprovals", label: "Pending Partner Approvals", icon: "fa-solid fa-handshake", roles: ["super_admin", "admin"], Component: PartnerApprovalsTab },
   { key: "partnerHistory", label: "Partner History", icon: "fa-solid fa-clock-rotate-left", roles: ["super_admin", "admin"], Component: PartnerHistoryTab },
   { key: "commissions", label: "Commissions", icon: "fa-solid fa-sack-dollar", roles: ["super_admin", "admin", "finance_admin"], Component: CommissionsTab },

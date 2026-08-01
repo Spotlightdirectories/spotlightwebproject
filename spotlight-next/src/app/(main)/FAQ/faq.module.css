@@ -17,7 +17,7 @@
 
 .faqIntro {
   text-align: center;
-  color: #555;
+  color: var(--color-text-muted);
   margin-bottom: 2rem;
   font-size: 1rem;
 }
@@ -26,12 +26,12 @@
 
 /* ACCORDION */
 .accordion {
-  border-top: 1px solid #ccc;
+  border-top: 1px solid var(--color-border);
   border-radius: 10px;
   overflow: hidden;
 }
 
-.accordionItem { border-bottom: 1px solid #ccc; }
+.accordionItem { border-bottom: 1px solid var(--color-border); }
 
 .accordionHeader {
   width: 100%;
@@ -62,14 +62,14 @@
 }
 
 .accordionPanel {
-  background: rgb(238, 220, 220);
+  background: var(--color-surface-alt);
   border-radius: 10px;
   padding: 0.5rem;
 }
 
 .accordionPanel p {
   margin: 1rem 0;
-  color: black;
+  color: var(--color-text-primary);
   font-size: 1.3rem;
   line-height: 1.6;
 }

@@ -229,7 +229,11 @@ export default function PaymentPage() {
     }
 
     const handler = window.PaystackPop.setup({
-      key: "pk_live_3bb98d5dc8a2fa57534c307db789248d24c629de",
+      // Reads NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY (a test key locally/on
+      // Staging, per .env.local) so testing never runs against the
+      // live key — falls back to the live key if that variable isn't
+      // set somewhere (e.g. a future production deploy of this app).
+      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_live_3bb98d5dc8a2fa57534c307db789248d24c629de",
       email: userEmail,
       amount: getAmountInKobo(effectivePlan, billingType),
       currency: "NGN",

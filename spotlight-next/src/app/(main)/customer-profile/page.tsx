@@ -122,6 +122,7 @@ async function resolveActivityItems(events: RawActivityEvent[]): Promise<Activit
           .from("vendor_products")
           .select("id, slug, product_name, price, primary_image_url, vendors(name, slug)")
           .in("id", productIds)
+          .eq("moderation_status", "approved")
           .returns<ProductRow[]>()
       : Promise.resolve({ data: [] as ProductRow[] }),
     serviceIds.length
@@ -129,6 +130,7 @@ async function resolveActivityItems(events: RawActivityEvent[]): Promise<Activit
           .from("vendor_services")
           .select("id, slug, service_name, starting_price, representative_image_url, vendors(name, slug)")
           .in("id", serviceIds)
+          .eq("moderation_status", "approved")
           .returns<ServiceRow[]>()
       : Promise.resolve({ data: [] as ServiceRow[] }),
   ]);

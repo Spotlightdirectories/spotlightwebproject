@@ -3,18 +3,37 @@
 // ===============================================================
 // src/app/(standalone)/verify-email/page.tsx
 //
-// Ported faithfully from verify-email.html's inline script.
+// Reached via the confirmation link the "swift-task" edge function
+// emails out when a vendor clicks "Verify Email" in the dashboard.
+// That function generates its own one-time token (stored in
+// email_verification_tokens, NOT Supabase Auth) and links to
+// `?token=<uuid>`.
 //
-// Reached via the confirmation link in the vendor welcome/signup
-// email. Exchanges the ?code= param for a real session (if present),
-// then marks vendors.email_verified = true for that auth_user_id,
-// and redirects back to the vendor dashboard.
+// FIXED (2026-08-01): this page previously looked for a `?code=`
+// param and tried supabase.auth.exchangeCodeForSession(code) — that's
+// the mechanism for Supabase's native magic-link auth, which has
+// nothing to do with the custom token system swift-task actually
+// uses. Since the email link never contains `?code=`, this always
+// failed with "Invalid or expired verification link," regardless of
+// whether the token itself was valid. Now it reads `?token=` and
+// hands it to the verify-email-token edge function, which validates
+// it (expiry + single-use) and flips vendors.email_verified using the
+// service role key — no logged-in session required, since email links
+// are often opened in a different browser/device than the one the
+// vendor is signed into.
 // ===============================================================
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import styles from "./verify-email.module.css";
+
+const ERROR_MESSAGES: Record<string, string> = {
+  missing_token: "This verification link is missing its token.",
+  invalid: "Invalid or expired verification link.",
+  used: "This verification link has already been used.",
+  expired: "This verification link has expired. Please request a new one from your dashboard.",
+};
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -25,27 +44,22 @@ export default function VerifyEmailPage() {
 
   useEffect(() => {
     async function verify() {
-      const code = searchParams.get("code");
-      if (code) {
-        await supabase.auth.exchangeCodeForSession(code);
+      const token = searchParams.get("token");
+
+      if (!token) {
+        setMessage("This verification link is missing its token.");
+        setStatus("error");
+        return;
       }
 
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data, error } = await supabase.functions.invoke("verify-email-token", {
+          body: { token },
+        });
 
-        if (error || !session?.user) {
-          setMessage("Invalid or expired verification link.");
-          setStatus("error");
-          return;
-        }
-
-        const { error: vendorError } = await supabase
-          .from("vendors")
-          .update({ email_verified: true })
-          .eq("auth_user_id", session.user.id);
-
-        if (vendorError) {
-          setMessage("Unable to verify email.");
+        if (error || !data?.success) {
+          const code = data?.error as string | undefined;
+          setMessage((code && ERROR_MESSAGES[code]) || "Invalid or expired verification link.");
           setStatus("error");
           return;
         }
@@ -53,10 +67,6 @@ export default function VerifyEmailPage() {
         setMessage("Your email has been verified successfully.");
         setStatus("success");
 
-        // Refresh auth session
-        await supabase.auth.refreshSession();
-
-        // Redirect owner back to dashboard
         setTimeout(() => {
           router.push("/vendordashboard");
         }, 1500);

@@ -5,22 +5,23 @@
 //
 // Vendor Dashboard — MODULE: Services.
 //
-// Faithful port of the #services section in production
-// vendordashboard.html + the "SERVICE" blocks in vendordashboard.js.
-// Per Cyril's instruction (2026-07-31): everything ported exactly as
-// production behaves; nothing changed silently. Two pre-existing
-// production behaviors are called out below rather than "fixed" —
-// flagging them to Cyril in chat instead of building around them.
+// Standardized taxonomy pass (2026-08-01, per Cyril): category and
+// subcategory selection used to live on the vendor Profile tab.
+// That's removed now — category/subcategory only exist inside the
+// Products and Services modules going forward, scoped to the
+// taxonomy that matches each (Services uses categories/subcategories
+// where kind = 'service').
 //
-// NOTED BUT NOT CHANGED (production behavior, kept as-is):
-// 1. Deleting a saved service does NOT remove its images from
-//    storage (unlike Products' delete, which does clean up
-//    "vendor-gallery"). Ported faithfully — orphaned files stay in
-//    the bucket after a service is deleted, same as production.
-// 2. The duplicate-name check only compares against services already
-//    staged in THIS pending batch, not against services already
-//    saved to the database. So the same service name can be added
-//    twice across two separate "Save" actions. Ported faithfully.
+// Also per Cyril's earlier decision: service listings are NOT
+// freely named by vendors. A service's name IS its subcategory name
+// — there is no freeform "service name" text field anymore. Vendors
+// pick Category -> Subcategory and that becomes the service.
+//
+// NOTED, KEPT (pre-existing production behavior, unrelated to this pass):
+// Deleting a saved service does NOT remove its images from storage
+// (unlike Products' delete, which does clean up "vendor-gallery").
+// Orphaned files stay in the bucket after a service is deleted, same
+// as production.
 // ===============================================================
 
 import { useEffect, useRef, useState } from "react";
@@ -30,6 +31,8 @@ import { uploadVendorFile } from "@/lib/uploadVendorFile";
 import AiDescribeModal, { useAiDescribeToast } from "@/components/AiDescribeModal";
 import type { Vendor } from "./page";
 
+type Option = { id: string; name: string };
+
 type VendorService = {
   id: string;
   service_name: string;
@@ -38,10 +41,16 @@ type VendorService = {
   representative_image_url: string | null;
   secondary_image_url: string | null;
   slug?: string | null;
+  category_id: string | null;
+  subcategory_id: string | null;
+  moderation_status?: string | null;
+  moderation_flag_reason?: string | null;
 };
 
 type PendingService = {
   service_name: string;
+  category_id: string;
+  subcategory_id: string;
   short_description: string;
   starting_price: number | null;
   representative_image_url: string;
@@ -52,10 +61,10 @@ type PendingService = {
 // the object itself — the 90-day trial override is applied via the
 // same ternary production uses, matching Products' pattern).
 const SERVICE_LIMITS: Record<string, number> = {
-  free: 1,
-  standard: 6,
-  enterprise: 12,
-  elite: 24,
+  free: 2,
+  standard: 25,
+  enterprise: 50,
+  elite: 100,
   custom: Infinity,
 };
 
@@ -100,15 +109,80 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
   const [aiModalOpen, setAiModalOpen] = useState(false);
   const { showToast, toastNode } = useAiDescribeToast();
 
-  const nameRef = useRef<HTMLInputElement>(null);
+  // CATEGORY + SUBCATEGORY (services taxonomy only — kind = 'service')
+  const [categories, setCategories] = useState<Option[]>([]);
+  const [subcategories, setSubcategories] = useState<Option[]>([]);
+  const [categoryId, setCategoryId] = useState("");
+  const [subcategoryId, setSubcategoryId] = useState("");
+
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const priceRef = useRef<HTMLInputElement>(null);
   const primaryInputRef = useRef<HTMLInputElement>(null);
   const secondaryInputRef = useRef<HTMLInputElement>(null);
 
   const trialActive = isTrialActive(vendor);
-  const currentLimit = trialActive ? 3 : getServiceLimit(vendor.plan_tier || "free");
+  const currentLimit = trialActive ? 5 : getServiceLimit(vendor.plan_tier || "free");
   const totalCount = savedServices.length + pendingServices.length;
+
+  // Subcategories already in use (saved or pending) — a vendor can't add
+  // the same service (i.e. the same subcategory) twice, since the service
+  // name IS the subcategory name now.
+  const usedSubcategoryIds = new Set([
+    ...savedServices.map((s) => s.subcategory_id).filter(Boolean),
+    ...pendingServices.map((s) => s.subcategory_id).filter(Boolean),
+  ]);
+
+  // Categories already in use (saved or pending) — used only for the
+  // soft "different field" nudge below. This is informational only,
+  // never a block: vendors can list across as many categories as they
+  // genuinely operate in (this matches how Jumia/Konga/Alibaba/Amazon
+  // seller accounts work — categorization is per-listing, not per-vendor).
+  const usedCategoryIds = new Set([
+    ...savedServices.map((s) => s.category_id).filter(Boolean),
+    ...pendingServices.map((s) => s.category_id).filter(Boolean),
+  ]);
+  const isDifferentField = !!categoryId && usedCategoryIds.size > 0 && !usedCategoryIds.has(categoryId);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("id,name")
+        .eq("kind", "service")
+        .order("name", { ascending: true });
+      if (!error) setCategories(data || []);
+    })();
+  }, []);
+
+  // Set by handleEditSaved right before switching categoryId, so the
+  // subcategory can be re-selected once its list loads for that category.
+  const pendingEditSubcategoryId = useRef<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      if (!categoryId) {
+        setSubcategories([]);
+        return;
+      }
+      const { data, error } = await supabase
+        .from("subcategories")
+        .select("id,name")
+        .eq("category_id", categoryId)
+        .order("name", { ascending: true });
+      if (!error) {
+        setSubcategories(data || []);
+        if (pendingEditSubcategoryId.current) {
+          setSubcategoryId(pendingEditSubcategoryId.current);
+          pendingEditSubcategoryId.current = null;
+        }
+      }
+    })();
+  }, [categoryId]);
+
+  function handleCategoryChange(id: string) {
+    setCategoryId(id);
+    setSubcategoryId("");
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -137,7 +211,8 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
   }, [vendor.id]);
 
   function resetForm() {
-    if (nameRef.current) nameRef.current.value = "";
+    setCategoryId("");
+    setSubcategoryId("");
     if (descriptionRef.current) descriptionRef.current.value = "";
     if (priceRef.current) priceRef.current.value = "";
     setPrimaryUrl("");
@@ -176,11 +251,14 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
   }
 
   function handleAddToPending() {
-    const name = nameRef.current?.value.trim() || "";
     const description = descriptionRef.current?.value.trim() || "";
     const priceRaw = priceRef.current?.value.trim() || "";
 
-    // Same validation order and copy as production's ADD SERVICE ITEM handler.
+    if (!categoryId || !subcategoryId) {
+      alert("Select a category and subcategory — this is what your service will be listed as.");
+      return;
+    }
+    // Same description validation production has always had.
     if (description.length < 280) {
       alert("Service description must contain at least 280 characters including spaces.");
       return;
@@ -189,35 +267,23 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
       alert("Service description must not exceed 500 characters including spaces.");
       return;
     }
-    if (!name) {
-      alert("Enter a service name.");
-      return;
-    }
-    if (name.includes(",")) {
-      alert("Add one service at a time.");
-      return;
-    }
-    if (name.length > 60) {
-      alert("Service name must not exceed 60 characters.");
-      return;
-    }
-    if (name.split(/\s+/).length > 6) {
-      alert("Service name is too long.");
-      return;
-    }
     if (totalCount >= currentLimit) {
       alert("You have reached your current plan limit.");
       return;
     }
-    if (pendingServices.some((s) => s.service_name.toLowerCase() === name.toLowerCase())) {
-      alert("Service already added.");
+    if (!editingId && usedSubcategoryIds.has(subcategoryId)) {
+      alert("You've already added a service under this subcategory.");
       return;
     }
+
+    const name = subcategories.find((s) => s.id === subcategoryId)?.name || "";
 
     setPendingServices((prev) => [
       ...prev,
       {
         service_name: name,
+        category_id: categoryId,
+        subcategory_id: subcategoryId,
         short_description: description,
         starting_price: Number(priceRaw) || null,
         representative_image_url: primaryUrl,
@@ -236,9 +302,12 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
     setEditingId(service.id);
     setFormOpen(true);
 
-    if (nameRef.current) nameRef.current.value = service.service_name || "";
     if (descriptionRef.current) descriptionRef.current.value = service.short_description || "";
     if (priceRef.current) priceRef.current.value = service.starting_price != null ? String(service.starting_price) : "";
+
+    pendingEditSubcategoryId.current = service.subcategory_id;
+    setCategoryId(service.category_id || "");
+    if (!service.category_id) setSubcategoryId(service.subcategory_id || "");
 
     setPrimaryUrl(service.representative_image_url || "");
     setPrimaryLabel(
@@ -281,15 +350,23 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
 
     try {
       if (editingId) {
-        const name = nameRef.current?.value.trim() || "";
+        if (!categoryId || !subcategoryId) {
+          alert("Select a category and subcategory — this is what your service will be listed as.");
+          setSaving(false);
+          return;
+        }
+
         const description = descriptionRef.current?.value.trim() || "";
         const priceRaw = priceRef.current?.value || "";
+        const name = subcategories.find((s) => s.id === subcategoryId)?.name || "";
 
         const { error } = await supabase
           .from("vendor_services")
           .update({
             service_name: name,
             slug: slugify(name),
+            category_id: categoryId,
+            subcategory_id: subcategoryId,
             short_description: description,
             starting_price: Number(priceRaw) || null,
             representative_image_url: primaryUrl,
@@ -299,23 +376,37 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
 
         if (error) throw error;
 
+        const { data: refreshed } = await supabase
+          .from("vendor_services")
+          .select("moderation_status, moderation_flag_reason")
+          .eq("id", editingId)
+          .single();
+
         setSavedServices((prev) =>
           prev.map((s) =>
             s.id === editingId
               ? {
                   ...s,
                   service_name: name,
+                  category_id: categoryId,
+                  subcategory_id: subcategoryId,
                   short_description: description,
                   starting_price: Number(priceRaw) || null,
                   representative_image_url: primaryUrl,
                   secondary_image_url: secondaryUrl,
+                  moderation_status: refreshed?.moderation_status ?? s.moderation_status,
+                  moderation_flag_reason: refreshed?.moderation_flag_reason ?? s.moderation_flag_reason,
                 }
               : s
           )
         );
 
         resetForm();
-        alert("Service updated successfully.");
+        alert(
+          refreshed?.moderation_status === "pending_review"
+            ? "Service updated. It's now pending review because it falls under a regulated category, and will go live once approved."
+            : "Service updated successfully."
+        );
         return;
       }
 
@@ -324,6 +415,8 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
         vendor_name: vendor.name,
         service_name: s.service_name,
         slug: slugify(s.service_name),
+        category_id: s.category_id,
+        subcategory_id: s.subcategory_id,
         short_description: s.short_description,
         starting_price: s.starting_price,
         representative_image_url: s.representative_image_url || null,
@@ -336,10 +429,16 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
 
       setSavedServices((prev) => [...prev, ...((data as VendorService[]) || [])]);
       setPendingServices([]);
-      alert("Services saved successfully.");
+
+      const anyPending = ((data as VendorService[]) || []).some((s) => s.moderation_status === "pending_review");
+      alert(
+        anyPending
+          ? "Services saved. One or more fall under a regulated category and are pending review — they'll go live once approved."
+          : "Services saved successfully."
+      );
     } catch (err) {
       console.error("Save service error:", err);
-      alert("Unable to save services.");
+      alert(err instanceof Error ? err.message : "Unable to save services.");
     } finally {
       setSaving(false);
     }
@@ -359,9 +458,40 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
       </div>
 
       <div className={`vd-inline-editor${formOpen ? " active" : ""}`}>
-        <div className="vd-service-add-row">
-          <input type="text" ref={nameRef} className="vd-input" placeholder="Enter service name" />
+        <p className="vd-helper-text">
+          Choose a category and subcategory — the subcategory name becomes your service&apos;s name. Custom
+          service names aren&apos;t used anymore, so listings stay consistent and easy to search across the
+          platform.
+        </p>
+
+        <div className="vd-coordinates-row">
+          <select className="vd-input" value={categoryId} onChange={(e) => handleCategoryChange(e.target.value)}>
+            <option value="">Select Category</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+
+          <select className="vd-input" value={subcategoryId} onChange={(e) => setSubcategoryId(e.target.value)}>
+            <option value="">Select Subcategory</option>
+            {subcategories.map((s) => (
+              <option key={s.id} value={s.id} disabled={s.id !== subcategoryId && usedSubcategoryIds.has(s.id)}>
+                {s.name}
+                {s.id !== subcategoryId && usedSubcategoryIds.has(s.id) ? " (already added)" : ""}
+              </option>
+            ))}
+          </select>
         </div>
+
+        {isDifferentField && (
+          <p className="vd-field-tip">
+            💡 This is a different field from your other services. That&apos;s okay if it&apos;s a real part of your
+            business — just keep each listing genuine and accurate, so customers know exactly what to expect
+            from you.
+          </p>
+        )}
 
         <div className="vd-service-description-row">
           <button type="button" className="vd-ai-generate-btn" onClick={() => setAiModalOpen(true)}>
@@ -431,12 +561,16 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
         <div className="vd-pending-services">
           {pendingServices.map((service, index) => (
             <div className="vd-service-pill" key={index}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                className="vd-service-image"
-                src={service.representative_image_url || "/images/placeholder.png"}
-                alt={service.service_name}
-              />
+              {service.representative_image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  className="vd-service-image"
+                  src={service.representative_image_url}
+                  alt={service.service_name}
+                />
+              ) : (
+                <div className="vd-service-image-placeholder" aria-hidden="true">🖼️</div>
+              )}
 
               <div className="vd-service-content">
                 <div className="vd-service-name">{service.service_name}</div>
@@ -468,15 +602,31 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
           ) : (
             savedServices.map((service) => (
               <div className="vd-service-pill saved" key={service.id}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  className="vd-service-image"
-                  src={service.representative_image_url || "/images/placeholder.png"}
-                  alt={service.service_name}
-                />
+                {service.representative_image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    className="vd-service-image"
+                    src={service.representative_image_url}
+                    alt={service.service_name}
+                  />
+                ) : (
+                  <div className="vd-service-image-placeholder" aria-hidden="true">🖼️</div>
+                )}
 
                 <div className="vd-service-content">
-                  <div className="vd-service-name">{service.service_name}</div>
+                  <div className="vd-service-name">
+                    {service.service_name}
+                    {service.moderation_status === "pending_review" && (
+                      <span className="vd-pending-review-badge" title={service.moderation_flag_reason || ""}>
+                        Pending Review
+                      </span>
+                    )}
+                    {service.moderation_status === "rejected" && (
+                      <span className="vd-rejected-badge" title={service.moderation_flag_reason || ""}>
+                        Not Approved
+                      </span>
+                    )}
+                  </div>
                   <div className="vd-service-description">
                     {(service.short_description || "").length > 280
                       ? `${(service.short_description || "").slice(0, 280)}...`
@@ -513,7 +663,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
       <AiDescribeModal
         open={aiModalOpen}
         type="service"
-        itemName={nameRef.current?.value}
+        itemName={subcategories.find((s) => s.id === subcategoryId)?.name}
         onClose={() => setAiModalOpen(false)}
         onGenerated={(text, meta) => {
           if (descriptionRef.current) descriptionRef.current.value = text;

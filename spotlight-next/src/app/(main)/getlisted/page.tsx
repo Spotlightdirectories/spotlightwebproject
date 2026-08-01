@@ -56,7 +56,7 @@ const PLANS = [
     locationLabel: "1 location",
     everythingLabel: "Your first 90 days include:",
     features: [
-      "List up to 3 products or services",
+      "List up to 5 products or services",
       "1 social media handle",
       "Photo gallery — 3 images",
       "Clickable WhatsApp number",
@@ -83,7 +83,7 @@ const PLANS = [
     features: [
       "Mini web page for products & services",
       "Profile photo, cover image & logo",
-      "Photo gallery — 6 images",
+      "Photo gallery — 10 images",
       "Business video — up to 30 seconds",
       "2 social media handles",
       "Up to 100-word description",
@@ -104,7 +104,7 @@ const PLANS = [
     features: [
       "Up to 10 business branches",
       "Own address & WhatsApp number per branch",
-      "Photo gallery — 12 images",
+      "Photo gallery — 20 images",
       "Business video — up to 60 seconds",
       "3 social media handles",
       "Up to 150-word description",
@@ -124,7 +124,7 @@ const PLANS = [
     everythingLabel: "Everything in Enterprise, plus:",
     features: [
       "Up to 30 business branches",
-      "Photo gallery — 24 images",
+      "Photo gallery — 30 images",
       "Business video — up to 90 seconds",
       "5 social media handles",
       "Priority+ support",
@@ -158,7 +158,7 @@ const COMPARE_ROWS = [
   { label: "Business name", values: ["1", "1", "1", "1", "1"] },
   { label: "Business address", values: ["1", "1", "Up to 10", "Up to 30", "Unlimited"] },
   { label: "Click-to-call & WhatsApp", values: ["1 number", "1 number", "Up to 10", "Up to 30", "Unlimited"] },
-  { label: "Products & services you can list", values: ["Up to 3 (trial), then 1", "6", "12", "24", "Unlimited"] },
+  { label: "Products & services you can list", values: ["5(2)", "25", "50", "100", "Unlimited"] },
   { label: "Business category", values: ["✓", "✓", "Same for all branches", "Same for all branches", "Same for all branches"] },
   { label: "Mini web page for goods & services", values: ["✓", "✓", "✓", "✓", "✓"] },
   { label: "Business description", values: ["50 words", "100 words", "150 words", "200 words", "250 words"] },
@@ -169,7 +169,7 @@ const COMPARE_ROWS = [
   { label: "Social media handles", values: ["✗", "2", "3", "5", "Unlimited"] },
   { label: "Business Insight Dashboard", values: ["✓", "✓", "✓", "✓", "✓"] },
   { label: "Google Map & Directions", values: ["✓", "✓", "✓", "✓", "✓"] },
-  { label: "Photo gallery", values: ["1 image", "6 images", "12 images", "24 images", "Custom"] },
+  { label: "Photo gallery", values: ["3 images", "10 images", "20 images", "30 images", "Custom"] },
   { label: "Support level", values: ["Standard", "Standard", "Priority", "Priority+", "Dedicated"] },
   { label: "Eligible for verification badge", values: ["✓", "✓", "✓", "✓", "✓"] },
   { label: "Registered & unregistered businesses welcome", values: ["✓", "✓", "✓", "✓", "✓"] },

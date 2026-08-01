@@ -145,7 +145,7 @@
   font-size: var(--text-base);
   font-family: inherit;
   box-sizing: border-box;
-  background: #f0efe9;
+  background: var(--color-surface-alt);
   color: var(--color-text-primary);
 }
 

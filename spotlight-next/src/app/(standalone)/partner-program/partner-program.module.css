@@ -79,6 +79,11 @@
   margin-bottom: var(--spacing-md);
 }
 
+[data-theme="dark"] .ppBadge {
+  background: rgba(10, 134, 72, 0.22);
+  color: #4ade80;
+}
+
 .ppHeroLeft h1 {
   font-size: clamp(1.7rem, 3.4vw, var(--text-5xl));
   font-weight: var(--font-black);
@@ -129,7 +134,7 @@
   font-size: var(--text-base);
   font-family: inherit;
   box-sizing: border-box;
-  background: #f0efe9;
+  background: var(--color-surface-alt);
   color: var(--color-text-primary);
 }
 

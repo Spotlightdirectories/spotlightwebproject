@@ -315,16 +315,24 @@
 .adm-status-revoked,
 .adm-status-expired { background: #fef3c7; color: #92400e; }
 
-:global([data-theme="dark"]) .adm-status-awaiting_review,
-:global([data-theme="dark"]) .adm-status-pending { background: rgba(154, 52, 18, 0.25); color: #fdba74; }
-:global([data-theme="dark"]) .adm-status-approved,
-:global([data-theme="dark"]) .adm-status-confirmed,
-:global([data-theme="dark"]) .adm-status-active,
-:global([data-theme="dark"]) .adm-status-paid,
-:global([data-theme="dark"]) .adm-status-available { background: rgba(22, 101, 52, 0.25); color: #86efac; }
-:global([data-theme="dark"]) .adm-status-rejected { background: rgba(153, 27, 27, 0.25); color: #fca5a5; }
-:global([data-theme="dark"]) .adm-status-revoked,
-:global([data-theme="dark"]) .adm-status-expired { background: rgba(146, 64, 14, 0.25); color: #fcd34d; }
+/* FIXED 2026-08-01: this file is loaded as a plain global stylesheet
+   (`import "./admin.css"` in layout.tsx, not `import styles from`), so
+   it never goes through the CSS Modules build step — the ":global(...)"
+   wrapper syntax below only means anything inside CSS Modules
+   processing. As plain CSS, ":global(...)" isn't a real selector, so
+   every one of these dark-mode rules was silently invalid and never
+   applied. Removing the wrapper (plain [data-theme="dark"] ...) makes
+   them work the way they were clearly intended to. */
+[data-theme="dark"] .adm-status-awaiting_review,
+[data-theme="dark"] .adm-status-pending { background: rgba(154, 52, 18, 0.25); color: #fdba74; }
+[data-theme="dark"] .adm-status-approved,
+[data-theme="dark"] .adm-status-confirmed,
+[data-theme="dark"] .adm-status-active,
+[data-theme="dark"] .adm-status-paid,
+[data-theme="dark"] .adm-status-available { background: rgba(22, 101, 52, 0.25); color: #86efac; }
+[data-theme="dark"] .adm-status-rejected { background: rgba(153, 27, 27, 0.25); color: #fca5a5; }
+[data-theme="dark"] .adm-status-revoked,
+[data-theme="dark"] .adm-status-expired { background: rgba(146, 64, 14, 0.25); color: #fcd34d; }
 
 /* ---------------------------------------------------------------
    MOBILE

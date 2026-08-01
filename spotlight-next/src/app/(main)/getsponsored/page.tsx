@@ -167,8 +167,8 @@ export default function GetSponsoredPage() {
       }
 
       const [{ data: p }, { data: s }] = await Promise.all([
-        supabase.from("vendor_products").select("id, slug, product_name, primary_image_url").eq("vendor_id", v.id),
-        supabase.from("vendor_services").select("id, slug, service_name, representative_image_url").eq("vendor_id", v.id),
+        supabase.from("vendor_products").select("id, slug, product_name, primary_image_url").eq("vendor_id", v.id).eq("moderation_status", "approved"),
+        supabase.from("vendor_services").select("id, slug, service_name, representative_image_url").eq("vendor_id", v.id).eq("moderation_status", "approved"),
       ]);
 
       if (cancelled) return;
@@ -416,7 +416,11 @@ export default function GetSponsoredPage() {
     const reference = `SPONSOR_${Date.now()}`;
 
     const handler = window.PaystackPop.setup({
-      key: "pk_live_3bb98d5dc8a2fa57534c307db789248d24c629de",
+      // Reads NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY (a test key locally/on
+      // Staging, per .env.local) so testing never runs against the
+      // live key — falls back to the live key if that variable isn't
+      // set somewhere (e.g. a future production deploy of this app).
+      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_live_3bb98d5dc8a2fa57534c307db789248d24c629de",
       email: vendor.email || userEmail,
       amount: summaryUnitPrice * 100,
       currency: "NGN",
@@ -726,8 +730,12 @@ export default function GetSponsoredPage() {
                             checked={selectedItemIds.includes(item.id)}
                             onChange={() => toggleItem(item.id, maxItems)}
                           />
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={item.image || "/images/placeholder.png"} alt={item.name} />
+                          {item.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={item.image} alt={item.name} />
+                          ) : (
+                            <div className={styles.itemImagePlaceholder} aria-hidden="true">🖼️</div>
+                          )}
                           <span>{item.name}</span>
                         </label>
                       ))}
