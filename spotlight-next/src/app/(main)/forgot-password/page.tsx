@@ -15,12 +15,23 @@
 // Supabase's redirect) knows where to send the user afterward.
 // ===============================================================
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import styles from "./forgot-password.module.css";
 
+// Next.js requires useSearchParams() to sit inside a Suspense boundary
+// so the page shell can still be prerendered — without this, `npm run
+// build` fails outright ("should be wrapped in a suspense boundary").
 export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={null}>
+      <ForgotPasswordInner />
+    </Suspense>
+  );
+}
+
+function ForgotPasswordInner() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [statusMsg, setStatusMsg] = useState("");

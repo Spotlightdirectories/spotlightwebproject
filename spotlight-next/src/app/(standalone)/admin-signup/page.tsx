@@ -29,14 +29,25 @@
 // admin's active session elsewhere in /admin.
 // ===============================================================
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { adminSignupSupabase } from "@/lib/adminSignupSupabase";
 import styles from "./admin-signup.module.css";
 
 type InvitationLookup = { email: string; role: string; valid: boolean };
 
+// Next.js requires useSearchParams() to sit inside a Suspense boundary
+// so the page shell can still be prerendered — without this, `npm run
+// build` fails outright ("should be wrapped in a suspense boundary").
 export default function AdminSignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminSignupInner />
+    </Suspense>
+  );
+}
+
+function AdminSignupInner() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
 

@@ -87,6 +87,17 @@ interface ServiceRow {
   vendors: { name: string; slug: string } | null;
 }
 
+interface VisitRequestRow {
+  id: string;
+  location_note: string;
+  message: string | null;
+  status: "pending" | "acknowledged" | "declined" | "cancelled";
+  created_at: string;
+  acknowledged_at: string | null;
+  customer_viewed_at: string | null;
+  vendors: { name: string; slug: string | null } | null;
+}
+
 interface ActivityItem {
   kind: "product" | "service";
   slug: string;
@@ -173,12 +184,30 @@ async function resolveActivityItems(events: RawActivityEvent[]): Promise<Activit
   return items;
 }
 
+type TabKey = "overview" | "favorites" | "viewed" | "inquiries" | "visits" | "reviews";
+
+const TAB_TITLES: Record<TabKey, string> = {
+  overview: "Overview",
+  favorites: "Favorite Vendors",
+  viewed: "Recently Viewed",
+  inquiries: "My Inquiries",
+  visits: "Visit Requests",
+  reviews: "My Reviews",
+};
+
 export default function CustomerProfilePage() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [hasVendorAccount, setHasVendorAccount] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabKey>("overview");
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  function switchTab(tab: TabKey) {
+    setActiveTab(tab);
+    setMobileSidebarOpen(false);
+  }
 
   const [favorites, setFavorites] = useState<FavoriteRow[]>([]);
   const [favoritesError, setFavoritesError] = useState(false);
@@ -191,6 +220,15 @@ export default function CustomerProfilePage() {
 
   const [inquiries, setInquiries] = useState<ActivityItem[]>([]);
   const [inquiriesError, setInquiriesError] = useState(false);
+
+  const [visitRequests, setVisitRequests] = useState<VisitRequestRow[]>([]);
+  const [visitRequestsError, setVisitRequestsError] = useState(false);
+  const [unreadVisitReplies, setUnreadVisitReplies] = useState(0);
+  // IDs of replies that were unread at page-load — captured once so the
+  // "New" highlight in the Visit Requests tab sticks around for this
+  // visit even after mark_visit_requests_viewed_by_customer clears the
+  // unread flag in the database. Naturally resets on next page load.
+  const [newlyRepliedIds, setNewlyRepliedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function load() {
@@ -281,6 +319,36 @@ export default function CustomerProfilePage() {
         setInquiries(await resolveActivityItems(contactEvents || []));
       }
 
+      // Visit requests this customer has sent — 2026-08 safety
+      // feature. Shows the vendor, when it was requested, and whether
+      // the vendor has confirmed/declined it yet, so the customer
+      // isn't left wondering what happened after tapping "Request a
+      // Visit" on a vendor/product/service page.
+      const { data: visitData, error: visitError } = await supabase
+        .from("visit_requests")
+        .select(`
+          id, location_note, message, status, created_at, acknowledged_at, customer_viewed_at,
+          vendors ( name, slug )
+        `)
+        .eq("customer_id", customerRow.id)
+        .order("created_at", { ascending: false })
+        .returns<VisitRequestRow[]>();
+
+      if (visitError) {
+        console.error("Visit requests load error:", visitError);
+        setVisitRequestsError(true);
+      } else {
+        setVisitRequests(visitData || []);
+        // Unread = a vendor reply (acknowledged/declined) the customer
+        // hasn't opened the Visit Requests tab to see yet — mirrors the
+        // vendor-side inbox-style badge.
+        const unreadRows = (visitData || []).filter(
+          v => (v.status === "acknowledged" || v.status === "declined") && !v.customer_viewed_at
+        );
+        setUnreadVisitReplies(unreadRows.length);
+        setNewlyRepliedIds(new Set(unreadRows.map(v => v.id)));
+      }
+
       // My reviews — matched by email
       if (customerRow.email) {
         const { data: reviewData, error: reviewError } = await supabase
@@ -307,6 +375,22 @@ export default function CustomerProfilePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Clear the "Visit Requests" badge once the customer actually opens
+  // that tab — same pattern as the vendor dashboard's unread badge.
+  useEffect(() => {
+    const customerId = customer?.id;
+    if (activeTab !== "visits" || !customerId || unreadVisitReplies === 0) return;
+    let cancelled = false;
+    (async () => {
+      const { error } = await supabase.rpc("mark_visit_requests_viewed_by_customer", {
+        p_customer_id: customerId,
+      });
+      if (!cancelled && !error) setUnreadVisitReplies(0);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, customer?.id]);
+
   async function handleLogout() {
     await supabase.auth.signOut();
     router.push("/");
@@ -322,22 +406,107 @@ export default function CustomerProfilePage() {
 
   if (!customer) return null;
 
+  const navItemClass = (tab: TabKey) => `${styles.cpNavItem}${activeTab === tab ? " " + styles.cpNavItemActive : ""}`;
+
   return (
-    <div className={styles.cpPage}>
+    <div className={styles.cpDashboardRoot}>
 
-      <div className={styles.cpHeader}>
-        <h1>{customer.name || "My Account"}</h1>
-        <p className={styles.cpEmail}>{customer.email || ""}</p>
-      </div>
+      {/* SIDEBAR */}
+      <aside className={`${styles.cpSidebar}${mobileSidebarOpen ? " " + styles.cpSidebarOpen : ""}`}>
+        <div className={styles.cpSidebarInner}>
+          <div className={styles.cpSidebarHeader}>
+            <h2>{customer.name || "My Account"}</h2>
+            <p>{customer.email || ""}</p>
+          </div>
 
-      {hasVendorAccount && (
-        <div className={styles.cpVendorSwitch}>
-          <i className="fa-solid fa-store"></i>
-          <span>You also have a vendor account on Spotlight.</span>
-          <a href="/vendordashboard">Go to Vendor Dashboard</a>
+          <nav className={styles.cpNav}>
+            <button className={navItemClass("overview")} onClick={() => switchTab("overview")}>
+              <i className="fa-regular fa-square"></i><span>Overview</span>
+            </button>
+            <button className={navItemClass("favorites")} onClick={() => switchTab("favorites")}>
+              <i className="fa-regular fa-heart"></i><span>Favorite Vendors</span>
+            </button>
+            <button className={navItemClass("viewed")} onClick={() => switchTab("viewed")}>
+              <i className="fa-regular fa-eye"></i><span>Recently Viewed</span>
+            </button>
+            <button className={navItemClass("inquiries")} onClick={() => switchTab("inquiries")}>
+              <i className="fa-solid fa-comments"></i><span>My Inquiries</span>
+            </button>
+            <button className={navItemClass("visits")} onClick={() => switchTab("visits")}>
+              <i className="fa-solid fa-shield-heart"></i>
+              <span>Visit Requests{unreadVisitReplies > 0 ? ` (${unreadVisitReplies})` : ""}</span>
+            </button>
+            <button className={navItemClass("reviews")} onClick={() => switchTab("reviews")}>
+              <i className="fa-regular fa-star"></i><span>My Reviews</span>
+            </button>
+            {hasVendorAccount && (
+              <a href="/vendordashboard" className={styles.cpNavItem}>
+                <i className="fa-solid fa-store"></i><span>Vendor Dashboard</span>
+              </a>
+            )}
+          </nav>
+
+          <button type="button" className={styles.cpLogoutBtn} onClick={handleLogout}>
+            <i className="fa-solid fa-arrow-right-from-bracket"></i> Log Out
+          </button>
         </div>
+      </aside>
+
+      {/* MOBILE TOPBAR */}
+      <header className={styles.cpMobileTopbar}>
+        <span className={styles.cpMobileBrand}>{TAB_TITLES[activeTab]}</span>
+        <button className={styles.cpMobileMenuBtn} onClick={() => setMobileSidebarOpen(true)} aria-label="Open menu">
+          <i className="fa-solid fa-bars"></i>
+        </button>
+      </header>
+
+      {mobileSidebarOpen && (
+        <div className={styles.cpMobileOverlay} onClick={() => setMobileSidebarOpen(false)}></div>
       )}
 
+      {/* MAIN */}
+      <main className={styles.cpMain}>
+        <h1 className={styles.cpMainTitle}>{TAB_TITLES[activeTab]}</h1>
+
+        {hasVendorAccount && activeTab === "overview" && (
+          <div className={styles.cpVendorSwitch}>
+            <i className="fa-solid fa-store"></i>
+            <span>You also have a vendor account on Spotlight.</span>
+            <a href="/vendordashboard">Go to Vendor Dashboard</a>
+          </div>
+        )}
+
+        {activeTab === "overview" && (
+          <div className={styles.cpOverviewGrid}>
+            <button type="button" className={styles.cpOverviewCard} onClick={() => switchTab("favorites")}>
+              <i className="fa-regular fa-heart"></i>
+              <strong>{favorites.length}</strong>
+              <span>Favorite Vendors</span>
+            </button>
+            <button type="button" className={styles.cpOverviewCard} onClick={() => switchTab("viewed")}>
+              <i className="fa-regular fa-eye"></i>
+              <strong>{recentlyViewed.length}</strong>
+              <span>Recently Viewed</span>
+            </button>
+            <button type="button" className={styles.cpOverviewCard} onClick={() => switchTab("inquiries")}>
+              <i className="fa-solid fa-comments"></i>
+              <strong>{inquiries.length}</strong>
+              <span>Inquiries</span>
+            </button>
+            <button type="button" className={styles.cpOverviewCard} onClick={() => switchTab("visits")}>
+              <i className="fa-solid fa-shield-heart"></i>
+              <strong>{visitRequests.length}</strong>
+              <span>Visit Requests</span>
+            </button>
+            <button type="button" className={styles.cpOverviewCard} onClick={() => switchTab("reviews")}>
+              <i className="fa-regular fa-star"></i>
+              <strong>{reviews.length}</strong>
+              <span>Reviews Written</span>
+            </button>
+          </div>
+        )}
+
+      {activeTab === "favorites" && (
       <section className={styles.cpSection}>
         <h2>My Favorite Vendors</h2>
         <div className={styles.cpFavoritesList}>
@@ -375,7 +544,9 @@ export default function CustomerProfilePage() {
           )}
         </div>
       </section>
+      )}
 
+      {activeTab === "viewed" && (
       <section className={styles.cpSection}>
         <h2>Recently Viewed</h2>
         <div className={styles.cpActivityList}>
@@ -404,7 +575,9 @@ export default function CustomerProfilePage() {
           )}
         </div>
       </section>
+      )}
 
+      {activeTab === "inquiries" && (
       <section className={styles.cpSection}>
         <h2>My Inquiries</h2>
         <p className={styles.cpNote}>
@@ -437,7 +610,53 @@ export default function CustomerProfilePage() {
           )}
         </div>
       </section>
+      )}
 
+      {activeTab === "visits" && (
+      <section className={styles.cpSection}>
+        <h2>My Visit Requests</h2>
+        <p className={styles.cpNote}>
+          Requests you&apos;ve sent through &quot;Request a Visit&quot; on a vendor, product, or service page.
+        </p>
+        <div className={styles.cpVisitList}>
+          {visitRequestsError ? (
+            <p className={styles.cpEmpty}>Couldn't load your visit requests right now.</p>
+          ) : visitRequests.length === 0 ? (
+            <p className={styles.cpEmpty}>No visit requests yet — use &quot;Request a Visit&quot; on a vendor's page to send one.</p>
+          ) : (
+            visitRequests.map(vr => {
+              const isNew = newlyRepliedIds.has(vr.id);
+              return (
+              <div key={vr.id} className={`${styles.cpVisitCard}${isNew ? " " + styles.cpVisitCardNew : ""}`}>
+                <div className={styles.cpVisitTop}>
+                  {vr.vendors?.slug ? (
+                    <a href={`/vendor/${encodeURIComponent(vr.vendors.slug)}`}><strong>{vr.vendors.name}</strong></a>
+                  ) : (
+                    <strong>{vr.vendors?.name || "Vendor"}</strong>
+                  )}
+                  {isNew && <span className={styles.cpVisitNewBadge}>New</span>}
+                  {vr.status === "pending" && <span className={`${styles.cpVisitStatus} ${styles.cpVisitStatusPending}`}>Awaiting vendor confirmation</span>}
+                  {vr.status === "acknowledged" && <span className={`${styles.cpVisitStatus} ${styles.cpVisitStatusAck}`}>Confirmed by vendor</span>}
+                  {vr.status === "declined" && <span className={`${styles.cpVisitStatus} ${styles.cpVisitStatusDeclined}`}>Declined</span>}
+                  {vr.status === "cancelled" && <span className={`${styles.cpVisitStatus} ${styles.cpVisitStatusDeclined}`}>Cancelled</span>}
+                </div>
+                <p className={styles.cpVisitDetail}><i className="fa-solid fa-location-dot"></i> {vr.location_note}</p>
+                {vr.message && <p className={styles.cpVisitDetail}><i className="fa-solid fa-comment"></i> {vr.message}</p>}
+                <p className={styles.cpVisitDate}>
+                  Requested {new Date(vr.created_at).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" })}
+                  {vr.status === "acknowledged" && vr.acknowledged_at && (
+                    <> · Confirmed {new Date(vr.acknowledged_at).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" })}</>
+                  )}
+                </p>
+              </div>
+              );
+            })
+          )}
+        </div>
+      </section>
+      )}
+
+      {activeTab === "reviews" && (
       <section className={styles.cpSection}>
         <h2>My Reviews</h2>
         <p className={styles.cpNote}>
@@ -464,9 +683,9 @@ export default function CustomerProfilePage() {
           )}
         </div>
       </section>
+      )}
 
-      <button type="button" className={styles.cpLogoutBtn} onClick={handleLogout}>Log Out</button>
-
+      </main>
     </div>
   );
 }

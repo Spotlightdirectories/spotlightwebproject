@@ -12,8 +12,8 @@
 // present here as stubs so tab switching works end to end.
 // ===============================================================
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import ProfileTab from "./ProfileTab";
 import ProductsTab from "./ProductsTab";
@@ -21,6 +21,7 @@ import ServicesTab from "./ServicesTab";
 import PortfolioTab from "./PortfolioTab";
 import SubscriptionTab from "./SubscriptionTab";
 import VerificationTab from "./VerificationTab";
+import VisitRequestsTab from "./VisitRequestsTab";
 import SettingsTab from "./SettingsTab";
 
 export type Vendor = {
@@ -68,6 +69,7 @@ type TabKey =
   | "portfolio"
   | "subscription"
   | "verification"
+  | "visitRequests"
   | "settings";
 
 const TAB_TITLES: Record<TabKey, string> = {
@@ -78,11 +80,25 @@ const TAB_TITLES: Record<TabKey, string> = {
   portfolio: "Portfolio",
   subscription: "Subscription",
   verification: "Verification",
+  visitRequests: "Visit Requests",
   settings: "Settings",
 };
 
+// 2026-08 addition, per Cyril: the "New Visit Request" email links here
+// with ?tab=visitRequests so the vendor lands directly on that tab
+// instead of the generic Overview. useSearchParams() requires a
+// Suspense boundary in Next.js, hence the wrapper.
 export default function VendorDashboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <VendorDashboardInner />
+    </Suspense>
+  );
+}
+
+function VendorDashboardInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [loading, setLoading] = useState(true);
@@ -101,6 +117,12 @@ export default function VendorDashboardPage() {
   // Trial countdown
   const [trialText, setTrialText] = useState<{ days: string; time: string; ended: boolean } | null>(null);
 
+  // Visit Requests unread count (2026-08) — mirrors an inbox unread
+  // badge: counts requests this vendor hasn't opened the tab to see
+  // yet (vendor_viewed_at IS NULL). Cleared by VisitRequestsTab the
+  // moment the tab becomes active, via the onViewed callback below.
+  const [unreadVisits, setUnreadVisits] = useState(0);
+
   // ---------------------------------------------------------------
   // AUTH GUARD + FETCH VENDOR
   // ---------------------------------------------------------------
@@ -108,8 +130,18 @@ export default function VendorDashboardPage() {
     async function load() {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
 
+      // Preserve where the vendor was actually headed (e.g. a
+      // ?tab=visitRequests link from the visit-request email) through
+      // the login detour, instead of dumping them on a generic
+      // Overview tab with no idea why they were sent there.
+      const loginRedirect = () => {
+        const tab = searchParams.get("tab");
+        const next = tab ? `/vendordashboard?tab=${encodeURIComponent(tab)}` : "/vendordashboard";
+        router.replace(`/login?next=${encodeURIComponent(next)}`);
+      };
+
       if (authError || !user) {
-        router.replace("/login");
+        loginRedirect();
         return;
       }
 
@@ -120,7 +152,7 @@ export default function VendorDashboardPage() {
         .maybeSingle();
 
       if (vendorError || !v) {
-        router.replace("/login");
+        loginRedirect();
         return;
       }
 
@@ -130,6 +162,14 @@ export default function VendorDashboardPage() {
       }
 
       setVendor(v as Vendor);
+
+      // Deep-link support: ?tab=visitRequests (etc.) from the
+      // visit-request email opens straight to that tab instead of the
+      // default Overview.
+      const requestedTab = searchParams.get("tab");
+      if (requestedTab && requestedTab in TAB_TITLES) {
+        setActiveTab(requestedTab as TabKey);
+      }
 
       // Media + social counts for the profile checklist. Category/subcategory
       // now lives on individual products/services (not on the vendor row
@@ -148,7 +188,25 @@ export default function VendorDashboardPage() {
       setLoading(false);
     }
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
+
+  // ---------------------------------------------------------------
+  // VISIT REQUESTS — unread count for the sidebar badge
+  // ---------------------------------------------------------------
+  useEffect(() => {
+    if (!vendor?.id) return;
+    let cancelled = false;
+    (async () => {
+      const { count } = await supabase
+        .from("visit_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("vendor_id", vendor.id)
+        .is("vendor_viewed_at", null);
+      if (!cancelled) setUnreadVisits(count || 0);
+    })();
+    return () => { cancelled = true; };
+  }, [vendor?.id]);
 
   // ---------------------------------------------------------------
   // TRIAL COUNTDOWN (free plan only, 90 days from trial_started_at)
@@ -362,6 +420,10 @@ export default function VendorDashboardPage() {
               </button>
               <button className={`vd-nav-item${activeTab === "verification" ? " active" : ""}`} onClick={() => switchTab("verification")}>
                 <i className="fa-regular fa-circle-check"></i><span>Verification</span>
+              </button>
+              <button className={`vd-nav-item${activeTab === "visitRequests" ? " active" : ""}`} onClick={() => switchTab("visitRequests")}>
+                <i className="fa-solid fa-shield-heart"></i><span>Visit Requests</span>
+                {unreadVisits > 0 && <span className="vd-nav-badge">{unreadVisits}</span>}
               </button>
               <button className="vd-nav-item" onClick={() => { window.location.href = "/insight"; }}>
                 <i className="fa-solid fa-chart-line"></i><span>Business Insights</span>
@@ -585,6 +647,11 @@ export default function VendorDashboardPage() {
         {/* ============ VERIFICATION (module 4) ============ */}
         <section className={sec("verification")}>
           <VerificationTab vendor={vendor} />
+        </section>
+
+        {/* ============ VISIT REQUESTS (2026-08 safety feature) ============ */}
+        <section className={sec("visitRequests")}>
+          <VisitRequestsTab vendor={vendor} active={activeTab === "visitRequests"} onViewed={() => setUnreadVisits(0)} />
         </section>
 
         <section className={sec("settings")}>

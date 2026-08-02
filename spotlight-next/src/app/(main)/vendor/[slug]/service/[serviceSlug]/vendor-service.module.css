@@ -176,12 +176,22 @@
   margin-top: 4px;
 }
 
-/* ACTIONS */
+/* ACTIONS — flex row of 4 when there's no image (vsContainerNoImage
+   gives the info column the full page width, plenty of room). When
+   an image IS present, the info column is much narrower, so
+   .vsActionsCompact (applied in JSX when hasImage) switches to a 2x2
+   wrap instead of letting 4 labelled buttons squeeze into one row
+   and wrap mid-word (2026-08 fix, per Cyril). */
 .vsActions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: 22px;
   width: 100%;
+}
+
+.vsActionsCompact .vsActionBtn {
+  flex: 1 1 calc(50% - 5px);
 }
 
 .vsActionBtn {
@@ -192,11 +202,13 @@
   justify-content: center;
   gap: 6px;
   border-radius: 10px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   text-decoration: none;
   border: none;
   cursor: pointer;
+  white-space: nowrap;
+  flex: 1 1 0;
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
@@ -207,6 +219,98 @@
 .vsWhatsappBtn:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(0,0,0,0.18); }
 .vsCallBtn { background: var(--color-dark); color: #ffffff; }
 .vsShareBtn { background: var(--color-primary); color: #000000; }
+.vsVisitBtn { background: var(--color-surface); color: var(--color-text-primary); border: 1.5px solid var(--color-primary); }
+.vsVisitBtn:hover { background: var(--color-primary); color: var(--color-dark); }
+
+/* VISIT REQUEST MODAL — 2026-08 safety feature */
+.vsModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.vsModal {
+  width: 100%;
+  max-width: 420px;
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--color-surface);
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: var(--shadow-xl);
+}
+
+.vsModalTitle { font-size: 1.2rem; font-weight: 700; margin: 0 0 20px; color: var(--color-text-primary); }
+
+.vsVisitModalIntro {
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  color: var(--color-text-body);
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.vsVisitModalIntro i { color: var(--color-primary-hover); }
+
+.vsVisitLabel { display: block; font-size: 0.8rem; font-weight: 600; color: var(--color-text-body); margin: 12px 0 4px; }
+.vsVisitLabel:first-of-type { margin-top: 0; }
+
+.vsModalInput,
+.vsModalTextarea {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  font-size: 0.95rem;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.vsModalInput:focus, .vsModalTextarea:focus { outline: none; border-color: var(--color-primary); }
+.vsModalTextarea { min-height: 80px; resize: vertical; }
+
+.vsModalActions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+.vsModalCancelBtn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vsModalSubmitBtn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  background: var(--color-dark);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.vsModalSubmitBtn:hover:not(:disabled) { background: var(--color-primary); color: #000000; }
+.vsModalSubmitBtn:disabled { opacity: 0.7; cursor: not-allowed; }
+[data-theme="dark"] .vsModalSubmitBtn { border: 1.5px solid var(--color-border); }
+
+.vsVisitSubmittedText { font-size: 0.9rem; color: var(--color-text-body); line-height: 1.6; margin: 0 0 20px; }
+.vsVisitSubmittedText i { color: var(--color-success); margin-right: 4px; }
 
 /* MORE / SIMILAR */
 .vsMoreSection, .vsSimilarSection { margin-top: 48px; }
@@ -300,8 +404,8 @@
   .vsMainImage { height: 260px; }
   .vsInfo h1 { font-size: 1.3rem; }
   .vsPrice { font-size: 1.15rem; }
-  .vsActions { gap: 6px; }
-  .vsActionBtn { height: 42px; font-size: 12px; }
+  .vsActions { gap: 6px; flex-wrap: wrap; }
+  .vsActionBtn { height: 42px; font-size: 12px; flex: 1 1 calc(50% - 6px); }
   .vsMoreSection, .vsSimilarSection { margin-top: 32px; }
   .vsCardGrid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 }

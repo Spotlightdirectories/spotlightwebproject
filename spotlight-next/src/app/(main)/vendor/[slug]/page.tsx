@@ -298,6 +298,21 @@ export default function VendorProfilePage() {
   const [favoriteCustomerId, setFavoriteCustomerId] = useState<string | null>(null);
   const [favoriteBusy, setFavoriteBusy] = useState(false);
 
+  // Visit Request modal (2026-08 safety feature) — unlike reviews,
+  // this requires a logged-in customer identity, since the entire
+  // point is giving the vendor a confirmed name + phone to check
+  // before they travel to a customer's location. Cached the same way
+  // as reviewingCustomer, undefined = not yet checked.
+  const [visitCustomer, setVisitCustomer] = useState<
+    { id: string; name: string; email: string; phone: string | null } | null | undefined
+  >(undefined);
+  const [visitModalOpen, setVisitModalOpen] = useState(false);
+  const [visitPhone, setVisitPhone] = useState("");
+  const [visitLocation, setVisitLocation] = useState("");
+  const [visitMessage, setVisitMessage] = useState("");
+  const [submittingVisit, setSubmittingVisit] = useState(false);
+  const [visitSubmitted, setVisitSubmitted] = useState(false);
+
   const aboutEditorRef = useRef<HTMLDivElement>(null);
 
   // ── Load vendor ──────────────────────────────────────────────
@@ -424,6 +439,21 @@ export default function VendorProfilePage() {
     if (searchParams.get("review") === "1") {
       reviewParamHandled.current = true;
       openReviewModal();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vendor]);
+
+  // Deep-link support for "Request a Visit" (?requestVisit=1) — an
+  // anonymous visitor gets sent to /customer-login first (see
+  // openVisitModal), then lands back here with this param, which
+  // reopens the same modal automatically once they're logged in.
+  const visitParamHandled = useRef(false);
+  useEffect(() => {
+    if (visitParamHandled.current) return;
+    if (!vendor) return;
+    if (searchParams.get("requestVisit") === "1") {
+      visitParamHandled.current = true;
+      openVisitModal();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vendor]);
@@ -875,6 +905,82 @@ export default function VendorProfilePage() {
     setReviewModalOpen(true);
   }
 
+  // ── Visit Request modal (2026-08 safety feature) ──────────────
+  // Requires a real, logged-in customer identity — unlike reviews,
+  // there's no anonymous path here, since the whole point is giving
+  // the vendor a confirmed name + phone to check before they travel.
+  async function getVisitCustomer() {
+    if (visitCustomer !== undefined) return visitCustomer;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { setVisitCustomer(null); return null; }
+    const { data: customer } = await supabase
+      .from("customers")
+      .select("id, name, email, phone")
+      .eq("auth_user_id", session.user.id)
+      .maybeSingle();
+    const result = customer || null;
+    setVisitCustomer(result);
+    return result;
+  }
+
+  async function openVisitModal() {
+    const customer = await getVisitCustomer();
+    if (!customer) {
+      // Not logged in as a customer — send them to log in first, then
+      // straight back to this profile with ?requestVisit=1 so the
+      // deep-link effect below reopens this exact modal automatically
+      // (mirrors the existing ?review=1 pattern), instead of dropping
+      // them on their profile with no idea why they logged in.
+      router.push(`/customer-login?next=${encodeURIComponent(`/vendor/${slug}?requestVisit=1`)}`);
+      return;
+    }
+    setVisitPhone(customer.phone || "");
+    setVisitLocation("");
+    setVisitMessage("");
+    setVisitSubmitted(false);
+    setVisitModalOpen(true);
+  }
+
+  async function handleSubmitVisit() {
+    if (!vendor) return;
+    const customer = await getVisitCustomer();
+    if (!customer) return;
+    if (!visitPhone.trim()) { alert("Please add a phone number so the vendor can confirm it's really you."); return; }
+    if (!visitLocation.trim()) { alert("Please add the location or address for the visit."); return; }
+
+    setSubmittingVisit(true);
+
+    // Keep the customer's phone on file up to date for next time.
+    if (visitPhone.trim() !== (customer.phone || "")) {
+      await supabase.from("customers").update({ phone: visitPhone.trim() }).eq("id", customer.id);
+      setVisitCustomer({ ...customer, phone: visitPhone.trim() });
+    }
+
+    const { data: created, error } = await supabase.from("visit_requests").insert({
+      vendor_id: vendor.id,
+      customer_id: customer.id,
+      customer_name: customer.name || "",
+      customer_phone: visitPhone.trim(),
+      customer_email: customer.email || null,
+      location_note: visitLocation.trim(),
+      message: visitMessage.trim() || null,
+    }).select("id").single();
+
+    setSubmittingVisit(false);
+
+    if (error) {
+      console.error(error);
+      alert("Unable to send the visit request. Please try again.");
+      return;
+    }
+
+    try {
+      await supabase.functions.invoke("notify-visit-request", { body: { visit_request_id: created?.id } });
+    } catch { /* non-fatal */ }
+
+    setVisitSubmitted(true);
+  }
+
   // ── Review submit ────────────────────────────────────────────
   async function handleSubmitReview() {
     if (!vendor || !reviewRating || !reviewerName.trim() || !reviewerEmail.trim() || !reviewText.trim()) {
@@ -1157,6 +1263,16 @@ export default function VendorProfilePage() {
               >
                 <i className={isFavorited ? "fa-solid fa-heart" : "fa-regular fa-heart"}></i>
                 <span>{isFavorited ? "Saved" : "Save"}</span>
+              </button>
+            )}
+            {!isOwner && (
+              <button
+                type="button"
+                className={`${styles.quickAction} ${styles.quickActionVisit}`}
+                onClick={openVisitModal}
+              >
+                <i className="fa-solid fa-shield-heart"></i>
+                <span>Request a Visit</span>
               </button>
             )}
           </div>
@@ -1686,6 +1802,70 @@ export default function VendorProfilePage() {
                 {submittingReview ? "Submitting..." : "Submit Review"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* VISIT REQUEST MODAL — 2026-08 safety feature. Requires a
+          logged-in customer (gated in openVisitModal), so name is
+          always locked to the real account; phone is editable in
+          case it wasn't collected at signup, and gets saved back to
+          the customer's profile for next time. */}
+      {visitModalOpen && (
+        <div className={styles.modalOverlay} onClick={e => { if (e.target === e.currentTarget) setVisitModalOpen(false); }}>
+          <div className={styles.modal}>
+            {visitSubmitted ? (
+              <>
+                <h3 className={styles.modalTitle}>Request Sent</h3>
+                <p className={styles.visitSubmittedText}>
+                  <i className="fa-solid fa-circle-check"></i>{" "}
+                  {vendor?.name || "The vendor"} will confirm your name and phone number before coming. You can
+                  expect a call or WhatsApp message to arrange the visit.
+                </p>
+                <div className={styles.modalActions}>
+                  <button type="button" className={styles.modalSubmitBtn} onClick={() => setVisitModalOpen(false)}>Done</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className={styles.modalTitle}>Request a Visit</h3>
+                <p className={styles.visitModalIntro}>
+                  <i className="fa-solid fa-shield-heart"></i>{" "}
+                  For your safety and the vendor&apos;s, {vendor?.name || "this vendor"} will confirm your name
+                  and phone number here on Spotlight before travelling to your location.
+                </p>
+                <label className={styles.visitLabel}>Your name</label>
+                <input className={styles.modalInput} value={visitCustomer?.name || ""} readOnly />
+                <label className={styles.visitLabel}>Your phone number</label>
+                <input
+                  className={styles.modalInput}
+                  type="tel"
+                  placeholder="+2348021234567"
+                  value={visitPhone}
+                  onChange={e => setVisitPhone(e.target.value)}
+                />
+                <label className={styles.visitLabel}>Location / address for the visit</label>
+                <input
+                  className={styles.modalInput}
+                  placeholder="e.g. Off Admiralty Way, Lekki Phase 1"
+                  value={visitLocation}
+                  onChange={e => setVisitLocation(e.target.value)}
+                />
+                <label className={styles.visitLabel}>What do you need? (optional)</label>
+                <textarea
+                  className={styles.modalTextarea}
+                  placeholder="Briefly describe the job..."
+                  value={visitMessage}
+                  onChange={e => setVisitMessage(e.target.value)}
+                />
+                <div className={styles.modalActions}>
+                  <button type="button" className={styles.modalCancelBtn} onClick={() => setVisitModalOpen(false)}>Cancel</button>
+                  <button type="button" className={styles.modalSubmitBtn} onClick={handleSubmitVisit} disabled={submittingVisit}>
+                    {submittingVisit ? "Sending..." : "Send Visit Request"}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

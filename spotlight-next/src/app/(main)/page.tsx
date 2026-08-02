@@ -25,6 +25,13 @@ const HOW_STEPS = [
   { img: "/images/slide-empowering-small-businesses2.webp", alt: "Business owner connecting with a customer", num: "3", title: "Connect Directly", desc: "They reach you by WhatsApp, phone call, or directions — straight to your door." },
 ];
 
+const SAFETY = [
+  { icon: "fa-solid fa-shield-heart", title: "Verified Badges", desc: "Vendors can apply for identity and business verification. Look for the badge before you engage." },
+  { icon: "fa-solid fa-ban", title: "Restricted Items Blocked", desc: "Illegal and unsafe listings — firearms, counterfeit goods, and more — never make it onto Spotlight." },
+  { icon: "fa-solid fa-star", title: "Recommendations Tied To Real Work", desc: "Only customers with a genuine, completed interaction can leave a review. No fake ratings." },
+  { icon: "fa-solid fa-envelope-open-text", title: "A Real Person Reviews Reports", desc: "See something wrong? One email gets it in front of our team — support@spotlightdirectories.com." },
+];
+
 const GROWTH = [
   { icon: "fa-solid fa-magnifying-glass-location", title: "Stand Out Locally", desc: "Show up when nearby customers search your category." },
   { icon: "fa-solid fa-chart-line", title: "Business Insight Dashboard", desc: "See where your visitors come from and what they search for — included on every plan." },
@@ -129,6 +136,30 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* SAFETY — for both service seekers and providers */}
+      <section className={styles.ldSafety}>
+        <div className={styles.ldSafetyContainer}>
+          <p className={styles.ldEyebrow}>
+            <i className="fa-solid fa-shield-heart"></i> Your safety comes first
+          </p>
+          <h2>Built With Nigerian Realities In Mind</h2>
+          <p className={styles.ldSafetySub}>
+            Whether you&apos;re searching for a service or listing your business, here&apos;s how Spotlight
+            helps keep it safe.
+          </p>
+          <div className={styles.ldSafetyGrid}>
+            {SAFETY.map((s, i) => (
+              <div key={i} className={styles.ldSafetyCard}>
+                <i className={s.icon}></i>
+                <h3>{s.title}</h3>
+                <p>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+          <a href="/safety" className={`${styles.ldBtn} ${styles.ldBtnOutline}`}>Read Our Full Safety Guide</a>
+        </div>
+      </section>
+
       {/* VENDOR GROWTH */}
       <section className={styles.ldGrowth}>
         <div>
@@ -167,6 +198,7 @@ export default function HomePage() {
           </div>
           <div className={styles.hfooterSupport}>
             <h4>Support</h4>
+            <a href="/safety">Safety Center</a>
             <a href="/FAQ">FAQ</a>
             <a href="/contact-us">Contact Us</a>
             <a href="/feedback">Feedback</a>

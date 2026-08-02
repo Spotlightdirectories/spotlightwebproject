@@ -21,12 +21,25 @@
 // partners via a new ?type=customer.
 // ===============================================================
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import styles from "./customer-login.module.css";
 
+// Next.js requires useSearchParams() to sit inside a Suspense boundary
+// so the page shell can still be prerendered — without this, `npm run
+// build` fails outright ("should be wrapped in a suspense boundary").
+// This wasn't caught earlier because the sandbox's build check has
+// been unavailable most of this session; this is the actual fix.
 export default function CustomerLoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <CustomerLoginForm />
+    </Suspense>
+  );
+}
+
+function CustomerLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -39,6 +52,12 @@ export default function CustomerLoginPage() {
   const setupMode = searchParams.get("setup") === "1";
   const setupEmail = searchParams.get("email") || "";
   const setupName = searchParams.get("name") || "";
+  // Where to send the customer after a successful login — used by
+  // flows like "Request a Visit" that send an unauthenticated
+  // customer here first and need them back on the exact page they
+  // started from afterward, instead of dumping them on their profile
+  // with no idea why they were asked to log in.
+  const nextUrl = searchParams.get("next") || "/customer-profile";
 
   useEffect(() => {
     if (setupEmail) setEmail(setupEmail);
@@ -87,7 +106,7 @@ export default function CustomerLoginPage() {
           return;
         }
 
-        router.push("/customer-profile");
+        router.push(nextUrl);
         return;
       }
 
@@ -99,7 +118,7 @@ export default function CustomerLoginPage() {
       return;
     }
 
-    router.push("/customer-profile");
+    router.push(nextUrl);
   }
 
   return (
@@ -110,6 +129,8 @@ export default function CustomerLoginPage() {
         <p className={styles.authSubtitle}>
           {setupMode
             ? "Log in below and we'll set up your customer profile on this account."
+            : nextUrl !== "/customer-profile"
+            ? "Log in to continue where you left off."
             : "Log in to see your favorite vendors and reviews."}
         </p>
 

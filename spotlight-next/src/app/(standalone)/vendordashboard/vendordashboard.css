@@ -129,6 +129,23 @@
   color: #000;
 }
 
+.vd-nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: auto;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  background: #dc2626;
+  flex-shrink: 0;
+}
+
 .vd-main {
   margin-left: 288px;
   padding: 20px;
@@ -1664,6 +1681,174 @@
   color: #f87171;
   background: #450a0a;
 }
+
+.vd-visit-ack-badge {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #166534;
+  background: #dcfce7;
+  border-radius: 999px;
+  padding: 2px 8px;
+  vertical-align: middle;
+}
+
+[data-theme="dark"] .vd-visit-ack-badge {
+  color: #4ade80;
+  background: #052e16;
+}
+
+/* VISIT REQUESTS list — 2026-08 safety feature */
+.vd-visit-list { display: flex; flex-direction: column; gap: 14px; }
+
+.vd-visit-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+
+.vd-visit-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.vd-visit-card-top strong { color: var(--color-text-primary); font-size: 15px; }
+
+.vd-visit-detail {
+  font-size: 13.5px;
+  color: var(--color-text-body);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.vd-visit-detail i { color: var(--color-text-muted); width: 14px; margin-top: 2px; flex-shrink: 0; }
+
+.vd-visit-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.vd-visit-decline-btn {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.vd-visit-decline-btn:hover:not(:disabled) { border-color: #dc2626; color: #dc2626; }
+.vd-visit-decline-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.vd-visit-confirm-btn {
+  background: var(--color-dark);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.vd-visit-confirm-btn:hover:not(:disabled) { background: var(--color-primary); color: var(--color-dark); }
+.vd-visit-confirm-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+[data-theme="dark"] .vd-visit-confirm-btn { border: 1.5px solid var(--color-border); }
+
+/* Prominent safety banner at the top of the Visit Requests tab
+   (2026-08, per Cyril) — stronger visual weight than the plain
+   .vd-field-tip note used elsewhere, since this links to the full
+   Safety Center and should read as important, not a passing hint. */
+.vd-visit-safety-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 4px 0 16px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--color-text-body);
+}
+
+.vd-visit-safety-banner i { color: var(--color-primary-hover); font-size: 18px; margin-top: 2px; flex-shrink: 0; }
+.vd-visit-safety-banner a { color: var(--color-info); font-weight: 600; text-decoration: underline; }
+
+/* CAUTION NUDGE MODAL — shown before a visit request can be
+   confirmed (2026-08, per Cyril). */
+.vd-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.vd-modal {
+  width: 100%;
+  max-width: 480px;
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--color-surface);
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: var(--shadow-xl);
+}
+
+.vd-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 16px;
+  color: var(--color-text-primary);
+}
+
+.vd-modal-title i { color: #f59e0b; }
+
+.vd-modal-text { font-size: 0.9rem; color: var(--color-text-body); line-height: 1.6; margin: 0 0 12px; }
+.vd-modal-text a { color: var(--color-info); font-weight: 600; }
+
+.vd-modal-location {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: var(--color-surface-alt);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0 0 16px;
+}
+
+.vd-modal-caution-list {
+  margin: 0 0 16px;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vd-modal-caution-list li { font-size: 0.85rem; color: var(--color-text-body); line-height: 1.55; }
 
 .vd-field-tip {
   background: #eff6ff;

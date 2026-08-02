@@ -23,6 +23,7 @@ import styles from "./customer-signup.module.css";
 export default function CustomerSignupPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<ReactNode>("");
   const [submitting, setSubmitting] = useState(false);
@@ -79,6 +80,7 @@ export default function CustomerSignupPage() {
         auth_user_id: data.user!.id,
         name: fullName.trim(),
         email: email.trim(),
+        phone: phone.trim() || null,
       },
     ]);
 
@@ -155,6 +157,20 @@ export default function CustomerSignupPage() {
               value={email}
               onChange={e => setEmail(e.target.value)}
             />
+          </div>
+
+          <div>
+            <label htmlFor="phone">Phone number <span style={{ fontWeight: 400, color: "var(--color-text-faint)" }}>(optional)</span></label>
+            <input
+              type="tel"
+              id="phone"
+              placeholder="+2348021234567"
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+            />
+            <p style={{ fontSize: "0.78rem", color: "var(--color-text-faint)", margin: "4px 0 0" }}>
+              Only shared with a vendor when you request a visit, so they can confirm it&apos;s really you.
+            </p>
           </div>
 
           <div>

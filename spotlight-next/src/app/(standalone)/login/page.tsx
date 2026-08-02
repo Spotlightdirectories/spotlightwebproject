@@ -1,12 +1,32 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import styles from "./login.module.css";
 
+// 2026-08 addition, per Cyril: the "New Visit Request" email links to
+// /vendordashboard?tab=visitRequests — a logged-out vendor clicking it
+// lands here first via vendordashboard's auth guard, which passes the
+// intended destination through ?next=. On success, that destination is
+// used instead of the hardcoded /vendordashboard, but only in the two
+// cases that already went to the dashboard (free plan / active paid
+// plan) — every other branch (no vendor row, closed account, missing
+// business type, pending/failed payment) is a genuine blocker and
+// keeps its own redirect regardless of ?next=. useSearchParams()
+// requires a Suspense boundary in Next.js, hence the wrapper.
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextUrl = searchParams.get("next") || "/vendordashboard";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -68,7 +88,7 @@ export default function LoginPage() {
 
     // 6. Free plan → dashboard
     if (vendor.plan_tier === "free") {
-      router.replace("/vendordashboard");
+      router.replace(nextUrl);
       return;
     }
 
@@ -82,7 +102,7 @@ export default function LoginPage() {
       return;
     }
     if (vendor.subscription_status === "active") {
-      router.replace("/vendordashboard");
+      router.replace(nextUrl);
       return;
     }
 

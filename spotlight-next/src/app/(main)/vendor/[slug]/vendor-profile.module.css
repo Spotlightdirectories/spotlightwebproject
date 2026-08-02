@@ -299,6 +299,17 @@
   color: var(--color-text-body);
 }
 
+/* "Request a Visit" — visually distinct from the other quick actions
+   (gold icon background instead of blue) so it reads as the safety
+   action it is, not just another contact method. */
+.quickActionVisit i {
+  background: rgba(230, 194, 0, 0.15);
+  color: var(--color-primary-hover);
+}
+
+[data-theme="dark"] .quickAction i { background: rgba(30, 58, 138, 0.35); color: #93c5fd; }
+[data-theme="dark"] .quickActionVisit i { background: rgba(230, 194, 0, 0.18); color: var(--color-primary); }
+
 .quickActionWhatsapp i { background: #047857; color: #ffffff; }
 
 /* ── SOCIAL LINKS ──────────────────────────────────────────────── */
@@ -1144,6 +1155,39 @@
 }
 
 .reviewAnonNotice a { color: var(--color-primary); font-weight: 600; }
+
+.visitModalIntro {
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  color: var(--color-text-body);
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.visitModalIntro i { color: var(--color-primary-hover); }
+
+.visitLabel {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-body);
+  margin: 12px 0 4px;
+}
+
+.visitLabel:first-of-type { margin-top: 0; }
+
+.visitSubmittedText {
+  font-size: 0.9rem;
+  color: var(--color-text-body);
+  line-height: 1.6;
+  margin: 0 0 20px;
+}
+
+.visitSubmittedText i { color: var(--color-success); margin-right: 4px; }
 
 .starPicker {
   display: flex;

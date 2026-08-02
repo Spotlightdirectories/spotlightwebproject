@@ -10,16 +10,35 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const [loggedIn, setLoggedIn] = useState(false);
+  // Spotlight's dual-account model means a session alone doesn't say
+  // whether this person is a vendor, a customer, or both (same
+  // email/password can hold both). Checked once per session change
+  // so the account dropdown / mobile menu can point at the right
+  // dashboard instead of always assuming vendor.
+  const [isVendor, setIsVendor] = useState(false);
+  const [isCustomer, setIsCustomer] = useState(false);
 
   useEffect(() => {
+    async function resolveIdentity(userId: string | undefined) {
+      if (!userId) { setIsVendor(false); setIsCustomer(false); return; }
+      const [{ data: vendor }, { data: customer }] = await Promise.all([
+        supabase.from("vendors").select("id").eq("auth_user_id", userId).maybeSingle(),
+        supabase.from("customers").select("id").eq("auth_user_id", userId).maybeSingle(),
+      ]);
+      setIsVendor(!!vendor);
+      setIsCustomer(!!customer);
+    }
+
     // Check session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       setLoggedIn(!!session);
+      resolveIdentity(session?.user.id);
     });
 
     // Listen for auth state changes (login/logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setLoggedIn(!!session);
+      resolveIdentity(session?.user.id);
     });
 
     return () => subscription.unsubscribe();
@@ -75,35 +94,84 @@ export default function Navbar() {
               below. Cyril's ask (2026-07-28): show it as its own
               always-visible item, right before Log Out. Only rendered
               when logged in — a logged-out visitor has no dashboard
-              to go to. */}
-          {loggedIn && (
+              to go to. Points at whichever dashboard(s) this identity
+              actually has (2026-08 fix — previously always pointed at
+              /vendordashboard even for a customer-only account). */}
+          {loggedIn && isVendor && (
             <li className={styles.dashboardMobileOnly}>
               <Link href="/vendordashboard" onClick={() => setMenuOpen(false)}>
-                <i className="fa-solid fa-gauge"></i> Dashboard
+                <i className="fa-solid fa-gauge"></i> Vendor Dashboard
+              </Link>
+            </li>
+          )}
+          {loggedIn && isCustomer && (
+            <li className={styles.dashboardMobileOnly}>
+              <Link href="/customer-profile" onClick={() => setMenuOpen(false)}>
+                <i className="fa-solid fa-user"></i> My Account
               </Link>
             </li>
           )}
 
-          <li className={loggedIn ? styles.accountMenu : undefined}>
+          {/* MOBILE ONLY — logged-out equivalent of the two links
+              above. There's no hover on touch, so both login routes
+              need to be directly tappable rather than hidden behind
+              the desktop dropdown below (2026-08, per Cyril: customer
+              login was previously only reachable via an icon buried
+              on the Discover page). */}
+          {!loggedIn && (
+            <>
+              <li className={styles.dashboardMobileOnly}>
+                <Link href="/login" onClick={() => setMenuOpen(false)}>
+                  <i className="fa-solid fa-store"></i> Vendor Login
+                </Link>
+              </li>
+              <li className={styles.dashboardMobileOnly}>
+                <Link href="/customer-login" onClick={() => setMenuOpen(false)}>
+                  <i className="fa-solid fa-user"></i> Customer Login
+                </Link>
+              </li>
+            </>
+          )}
+
+          <li className={styles.accountMenu}>
             {loggedIn ? (
               <>
                 <button className={styles.navLoginBtn} onClick={handleLogout}>
                   Log Out
                 </button>
-                {/* DESKTOP ONLY (≥1024px) — hover reveals this
-                    "Dashboard" shortcut instead of the always-visible
-                    mobile item above. Clicking "Log Out" itself is
-                    unchanged — it still logs out immediately. */}
+                {/* DESKTOP ONLY (≥1024px) — hover reveals whichever
+                    dashboard(s) this identity has. Clicking "Log Out"
+                    itself is unchanged — it still logs out immediately. */}
                 <div className={styles.accountDropdown}>
-                  <Link href="/vendordashboard" onClick={() => setMenuOpen(false)}>
-                    <i className="fa-solid fa-gauge"></i> Dashboard
-                  </Link>
+                  {isVendor && (
+                    <Link href="/vendordashboard" onClick={() => setMenuOpen(false)}>
+                      <i className="fa-solid fa-gauge"></i> Vendor Dashboard
+                    </Link>
+                  )}
+                  {isCustomer && (
+                    <Link href="/customer-profile" onClick={() => setMenuOpen(false)}>
+                      <i className="fa-solid fa-user"></i> My Account
+                    </Link>
+                  )}
                 </div>
               </>
             ) : (
-              <Link href="/login" className={styles.navLoginBtn} onClick={() => setMenuOpen(false)}>
-                Log In
-              </Link>
+              <>
+                <Link href="/login" className={styles.navLoginBtn} onClick={() => setMenuOpen(false)}>
+                  Log In
+                </Link>
+                {/* DESKTOP ONLY (≥1024px) — hover reveals both login
+                    routes, since clicking the button itself still goes
+                    straight to vendor login (unchanged default). */}
+                <div className={styles.accountDropdown}>
+                  <Link href="/login" onClick={() => setMenuOpen(false)}>
+                    <i className="fa-solid fa-store"></i> Vendor Login
+                  </Link>
+                  <Link href="/customer-login" onClick={() => setMenuOpen(false)}>
+                    <i className="fa-solid fa-user"></i> Customer Login
+                  </Link>
+                </div>
+              </>
             )}
           </li>
         </ul>

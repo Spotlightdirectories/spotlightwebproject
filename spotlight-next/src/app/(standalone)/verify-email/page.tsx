@@ -23,7 +23,7 @@
 // vendor is signed into.
 // ===============================================================
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import styles from "./verify-email.module.css";
@@ -35,7 +35,18 @@ const ERROR_MESSAGES: Record<string, string> = {
   expired: "This verification link has expired. Please request a new one from your dashboard.",
 };
 
+// Next.js requires useSearchParams() to sit inside a Suspense boundary
+// so the page shell can still be prerendered — without this, `npm run
+// build` fails outright ("should be wrapped in a suspense boundary").
 export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={null}>
+      <VerifyEmailInner />
+    </Suspense>
+  );
+}
+
+function VerifyEmailInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 

@@ -175,6 +175,18 @@ export default function SignupPage() {
         <h1 className={styles.authTitle}>Create Vendor Account</h1>
         <p className={styles.authSubtitle}>Start managing your business on Spotlight</p>
 
+        <div className={styles.safetyNotice}>
+          <i className="fa-solid fa-shield-heart"></i>
+          <div>
+            <strong>Read this before you list</strong>
+            Spotlight is a discovery platform — we don&apos;t oversee meetings, deliveries, or payments between
+            you and customers. Meet safely, avoid taking full payment upfront, and never share your bank PIN or
+            OTP with anyone. You may only list what&apos;s legal to sell and advertise in Nigeria. See our{" "}
+            <a href="/safety" target="_blank" rel="noopener">full Safety Center</a> and{" "}
+            <a href="/disclaimer" target="_blank" rel="noopener">restricted items list</a> for details.
+          </div>
+        </div>
+
         {error && <div className={styles.authError}>{error}</div>}
 
         <form className={styles.authForm} onSubmit={handleSubmit}>
@@ -212,17 +224,6 @@ export default function SignupPage() {
               <input type={showConfirm ? "text" : "password"} id="confirmPassword" name="confirmPassword" placeholder="Repeat your password" required value={form.confirmPassword} onChange={handleChange} />
               <button type="button" className={styles.togglePassword} onClick={() => setShowConfirm(v => !v)}>👁</button>
             </div>
-          </div>
-
-          <div className={styles.safetyNotice}>
-            <strong>Before you continue</strong>
-            Spotlight Directories is a discovery platform — we don&apos;t oversee meetings, service delivery, or
-            payments between you and customers. Meet in safe locations, avoid full upfront payment before work
-            starts, and never share your bank PIN or OTP with anyone. You may only list products or services
-            that are legal to sell and advertise in Nigeria — items like firearms, narcotics, counterfeit goods,
-            and unlicensed pharmaceuticals or financial services are not permitted. See the{" "}
-            <a href="/disclaimer" target="_blank" rel="noopener">full safety guidelines and restricted items list</a>{" "}
-            for details.
           </div>
 
           <label className={styles.checkboxWrap}>

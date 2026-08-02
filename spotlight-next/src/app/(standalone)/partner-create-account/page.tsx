@@ -23,13 +23,24 @@
 //    have to fill in again.
 // ===============================================================
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { partnerSupabase, setPartnerSession } from "@/lib/partnerSupabase";
 import { EmailTemplates } from "@/lib/emailTemplates";
 import styles from "./partner-create-account.module.css";
 
+// Next.js requires useSearchParams() to sit inside a Suspense boundary
+// so the page shell can still be prerendered — without this, `npm run
+// build` fails outright ("should be wrapped in a suspense boundary").
 export default function PartnerCreateAccountPage() {
+  return (
+    <Suspense fallback={null}>
+      <PartnerCreateAccountForm />
+    </Suspense>
+  );
+}
+
+function PartnerCreateAccountForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const partnerId = searchParams.get("partner_id");

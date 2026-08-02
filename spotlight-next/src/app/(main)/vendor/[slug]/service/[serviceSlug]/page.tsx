@@ -16,8 +16,8 @@
 // - Analytics: service_view event
 // ===============================================================
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { getViewingCustomerId } from "@/lib/getViewingCustomerId";
 import styles from "./vendor-service.module.css";
@@ -108,6 +108,7 @@ function ServiceCard({ service, onClick }: { service: RelatedService; onClick: (
 export default function VendorServicePage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const vendorSlug = params.slug as string;
   const serviceSlug = params.serviceSlug as string;
 
@@ -117,6 +118,19 @@ export default function VendorServicePage() {
   const [similarServices, setSimilarServices] = useState<RelatedService[]>([]);
   const [loading, setLoading] = useState(true);
   const [descExpanded, setDescExpanded] = useState(false);
+
+  // Visit Request modal (2026-08 safety feature) — same pattern as
+  // the vendor profile page: requires a logged-in customer identity.
+  const [visitCustomer, setVisitCustomer] = useState<
+    { id: string; name: string; email: string; phone: string | null } | null | undefined
+  >(undefined);
+  const [visitModalOpen, setVisitModalOpen] = useState(false);
+  const [visitPhone, setVisitPhone] = useState("");
+  const [visitLocation, setVisitLocation] = useState("");
+  const [visitMessage, setVisitMessage] = useState("");
+  const [submittingVisit, setSubmittingVisit] = useState(false);
+  const [visitSubmitted, setVisitSubmitted] = useState(false);
+  const visitParamHandled = useRef(false);
 
   useEffect(() => {
     async function load() {
@@ -207,6 +221,85 @@ export default function VendorServicePage() {
     }
     load();
   }, [serviceSlug]);
+
+  // Deep-link support for "Request a Visit" (?requestVisit=1) — an
+  // anonymous visitor gets sent to /customer-login first, then lands
+  // back here with this param, which reopens the modal automatically.
+  useEffect(() => {
+    if (visitParamHandled.current) return;
+    if (!service) return;
+    if (searchParams.get("requestVisit") === "1") {
+      visitParamHandled.current = true;
+      openVisitModal();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [service]);
+
+  async function getVisitCustomer() {
+    if (visitCustomer !== undefined) return visitCustomer;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { setVisitCustomer(null); return null; }
+    const { data: customer } = await supabase
+      .from("customers")
+      .select("id, name, email, phone")
+      .eq("auth_user_id", session.user.id)
+      .maybeSingle();
+    const result = customer || null;
+    setVisitCustomer(result);
+    return result;
+  }
+
+  async function openVisitModal() {
+    const customer = await getVisitCustomer();
+    if (!customer) {
+      router.push(`/customer-login?next=${encodeURIComponent(`/vendor/${vendorSlug}/service/${serviceSlug}?requestVisit=1`)}`);
+      return;
+    }
+    setVisitPhone(customer.phone || "");
+    setVisitLocation("");
+    setVisitMessage("");
+    setVisitSubmitted(false);
+    setVisitModalOpen(true);
+  }
+
+  async function handleSubmitVisit() {
+    if (!service) return;
+    const customer = await getVisitCustomer();
+    if (!customer) return;
+    if (!visitPhone.trim()) { alert("Please add a phone number so the vendor can confirm it's really you."); return; }
+    if (!visitLocation.trim()) { alert("Please add the location or address for the visit."); return; }
+
+    setSubmittingVisit(true);
+
+    if (visitPhone.trim() !== (customer.phone || "")) {
+      await supabase.from("customers").update({ phone: visitPhone.trim() }).eq("id", customer.id);
+      setVisitCustomer({ ...customer, phone: visitPhone.trim() });
+    }
+
+    const { data: created, error } = await supabase.from("visit_requests").insert({
+      vendor_id: service.vendor_id,
+      customer_id: customer.id,
+      customer_name: customer.name || "",
+      customer_phone: visitPhone.trim(),
+      customer_email: customer.email || null,
+      location_note: visitLocation.trim(),
+      message: visitMessage.trim() || null,
+    }).select("id").single();
+
+    setSubmittingVisit(false);
+
+    if (error) {
+      console.error(error);
+      alert("Unable to send the visit request. Please try again.");
+      return;
+    }
+
+    try {
+      await supabase.functions.invoke("notify-visit-request", { body: { visit_request_id: created?.id } });
+    } catch { /* non-fatal */ }
+
+    setVisitSubmitted(true);
+  }
 
   // Fires on WhatsApp/Call tap — production never logged these at
   // all (plain links, no handler). Fire-and-forget, doesn't block the
@@ -360,7 +453,7 @@ export default function VendorServicePage() {
           )}
 
           {/* ACTIONS */}
-          <div className={styles.vsActions}>
+          <div className={`${styles.vsActions} ${hasImage ? styles.vsActionsCompact : ""}`}>
             {vendor?.whatsapp ? (
               <a
                 href={`https://wa.me/${vendor.whatsapp}`}
@@ -392,6 +485,15 @@ export default function VendorServicePage() {
             >
               <i className="fas fa-share-nodes"></i>
               Share Service
+            </button>
+
+            <button
+              type="button"
+              className={`${styles.vsActionBtn} ${styles.vsVisitBtn}`}
+              onClick={openVisitModal}
+            >
+              <i className="fa-solid fa-shield-heart"></i>
+              Request a Visit
             </button>
           </div>
         </div>
@@ -427,6 +529,66 @@ export default function VendorServicePage() {
             ))}
           </div>
         </section>
+      )}
+
+      {/* VISIT REQUEST MODAL — 2026-08 safety feature */}
+      {visitModalOpen && (
+        <div className={styles.vsModalOverlay} onClick={e => { if (e.target === e.currentTarget) setVisitModalOpen(false); }}>
+          <div className={styles.vsModal}>
+            {visitSubmitted ? (
+              <>
+                <h3 className={styles.vsModalTitle}>Request Sent</h3>
+                <p className={styles.vsVisitSubmittedText}>
+                  <i className="fa-solid fa-circle-check"></i>{" "}
+                  {vendor?.name || "The vendor"} will confirm your name and phone number before coming. You can
+                  expect a call or WhatsApp message to arrange the visit.
+                </p>
+                <div className={styles.vsModalActions}>
+                  <button type="button" className={styles.vsModalSubmitBtn} onClick={() => setVisitModalOpen(false)}>Done</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className={styles.vsModalTitle}>Request a Visit</h3>
+                <p className={styles.vsVisitModalIntro}>
+                  <i className="fa-solid fa-shield-heart"></i>{" "}
+                  For your safety and the vendor&apos;s, {vendor?.name || "this vendor"} will confirm your name
+                  and phone number here on Spotlight before travelling to your location.
+                </p>
+                <label className={styles.vsVisitLabel}>Your name</label>
+                <input className={styles.vsModalInput} value={visitCustomer?.name || ""} readOnly />
+                <label className={styles.vsVisitLabel}>Your phone number</label>
+                <input
+                  className={styles.vsModalInput}
+                  type="tel"
+                  placeholder="+2348021234567"
+                  value={visitPhone}
+                  onChange={e => setVisitPhone(e.target.value)}
+                />
+                <label className={styles.vsVisitLabel}>Location / address for the visit</label>
+                <input
+                  className={styles.vsModalInput}
+                  placeholder="e.g. Off Admiralty Way, Lekki Phase 1"
+                  value={visitLocation}
+                  onChange={e => setVisitLocation(e.target.value)}
+                />
+                <label className={styles.vsVisitLabel}>What do you need? (optional)</label>
+                <textarea
+                  className={styles.vsModalTextarea}
+                  placeholder="Briefly describe the job..."
+                  value={visitMessage}
+                  onChange={e => setVisitMessage(e.target.value)}
+                />
+                <div className={styles.vsModalActions}>
+                  <button type="button" className={styles.vsModalCancelBtn} onClick={() => setVisitModalOpen(false)}>Cancel</button>
+                  <button type="button" className={styles.vsModalSubmitBtn} onClick={handleSubmitVisit} disabled={submittingVisit}>
+                    {submittingVisit ? "Sending..." : "Send Visit Request"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

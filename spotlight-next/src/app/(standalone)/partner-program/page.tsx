@@ -38,7 +38,7 @@
 // the shared vendor session.
 // ===============================================================
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { partnerSupabase, setPartnerSession } from "@/lib/partnerSupabase";
 import { nigeriaData } from "@/lib/nigeria-data";
@@ -63,7 +63,18 @@ function isAtLeast18(dob: string): boolean {
   return age >= 18;
 }
 
+// Next.js requires useSearchParams() to sit inside a Suspense boundary
+// so the page shell can still be prerendered — without this, `npm run
+// build` fails outright ("should be wrapped in a suspense boundary").
 export default function PartnerProgramPage() {
+  return (
+    <Suspense fallback={null}>
+      <PartnerProgramInner />
+    </Suspense>
+  );
+}
+
+function PartnerProgramInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
