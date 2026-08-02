@@ -966,18 +966,24 @@ export default function VendorProfilePage() {
       message: visitMessage.trim() || null,
     }).select("id").single();
 
-    setSubmittingVisit(false);
-
     if (error) {
+      setSubmittingVisit(false);
       console.error(error);
       alert("Unable to send the visit request. Please try again.");
       return;
     }
 
+    // 2026-08 fix, per Cyril: "Sending..." used to switch off as soon as
+    // the database insert finished, then the button sat there looking
+    // normal/idle while this notify call (a real network round trip to
+    // send the vendor's email) was still in flight — making the modal
+    // look stuck before the success screen suddenly appeared. Now the
+    // button stays in its loading state for the whole operation.
     try {
       await supabase.functions.invoke("notify-visit-request", { body: { visit_request_id: created?.id } });
     } catch { /* non-fatal */ }
 
+    setSubmittingVisit(false);
     setVisitSubmitted(true);
   }
 
@@ -1395,7 +1401,7 @@ export default function VendorProfilePage() {
           <p className={styles.mediaHint}>A look at past work — completed projects for previous clients.</p>
 
           <div className={styles.portfolioList}>
-            {(showAllPortfolio ? portfolioItems : portfolioItems.slice(0, 2)).map(item => {
+            {(showAllPortfolio ? portfolioItems : portfolioItems.slice(0, 3)).map(item => {
               const rec = portfolioRecommendations[item.id];
               // A verified recommendation (submitted by the actual
               // client via the emailed link) always takes priority
@@ -1445,13 +1451,13 @@ export default function VendorProfilePage() {
             })}
           </div>
 
-          {portfolioItems.length > 2 && (
+          {portfolioItems.length > 3 && (
             <button
               type="button"
               className={styles.viewAllBtn}
               onClick={() => setShowAllPortfolio(v => !v)}
             >
-              {showAllPortfolio ? "Show less" : `See More (${portfolioItems.length - 2} more)`}
+              {showAllPortfolio ? "Show less" : `See More (${portfolioItems.length - 3} more)`}
             </button>
           )}
         </section>

@@ -286,18 +286,22 @@ export default function VendorServicePage() {
       message: visitMessage.trim() || null,
     }).select("id").single();
 
-    setSubmittingVisit(false);
-
     if (error) {
+      setSubmittingVisit(false);
       console.error(error);
       alert("Unable to send the visit request. Please try again.");
       return;
     }
 
+    // 2026-08 fix, per Cyril: keep the loading state on through the
+    // whole operation (including the email notify call), not just the
+    // database insert — otherwise the button looks idle/stuck for a
+    // moment before the success screen suddenly appears.
     try {
       await supabase.functions.invoke("notify-visit-request", { body: { visit_request_id: created?.id } });
     } catch { /* non-fatal */ }
 
+    setSubmittingVisit(false);
     setVisitSubmitted(true);
   }
 

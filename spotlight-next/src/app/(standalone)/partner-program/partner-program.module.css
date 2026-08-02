@@ -400,8 +400,19 @@
 
 /* RESPONSIVE */
 @media (max-width: 900px) {
-  .ppHeroGrid { grid-template-columns: 1fr; }
-  .ppHeroLeft h1 { font-size: var(--text-3xl); }
+  .ppHero { padding: 110px 0 50px; }
+  .ppHeroGrid { grid-template-columns: 1fr; gap: 36px; }
+  .ppHeroLeft h1 {
+    font-size: var(--text-3xl);
+    /* Was forced onto one line at every screen size (white-space:
+       nowrap in the base rule), which pushed the page into horizontal
+       scroll on phones instead of wrapping "Become a Spotlight
+       Partner" onto two lines like the rest of the layout does. */
+    white-space: normal;
+  }
+  .ppHeroSub { max-width: none; }
+  .ppHeroImage { height: 260px; margin-top: 24px; }
+  .ppCard { padding: 28px 24px; }
   .ppGrid { grid-template-columns: 1fr; }
   .ppResourceGrid { grid-template-columns: repeat(2, 1fr); }
   .ppLogin { flex-direction: column; }
@@ -412,5 +423,11 @@
 }
 
 @media (max-width: 560px) {
+  .ppHero { padding: 96px 0 40px; }
+  .ppHeroLeft h1 { font-size: var(--text-2xl); }
+  .ppHeroSub { font-size: var(--text-base); }
+  .ppHeroImage { height: 200px; }
+  .ppCard { padding: 22px 18px; }
+  .ppCard h2 { font-size: var(--text-xl); }
   .ppResourceGrid { grid-template-columns: 1fr; }
 }
