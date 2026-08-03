@@ -13,13 +13,13 @@ SERVICE LIMITS
 
 const SERVICE_LIMITS = {
 
-  free: 1,
+  free: 2,
 
-  standard: 6,
+  standard: 25,
 
-  enterprise: 12,
+  enterprise: 50,
 
-  elite: 24,
+  elite: 100,
 
   custom: Infinity
 
@@ -852,15 +852,15 @@ PRODUCT LIMITS
 
 const PRODUCT_LIMITS = {
 
-  trial: 3,
+  trial: 5,
 
-  free: 1,
+  free: 2,
 
-  standard: 6,
+  standard: 25,
 
-  enterprise: 12,
+  enterprise: 50,
 
-  elite: 24,
+  elite: 100,
 
   custom: Infinity
 
@@ -884,7 +884,7 @@ function getProductLimit(
 
 const currentProductLimit =
   trialActive
-    ? 3
+    ? 5
     : getProductLimit(
         vendor?.plan_tier || "free"
       );
@@ -1849,7 +1849,7 @@ alert(
 
 const currentServiceLimit =
   trialActive
-    ? 3
+    ? 5
     : getServiceLimit(
         vendor?.plan_tier || "free"
       );
