@@ -110,6 +110,22 @@ function isTrialActive(vendor: Vendor): boolean {
   return diffDays <= 90;
 }
 
+// Supabase/Postgrest errors are plain objects with a `.message`
+// string — they are NOT instances of the native Error class, so a
+// bare `err instanceof Error` check (as this file used to have)
+// always falls through to the generic fallback text, silently
+// hiding the real reason a save failed (e.g. a restricted-item
+// trigger rejection, or a DB constraint violation). This checks for
+// a usable message on either shape before giving up and showing the
+// generic fallback.
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error) return err.message;
+  if (err && typeof err === "object" && "message" in err && typeof (err as { message?: unknown }).message === "string") {
+    return (err as { message: string }).message;
+  }
+  return fallback;
+}
+
 // Extracts the storage path from a public URL so it can be removed
 // from the "vendor-gallery" bucket on delete — same regex approach
 // production uses.
@@ -537,7 +553,7 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
       );
     } catch (err) {
       console.error("Save product error:", err);
-      alert(err instanceof Error ? err.message : "Unable to save products.");
+      alert(getErrorMessage(err, "Unable to save products."));
     } finally {
       setSaving(false);
     }

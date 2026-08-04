@@ -112,12 +112,22 @@ export default function PaymentPage() {
         return;
       }
 
-      const cycle = v.billing_cycle || "monthly";
-      setBillingType(cycle);
-
       const selectedPlan = typeof window !== "undefined" ? localStorage.getItem("selectedPlan") : null;
       const plan = selectedPlan && selectedPlan !== v.plan_tier ? selectedPlan : v.plan_tier || "";
       setEffectivePlan(plan);
+
+      // getlisted's yearly/monthly toggle writes "billingType" to
+      // localStorage right alongside "selectedPlan" (see getlisted's
+      // handlePlanClick) — but this page previously never read it back,
+      // always falling through to the vendor's existing DB billing_cycle
+      // (null/"monthly" for a brand-new vendor). That's why the toggle
+      // could visually default to "yearly" on getlisted yet the actual
+      // Paystack popup still charged monthly: the selection was written
+      // but never consulted. Same "is this a fresh plan pick, not a
+      // stale existing record" condition as the plan override above.
+      const selectedBillingType = typeof window !== "undefined" ? localStorage.getItem("billingType") : null;
+      const cycle = selectedPlan && selectedBillingType ? selectedBillingType : v.billing_cycle || "monthly";
+      setBillingType(cycle);
 
       const upgradingFromFree = v.plan_tier === "free" && !!selectedPlan && selectedPlan !== "free";
 

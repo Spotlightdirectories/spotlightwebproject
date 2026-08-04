@@ -72,6 +72,20 @@ function getServiceLimit(planTier: string): number {
   return SERVICE_LIMITS[planTier] ?? 3;
 }
 
+// Supabase/Postgrest errors are plain objects with a `.message`
+// string — NOT instances of the native Error class — so a bare
+// `err instanceof Error` check always fell through to the generic
+// fallback text, silently hiding the real reason a save failed (e.g.
+// a restricted-item trigger rejection). See matching fix in
+// ProductsTab.tsx.
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error) return err.message;
+  if (err && typeof err === "object" && "message" in err && typeof (err as { message?: unknown }).message === "string") {
+    return (err as { message: string }).message;
+  }
+  return fallback;
+}
+
 // Matches production's 90-day free-trial override exactly.
 function isTrialActive(vendor: Vendor): boolean {
   if ((vendor.plan_tier || "free") !== "free" || !vendor.trial_started_at) return false;
@@ -438,7 +452,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
       );
     } catch (err) {
       console.error("Save service error:", err);
-      alert(err instanceof Error ? err.message : "Unable to save services.");
+      alert(getErrorMessage(err, "Unable to save services."));
     } finally {
       setSaving(false);
     }

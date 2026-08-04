@@ -83,6 +83,9 @@ type VendorRow = {
   reviews_count: number | null;
   category: string | null;
   subcategory: string | null;
+  plan_tier: string | null;
+  subscription_status: string | null;
+  trial_started_at: string | null;
 };
 
 type Sponsorship = {
@@ -510,6 +513,30 @@ async function loadCatalog(vendorId: string, period: Period): Promise<{ products
   };
 }
 
+// Per-type product/service caps, confirmed by Cyril (2026-08): trial=5,
+// free (post-trial)=2, standard=25, enterprise=50, elite=100 — matches
+// PRODUCT_LIMITS/SERVICE_LIMITS in ProductsTab.tsx/ServicesTab.tsx and
+// get_vendor_plan_limits() exactly. Growth Coach's "Recommended" catalog
+// size is the sum of both type caps (products + services), since
+// totalListings below is also a combined count — previously this was a
+// flat hardcoded 6, stale relative to every plan's real limit.
+function getRecommendedCatalogSize(vendor: VendorRow): number {
+  const planTier = vendor.plan_tier || "free";
+  if (planTier === "custom") return 999999;
+
+  const isTrial =
+    planTier === "free" &&
+    !!vendor.trial_started_at &&
+    new Date(vendor.trial_started_at).getTime() > Date.now() - 90 * 24 * 60 * 60 * 1000;
+
+  const perTypeCap =
+    vendor.subscription_status === "active"
+      ? planTier === "standard" ? 25 : planTier === "enterprise" ? 50 : planTier === "elite" ? 100 : 2
+      : isTrial ? 5 : 2;
+
+  return perTypeCap * 2; // products + services
+}
+
 async function computeHealthScore(vendor: VendorRow, activeSponsorships: Sponsorship[]): Promise<HealthData> {
   const profileDetails = {
     logo: !!vendor.logo_url,
@@ -538,7 +565,7 @@ async function computeHealthScore(vendor: VendorRow, activeSponsorships: Sponsor
     .eq("vendor_id", vendor.id);
 
   const totalListings = (productCount || 0) + (serviceCount || 0);
-  const catalogRequired = 6;
+  const catalogRequired = getRecommendedCatalogSize(vendor);
   const catalogScore = Math.round(Math.min(totalListings / catalogRequired, 1) * 20);
 
   const sponsorshipScore = activeSponsorships.length > 0 ? 20 : 0;

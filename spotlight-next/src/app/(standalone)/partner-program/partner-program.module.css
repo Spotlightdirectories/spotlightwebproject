@@ -145,7 +145,12 @@
   margin-top: 22px;
   padding: 14px;
   background: var(--color-dark);
-  color: var(--color-text-inverse);
+  /* Fixed white, not var(--color-text-inverse) — that variable flips
+     to black in dark mode (meant for text on light-colored buttons
+     elsewhere), but this button's background (--color-dark) is pure
+     black in BOTH modes, so the flip produced invisible black-on-black
+     text in dark mode (item 8, Cyril 2026-08). */
+  color: #ffffff;
   border: none;
   border-radius: var(--radius-lg);
   font-size: var(--text-base);

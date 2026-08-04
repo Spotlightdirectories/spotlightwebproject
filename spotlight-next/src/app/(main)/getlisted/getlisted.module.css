@@ -102,6 +102,22 @@
 .round { border-radius: var(--radius-full); }
 .round:before { border-radius: 50%; }
 
+/* Billing toggle in dark mode (item 9, Cyril 2026-08): the "on" track
+   is a fixed var(--color-dark) (pure black in both modes) and the
+   knob is var(--color-surface), which flips to near-black (#111111)
+   in dark mode — so both track and knob collapsed into one
+   indistinguishable black blob against the dark page, in either
+   toggle state. Same fix pattern as Discover's dark-mode toggle
+   touch-ups: keep the black fill, add a visible light border so the
+   track and knob both read clearly. */
+:global([data-theme="dark"]) .slider {
+  border: 1.5px solid #6b7280;
+}
+:global([data-theme="dark"]) .slider:before {
+  background-color: #ffffff;
+  border: 1px solid #6b7280;
+}
+
 /* PRICING GRID */
 .pricingGrid {
   display: grid;
