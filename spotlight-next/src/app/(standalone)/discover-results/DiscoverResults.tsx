@@ -1008,4 +1008,3 @@ export default function DiscoverResultsPage() {
     </main>
   );
 }
-Displaying DiscoverResults_updated.txt.
