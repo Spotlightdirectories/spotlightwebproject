@@ -59,6 +59,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Inter } from "next/font/google";
 import { supabase } from "@/lib/supabase";
+import SearchableSelect from "@/components/SearchableSelect";
 import styles from "./insight.module.css";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] });
@@ -1512,45 +1513,43 @@ export default function InsightPage() {
             ) : (
               <>
                 <label>Category</label>
-                <select
-                  className={styles["ranking-select"]}
+                <SearchableSelect
+                  placeholder="Select Category"
+                  searchPlaceholder="Search your categories..."
                   value={modalSelection ? `${modalSelection.kind}:${modalSelection.categoryId}` : ""}
-                  onChange={(e) => {
-                    const [kind, categoryId] = e.target.value.split(":");
+                  onChange={(compositeKey) => {
+                    const [kind, categoryId] = compositeKey.split(":");
                     const match = vendorTaxonomy.find((o) => o.kind === kind && o.categoryId === categoryId);
                     if (match) setModalSelection(match);
                   }}
-                >
-                  {Array.from(new Map(vendorTaxonomy.map((o) => [`${o.kind}:${o.categoryId}`, o])).values()).map((o) => (
-                    <option key={`${o.kind}:${o.categoryId}`} value={`${o.kind}:${o.categoryId}`}>
-                      {o.categoryName} ({o.kind === "product" ? "Products" : "Services"})
-                    </option>
-                  ))}
-                </select>
+                  options={Array.from(new Map(vendorTaxonomy.map((o) => [`${o.kind}:${o.categoryId}`, o])).values()).map(
+                    (o) => ({
+                      value: `${o.kind}:${o.categoryId}`,
+                      label: `${o.categoryName} (${o.kind === "product" ? "Products" : "Services"})`,
+                    })
+                  )}
+                />
 
-                <label style={{ marginTop: 16, display: "block" }}>Subcategory</label>
-                <select
-                  className={styles["ranking-select"]}
-                  value={modalSelection?.subcategoryId || ""}
-                  onChange={(e) => {
-                    const subcategoryId = e.target.value;
-                    const match = vendorTaxonomy.find(
-                      (o) =>
-                        o.kind === modalSelection?.kind &&
-                        o.categoryId === modalSelection?.categoryId &&
-                        o.subcategoryId === subcategoryId
-                    );
-                    if (match) setModalSelection(match);
-                  }}
-                >
-                  {vendorTaxonomy
-                    .filter((o) => o.kind === modalSelection?.kind && o.categoryId === modalSelection?.categoryId)
-                    .map((o) => (
-                      <option key={o.subcategoryId} value={o.subcategoryId}>
-                        {o.subcategoryName}
-                      </option>
-                    ))}
-                </select>
+                <div style={{ marginTop: 16 }}>
+                  <label style={{ display: "block" }}>Subcategory</label>
+                  <SearchableSelect
+                    placeholder="Select Subcategory"
+                    searchPlaceholder="Search subcategories..."
+                    value={modalSelection?.subcategoryId || ""}
+                    onChange={(subcategoryId) => {
+                      const match = vendorTaxonomy.find(
+                        (o) =>
+                          o.kind === modalSelection?.kind &&
+                          o.categoryId === modalSelection?.categoryId &&
+                          o.subcategoryId === subcategoryId
+                      );
+                      if (match) setModalSelection(match);
+                    }}
+                    options={vendorTaxonomy
+                      .filter((o) => o.kind === modalSelection?.kind && o.categoryId === modalSelection?.categoryId)
+                      .map((o) => ({ value: o.subcategoryId, label: o.subcategoryName }))}
+                  />
+                </div>
 
                 <button
                   type="button"
@@ -1611,3 +1610,4 @@ export default function InsightPage() {
     </div>
   );
 }
+Displaying insight_page_updated_v2.txt.
