@@ -116,12 +116,16 @@ type CatalogItem = { name: string; views: number };
 type AudienceRow = { city: string; count: number; pct: number; cls: string };
 type KeywordRow = { term: string; searches: number; pct: number };
 type RankingState = { current: number | string; sponsored: number | null; category: string; totalPeers: number };
-const RANKING_CATEGORY_MAP: Record<string, string[]> = {
-  "Professional Services": ["Accountant / Auditor", "Tax Consultant", "Lawyer", "Architect"],
-  "Fashion & Tailoring": ["Fashion Designer", "Tailor", "Makeup Artist", "Barber"],
-  "Local Food & Canteens": ["Restaurant", "Caterer", "Bakery", "Food Vendor"],
-  "Digital & Tech Services": ["Web Designer", "Graphic Designer", "Software Developer", "Digital Marketer"],
-  "Home Services": ["Plumber", "Electrician", "Painter", "Cleaner"],
+// A vendor's real category/subcategory, taken directly from their own
+// listings (vendor_products / vendor_services), not a hardcoded list.
+// "kind" distinguishes a product-side listing from a service-side one,
+// since a hybrid vendor can have both, possibly in different categories.
+type TaxonomyOption = {
+  kind: "product" | "service";
+  categoryId: string;
+  categoryName: string;
+  subcategoryId: string;
+  subcategoryName: string;
 };
 
 /* ===========================
@@ -622,9 +626,63 @@ function buildCoachItems(healthData: HealthData, activeSponsorships: Sponsorship
   ];
 }
 
-async function loadRanking(vendorId: string, category: string, subcategory: string, period: Period): Promise<RankingState> {
+// Pulls the vendor's OWN real category/subcategory combinations directly
+// from their listings (vendor_products + vendor_services), joined to the
+// categories/subcategories tables for display names. A hybrid vendor —
+// one with both product and service listings, possibly in different
+// categories — gets options for both, each tagged with its "kind" so the
+// ranking modal can keep them distinct instead of merging them.
+async function loadVendorTaxonomy(vendorId: string): Promise<TaxonomyOption[]> {
+  const [{ data: products }, { data: services }] = await Promise.all([
+    supabase
+      .from("vendor_products")
+      .select("category_id, subcategory_id, categories:category_id(name), subcategories:subcategory_id(name)")
+      .eq("vendor_id", vendorId)
+      .not("category_id", "is", null)
+      .not("subcategory_id", "is", null),
+    supabase
+      .from("vendor_services")
+      .select("category_id, subcategory_id, categories:category_id(name), subcategories:subcategory_id(name)")
+      .eq("vendor_id", vendorId)
+      .not("category_id", "is", null)
+      .not("subcategory_id", "is", null),
+  ]);
+
+  const seen = new Set<string>();
+  const options: TaxonomyOption[] = [];
+
+  function addRows(rows: unknown, kind: "product" | "service") {
+    ((rows as Array<{
+      category_id: string | null;
+      subcategory_id: string | null;
+      categories: { name: string } | { name: string }[] | null;
+      subcategories: { name: string } | { name: string }[] | null;
+    }> | null) || []).forEach((row) => {
+      const categoryName = Array.isArray(row.categories) ? row.categories[0]?.name : row.categories?.name;
+      const subcategoryName = Array.isArray(row.subcategories) ? row.subcategories[0]?.name : row.subcategories?.name;
+      if (!row.category_id || !row.subcategory_id || !categoryName || !subcategoryName) return;
+      const key = `${kind}:${row.subcategory_id}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      options.push({
+        kind,
+        categoryId: row.category_id,
+        categoryName,
+        subcategoryId: row.subcategory_id,
+        subcategoryName,
+      });
+    });
+  }
+
+  addRows(products, "product");
+  addRows(services, "service");
+
+  return options;
+}
+
+async function loadRanking(vendorId: string, selection: TaxonomyOption, period: Period): Promise<RankingState> {
   const { currentStart } = getPeriodRanges(period);
-  const combinedLabel = `${category} / ${subcategory}`;
+  const combinedLabel = `${selection.categoryName} / ${selection.subcategoryName}`;
 
   // Fixed 2026-07-31: this used to fetch peer vendor IDs and then
   // query analytics_events directly filtered to those IDs. That
@@ -633,11 +691,17 @@ async function loadRanking(vendorId: string, category: string, subcategory: stri
   // never real. get_vendor_period_ranking runs the same computation
   // server-side (SECURITY DEFINER, same pattern as get_vendor_rank),
   // returning only the aggregate rank numbers.
+  //
+  // Reworked 2026-08-05: peers are now matched by subcategory_id + kind
+  // (product vs service) against vendor_products/vendor_services directly,
+  // instead of the old vendors.category/subcategory free-text columns —
+  // those are legacy, frozen since task #116, and couldn't represent a
+  // hybrid vendor's real per-listing categories anyway.
   const { data, error } = await supabase
     .rpc("get_vendor_period_ranking", {
       p_vendor_id: vendorId,
-      p_category: category,
-      p_subcategory: subcategory,
+      p_subcategory_id: selection.subcategoryId,
+      p_kind: selection.kind,
       p_period_start: currentStart.toISOString(),
     })
     .maybeSingle()
@@ -828,11 +892,12 @@ export default function InsightPage() {
   const [audience, setAudience] = useState<{ total: number; rows: AudienceRow[] }>({ total: 0, rows: [] });
   const [keywords, setKeywords] = useState<KeywordRow[]>([]);
 
-  const [rankingCategory, setRankingCategory] = useState("Professional Services");
-  const [rankingSubcategory, setRankingSubcategory] = useState("Accountant / Auditor");
+  // Vendor's real category/subcategory options, read live from their own
+  // product/service listings (see loadVendorTaxonomy) — no hardcoded list.
+  const [vendorTaxonomy, setVendorTaxonomy] = useState<TaxonomyOption[]>([]);
+  const [rankingSelection, setRankingSelection] = useState<TaxonomyOption | null>(null);
   const [ranking, setRanking] = useState<RankingState | null>(null);
-  const [modalCategory, setModalCategory] = useState("Professional Services");
-  const [modalSubcategory, setModalSubcategory] = useState("Accountant / Auditor");
+  const [modalSelection, setModalSelection] = useState<TaxonomyOption | null>(null);
 
   const [showAllKeywords, setShowAllKeywords] = useState(false);
   const [expandedCoachIndex, setExpandedCoachIndex] = useState<number | null>(null);
@@ -909,17 +974,33 @@ export default function InsightPage() {
     };
   }, [vendor, period]);
 
-  // ---- Ranking (depends on period + chosen category/subcategory) ----
+  // ---- Vendor's own taxonomy (for the ranking category picker) ----
   useEffect(() => {
     if (!vendor) return;
     let cancelled = false;
-    loadRanking(vendor.id, rankingCategory, rankingSubcategory, period).then((data) => {
+    loadVendorTaxonomy(vendor.id).then((options) => {
+      if (cancelled) return;
+      setVendorTaxonomy(options);
+      // Only fill a default the first time — never override a choice
+      // the vendor already made via the "Change Category" modal.
+      setRankingSelection((prev) => prev ?? options[0] ?? null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [vendor]);
+
+  // ---- Ranking (depends on period + chosen category/subcategory) ----
+  useEffect(() => {
+    if (!vendor || !rankingSelection) return;
+    let cancelled = false;
+    loadRanking(vendor.id, rankingSelection, period).then((data) => {
       if (!cancelled) setRanking(data);
     });
     return () => {
       cancelled = true;
     };
-  }, [vendor, period, rankingCategory, rankingSubcategory]);
+  }, [vendor, period, rankingSelection]);
 
   if (loading) {
     return (
@@ -1206,8 +1287,7 @@ export default function InsightPage() {
               type="button"
               className={`${styles["how-it-works-btn"]} ${styles["secondary-btn"]}`}
               onClick={() => {
-                setModalCategory(rankingCategory);
-                setModalSubcategory(rankingSubcategory);
+                setModalSelection(rankingSelection);
                 setRankingCategoryModalOpen(true);
               }}
             >
@@ -1424,44 +1504,67 @@ export default function InsightPage() {
             </button>
             <h2>Select Ranking Category</h2>
 
-            <label>Category</label>
-            <select
-              className={styles["ranking-select"]}
-              value={modalCategory}
-              onChange={(e) => {
-                const cat = e.target.value;
-                setModalCategory(cat);
-                setModalSubcategory(RANKING_CATEGORY_MAP[cat]?.[0] || "");
-              }}
-            >
-              {Object.keys(RANKING_CATEGORY_MAP).map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
+            {vendorTaxonomy.length === 0 ? (
+              <p className={styles["rank-note"]}>
+                Add a category and subcategory to at least one of your products or services to compare your ranking
+                against similar businesses.
+              </p>
+            ) : (
+              <>
+                <label>Category</label>
+                <select
+                  className={styles["ranking-select"]}
+                  value={modalSelection ? `${modalSelection.kind}:${modalSelection.categoryId}` : ""}
+                  onChange={(e) => {
+                    const [kind, categoryId] = e.target.value.split(":");
+                    const match = vendorTaxonomy.find((o) => o.kind === kind && o.categoryId === categoryId);
+                    if (match) setModalSelection(match);
+                  }}
+                >
+                  {Array.from(new Map(vendorTaxonomy.map((o) => [`${o.kind}:${o.categoryId}`, o])).values()).map((o) => (
+                    <option key={`${o.kind}:${o.categoryId}`} value={`${o.kind}:${o.categoryId}`}>
+                      {o.categoryName} ({o.kind === "product" ? "Products" : "Services"})
+                    </option>
+                  ))}
+                </select>
 
-            <label style={{ marginTop: 16, display: "block" }}>Subcategory</label>
-            <select className={styles["ranking-select"]} value={modalSubcategory} onChange={(e) => setModalSubcategory(e.target.value)}>
-              {(RANKING_CATEGORY_MAP[modalCategory] || []).map((sub) => (
-                <option key={sub} value={sub}>
-                  {sub}
-                </option>
-              ))}
-            </select>
+                <label style={{ marginTop: 16, display: "block" }}>Subcategory</label>
+                <select
+                  className={styles["ranking-select"]}
+                  value={modalSelection?.subcategoryId || ""}
+                  onChange={(e) => {
+                    const subcategoryId = e.target.value;
+                    const match = vendorTaxonomy.find(
+                      (o) =>
+                        o.kind === modalSelection?.kind &&
+                        o.categoryId === modalSelection?.categoryId &&
+                        o.subcategoryId === subcategoryId
+                    );
+                    if (match) setModalSelection(match);
+                  }}
+                >
+                  {vendorTaxonomy
+                    .filter((o) => o.kind === modalSelection?.kind && o.categoryId === modalSelection?.categoryId)
+                    .map((o) => (
+                      <option key={o.subcategoryId} value={o.subcategoryId}>
+                        {o.subcategoryName}
+                      </option>
+                    ))}
+                </select>
 
-            <button
-              type="button"
-              className={styles["manage-sub-btn"]}
-              style={{ marginTop: 20 }}
-              onClick={() => {
-                setRankingCategory(modalCategory);
-                setRankingSubcategory(modalSubcategory);
-                setRankingCategoryModalOpen(false);
-              }}
-            >
-              Apply
-            </button>
+                <button
+                  type="button"
+                  className={styles["manage-sub-btn"]}
+                  style={{ marginTop: 20 }}
+                  onClick={() => {
+                    if (modalSelection) setRankingSelection(modalSelection);
+                    setRankingCategoryModalOpen(false);
+                  }}
+                >
+                  Apply
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
