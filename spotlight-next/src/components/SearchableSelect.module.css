@@ -1,0 +1,158 @@
+/* SearchableSelect — matches the look of the plain <select> elements
+   it replaces (14px radius, var(--color-border) border, var(--color-surface)
+   background) used across vendordashboard/vd-input, discover filter
+   drawers, and insight's ranking-select. All colors come from the
+   shared CSS custom properties defined in globals.css, which already
+   flip between light/dark via [data-theme="dark"] — no separate
+   dark-mode block needed here. */
+
+.wrap {
+  position: relative;
+  width: 100%;
+}
+
+.control {
+  width: 100%;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease;
+}
+
+.control:hover {
+  border-color: var(--color-primary);
+}
+
+.controlOpen {
+  border-color: var(--color-primary);
+}
+
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.icon {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.valueText {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-primary);
+}
+
+.placeholderText {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+
+.chevron {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.searchInput {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.searchInput:focus {
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--color-text-muted);
+}
+
+.optionsList {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 11px 14px;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.option:hover,
+.optionHighlighted {
+  background: var(--color-surface-hover);
+}
+
+.optionSelected {
+  font-weight: 600;
+}
+
+.optionDisabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.optionDisabled:hover {
+  background: transparent;
+}
+
+.checkIcon {
+  color: var(--color-primary);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.emptyState {
+  padding: 16px 14px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
