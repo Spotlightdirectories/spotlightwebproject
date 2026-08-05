@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { nigeriaData } from "@/lib/nigeria-data.js";
 import ProfileNav from "@/components/ProfileNav";
+import SearchableSelect from "@/components/SearchableSelect";
 import styles from "./discover.module.css";
 
 // ── Types ────────────────────────────────────────────────────
@@ -591,31 +592,25 @@ export default function DiscoverPage() {
         <div className={styles.discoverFiltersBody}>
           <div className={styles.discoverFilterGroup}>
             <label>Category</label>
-            <select
-              className={styles.discoverFilterSelect}
+            <SearchableSelect
+              placeholder="Select Category"
+              searchPlaceholder="Search categories..."
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-            >
-              <option value="">Select Category</option>
-              {categories.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
+              onChange={setSelectedCategory}
+              options={categories.map((c) => ({ value: c, label: c }))}
+            />
           </div>
 
           <div className={styles.discoverFilterGroup}>
             <label>Subcategory</label>
-            <select
-              className={styles.discoverFilterSelect}
+            <SearchableSelect
+              placeholder="Select Subcategory"
+              searchPlaceholder="Search subcategories..."
               value={selectedSubcategory}
-              onChange={(e) => setSelectedSubcategory(e.target.value)}
+              onChange={setSelectedSubcategory}
               disabled={!selectedCategory}
-            >
-              <option value="">Select Subcategory</option>
-              {subcategories.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+              options={subcategories.map((s) => ({ value: s, label: s }))}
+            />
           </div>
 
           <div className={styles.discoverFilterGroup}>
@@ -682,3 +677,4 @@ export default function DiscoverPage() {
     </main>
   );
 }
+Displaying discover_page_updated.txt.
