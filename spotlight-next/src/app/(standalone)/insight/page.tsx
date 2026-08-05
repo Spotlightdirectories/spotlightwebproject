@@ -1610,4 +1610,3 @@ export default function InsightPage() {
     </div>
   );
 }
-Displaying insight_page_updated_v2.txt.
