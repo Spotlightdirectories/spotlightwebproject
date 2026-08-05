@@ -877,7 +877,11 @@ export default function DiscoverResultsPage() {
           </div>
           <div className={styles.vendorsList}>
             {visibleVendors.map(v => (
-              <article key={`${v.id}-${v.branchId || "main"}`} className={styles.vendorCard}>
+              <article
+                key={`${v.id}-${v.branchId || "main"}`}
+                className={styles.vendorCard}
+                onClick={() => router.push(`/vendor/${v.slug}${v.branchId ? `?branch=${v.branchId}` : ""}`)}
+              >
                 <div className={styles.vendorLeft}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -905,12 +909,27 @@ export default function DiscoverResultsPage() {
                   <span className={styles.vendorCategory}>{v.subcategory || v.category}</span>
                   {v.sponsored && <p className={styles.sponsoredLabel}>Sponsored</p>}
                   <div className={styles.actions}>
-                    <button type="button" className={styles.reviewBtn}
-                      onClick={() => { /* review modal — Commit 3 */ }}>
+                    <button
+                      type="button"
+                      className={styles.reviewBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const params = new URLSearchParams();
+                        if (v.branchId) params.set("branch", v.branchId);
+                        params.set("review", "1");
+                        router.push(`/vendor/${v.slug}?${params.toString()}`);
+                      }}
+                    >
                       Leave Review
                     </button>
-                    <button type="button" className={styles.profileBtn}
-                      onClick={() => router.push(`/vendor/${v.slug}${v.branchId ? `?branch=${v.branchId}` : ""}`)}>
+                    <button
+                      type="button"
+                      className={styles.profileBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/vendor/${v.slug}${v.branchId ? `?branch=${v.branchId}` : ""}`);
+                      }}
+                    >
                       View Profile
                     </button>
                   </div>
