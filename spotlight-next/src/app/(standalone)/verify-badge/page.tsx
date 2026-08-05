@@ -35,6 +35,7 @@
 // ===============================================================
 
 import { useEffect, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { uploadVendorFile } from "@/lib/uploadVendorFile";
@@ -99,6 +100,15 @@ export default function VerifyBadgePage() {
   const statusReportFileRef = useRef<HTMLInputElement>(null);
   const passportFileRef = useRef<HTMLInputElement>(null);
   const consentRef = useRef<HTMLInputElement>(null);
+
+  // Filenames shown next to each gold "Choose File" button, purely
+  // cosmetic — the actual files are still read from the refs above
+  // on submit, uncontrolled, exactly as before.
+  const [fileNames, setFileNames] = useState<Partial<Record<keyof FieldErrors, string>>>({});
+
+  function handleFileChosen(field: keyof FieldErrors, e: ChangeEvent<HTMLInputElement>) {
+    setFileNames((prev) => ({ ...prev, [field]: e.target.files?.[0]?.name || "" }));
+  }
 
   useEffect(() => {
     const pending = localStorage.getItem("pendingBadgeType");
@@ -355,7 +365,13 @@ export default function VerifyBadgePage() {
               <div className={`${styles.formGroup} ${fieldErrors.idFile ? styles.fieldError : ""}`}>
                 <label htmlFor="idFile">Government ID (NIN) *</label>
                 <small>{FILE_HINT}</small>
-                <input type="file" id="idFile" ref={idFileRef} />
+                <div className={styles.fileRow}>
+                  <label htmlFor="idFile" className={styles.chooseFileBtn}>
+                    Choose File
+                  </label>
+                  <input type="file" id="idFile" ref={idFileRef} onChange={(e) => handleFileChosen("idFile", e)} />
+                  <span className={styles.fileName}>{fileNames.idFile || "No file chosen"}</span>
+                </div>
                 {fieldErrors.idFile && <p className={styles.fieldErrorMsg}>{fieldErrors.idFile}</p>}
               </div>
 
@@ -363,7 +379,13 @@ export default function VerifyBadgePage() {
                 <div className={`${styles.formGroup} ${fieldErrors.cacFile ? styles.fieldError : ""}`}>
                   <label htmlFor="cacFile">CAC Certificate *</label>
                   <small>{FILE_HINT}</small>
-                  <input type="file" id="cacFile" ref={cacFileRef} />
+                  <div className={styles.fileRow}>
+                    <label htmlFor="cacFile" className={styles.chooseFileBtn}>
+                      Choose File
+                    </label>
+                    <input type="file" id="cacFile" ref={cacFileRef} onChange={(e) => handleFileChosen("cacFile", e)} />
+                    <span className={styles.fileName}>{fileNames.cacFile || "No file chosen"}</span>
+                  </div>
                   {fieldErrors.cacFile && <p className={styles.fieldErrorMsg}>{fieldErrors.cacFile}</p>}
                 </div>
               )}
@@ -372,7 +394,18 @@ export default function VerifyBadgePage() {
                 <label htmlFor="utilityFile">Utility Bill *</label>
                 <small>{copy?.utilityHint}</small>
                 <small>{FILE_HINT}</small>
-                <input type="file" id="utilityFile" ref={utilityFileRef} />
+                <div className={styles.fileRow}>
+                  <label htmlFor="utilityFile" className={styles.chooseFileBtn}>
+                    Choose File
+                  </label>
+                  <input
+                    type="file"
+                    id="utilityFile"
+                    ref={utilityFileRef}
+                    onChange={(e) => handleFileChosen("utilityFile", e)}
+                  />
+                  <span className={styles.fileName}>{fileNames.utilityFile || "No file chosen"}</span>
+                </div>
                 {fieldErrors.utilityFile && <p className={styles.fieldErrorMsg}>{fieldErrors.utilityFile}</p>}
               </div>
 
@@ -380,7 +413,18 @@ export default function VerifyBadgePage() {
                 <div className={`${styles.formGroup} ${fieldErrors.passportFile ? styles.fieldError : ""}`}>
                   <label htmlFor="passportFile">Passport Photograph (Recent - within last 6 months) *</label>
                   <small>{FILE_HINT}</small>
-                  <input type="file" id="passportFile" ref={passportFileRef} />
+                  <div className={styles.fileRow}>
+                    <label htmlFor="passportFile" className={styles.chooseFileBtn}>
+                      Choose File
+                    </label>
+                    <input
+                      type="file"
+                      id="passportFile"
+                      ref={passportFileRef}
+                      onChange={(e) => handleFileChosen("passportFile", e)}
+                    />
+                    <span className={styles.fileName}>{fileNames.passportFile || "No file chosen"}</span>
+                  </div>
                   {fieldErrors.passportFile && <p className={styles.fieldErrorMsg}>{fieldErrors.passportFile}</p>}
                 </div>
               )}
@@ -389,7 +433,18 @@ export default function VerifyBadgePage() {
                 <div className={`${styles.formGroup} ${fieldErrors.memartFile ? styles.fieldError : ""}`}>
                   <label htmlFor="memartFile">MEMART (Memorandum &amp; Articles of Association) *</label>
                   <small>{FILE_HINT}</small>
-                  <input type="file" id="memartFile" ref={memartFileRef} />
+                  <div className={styles.fileRow}>
+                    <label htmlFor="memartFile" className={styles.chooseFileBtn}>
+                      Choose File
+                    </label>
+                    <input
+                      type="file"
+                      id="memartFile"
+                      ref={memartFileRef}
+                      onChange={(e) => handleFileChosen("memartFile", e)}
+                    />
+                    <span className={styles.fileName}>{fileNames.memartFile || "No file chosen"}</span>
+                  </div>
                   {fieldErrors.memartFile && <p className={styles.fieldErrorMsg}>{fieldErrors.memartFile}</p>}
                 </div>
               )}
@@ -398,7 +453,18 @@ export default function VerifyBadgePage() {
                 <div className={`${styles.formGroup} ${fieldErrors.statusReportFile ? styles.fieldError : ""}`}>
                   <label htmlFor="statusReportFile">CAC Status Report *</label>
                   <small>{FILE_HINT}</small>
-                  <input type="file" id="statusReportFile" ref={statusReportFileRef} />
+                  <div className={styles.fileRow}>
+                    <label htmlFor="statusReportFile" className={styles.chooseFileBtn}>
+                      Choose File
+                    </label>
+                    <input
+                      type="file"
+                      id="statusReportFile"
+                      ref={statusReportFileRef}
+                      onChange={(e) => handleFileChosen("statusReportFile", e)}
+                    />
+                    <span className={styles.fileName}>{fileNames.statusReportFile || "No file chosen"}</span>
+                  </div>
                   {fieldErrors.statusReportFile && (
                     <p className={styles.fieldErrorMsg}>{fieldErrors.statusReportFile}</p>
                   )}
