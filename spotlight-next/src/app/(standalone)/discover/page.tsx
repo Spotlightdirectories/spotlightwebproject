@@ -677,4 +677,3 @@ export default function DiscoverPage() {
     </main>
   );
 }
-Displaying discover_page_updated.txt.
