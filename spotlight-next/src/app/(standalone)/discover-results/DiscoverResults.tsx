@@ -17,6 +17,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { nigeriaData } from "@/lib/nigeria-data.js";
 import ProfileNav from "@/components/ProfileNav";
+import SearchableSelect from "@/components/SearchableSelect";
 import styles from "./discover-results.module.css";
 
 // ── Types ─────────────────────────────────────────────────────
@@ -836,7 +837,11 @@ export default function DiscoverResultsPage() {
                       {s.vendorLga}{s.vendorState ? `, ${s.vendorState}` : ""}
                       <DistanceInline km={s.distanceKm} />
                     </p>
-                    <span className={styles.vendorCategory}>{s.vendorSubcategory || s.vendorCategory}</span>
+                    {/* No separate category/subcategory label here (unlike the
+                        Vendor and Product cards) — a service's name IS its
+                        subcategory name by design (one slot, not two — see
+                        ServicesTab.tsx), so this would always just repeat the
+                        heading above verbatim (Cyril, 2026-08). */}
                     {s.sponsored && <p className={styles.sponsoredLabel}>Sponsored</p>}
                     <div className={styles.actions}>
                       <button type="button" className={styles.reviewBtn}
@@ -942,20 +947,24 @@ export default function DiscoverResultsPage() {
         <div className={styles.drawerBody}>
           <div className={styles.filterGroup}>
             <label>Category</label>
-            <select className={styles.filterSelect} value={selectedCategory}
-              onChange={e => setSelectedCategory(e.target.value)}>
-              <option value="">Select Category</option>
-              {categories.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
+            <SearchableSelect
+              placeholder="Select Category"
+              searchPlaceholder="Search categories..."
+              value={selectedCategory}
+              onChange={setSelectedCategory}
+              options={categories.map(c => ({ value: c, label: c }))}
+            />
           </div>
           <div className={styles.filterGroup}>
             <label>Subcategory</label>
-            <select className={styles.filterSelect} value={selectedSubcategory}
-              onChange={e => setSelectedSubcategory(e.target.value)}
-              disabled={!selectedCategory}>
-              <option value="">Select Subcategory</option>
-              {subcategories.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <SearchableSelect
+              placeholder="Select Subcategory"
+              searchPlaceholder="Search subcategories..."
+              value={selectedSubcategory}
+              onChange={setSelectedSubcategory}
+              disabled={!selectedCategory}
+              options={subcategories.map(s => ({ value: s, label: s }))}
+            />
           </div>
           <div className={styles.filterGroup}>
             <label>State</label>
@@ -999,3 +1008,4 @@ export default function DiscoverResultsPage() {
     </main>
   );
 }
+Displaying DiscoverResults_updated.txt.
