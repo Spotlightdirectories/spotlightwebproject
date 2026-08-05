@@ -43,17 +43,18 @@ export default function VendorProfileLayout({ children }: { children: React.Reac
     }>
       {/*
         2026-08 fix, per Cyril: the footer used to sit at a fixed
-        70vh down the page. On the brief "Loading..." placeholder
-        (and on any page shorter than the viewport), that left a gap
-        between the footer and the true bottom of the screen — the
-        footer looked like it was floating, then "dropped" down once
-        the real content loaded and pushed it further. Flex column +
-        `flex: 1` on <main> makes the footer always sit flush against
-        the bottom of the viewport (short content) or the bottom of
-        the content (tall content), with no visible jump either way.
+        70vh down the page, which left a visible gap on short content
+        then "dropped" once real content loaded. Switched to the
+        shared `.pageShellFlush` class (globals.css) so the footer
+        sits flush at the bottom either way. That class also uses
+        `100dvh` (not just `100vh`), which fixes a second, separate
+        jump: on mobile, plain `100vh` is measured against the address
+        bar's tallest state and gets re-measured shorter a moment
+        later, causing a small up/down jump on click. `100dvh` tracks
+        the real visible area from the start, so nothing re-settles.
       */}
-      <div style={{ display: "flex", flexDirection: "column", minHeight: "calc(100vh - var(--header-height))" }}>
-        <main style={{ flex: 1 }}>
+      <div className="pageShellFlush">
+        <main>
           {children}
         </main>
         <Footer />

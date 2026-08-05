@@ -186,3 +186,32 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+
+/* ==============================================
+   STICKY-FOOTER SHELL
+   Used by pages (vendor profile, product, service)
+   that pin the Footer to the bottom of short content.
+   2026-08 fix, per Cyril: the old inline `100vh` jumped
+   on click — mobile browsers resize the real viewport
+   as the address bar shows/hides, so a plain `100vh`
+   is measured once (too tall) and then re-measured a
+   moment later (shorter), producing a visible up/down
+   jump before the footer settles. `100dvh` (dynamic
+   viewport height) tracks the *current* visible area
+   instead, so there's nothing to re-settle. The plain
+   `vh` rule stays first as a fallback for the handful
+   of older browsers that don't understand `dvh` yet —
+   they simply ignore the second, unsupported line.
+============================================== */
+
+.pageShellFlush {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - var(--header-height));
+  min-height: calc(100dvh - var(--header-height));
+}
+
+.pageShellFlush > main {
+  flex: 1;
+}
