@@ -43,6 +43,7 @@ import type { ChangeEvent, RefObject } from "react";
 import { supabase } from "@/lib/supabase";
 import { uploadVendorFile } from "@/lib/uploadVendorFile";
 import AiDescribeModal, { useAiDescribeToast } from "@/components/AiDescribeModal";
+import SearchableSelect from "@/components/SearchableSelect";
 import type { Vendor } from "./page";
 
 type Option = { id: string; name: string };
@@ -632,23 +633,22 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
         </p>
 
         <div className="vd-coordinates-row">
-          <select className="vd-input" value={categoryId} onChange={(e) => handleCategoryChange(e.target.value)}>
-            <option value="">Select Category</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <SearchableSelect
+            placeholder="Select Category"
+            searchPlaceholder="Search categories..."
+            value={categoryId}
+            onChange={handleCategoryChange}
+            options={categories.map((c) => ({ value: c.id, label: c.name }))}
+          />
 
-          <select className="vd-input" value={subcategoryId} onChange={(e) => setSubcategoryId(e.target.value)}>
-            <option value="">Select Subcategory</option>
-            {subcategories.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+          <SearchableSelect
+            placeholder="Select Subcategory"
+            searchPlaceholder="Search subcategories..."
+            value={subcategoryId}
+            onChange={setSubcategoryId}
+            options={subcategories.map((s) => ({ value: s.id, label: s.name }))}
+            disabled={!categoryId}
+          />
         </div>
 
         {isDifferentField && (
