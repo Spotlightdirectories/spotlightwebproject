@@ -255,109 +255,123 @@ export default function DiscoverResultsPage() {
     setLoading(true);
 
     try {
-      let rawVendors: any[] = [];
-      let rawProducts: any[] = [];
-      let rawServices: any[] = [];
+      // 2026-08 perf fix, per Cyril: vendors/branches, products, and
+      // services used to be fetched one `await` after another, so the
+      // page's total wait time was the SUM of every query's latency.
+      // None of these three actually depend on each other's results (they
+      // only share the same filter inputs), so they now run concurrently
+      // via Promise.all — total wait drops to roughly the SLOWEST single
+      // query instead of all of them added together. Every individual
+      // query, filter, and field mapping below is unchanged from before;
+      // only the sequencing changed.
 
-      if (type === "all" || type === "vendor") {
-        const { data } = await supabase.rpc("search_vendors", {
-          p_keyword: kw || null,
-          p_category: cat || null,
-          p_subcategory: subcat || null,
-          p_state: st || null,
-          p_lga: lg || null,
-          p_verified_only: verified,
-        });
-        rawVendors = applyDistance(
-        data || [], 
-        v => v.latitude ? Number(v.latitude) : null,
-        v => v.longitude ? Number(v.longitude) : null,
-        lat, lng, rad, distOn
-      );
+      const fetchVendors = async (): Promise<any[]> => {
+        if (!(type === "all" || type === "vendor")) return [];
 
-        // Branch search — two-step query to avoid join syntax issues
-        // Step 1: fetch all active branches
-        let branchQuery = supabase
-          .from("branches")
-          .select("id, branch_name, address, state, lga, latitude, longitude, vendor_id, phone, whatsapp, open_time, close_time, business_days, account_status")
-          .eq("account_status", "active");
-        if (st) branchQuery = branchQuery.eq("state", st);
-        if (lg) branchQuery = branchQuery.eq("lga", lg);
-        const { data: branchData, error: branchError } = await branchQuery;
-        if (branchError) console.error("Branch query error:", branchError);
+        const [vendorsRes, branches] = await Promise.all([
+          supabase.rpc("search_vendors", {
+            p_keyword: kw || null,
+            p_category: cat || null,
+            p_subcategory: subcat || null,
+            p_state: st || null,
+            p_lga: lg || null,
+            p_verified_only: verified,
+          }),
+          (async (): Promise<any[]> => {
+            // Branch search — two-step query to avoid join syntax issues
+            // Step 1: fetch all active branches
+            let branchQuery = supabase
+              .from("branches")
+              .select("id, branch_name, address, state, lga, latitude, longitude, vendor_id, phone, whatsapp, open_time, close_time, business_days, account_status")
+              .eq("account_status", "active");
+            if (st) branchQuery = branchQuery.eq("state", st);
+            if (lg) branchQuery = branchQuery.eq("lga", lg);
+            const { data: branchData, error: branchError } = await branchQuery;
+            if (branchError) console.error("Branch query error:", branchError);
 
-        let branches: any[] = [];
-        if (branchData && branchData.length > 0) {
-          // Step 2: fetch parent vendors for these branches
-          const vendorIds = [...new Set(branchData.map((b: any) => b.vendor_id))];
-          const { data: branchVendors } = await supabase
-            .from("vendors")
-            .select("id, slug, name, logo_url, category, subcategory, verification_status, average_rating, reviews_count, is_sponsored, account_status")
-            .in("id", vendorIds)
-            .eq("account_status", "active");
+            let branches: any[] = [];
+            if (branchData && branchData.length > 0) {
+              // Step 2: fetch parent vendors for these branches
+              const vendorIds = [...new Set(branchData.map((b: any) => b.vendor_id))];
+              const { data: branchVendors } = await supabase
+                .from("vendors")
+                .select("id, slug, name, logo_url, category, subcategory, verification_status, average_rating, reviews_count, is_sponsored, account_status")
+                .in("id", vendorIds)
+                .eq("account_status", "active");
 
-          const vendorMap = new Map((branchVendors || []).map((v: any) => [v.id, v]));
+              const vendorMap = new Map((branchVendors || []).map((v: any) => [v.id, v]));
 
-          branches = branchData
-            .map((b: any) => {
-              const v = vendorMap.get(b.vendor_id);
-              if (!v) return null;
-              return {
-                id: v.id,
-                branchId: b.id,
-                slug: v.slug,
-                name: v.name,
-                logo_url: v.logo_url,
-                category: v.category,
-                subcategory: v.subcategory,
-                verification_status: v.verification_status,
-                average_rating: v.average_rating,
-                reviews_count: v.reviews_count,
-                is_sponsored: v.is_sponsored,
-                state: b.state,
-                lga: b.lga,
-                latitude: b.latitude ? Number(b.latitude) : null,
-                longitude: b.longitude ? Number(b.longitude) : null,
-                branchName: b.branch_name,
-                branchAddress: b.address,
-                phone: b.phone,
-                whatsapp: b.whatsapp,
-                open_time: b.open_time,
-                close_time: b.close_time,
-                business_days: b.business_days,
-                isBranchMatch: true,
-              };
-            })
-            .filter(Boolean);
+              branches = branchData
+                .map((b: any) => {
+                  const v = vendorMap.get(b.vendor_id);
+                  if (!v) return null;
+                  return {
+                    id: v.id,
+                    branchId: b.id,
+                    slug: v.slug,
+                    name: v.name,
+                    logo_url: v.logo_url,
+                    category: v.category,
+                    subcategory: v.subcategory,
+                    verification_status: v.verification_status,
+                    average_rating: v.average_rating,
+                    reviews_count: v.reviews_count,
+                    is_sponsored: v.is_sponsored,
+                    state: b.state,
+                    lga: b.lga,
+                    latitude: b.latitude ? Number(b.latitude) : null,
+                    longitude: b.longitude ? Number(b.longitude) : null,
+                    branchName: b.branch_name,
+                    branchAddress: b.address,
+                    phone: b.phone,
+                    whatsapp: b.whatsapp,
+                    open_time: b.open_time,
+                    close_time: b.close_time,
+                    business_days: b.business_days,
+                    isBranchMatch: true,
+                  };
+                })
+                .filter(Boolean);
 
-          // Client-side keyword/category/verified filtering
-          if (kw) {
-            const kwLower = kw.toLowerCase();
-            branches = branches.filter((b: any) =>
-              (b.name || "").toLowerCase().includes(kwLower) ||
-              (b.category || "").toLowerCase().includes(kwLower) ||
-              (b.subcategory || "").toLowerCase().includes(kwLower) ||
-              (b.branchName || "").toLowerCase().includes(kwLower)
-            );
-          }
-          if (cat) branches = branches.filter((b: any) => b.category === cat);
-          if (subcat) branches = branches.filter((b: any) => b.subcategory === subcat);
-          if (verified) branches = branches.filter((b: any) =>
-            b.verification_status === "blue" || b.verification_status === "gray"
-          );
+              // Client-side keyword/category/verified filtering
+              if (kw) {
+                const kwLower = kw.toLowerCase();
+                branches = branches.filter((b: any) =>
+                  (b.name || "").toLowerCase().includes(kwLower) ||
+                  (b.category || "").toLowerCase().includes(kwLower) ||
+                  (b.subcategory || "").toLowerCase().includes(kwLower) ||
+                  (b.branchName || "").toLowerCase().includes(kwLower)
+                );
+              }
+              if (cat) branches = branches.filter((b: any) => b.category === cat);
+              if (subcat) branches = branches.filter((b: any) => b.subcategory === subcat);
+              if (verified) branches = branches.filter((b: any) =>
+                b.verification_status === "blue" || b.verification_status === "gray"
+              );
 
-          branches = applyDistance(
-            branches,
-            (v: any) => v.latitude,
-            (v: any) => v.longitude,
-            lat, lng, rad, distOn
-          );
-        }
+              branches = applyDistance(
+                branches,
+                (v: any) => v.latitude,
+                (v: any) => v.longitude,
+                lat, lng, rad, distOn
+              );
+            }
+            return branches;
+          })(),
+        ]);
 
-        rawVendors = rawVendors.concat(branches);
-      }
+        const vendorsFromRpc = applyDistance(
+          (vendorsRes.data || []) as any[],
+          v => v.latitude ? Number(v.latitude) : null,
+          v => v.longitude ? Number(v.longitude) : null,
+          lat, lng, rad, distOn
+        );
 
-      if (type === "all" || type === "product") {
+        return vendorsFromRpc.concat(branches);
+      };
+
+      const fetchProducts = async (): Promise<any[]> => {
+        if (!(type === "all" || type === "product")) return [];
         const { data } = await supabase.rpc("search_products", {
           p_keyword: kw || null,
           p_category: cat || null,
@@ -366,13 +380,14 @@ export default function DiscoverResultsPage() {
           p_lga: lg || null,
           p_verified_only: verified,
         });
-        rawProducts = applyDistance(
+        return applyDistance(
           data || [], p => p.vendor_latitude, p => p.vendor_longitude,
           lat, lng, rad, distOn
         );
-      }
+      };
 
-      if (type === "all" || type === "service") {
+      const fetchServices = async (): Promise<any[]> => {
+        if (!(type === "all" || type === "service")) return [];
         const { data } = await supabase.rpc("search_services", {
           p_keyword: kw || null,
           p_category: cat || null,
@@ -381,13 +396,19 @@ export default function DiscoverResultsPage() {
           p_lga: lg || null,
           p_verified_only: verified,
         });
-        rawServices = applyDistance(
+        return applyDistance(
           data || [],
           s => s.vendor_latitude ? Number(s.vendor_latitude) : null,
           s => s.vendor_longitude ? Number(s.vendor_longitude) : null,
           lat, lng, rad, distOn
         );
-      }
+      };
+
+      const [rawVendors, rawProducts, rawServices] = await Promise.all([
+        fetchVendors(),
+        fetchProducts(),
+        fetchServices(),
+      ]);
 
       // Normalize
       const normVendors: Vendor[] = rawVendors.map((v: any) => ({

@@ -374,13 +374,20 @@ export default function VendorProfilePage() {
       setDescription(vendorData.description || "");
 
       // Analytics: profile_view (non-owner only)
+      // 2026-08 perf fix, per Cyril: this insert was previously
+      // `await`-ed, so every single profile view paid for one extra full
+      // round trip before the page's own product/service/review/etc.
+      // data even started loading — and nothing downstream needs its
+      // result. Fire-and-forget (same insert, same error logging) so the
+      // real page content starts loading immediately instead of waiting
+      // on an analytics write.
       if (!owner) {
-        try {
-          await supabase.from("analytics_events").insert({
-            vendor_id: vendorData.id,
-            event_type: "profile_view",
-          });
-        } catch { /* non-fatal */ }
+        supabase.from("analytics_events").insert({
+          vendor_id: vendorData.id,
+          event_type: "profile_view",
+        }).then(({ error }) => {
+          if (error) console.error("profile_view analytics insert failed:", error);
+        });
       }
 
       // Load related data
