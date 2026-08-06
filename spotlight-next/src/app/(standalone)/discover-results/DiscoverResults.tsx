@@ -15,6 +15,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { getViewingCustomerId } from "@/lib/getViewingCustomerId";
 import { nigeriaData } from "@/lib/nigeria-data.js";
 import ProfileNav from "@/components/ProfileNav";
 import SearchableSelect from "@/components/SearchableSelect";
@@ -486,6 +487,46 @@ export default function DiscoverResultsPage() {
         ...filteredServices.filter(s => s.sponsored),
         ...filteredVendors.filter(v => v.sponsored),
       ];
+
+      // 2026-08 fix, per Cyril: Business Insights' "Search Keywords" panel
+      // reads analytics_events rows with event_type "search_impression",
+      // but nothing in the Next.js rebuild was ever writing them -- the
+      // DB column and the reader (insight/page.tsx's loadKeywords) both
+      // existed, the writer never got ported. Ported faithfully from
+      // production's discover-results.js: log one impression per vendor,
+      // product, and service actually shown in the results, tagged with
+      // the keyword searched. Fire-and-forget so a logging failure can
+      // never slow down or block a real user from seeing their results.
+      (async () => {
+        try {
+          const customerId = await getViewingCustomerId();
+          const impressions = [
+            ...filteredVendors.map(v => ({
+              vendor_id: v.id,
+              event_type: "search_impression",
+              search_keyword: kw || "",
+              customer_id: customerId,
+            })),
+            ...filteredProducts.map(p => ({
+              vendor_id: p.vendorId,
+              product_id: p.id,
+              event_type: "search_impression",
+              search_keyword: kw || "",
+              customer_id: customerId,
+            })),
+            ...filteredServices.map(s => ({
+              vendor_id: s.vendorId,
+              service_id: s.id,
+              event_type: "search_impression",
+              search_keyword: kw || "",
+              customer_id: customerId,
+            })),
+          ];
+          if (impressions.length) {
+            await supabase.from("analytics_events").insert(impressions);
+          }
+        } catch { /* non-fatal */ }
+      })();
 
       setVendors(filteredVendors);
       setProducts(filteredProducts);

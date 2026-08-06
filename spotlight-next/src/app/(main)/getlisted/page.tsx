@@ -57,6 +57,7 @@ const PLANS = [
     everythingLabel: "Your first 90 days include:",
     features: [
       "List up to 5 products or services",
+      "Mini web page for products & services",
       "1 social media handle",
       "Photo gallery — 3 images",
       "Clickable WhatsApp number",
@@ -81,7 +82,6 @@ const PLANS = [
     locationLabel: "1 location",
     everythingLabel: "Everything in Basic, plus:",
     features: [
-      "Mini web page for products & services",
       "Profile photo, cover image & logo",
       "Photo gallery — 10 images",
       "Business video — up to 30 seconds",
