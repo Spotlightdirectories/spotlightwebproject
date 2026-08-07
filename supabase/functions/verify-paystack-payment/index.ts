@@ -9,8 +9,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // matching payment.js's own values directly (no naira conversion
 // needed here, unlike the sponsorship pricing table).
 // -----------------------------------------------------------------
+// TEMPORARY LIVE-KEY TEST PRICE — see payment/page.tsx for details.
+// MUST be reverted to 299800 right after the test.
 const PLAN_PRICES_KOBO: Record<string, Record<string, number>> = {
-  standard: { monthly: 299800, yearly: 2698200 },
+  standard: { monthly: 20000, yearly: 2698200 },
   enterprise: { monthly: 1260000, yearly: 11340000 },
   elite: { monthly: 2240000, yearly: 20160000 },
 };

@@ -50,8 +50,14 @@ type Vendor = {
 const PAID_PLANS = ["standard", "enterprise", "elite", "custom"];
 
 // Matches production's getAmountInKobo exactly.
+// TEMPORARY LIVE-KEY TEST PRICE — standard/monthly dropped to ₦200
+// (20000 kobo) so Cyril can confirm the real Paystack + webhook chain
+// works without paying full price. MUST be reverted to 299800 right
+// after the test. See paystack-webhook and verify-paystack-payment —
+// their copies of this table must match or the payment gets flagged
+// for manual review instead of activating.
 const PRICES_KOBO: Record<string, { monthly: number; yearly: number }> = {
-  standard: { monthly: 299800, yearly: 2698200 },
+  standard: { monthly: 20000, yearly: 2698200 },
   enterprise: { monthly: 1260000, yearly: 11340000 },
   elite: { monthly: 2240000, yearly: 20160000 },
 };

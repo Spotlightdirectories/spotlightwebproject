@@ -10,8 +10,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // If Cyril ever changes approved pricing, both places must be
 // updated together.
 // -----------------------------------------------------------------
+// TEMPORARY LIVE-KEY TEST PRICE — see getsponsored/page.tsx for
+// details. MUST be reverted to 2000/2000 right after the test.
 const PRODUCT_SERVICE_TIERS: Record<string, { monthly: number; singleMonthly: number }> = {
-  standard: { monthly: 2000,  singleMonthly: 2000 },
+  standard: { monthly: 200,  singleMonthly: 200 },
   silver:   { monthly: 5000,  singleMonthly: 2500 },
   gold:     { monthly: 8000,  singleMonthly: 4000 },
   platinum: { monthly: 12000, singleMonthly: 6000 },
