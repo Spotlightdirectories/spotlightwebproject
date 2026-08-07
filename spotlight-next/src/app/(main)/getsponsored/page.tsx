@@ -361,7 +361,7 @@ export default function GetSponsoredPage() {
   // ---------------------------------------------------------------
   // CREATE PENDING SPONSORSHIP ROW(S)
   // ---------------------------------------------------------------
-  async function createPendingSponsorships(paymentMethod: "paystack" | "bank_transfer"): Promise<string[]> {
+  async function createPendingSponsorships(paymentMethod: "paystack" | "bank_transfer", gatewayRef?: string): Promise<string[]> {
     if (!vendor || !tierConfig) throw new Error("Select a tier first.");
 
     const targetIds = selectedType === "business" ? [null] : selectedItemIds;
@@ -374,6 +374,11 @@ export default function GetSponsoredPage() {
     // be approved/rejected as one atomic decision later.
     const batchId = crypto.randomUUID();
 
+    // gateway_ref stores the Paystack reference for card payments so
+    // the paystack-webhook (Paystack's own server-to-server callback)
+    // can find and activate this batch on its own, without depending
+    // on the browser's post-checkout call succeeding. Bank transfers
+    // never go through Paystack, so they have no reference to store.
     const rows = targetIds.map((targetId) => ({
       vendor_id: vendor.id,
       sponsorship_type: selectedType,
@@ -384,6 +389,7 @@ export default function GetSponsoredPage() {
       payment_method: paymentMethod,
       payment_status: "pending",
       batch_id: batchId,
+      gateway_ref: gatewayRef ?? null,
     }));
 
     const { data, error } = await supabase.from("vendor_sponsorships").insert(rows).select("id");
@@ -398,9 +404,22 @@ export default function GetSponsoredPage() {
     if (!vendor || !userId) return;
     setPayingOnline(true);
 
+    // Read this once, up front, and refuse to proceed if it's missing
+    // rather than silently falling back to a hardcoded live key. A
+    // missing env var should fail loudly, not quietly start charging
+    // real cards on what everyone believes is a test setup.
+    const paystackKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+    if (!paystackKey) {
+      alert("Payment is temporarily unavailable (configuration error). Please contact support — do not retry.");
+      setPayingOnline(false);
+      return;
+    }
+
+    const reference = `SPONSOR_${Date.now()}`;
+
     let sponsorshipIds: string[];
     try {
-      sponsorshipIds = await createPendingSponsorships("paystack");
+      sponsorshipIds = await createPendingSponsorships("paystack", reference);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Could not create sponsorship record.");
       setPayingOnline(false);
@@ -413,14 +432,8 @@ export default function GetSponsoredPage() {
       return;
     }
 
-    const reference = `SPONSOR_${Date.now()}`;
-
     const handler = window.PaystackPop.setup({
-      // Reads NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY (a test key locally/on
-      // Staging, per .env.local) so testing never runs against the
-      // live key — falls back to the live key if that variable isn't
-      // set somewhere (e.g. a future production deploy of this app).
-      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_live_3bb98d5dc8a2fa57534c307db789248d24c629de",
+      key: paystackKey,
       email: vendor.email || userEmail,
       amount: summaryUnitPrice * 100,
       currency: "NGN",

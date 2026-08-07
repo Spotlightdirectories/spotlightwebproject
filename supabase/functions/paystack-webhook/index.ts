@@ -21,6 +21,49 @@ function getExpectedKobo(plan: string, billingType: string): number {
   return planPrices[billingType] ?? planPrices.monthly ?? 0;
 }
 
+// -----------------------------------------------------------------
+// SPONSORSHIP PRICING TABLES — must exactly mirror getsponsored.js
+// (same tables used in verify-paystack-sponsorship). Added so this
+// webhook can activate sponsorships too, not just subscriptions.
+// Previously this webhook only ever looked in vendor_payments, so a
+// sponsorship payment had zero automatic safety net if the browser's
+// own post-checkout call never fired.
+// -----------------------------------------------------------------
+const SPONSOR_PRODUCT_SERVICE_TIERS: Record<string, { monthly: number; singleMonthly: number }> = {
+  standard: { monthly: 2000,  singleMonthly: 2000 },
+  silver:   { monthly: 5000,  singleMonthly: 2500 },
+  gold:     { monthly: 8000,  singleMonthly: 4000 },
+  platinum: { monthly: 12000, singleMonthly: 6000 },
+  diamond:  { monthly: 16000, singleMonthly: 8000 },
+};
+
+const SPONSOR_BUSINESS_TIERS: Record<string, number> = {
+  standard: 3000, silver: 6000, gold: 10000, platinum: 15000, diamond: 20000,
+};
+
+const SPONSOR_PLAN_MULTIPLIER: Record<string, number> = { standard: 1, enterprise: 1.5, elite: 2 };
+
+function getExpectedSponsorshipKobo(
+  sponsorshipType: string,
+  tier: string,
+  itemCount: number,
+  vendorPlanTier: string,
+  billingCycle: string
+): number {
+  let expectedMonthly = 0;
+  if (sponsorshipType === "business") {
+    const base = SPONSOR_BUSINESS_TIERS[tier] ?? 0;
+    const multiplier = SPONSOR_PLAN_MULTIPLIER[vendorPlanTier] ?? 1;
+    expectedMonthly = base * multiplier;
+  } else {
+    const tierConfig = SPONSOR_PRODUCT_SERVICE_TIERS[tier];
+    if (!tierConfig) return 0;
+    expectedMonthly = itemCount === 1 ? tierConfig.singleMonthly : tierConfig.monthly;
+  }
+  const expectedNaira = billingCycle === "yearly" ? expectedMonthly * 9 : expectedMonthly;
+  return expectedNaira * 100;
+}
+
 serve(async (req) => {
 
   // 🔓 CORS HEADERS
@@ -152,12 +195,7 @@ const { data: payment } = await supabase
   .eq("gateway_ref", reference)
   .maybeSingle();
 
-if (!payment) {
-  return new Response(
-    JSON.stringify({ error: "Payment record not found" }),
-    { status: 400, headers: corsHeaders }
-  );
-}
+if (payment) {
 
 // 🔒 Retry protection (PAYMENT LEVEL)
 if (payment.status === "confirmed") {
@@ -280,4 +318,113 @@ await supabase
     JSON.stringify({ success: true }),
     { status: 200, headers: corsHeaders }
   );
+
+} // end subscription branch (payment found in vendor_payments)
+
+// -----------------------------------------------------------------
+// Not a subscription payment — check whether this reference belongs
+// to a SPONSORSHIP batch instead. Sponsorships live in a separate
+// table with their own pricing and activation rules.
+// -----------------------------------------------------------------
+const { data: sponsorships } = await supabase
+  .from("vendor_sponsorships")
+  .select("id, payment_status, vendor_id, billing_cycle, sponsorship_type, target_id, tier")
+  .eq("gateway_ref", reference);
+
+if (sponsorships && sponsorships.length > 0) {
+  const first = sponsorships[0];
+
+  // 🔒 Retry protection — mirrors verify-paystack-sponsorship
+  if (first.payment_status === "active") {
+    return new Response(
+      JSON.stringify({ message: "Sponsorship already processed" }),
+      { status: 200, headers: corsHeaders }
+    );
+  }
+
+  const { data: sponsorVendor } = await supabase
+    .from("vendors")
+    .select("email, plan_tier")
+    .eq("id", first.vendor_id)
+    .maybeSingle();
+
+  // Same server-side price check as the subscription path above —
+  // independently recompute what this batch SHOULD have cost and
+  // compare it to what Paystack actually confirms was charged.
+  const itemCount = first.sponsorship_type === "business" ? 1 : sponsorships.length;
+  const expectedSponsorKobo = getExpectedSponsorshipKobo(
+    first.sponsorship_type,
+    first.tier,
+    itemCount,
+    sponsorVendor?.plan_tier || "standard",
+    first.billing_cycle
+  );
+  const actualSponsorKobo = verifyData.data.amount;
+
+  if (expectedSponsorKobo > 0 && actualSponsorKobo !== expectedSponsorKobo) {
+    console.error(
+      "SPONSORSHIP PRICE MISMATCH (webhook) — refusing to activate.",
+      { reference, expectedSponsorKobo, actualSponsorKobo, sponsorshipIds: sponsorships.map((s) => s.id) }
+    );
+    // Left as "pending" deliberately, same reasoning as the
+    // subscription path — a human should review a genuine mismatch.
+    return new Response(
+      JSON.stringify({ success: false, error: "Amount mismatch — flagged for manual review" }),
+      { status: 400, headers: corsHeaders }
+    );
+  }
+
+  const sponsorNowIso = new Date().toISOString();
+  const sponsorExpiry =
+    first.billing_cycle === "monthly"
+      ? new Date(new Date().setDate(new Date().getDate() + 30))
+      : new Date(new Date().setDate(new Date().getDate() + 365));
+
+  const sponsorshipIds = sponsorships.map((s) => s.id);
+
+  await supabase
+    .from("vendor_sponsorships")
+    .update({
+      payment_status: "active",
+      starts_at: sponsorNowIso,
+      expires_at: sponsorExpiry.toISOString(),
+    })
+    .in("id", sponsorshipIds);
+
+  if (sponsorVendor?.email) {
+    try {
+      await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+            "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!}`
+          },
+          body: JSON.stringify({
+            to: sponsorVendor.email,
+            subject: "Sponsorship Activated 🎉",
+            html: `<p>Your ${first.tier} sponsorship is now active.</p>
+                   <p>It will run until ${sponsorExpiry.toDateString()}.</p>`
+          })
+        }
+      );
+    } catch (err) {
+      console.error("Email failed:", err);
+    }
+  }
+
+  return new Response(
+    JSON.stringify({ success: true }),
+    { status: 200, headers: corsHeaders }
+  );
+}
+
+// Neither a subscription payment nor a sponsorship batch matched
+// this reference.
+return new Response(
+  JSON.stringify({ error: "Payment record not found" }),
+  { status: 400, headers: corsHeaders }
+);
 });
