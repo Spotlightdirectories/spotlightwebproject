@@ -8,10 +8,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // verify what a payment should have cost, instead of trusting
 // whatever amount was charged.
 // -----------------------------------------------------------------
-// TEMPORARY LIVE-KEY TEST PRICE — see payment/page.tsx for details.
-// MUST be reverted to 299800 right after the test.
 const PLAN_PRICES_KOBO: Record<string, Record<string, number>> = {
-  standard: { monthly: 20000, yearly: 2698200 },
+  standard: { monthly: 299800, yearly: 2698200 },
   enterprise: { monthly: 1260000, yearly: 11340000 },
   elite: { monthly: 2240000, yearly: 20160000 },
 };
@@ -31,10 +29,8 @@ function getExpectedKobo(plan: string, billingType: string): number {
 // sponsorship payment had zero automatic safety net if the browser's
 // own post-checkout call never fired.
 // -----------------------------------------------------------------
-// TEMPORARY LIVE-KEY TEST PRICE — see getsponsored/page.tsx for
-// details. MUST be reverted to 2000/2000 right after the test.
 const SPONSOR_PRODUCT_SERVICE_TIERS: Record<string, { monthly: number; singleMonthly: number }> = {
-  standard: { monthly: 200,  singleMonthly: 200 },
+  standard: { monthly: 2000,  singleMonthly: 2000 },
   silver:   { monthly: 5000,  singleMonthly: 2500 },
   gold:     { monthly: 8000,  singleMonthly: 4000 },
   platinum: { monthly: 12000, singleMonthly: 6000 },

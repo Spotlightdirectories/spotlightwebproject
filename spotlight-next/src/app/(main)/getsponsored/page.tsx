@@ -65,14 +65,8 @@ type ViewComparison = { before: number; after: number; windowDays: number } | nu
 type TierRow = { tier: Tier; monthly: number; items?: number; singleMonthly?: number };
 
 // ── APPROVED PRICING (from the pricing workbook Cyril approved) ──
-// TEMPORARY LIVE-KEY TEST PRICE — standard tier dropped to ₦200 so
-// Cyril can confirm the real Paystack + webhook chain works without
-// paying full price. MUST be reverted to 2000/2000 right after the
-// test. paystack-webhook and verify-paystack-sponsorship have their
-// own copies of this table — they must match or the payment gets
-// flagged for manual review instead of activating.
 const PRODUCT_SERVICE_TIERS: TierRow[] = [
-  { tier: "standard", items: 1, monthly: 200, singleMonthly: 200 },
+  { tier: "standard", items: 1, monthly: 2000, singleMonthly: 2000 },
   { tier: "silver", items: 3, monthly: 5000, singleMonthly: 2500 },
   { tier: "gold", items: 5, monthly: 8000, singleMonthly: 4000 },
   { tier: "platinum", items: 8, monthly: 12000, singleMonthly: 6000 },
