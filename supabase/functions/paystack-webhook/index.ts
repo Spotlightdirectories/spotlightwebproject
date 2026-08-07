@@ -43,6 +43,86 @@ const SPONSOR_BUSINESS_TIERS: Record<string, number> = {
 
 const SPONSOR_PLAN_MULTIPLIER: Record<string, number> = { standard: 1, enterprise: 1.5, elite: 2 };
 
+// -----------------------------------------------------------------
+// BRANDED EMAILS — mirror spotlight-next/src/lib/emailTemplates.ts
+// (same shell/colours as EmailTemplates.paymentApproved and
+// .sponsorshipApproved, worded for an instant card payment rather
+// than an admin-approved bank transfer). Duplicated here because
+// edge functions run on Deno and can't import the Next.js app's
+// src/lib modules directly. This webhook previously sent no
+// confirmation email at all for subscriptions, and a plain unbranded
+// <p> string for sponsorships.
+// -----------------------------------------------------------------
+function paymentActivatedEmail(vendorName: string, plan: string, billingType: string, expiresAt: string): string {
+  const planDisplay = plan ? plan.charAt(0).toUpperCase() + plan.slice(1) : "—";
+  const billingDisplay = billingType ? billingType.charAt(0).toUpperCase() + billingType.slice(1) : "—";
+  const expiryDisplay = new Date(expiresAt).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" });
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Spotlight Directories</title></head>
+<body style="margin:0;padding:0;background-color:#fafaf8;font-family:Arial,sans-serif;">
+  <span style="display:none;max-height:0;overflow:hidden;opacity:0;">Your Spotlight payment was successful. Your listing is now active.</span>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#fafaf8;padding:40px 16px;"><tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.08);">
+      <tr><td style="background:#000000;padding:28px 40px;text-align:left;">
+        <span style="font-size:24px;font-weight:700;color:#e6c200;letter-spacing:-0.5px;">Spotlight</span>
+        <span style="font-size:24px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">Directories</span>
+      </td></tr>
+      <tr><td style="padding:40px 40px 32px;">
+        <h1 style="margin:0 0 16px;font-size:26px;font-weight:700;color:#0f172a;line-height:1.2;">Payment Successful 🎉</h1>
+        <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">Hello${vendorName ? " " + vendorName : " there"},</p>
+        <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">Your payment was successful and your Spotlight subscription is now active.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border-radius:12px;overflow:hidden;margin:20px 0;border:1px solid #e5e7eb;"><tbody>
+          <tr><td style="padding:10px 16px;font-size:13px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.04em;width:140px;border-bottom:1px solid #f1f5f9;">Plan</td><td style="padding:10px 16px;font-size:15px;font-weight:600;color:#0f172a;border-bottom:1px solid #f1f5f9;">${planDisplay}</td></tr>
+          <tr><td style="padding:10px 16px;font-size:13px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.04em;width:140px;border-bottom:1px solid #f1f5f9;">Billing</td><td style="padding:10px 16px;font-size:15px;font-weight:600;color:#0f172a;border-bottom:1px solid #f1f5f9;">${billingDisplay}</td></tr>
+          <tr><td style="padding:10px 16px;font-size:13px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.04em;width:140px;border-bottom:1px solid #f1f5f9;">Valid Until</td><td style="padding:10px 16px;font-size:15px;font-weight:600;color:#0f172a;border-bottom:1px solid #f1f5f9;">${expiryDisplay}</td></tr>
+        </tbody></table>
+        <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">You can now complete your profile, add your listings, and start getting discovered by customers.</p>
+        <table cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;"><tr><td style="background:#000000;border-radius:10px;"><a href="https://spotlightdirectories.com/login" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;">Go to My Dashboard</a></td></tr></table>
+      </td></tr>
+      <tr><td style="padding:0 40px;"><div style="height:1px;background:#e5e7eb;"></div></td></tr>
+      <tr><td style="padding:24px 40px;text-align:center;">
+        <p style="margin:0 0 8px;font-size:13px;color:#94a3b8;">Spotlight Directories &mdash; Helping Nigerian businesses get found.</p>
+        <p style="margin:0;font-size:12px;color:#94a3b8;">&copy; ${new Date().getFullYear()} Spotlight Digital Services Ltd. All rights reserved.</p>
+        <p style="margin:8px 0 0;font-size:12px;color:#94a3b8;"><a href="https://spotlightdirectories.com" style="color:#94a3b8;text-decoration:underline;">spotlightdirectories.com</a></p>
+      </td></tr>
+    </table>
+  </td></tr></table>
+</body></html>`;
+}
+
+function sponsorshipActivatedEmail(vendorName: string, tier: string, typeLabel: string, expiresAt: string): string {
+  const tierDisplay = tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : "—";
+  const expiryDisplay = new Date(expiresAt).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" });
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Spotlight Directories</title></head>
+<body style="margin:0;padding:0;background-color:#fafaf8;font-family:Arial,sans-serif;">
+  <span style="display:none;max-height:0;overflow:hidden;opacity:0;">Your ${tierDisplay} sponsorship is now active on Spotlight.</span>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#fafaf8;padding:40px 16px;"><tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.08);">
+      <tr><td style="background:#000000;padding:28px 40px;text-align:left;">
+        <span style="font-size:24px;font-weight:700;color:#e6c200;letter-spacing:-0.5px;">Spotlight</span>
+        <span style="font-size:24px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">Directories</span>
+      </td></tr>
+      <tr><td style="padding:40px 40px 32px;">
+        <h1 style="margin:0 0 16px;font-size:26px;font-weight:700;color:#0f172a;line-height:1.2;">Sponsorship Activated 🎉</h1>
+        <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">Hello${vendorName ? " " + vendorName : " there"},</p>
+        <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">Your payment was successful and your <strong>${tierDisplay}</strong> sponsorship for ${typeLabel || "your listing"} is now active.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border-radius:12px;overflow:hidden;margin:20px 0;border:1px solid #e5e7eb;"><tbody>
+          <tr><td style="padding:10px 16px;font-size:13px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.04em;width:140px;border-bottom:1px solid #f1f5f9;">Tier</td><td style="padding:10px 16px;font-size:15px;font-weight:600;color:#0f172a;border-bottom:1px solid #f1f5f9;">${tierDisplay}</td></tr>
+          <tr><td style="padding:10px 16px;font-size:13px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.04em;width:140px;border-bottom:1px solid #f1f5f9;">Runs Until</td><td style="padding:10px 16px;font-size:15px;font-weight:600;color:#0f172a;border-bottom:1px solid #f1f5f9;">${expiryDisplay}</td></tr>
+        </tbody></table>
+        <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">Your sponsored placement is now live and visible to customers browsing Spotlight.</p>
+        <div style="background:#dcfce7;border:1px solid #86efac;border-radius:10px;padding:14px 18px;margin:20px 0;"><p style="margin:0;font-size:14px;line-height:1.6;color:#166534;">You'll get another email if this sponsorship needs renewing before it expires.</p></div>
+      </td></tr>
+      <tr><td style="padding:0 40px;"><div style="height:1px;background:#e5e7eb;"></div></td></tr>
+      <tr><td style="padding:24px 40px;text-align:center;">
+        <p style="margin:0 0 8px;font-size:13px;color:#94a3b8;">Spotlight Directories &mdash; Helping Nigerian businesses get found.</p>
+        <p style="margin:0;font-size:12px;color:#94a3b8;">&copy; ${new Date().getFullYear()} Spotlight Digital Services Ltd. All rights reserved.</p>
+        <p style="margin:8px 0 0;font-size:12px;color:#94a3b8;"><a href="https://spotlightdirectories.com" style="color:#94a3b8;text-decoration:underline;">spotlightdirectories.com</a></p>
+      </td></tr>
+    </table>
+  </td></tr></table>
+</body></html>`;
+}
+
 function getExpectedSponsorshipKobo(
   sponsorshipType: string,
   tier: string,
@@ -314,6 +394,39 @@ await supabase
   })
   .eq("id", payment.id);
 
+  // 🔹 Send activation email — this webhook previously sent none at
+  // all for subscriptions (only the browser-side verify call did),
+  // meaning a vendor whose browser never completed the round trip
+  // got activated with no confirmation email whatsoever.
+  const { data: subVendorForEmail } = await supabase
+    .from("vendors")
+    .select("email, name")
+    .eq("id", payment.vendor_id)
+    .maybeSingle();
+
+  if (subVendorForEmail?.email) {
+    try {
+      await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+            "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!}`
+          },
+          body: JSON.stringify({
+            to: subVendorForEmail.email,
+            subject: "Payment Successful 🎉",
+            html: paymentActivatedEmail(subVendorForEmail.name || "", payment.plan, payment.billing_type, expiry.toISOString())
+          })
+        }
+      );
+    } catch (err) {
+      console.error("Email failed:", err);
+    }
+  }
+
   return new Response(
     JSON.stringify({ success: true }),
     { status: 200, headers: corsHeaders }
@@ -344,7 +457,7 @@ if (sponsorships && sponsorships.length > 0) {
 
   const { data: sponsorVendor } = await supabase
     .from("vendors")
-    .select("email, plan_tier")
+    .select("email, name, plan_tier")
     .eq("id", first.vendor_id)
     .maybeSingle();
 
@@ -405,8 +518,12 @@ if (sponsorships && sponsorships.length > 0) {
           body: JSON.stringify({
             to: sponsorVendor.email,
             subject: "Sponsorship Activated 🎉",
-            html: `<p>Your ${first.tier} sponsorship is now active.</p>
-                   <p>It will run until ${sponsorExpiry.toDateString()}.</p>`
+            html: sponsorshipActivatedEmail(
+              sponsorVendor.name || "",
+              first.tier,
+              first.sponsorship_type === "business" ? "your business" : first.sponsorship_type === "product" ? "your product" : "your service",
+              sponsorExpiry.toISOString()
+            )
           })
         }
       );

@@ -24,6 +24,49 @@ const BUSINESS_TIERS: Record<string, number> = {
 
 const PLAN_MULTIPLIER: Record<string, number> = { standard: 1, enterprise: 1.5, elite: 2 };
 
+// -----------------------------------------------------------------
+// BRANDED EMAIL — mirrors spotlight-next/src/lib/emailTemplates.ts
+// (same shell, colours, and heading/paragraph/infoTable/alertBox
+// building blocks used by EmailTemplates.sponsorshipApproved).
+// Duplicated here because edge functions run on Deno and can't
+// import the Next.js app's src/lib modules directly. Previously this
+// email was a bare <p> string with no branding at all — fixed here to
+// match every other transactional email on the platform.
+// -----------------------------------------------------------------
+function sponsorshipActivatedEmail(vendorName: string, tier: string, typeLabel: string, expiresAt: string): string {
+  const tierDisplay = tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : "—";
+  const expiryDisplay = new Date(expiresAt).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" });
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Spotlight Directories</title></head>
+<body style="margin:0;padding:0;background-color:#fafaf8;font-family:Arial,sans-serif;">
+  <span style="display:none;max-height:0;overflow:hidden;opacity:0;">Your ${tierDisplay} sponsorship is now active on Spotlight.</span>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#fafaf8;padding:40px 16px;"><tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.08);">
+      <tr><td style="background:#000000;padding:28px 40px;text-align:left;">
+        <span style="font-size:24px;font-weight:700;color:#e6c200;letter-spacing:-0.5px;">Spotlight</span>
+        <span style="font-size:24px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">Directories</span>
+      </td></tr>
+      <tr><td style="padding:40px 40px 32px;">
+        <h1 style="margin:0 0 16px;font-size:26px;font-weight:700;color:#0f172a;line-height:1.2;">Sponsorship Activated 🎉</h1>
+        <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">Hello${vendorName ? " " + vendorName : " there"},</p>
+        <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">Your payment was successful and your <strong>${tierDisplay}</strong> sponsorship for ${typeLabel || "your listing"} is now active.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border-radius:12px;overflow:hidden;margin:20px 0;border:1px solid #e5e7eb;"><tbody>
+          <tr><td style="padding:10px 16px;font-size:13px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.04em;width:140px;border-bottom:1px solid #f1f5f9;">Tier</td><td style="padding:10px 16px;font-size:15px;font-weight:600;color:#0f172a;border-bottom:1px solid #f1f5f9;">${tierDisplay}</td></tr>
+          <tr><td style="padding:10px 16px;font-size:13px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.04em;width:140px;border-bottom:1px solid #f1f5f9;">Runs Until</td><td style="padding:10px 16px;font-size:15px;font-weight:600;color:#0f172a;border-bottom:1px solid #f1f5f9;">${expiryDisplay}</td></tr>
+        </tbody></table>
+        <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">Your sponsored placement is now live and visible to customers browsing Spotlight.</p>
+        <div style="background:#dcfce7;border:1px solid #86efac;border-radius:10px;padding:14px 18px;margin:20px 0;"><p style="margin:0;font-size:14px;line-height:1.6;color:#166534;">You'll get another email if this sponsorship needs renewing before it expires.</p></div>
+      </td></tr>
+      <tr><td style="padding:0 40px;"><div style="height:1px;background:#e5e7eb;"></div></td></tr>
+      <tr><td style="padding:24px 40px;text-align:center;">
+        <p style="margin:0 0 8px;font-size:13px;color:#94a3b8;">Spotlight Directories &mdash; Helping Nigerian businesses get found.</p>
+        <p style="margin:0;font-size:12px;color:#94a3b8;">&copy; ${new Date().getFullYear()} Spotlight Digital Services Ltd. All rights reserved.</p>
+        <p style="margin:8px 0 0;font-size:12px;color:#94a3b8;"><a href="https://spotlightdirectories.com" style="color:#94a3b8;text-decoration:underline;">spotlightdirectories.com</a></p>
+      </td></tr>
+    </table>
+  </td></tr></table>
+</body></html>`;
+}
+
 function computeExpectedMonthlyNaira(
   sponsorshipType: string,
   tier: string,
@@ -241,8 +284,7 @@ serve(async (req) => {
           body: JSON.stringify({
             to: vendorData.email,
             subject: "Sponsorship Activated 🎉",
-            html: `<p>Your ${firstSponsorship.tier} sponsorship for ${typeLabel} is now active.</p>
-                   <p>It will run until ${expiry.toDateString()}.</p>`
+            html: sponsorshipActivatedEmail(vendorData.name || "", firstSponsorship.tier, typeLabel, expiry.toISOString())
           })
         }
       );

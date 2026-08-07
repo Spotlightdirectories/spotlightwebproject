@@ -22,6 +22,50 @@ function getExpectedKobo(plan: string, billingType: string): number {
   return planPrices[billingType] ?? planPrices.monthly ?? 0;
 }
 
+// -----------------------------------------------------------------
+// BRANDED EMAIL — mirrors spotlight-next/src/lib/emailTemplates.ts
+// (same shell/colours as EmailTemplates.paymentApproved, worded for
+// an instant card payment rather than an admin-approved bank
+// transfer). Duplicated here because edge functions run on Deno and
+// can't import the Next.js app's src/lib modules directly. Previously
+// this email was a bare <p> string with no branding at all.
+// -----------------------------------------------------------------
+function paymentActivatedEmail(vendorName: string, plan: string, billingType: string, expiresAt: string): string {
+  const planDisplay = plan ? plan.charAt(0).toUpperCase() + plan.slice(1) : "—";
+  const billingDisplay = billingType ? billingType.charAt(0).toUpperCase() + billingType.slice(1) : "—";
+  const expiryDisplay = new Date(expiresAt).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" });
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Spotlight Directories</title></head>
+<body style="margin:0;padding:0;background-color:#fafaf8;font-family:Arial,sans-serif;">
+  <span style="display:none;max-height:0;overflow:hidden;opacity:0;">Your Spotlight payment was successful. Your listing is now active.</span>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#fafaf8;padding:40px 16px;"><tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.08);">
+      <tr><td style="background:#000000;padding:28px 40px;text-align:left;">
+        <span style="font-size:24px;font-weight:700;color:#e6c200;letter-spacing:-0.5px;">Spotlight</span>
+        <span style="font-size:24px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">Directories</span>
+      </td></tr>
+      <tr><td style="padding:40px 40px 32px;">
+        <h1 style="margin:0 0 16px;font-size:26px;font-weight:700;color:#0f172a;line-height:1.2;">Payment Successful 🎉</h1>
+        <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">Hello${vendorName ? " " + vendorName : " there"},</p>
+        <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">Your payment was successful and your Spotlight subscription is now active.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border-radius:12px;overflow:hidden;margin:20px 0;border:1px solid #e5e7eb;"><tbody>
+          <tr><td style="padding:10px 16px;font-size:13px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.04em;width:140px;border-bottom:1px solid #f1f5f9;">Plan</td><td style="padding:10px 16px;font-size:15px;font-weight:600;color:#0f172a;border-bottom:1px solid #f1f5f9;">${planDisplay}</td></tr>
+          <tr><td style="padding:10px 16px;font-size:13px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.04em;width:140px;border-bottom:1px solid #f1f5f9;">Billing</td><td style="padding:10px 16px;font-size:15px;font-weight:600;color:#0f172a;border-bottom:1px solid #f1f5f9;">${billingDisplay}</td></tr>
+          <tr><td style="padding:10px 16px;font-size:13px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.04em;width:140px;border-bottom:1px solid #f1f5f9;">Valid Until</td><td style="padding:10px 16px;font-size:15px;font-weight:600;color:#0f172a;border-bottom:1px solid #f1f5f9;">${expiryDisplay}</td></tr>
+        </tbody></table>
+        <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#334155;">You can now complete your profile, add your listings, and start getting discovered by customers.</p>
+        <table cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;"><tr><td style="background:#000000;border-radius:10px;"><a href="https://spotlightdirectories.com/login" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;">Go to My Dashboard</a></td></tr></table>
+      </td></tr>
+      <tr><td style="padding:0 40px;"><div style="height:1px;background:#e5e7eb;"></div></td></tr>
+      <tr><td style="padding:24px 40px;text-align:center;">
+        <p style="margin:0 0 8px;font-size:13px;color:#94a3b8;">Spotlight Directories &mdash; Helping Nigerian businesses get found.</p>
+        <p style="margin:0;font-size:12px;color:#94a3b8;">&copy; ${new Date().getFullYear()} Spotlight Digital Services Ltd. All rights reserved.</p>
+        <p style="margin:8px 0 0;font-size:12px;color:#94a3b8;"><a href="https://spotlightdirectories.com" style="color:#94a3b8;text-decoration:underline;">spotlightdirectories.com</a></p>
+      </td></tr>
+    </table>
+  </td></tr></table>
+</body></html>`;
+}
+
 serve(async (req) => {
 
   console.log("EDGE FUNCTION HIT");
@@ -240,7 +284,7 @@ if (!updatedPayment || updatedPayment.length === 0) {
   // 🔹 Send activation email
   const { data: vendorData } = await supabase
     .from("vendors")
-    .select("email")
+    .select("email, name")
     .eq("id", existingPayment.vendor_id)
     .single();
 
@@ -258,8 +302,7 @@ if (!updatedPayment || updatedPayment.length === 0) {
     body: JSON.stringify({
       to: vendorData.email,
       subject: "Payment Successful 🎉",
-      html: `<p>Your payment has been confirmed.</p>
-             <p>You can now access your dashboard to complete onboarding. Make sure you get to 100% to optimize your business page.</p>`
+      html: paymentActivatedEmail(vendorData.name || "", existingPayment.plan, existingPayment.billing_type, expiry.toISOString())
     })
   }
 );
