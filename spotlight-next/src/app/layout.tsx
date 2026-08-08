@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import TawkChat from "@/components/TawkChat";
+import CookieConsent from "@/components/CookieConsent";
 
 export const metadata: Metadata = {
   title: "Spotlight Directories",
@@ -55,6 +56,7 @@ export default function RootLayout({
       <body>
         <ThemeProvider>{children}</ThemeProvider>
         <TawkChat />
+        <CookieConsent />
       </body>
     </html>
   );

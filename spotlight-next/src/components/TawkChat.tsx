@@ -18,11 +18,20 @@
 // results), every vendor/product/service page, and Get Listed.
 // Hidden everywhere else (dashboards, auth, admin, payment flows),
 // matching what production actually does.
+//
+// COOKIE CONSENT (added 2026-08): Tawk.to is the one non-essential
+// cookie source on the site (Paystack's checkout cookies are
+// strictly necessary and aren't gated). If the visitor has already
+// declined via the CookieConsent banner, the script never loads at
+// all. If they decline mid-session, we hide the widget immediately.
+// If they accept (either up front or after having declined), the
+// script loads/the widget reappears — no page reload needed.
 // ===============================================================
 
 import Script from "next/script";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { COOKIE_CONSENT_KEY, COOKIE_CONSENT_EVENT } from "./CookieConsent";
 
 declare global {
   interface Window {
@@ -44,8 +53,34 @@ function isTawkPage(pathname: string): boolean {
 
 export default function TawkChat() {
   const pathname = usePathname();
+  // null = still checking localStorage; avoids a flash where the
+  // script briefly loads for a visitor who already declined.
+  const [allowed, setAllowed] = useState<boolean | null>(null);
 
   useEffect(() => {
+    try {
+      setAllowed(localStorage.getItem(COOKIE_CONSENT_KEY) !== "declined");
+    } catch {
+      setAllowed(true);
+    }
+
+    const handleConsentChange = (e: Event) => {
+      const value = (e as CustomEvent<string>).detail;
+      if (value === "declined") {
+        window.Tawk_API?.hideWidget?.();
+        setAllowed(false);
+      } else if (value === "accepted") {
+        setAllowed(true);
+      }
+    };
+    window.addEventListener(COOKIE_CONSENT_EVENT, handleConsentChange);
+    return () =>
+      window.removeEventListener(COOKIE_CONSENT_EVENT, handleConsentChange);
+  }, []);
+
+  useEffect(() => {
+    if (!allowed) return;
+
     const applyVisibility = () => {
       const api = window.Tawk_API;
       if (!api) return;
@@ -66,7 +101,9 @@ export default function TawkChat() {
       window.Tawk_API = window.Tawk_API || {};
       window.Tawk_API.onLoad = applyVisibility;
     }
-  }, [pathname]);
+  }, [pathname, allowed]);
+
+  if (!allowed) return null;
 
   return (
     <Script id="tawk-to-widget" strategy="afterInteractive">

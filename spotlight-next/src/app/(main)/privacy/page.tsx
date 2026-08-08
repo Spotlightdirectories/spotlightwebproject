@@ -39,7 +39,8 @@ export default function PrivacyPage() {
             <li>Pages visited and interactions</li>
           </ul>
           <h3>c. Cookies and Tracking</h3>
-          <p>We use cookies and similar technologies to improve user experience and analyze usage. You can control cookies via your browser settings.</p>
+          <p>We do not use cookies for advertising or analytics. Your theme preference (light/dark) and login session are stored locally in your browser, not as cookies. Cookies on this site come from two third-party services we rely on: Paystack, to securely process payments during checkout, and Tawk.to, to power our live chat support widget.</p>
+          <p>When you first visit, a banner lets you accept or decline these cookies. Paystack&apos;s cookies are strictly necessary to complete a payment you initiate and cannot be declined. If you decline, the Tawk.to chat widget will not load; you can still reach us by email. You can change your choice at any time by clearing your browser&apos;s site data for spotlightdirectories.com.</p>
 
           <h2>4. Public Listing Notice ⚠️</h2>
           <p>By creating a listing on Spotlight Directories:</p>
