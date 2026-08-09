@@ -1,0 +1,23 @@
+# ===============================================================
+# Local backups & scratch files — never belong in source control.
+# Added because `git add .` was sweeping these into commits.
+# ===============================================================
+
+# Local Supabase database/storage backups (SQL dumps, vendor file
+# mirrors, download scripts). Can contain personal files (e.g. ID
+# photos uploaded by vendors) — must never be pushed to GitHub.
+backups/
+HOW-TO-BACKUP-DATABASE.md
+
+# Loose database dumps/schema exports saved at the repo root
+/*.sql
+
+# One-off scratch SQL fix not part of the tracked migration set
+pre-cutover-sql/04_textbook_handbook_fix.sql
+
+# Raw stock photos downloaded for sourcing — the real, in-use copies
+# live in spotlight-next/public/images/ and stay tracked.
+images/pexels-*.jpg
+
+# Supabase CLI local session/temp state
+supabase/.temp/
