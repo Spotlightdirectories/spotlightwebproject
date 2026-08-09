@@ -7,7 +7,11 @@ import styles from "./homepage.module.css";
 const SLIDES = [
   { img: "/images/tailorwoman.webp", alt: "Tailoring and fashion business owner", tag: "Fashion & Tailoring", caption: "Get found by customers looking for your craft nearby" },
   { img: "/images/mechanic3.webp", alt: "Auto mechanic and repair business owner", tag: "Auto & Technical Services", caption: "Trusted by the customers already searching for you" },
+  { img: "/images/hairdresser.webp", alt: "Hairdresser and salon business owner", tag: "Beauty & Hairdressing", caption: "Your next client is already searching nearby" },
   { img: "/images/consultant3.webp", alt: "Consultant and professional services provider", tag: "Professional & Consulting", caption: "Reach clients who need exactly what you offer" },
+  { img: "/images/caterer.webp", alt: "Caterer and event food business owner", tag: "Catering & Events", caption: "From small chops to full events — get booked faster" },
+  { img: "/images/carpenter.webp", alt: "Carpenter and woodwork business owner", tag: "Carpentry & Woodwork", caption: "Show off your craftsmanship to customers nearby" },
+  { img: "/images/accountant.webp", alt: "Accountant and financial services provider", tag: "Accounting & Finance", caption: "Trusted professionals, found by the clients who need them" },
 ];
 
 const BENEFITS = [
