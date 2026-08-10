@@ -2361,10 +2361,10 @@ if (socialLimit === 0) {
     // Client-side size pre-check — instant feedback instead of
     // silently converting the whole file to base64 and uploading it
     // over the network before the server eventually rejects it.
-    const maxCoverSize = 1 * 1024 * 1024;
+    const maxCoverSize = 3 * 1024 * 1024;
 
     if (file.size > maxCoverSize) {
-      alert("Cover image must be 1MB or smaller. Please choose a smaller file.");
+      alert("Cover image must be 3MB or smaller. Please choose a smaller file.");
       coverInput.value = "";
       return;
     }
@@ -2524,10 +2524,10 @@ if (logoInput) {
     if (!file) return;
 
     // Same client-side size pre-check as cover — instant feedback.
-    const maxLogoSize = 1 * 1024 * 1024;
+    const maxLogoSize = 3 * 1024 * 1024;
 
     if (file.size > maxLogoSize) {
-      alert("Logo image must be 1MB or smaller. Please choose a smaller file.");
+      alert("Logo image must be 3MB or smaller. Please choose a smaller file.");
       logoInput.value = "";
       return;
     }
