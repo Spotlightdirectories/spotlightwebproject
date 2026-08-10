@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Footer from "@/components/Footer";
 import styles from "./homepage.module.css";
 
@@ -44,15 +44,37 @@ const GROWTH = [
 
 export default function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const nextSlide = useCallback(() => {
-    setActiveSlide(s => (s + 1) % SLIDES.length);
+  const startTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setActiveSlide(s => (s + 1) % SLIDES.length);
+    }, 6000);
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(nextSlide, 6000);
-    return () => clearInterval(timer);
-  }, [nextSlide]);
+    startTimer();
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [startTimer]);
+
+  // Manual navigation (arrows/dots) jumps straight to a slide, then resets
+  // the auto-advance clock so it doesn't immediately jump again right after
+  // someone has just clicked — auto-scroll keeps running either way.
+  const goToSlide = useCallback((i: number) => {
+    setActiveSlide(i);
+    startTimer();
+  }, [startTimer]);
+
+  const nextSlide = useCallback(() => {
+    setActiveSlide(s => (s + 1) % SLIDES.length);
+    startTimer();
+  }, [startTimer]);
+
+  const prevSlide = useCallback(() => {
+    setActiveSlide(s => (s - 1 + SLIDES.length) % SLIDES.length);
+    startTimer();
+  }, [startTimer]);
 
   return (
     <>
@@ -85,11 +107,27 @@ export default function HomePage() {
               </div>
             </div>
           ))}
+
+          <button type="button"
+            className={`${styles.ldSlideArrow} ${styles.ldSlideArrowPrev}`}
+            onClick={prevSlide}
+            aria-label="Previous slide"
+          >
+            <i className="fa-solid fa-chevron-left"></i>
+          </button>
+          <button type="button"
+            className={`${styles.ldSlideArrow} ${styles.ldSlideArrowNext}`}
+            onClick={nextSlide}
+            aria-label="Next slide"
+          >
+            <i className="fa-solid fa-chevron-right"></i>
+          </button>
+
           <div className={styles.ldSlideDots}>
             {SLIDES.map((_, i) => (
               <button key={i} type="button"
                 className={`${styles.ldDot} ${activeSlide === i ? styles.ldDotActive : ""}`}
-                onClick={() => setActiveSlide(i)}
+                onClick={() => goToSlide(i)}
                 aria-label={`Slide ${i + 1}`}
               />
             ))}

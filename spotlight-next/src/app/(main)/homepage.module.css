@@ -146,6 +146,28 @@
 
 .ldSlideCaption p { font-size: var(--text-lg); font-weight: var(--font-semibold); margin: 0; }
 
+.ldSlideArrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.35);
+  color: #ffffff;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.ldSlideArrow:hover { background: rgba(0,0,0,0.6); }
+.ldSlideArrowPrev { left: 14px; }
+.ldSlideArrowNext { right: 14px; }
+
 .ldSlideDots {
   position: absolute;
   bottom: 20px; right: 28px;
@@ -397,6 +419,9 @@
   .ldHeroText h1 { font-size: var(--text-3xl); }
   .ldHeroCtas { flex-direction: column; }
   .ldHeroSlideshow { height: 300px; margin-top: 0; }
+  .ldSlideArrow { width: 32px; height: 32px; font-size: 12px; }
+  .ldSlideArrowPrev { left: 8px; }
+  .ldSlideArrowNext { right: 8px; }
   .ldBenefitsGrid { grid-template-columns: 1fr; }
   .ldHowGrid { grid-template-columns: 1fr; }
   .ldApp { grid-template-columns: 1fr; text-align: center; }
