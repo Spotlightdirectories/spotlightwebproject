@@ -418,7 +418,21 @@
   .ldHero { grid-template-columns: 1fr; padding: 90px 16px 50px; }
   .ldHeroText h1 { font-size: var(--text-3xl); }
   .ldHeroCtas { flex-direction: column; }
-  .ldHeroSlideshow { height: 300px; margin-top: 0; }
+  /* Was a fixed 300px height — on narrow phone widths that made the
+     box nearly square, while the source photos are much wider
+     (landscape). object-fit:cover then had to crop deep into the
+     sides to fill that squarish box, slicing into the caption
+     bubble baked into the left edge of 6 of the 7 slides (Cyril,
+     2026-08). A wider aspect-ratio keeps the box closer to the
+     photos' own proportions so far less gets cropped off the sides. */
+  .ldHeroSlideshow { height: auto; aspect-ratio: 3 / 2; margin-top: 0; }
+  /* The caption bar's desktop padding/font-size ate up a much bigger
+     share of the shorter mobile box, covering the photo underneath
+     (Cyril, 2026-08). Scaled both down for mobile only — desktop is
+     unchanged. */
+  .ldSlideCaption { padding: 14px 16px; }
+  .ldSlideTag { font-size: 10px; padding: 3px 9px; margin-bottom: 6px; }
+  .ldSlideCaption p { font-size: var(--text-sm); }
   .ldSlideArrow { width: 32px; height: 32px; font-size: 12px; }
   .ldSlideArrowPrev { left: 8px; }
   .ldSlideArrowNext { right: 8px; }
