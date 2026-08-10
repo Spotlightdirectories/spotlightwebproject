@@ -56,7 +56,7 @@ const PLANS = [
     locationLabel: "1 location",
     everythingLabel: "Your first 90 days include:",
     features: [
-      "List up to 5 products or services",
+      "List up to 5 products or services (2 after your 90-day trial)",
       "Mini web page for products & services",
       "1 social media handle",
       "Photo gallery — 3 images",
@@ -82,6 +82,7 @@ const PLANS = [
     locationLabel: "1 location",
     everythingLabel: "Everything in Basic, plus:",
     features: [
+      "List up to 25 products or services",
       "Profile photo, cover image & logo",
       "Photo gallery — 10 images",
       "Business video — up to 30 seconds",
@@ -102,6 +103,7 @@ const PLANS = [
     locationLabel: "Up to 10 locations",
     everythingLabel: "Everything in Standard, plus:",
     features: [
+      "List up to 50 products or services",
       "Up to 10 business branches",
       "Own address & WhatsApp number per branch",
       "Photo gallery — 20 images",
@@ -123,6 +125,7 @@ const PLANS = [
     locationLabel: "Up to 30 locations",
     everythingLabel: "Everything in Enterprise, plus:",
     features: [
+      "List up to 100 products or services",
       "Up to 30 business branches",
       "Photo gallery — 30 images",
       "Business video — up to 90 seconds",
@@ -146,6 +149,7 @@ const PLANS = [
     locationLabel: "Unlimited locations",
     everythingLabel: "Everything in Elite, plus:",
     features: [
+      "Unlimited products or services",
       "Unlimited business branches",
       "Unlimited social media handles",
       "Up to 250-word description",
