@@ -444,11 +444,11 @@ function VendorDashboardInner() {
 
       {/* MOBILE TOPBAR */}
       <header className="vd-mobile-topbar">
-        <div className="vd-mobile-brand">
+        <a href="/" className="vd-mobile-brand vd-logo-link">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/spotlightlogo-512.png" alt="Spotlight" className="vd-mobile-logo" />
           <span className="vd-mobile-brand-text">Spotlight</span>
-        </div>
+        </a>
         <button className="vd-mobile-menu-btn" onClick={() => setMobileSidebarOpen(true)} aria-label="Open Menu">
           <i className="fa-solid fa-bars"></i>
         </button>
