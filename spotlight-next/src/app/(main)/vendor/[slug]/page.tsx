@@ -1121,7 +1121,7 @@ export default function VendorProfilePage() {
           )}
           {isOwner && !vendor.cover_url && (
             <div className={styles.coverPlaceholder} style={{ display: "flex" }}>
-              Recommended size: 920 × 300px<br />Max size: 1MB<br />Formats: JPG, PNG
+              Recommended size: 920 × 300px<br />Max size: 3MB<br />Formats: JPG, PNG
             </div>
           )}
           {coverUploading && (
@@ -1153,7 +1153,7 @@ export default function VendorProfilePage() {
                   <img src={vendor.logo_url} alt={vendor.name} />
                 ) : (
                   <div className={styles.logoPlaceholder}>
-                    112 × 112px<br />Max: 1MB<br />JPG, PNG
+                    112 × 112px<br />Max: 3MB<br />JPG, PNG
                   </div>
                 )}
                 {logoUploading && (

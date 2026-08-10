@@ -113,8 +113,14 @@ const RULES: Record<string, Rule> = {
     isPublic: true,
   },
   cover: {
+    // Original upload cap raised 1MB -> 3MB: vendors have no practical way
+    // to shrink a photo themselves before uploading, and every image is
+    // resized to 1200px + recompressed as JPEG-80 below regardless of
+    // input size, so the FINAL stored file stays small either way (see
+    // formatSize-based error text and the resize/recompress step further
+    // down). Same reasoning already applied to verification/receipt.
     allowedTypes: ["image/jpeg", "image/png"],
-    maxBytes: 1024 * 1024,
+    maxBytes: 3 * 1024 * 1024,
     resizeTo: 1200,
     bucket: "vendor-branding",
     folder: "cover",
@@ -122,7 +128,7 @@ const RULES: Record<string, Rule> = {
   },
   logo: {
     allowedTypes: ["image/jpeg", "image/png"],
-    maxBytes: 1024 * 1024,
+    maxBytes: 3 * 1024 * 1024,
     resizeTo: 1200,
     bucket: "vendor-branding",
     folder: "logo",
