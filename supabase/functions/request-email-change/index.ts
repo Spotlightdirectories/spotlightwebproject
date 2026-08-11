@@ -171,15 +171,38 @@ serve(async (req) => {
       );
     }
 
-    const { data: existingVendor } = await supabase
-      .from("vendors")
-      .select("id")
-      .eq("email", cleanNewEmail)
-      .maybeSingle();
+    // Was vendors-only. A vendor's new email can just as easily
+    // already belong to a customer (or partner) account on Spotlight
+    // — same person, different role, same auth.users table underneath.
+    // That case used to sail past this check, only to fail at the
+    // final confirm step with a raw, unhelpful Admin API error
+    // ("Failed to update login email: {}") — Cyril hit this exact
+    // scenario 2026-08 with an email already used for a customer
+    // profile. Checking all three identity tables here catches it
+    // immediately and tells the vendor specifically why.
+    const [{ data: existingVendor }, { data: existingCustomer }, { data: existingPartner }] = await Promise.all([
+      supabase.from("vendors").select("id").eq("email", cleanNewEmail).maybeSingle(),
+      supabase.from("customers").select("id").eq("email", cleanNewEmail).maybeSingle(),
+      supabase.from("partners").select("id").eq("email", cleanNewEmail).maybeSingle(),
+    ]);
 
     if (existingVendor) {
       return new Response(
-        JSON.stringify({ error: "This email is already in use by another account." }),
+        JSON.stringify({ error: "This email is already registered to another vendor account." }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    if (existingCustomer) {
+      return new Response(
+        JSON.stringify({ error: "This email is already registered to a customer account. Use a different email, or contact support if you'd like to link the two." }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    if (existingPartner) {
+      return new Response(
+        JSON.stringify({ error: "This email is already registered to a partner account." }),
         { status: 400, headers: corsHeaders }
       );
     }

@@ -117,8 +117,21 @@ serve(async (req) => {
     );
 
     if (authUpdateError) {
+      // request-email-change already blocks emails already in use by a
+      // vendor/customer/partner row, but that's a table check, not the
+      // authoritative source — this Admin API call is. If it still
+      // rejects the email as taken (e.g. an account not covered by
+      // those three tables, or a race condition), surface a plain
+      // message instead of raw GoTrue error text, which can come back
+      // as something unhelpful like "{}" (Cyril hit this 2026-08).
+      const raw = (authUpdateError.message || "").toLowerCase();
+      const alreadyTaken = raw.includes("already") || raw.includes("exists") || raw.includes("registered") || !authUpdateError.message;
       return new Response(
-        JSON.stringify({ error: "Failed to update login email: " + authUpdateError.message }),
+        JSON.stringify({
+          error: alreadyTaken
+            ? "This email is already in use by another account. Please use a different email."
+            : "Failed to update login email: " + authUpdateError.message,
+        }),
         { status: 500, headers: corsHeaders }
       );
     }
