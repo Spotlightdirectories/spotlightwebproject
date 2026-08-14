@@ -5,6 +5,7 @@ export default function Footer() {
     <footer className={styles.footer}>
       <div className={styles.footerContent}>
         <a href="/safety">Safety Center</a>
+        <a href="/resources">Resources</a>
         <a href="/terms">Terms</a>
         <a href="/privacy">Privacy</a>
         <a href="/disclaimer">Disclaimer</a>

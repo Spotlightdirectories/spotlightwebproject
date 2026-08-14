@@ -189,6 +189,19 @@ export default function SignupPage() {
 
         {error && <div className={styles.authError}>{error}</div>}
 
+        <a
+          href="https://youtu.be/n37ooN5ZaXo"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.videoPrompt}
+        >
+          <span className={styles.videoIcon}><i className="fa-solid fa-circle-play"></i></span>
+          <span className={styles.videoText}>
+            <strong>New here? Watch how signup works</strong>
+            <small>Full walkthrough on YouTube &middot; opens in a new tab</small>
+          </span>
+        </a>
+
         <form className={styles.authForm} onSubmit={handleSubmit}>
           <div>
             <label htmlFor="businessName">Business name</label>

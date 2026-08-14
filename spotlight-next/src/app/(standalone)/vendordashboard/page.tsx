@@ -123,6 +123,46 @@ function VendorDashboardInner() {
   // moment the tab becomes active, via the onViewed callback below.
   const [unreadVisits, setUnreadVisits] = useState(0);
 
+  // Dashboard walkthrough banner — dismissible, persisted via localStorage
+  const [videoBannerDismissed, setVideoBannerDismissed] = useState(true);
+
+  useEffect(() => {
+    setVideoBannerDismissed(
+      typeof window !== "undefined" &&
+      localStorage.getItem("spotlightDashboardVideoBannerDismissed") === "true"
+    );
+  }, []);
+
+  function dismissVideoBanner() {
+    setVideoBannerDismissed(true);
+    localStorage.setItem("spotlightDashboardVideoBannerDismissed", "true");
+  }
+
+  // Desktop vs mobile walkthrough video — gated by screen width so a
+  // mobile visitor never sees the desktop recording and vice versa.
+  // Matches the existing 900px breakpoint already used for the mobile
+  // sidebar elsewhere in this file.
+  // TODO(Cyril): swap DASHBOARD_VIDEO_URLS.mobile once the mobile-specific
+  // walkthrough is uploaded — currently a placeholder pointing at the
+  // desktop video so nothing breaks in the meantime.
+  const DASHBOARD_VIDEO_URLS = {
+    desktop: "https://youtu.be/G2QEWiSJ9bo",
+    mobile: "https://youtu.be/G2QEWiSJ9bo", // TODO: replace with mobile video link
+  };
+
+  const [isMobileScreen, setIsMobileScreen] = useState(false);
+
+  useEffect(() => {
+    function checkWidth() {
+      setIsMobileScreen(window.innerWidth <= 900);
+    }
+    checkWidth();
+    window.addEventListener("resize", checkWidth);
+    return () => window.removeEventListener("resize", checkWidth);
+  }, []);
+
+  const dashboardVideoUrl = isMobileScreen ? DASHBOARD_VIDEO_URLS.mobile : DASHBOARD_VIDEO_URLS.desktop;
+
   // ---------------------------------------------------------------
   // AUTH GUARD + FETCH VENDOR
   // ---------------------------------------------------------------
@@ -507,6 +547,21 @@ function VendorDashboardInner() {
 
         {/* ============ OVERVIEW ============ */}
         <section className={sec("overview")}>
+
+          {!videoBannerDismissed && (
+            <div className="vd-video-banner">
+              <div className="vd-video-banner-icon"><i className="fa-solid fa-circle-play"></i></div>
+              <div className="vd-video-banner-text">
+                <strong>New here? Watch the full dashboard walkthrough</strong>
+                <span>See how to add products, get verified, and grow your listing.</span>
+              </div>
+              <a href={dashboardVideoUrl} target="_blank" rel="noopener noreferrer" className="vd-video-banner-btn">Watch Now</a>
+              <button className="vd-video-banner-close" type="button" aria-label="Dismiss" onClick={dismissVideoBanner}>
+                <i className="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          )}
+
           <div className="vd-overview-layout">
 
             {/* LEFT: STATUS */}

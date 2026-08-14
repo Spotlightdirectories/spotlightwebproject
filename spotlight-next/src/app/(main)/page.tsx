@@ -244,6 +244,7 @@ export default function HomePage() {
             <a href="/FAQ">FAQ</a>
             <a href="/contact-us">Contact Us</a>
             <a href="/feedback">Feedback</a>
+            <a href="/resources">Resources</a>
             <a href="/partner-program" className={styles.hfooterPartnerBtn}>Partner Program</a>
           </div>
           <div className={styles.hfooterNewsletter}>
