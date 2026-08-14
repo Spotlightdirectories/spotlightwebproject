@@ -15,6 +15,8 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { useIsMobile } from "@/lib/useIsMobile";
+import { ONBOARDING_VIDEOS } from "@/lib/onboardingVideos";
 import ProfileTab from "./ProfileTab";
 import ProductsTab from "./ProductsTab";
 import ServicesTab from "./ServicesTab";
@@ -99,6 +101,8 @@ export default function VendorDashboardPage() {
 function VendorDashboardInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isMobile = useIsMobile();
+  const dashboardVideoUrl = isMobile ? ONBOARDING_VIDEOS.dashboardWalkthrough.mobile : ONBOARDING_VIDEOS.dashboardWalkthrough.desktop;
 
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [loading, setLoading] = useState(true);
@@ -137,31 +141,6 @@ function VendorDashboardInner() {
     setVideoBannerDismissed(true);
     localStorage.setItem("spotlightDashboardVideoBannerDismissed", "true");
   }
-
-  // Desktop vs mobile walkthrough video — gated by screen width so a
-  // mobile visitor never sees the desktop recording and vice versa.
-  // Matches the existing 900px breakpoint already used for the mobile
-  // sidebar elsewhere in this file.
-  // TODO(Cyril): swap DASHBOARD_VIDEO_URLS.mobile once the mobile-specific
-  // walkthrough is uploaded — currently a placeholder pointing at the
-  // desktop video so nothing breaks in the meantime.
-  const DASHBOARD_VIDEO_URLS = {
-    desktop: "https://youtu.be/G2QEWiSJ9bo",
-    mobile: "https://youtu.be/G2QEWiSJ9bo", // TODO: replace with mobile video link
-  };
-
-  const [isMobileScreen, setIsMobileScreen] = useState(false);
-
-  useEffect(() => {
-    function checkWidth() {
-      setIsMobileScreen(window.innerWidth <= 900);
-    }
-    checkWidth();
-    window.addEventListener("resize", checkWidth);
-    return () => window.removeEventListener("resize", checkWidth);
-  }, []);
-
-  const dashboardVideoUrl = isMobileScreen ? DASHBOARD_VIDEO_URLS.mobile : DASHBOARD_VIDEO_URLS.desktop;
 
   // ---------------------------------------------------------------
   // AUTH GUARD + FETCH VENDOR

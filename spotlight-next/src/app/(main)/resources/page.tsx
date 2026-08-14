@@ -9,9 +9,15 @@
 // ===============================================================
 
 import Footer from "@/components/Footer";
+import { useIsMobile } from "@/lib/useIsMobile";
+import { ONBOARDING_VIDEOS, toEmbedUrl } from "@/lib/onboardingVideos";
 import styles from "./resources.module.css";
 
 export default function ResourcesPage() {
+  const isMobile = useIsMobile();
+  const videoUrl = isMobile ? ONBOARDING_VIDEOS.fullWalkthrough.mobile : ONBOARDING_VIDEOS.fullWalkthrough.desktop;
+  const embedUrl = toEmbedUrl(videoUrl);
+
   return (
     <>
       <main className={styles.resPage}>
@@ -30,7 +36,7 @@ export default function ResourcesPage() {
 
           <div className={styles.resVideoWrap}>
             <iframe
-              src="https://www.youtube.com/embed/n37ooN5ZaXo"
+              src={embedUrl}
               title="Spotlight Directories — Full Vendor Onboarding Walkthrough"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen

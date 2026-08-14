@@ -23,10 +23,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { EmailTemplates } from "@/lib/emailTemplates";
+import { useIsMobile } from "@/lib/useIsMobile";
+import { ONBOARDING_VIDEOS } from "@/lib/onboardingVideos";
 import styles from "./signup.module.css";
 
 export default function SignupPage() {
   const router = useRouter();
+  const isMobile = useIsMobile();
+  const videoUrl = isMobile ? ONBOARDING_VIDEOS.fullWalkthrough.mobile : ONBOARDING_VIDEOS.fullWalkthrough.desktop;
 
   const [form, setForm] = useState({
     businessName: "",
@@ -190,7 +194,7 @@ export default function SignupPage() {
         {error && <div className={styles.authError}>{error}</div>}
 
         <a
-          href="https://youtu.be/n37ooN5ZaXo"
+          href={videoUrl}
           target="_blank"
           rel="noopener noreferrer"
           className={styles.videoPrompt}
