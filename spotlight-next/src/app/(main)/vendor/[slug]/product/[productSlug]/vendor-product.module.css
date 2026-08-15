@@ -103,7 +103,11 @@
   display: inline-block;
   font-size: 2rem;
   font-weight: 900;
-  color: var(--color-text-primary);
+  /* Was --color-text-primary — the service detail page's price
+     (.vsPrice) and both the product/service cards on the vendor
+     profile page already use --color-success (green); this was the
+     one price on the site left off-color (Cyril, 2026-08). */
+  color: var(--color-success);
   margin: 6px 0 14px;
   letter-spacing: -0.5px;
   padding-bottom: 6px;

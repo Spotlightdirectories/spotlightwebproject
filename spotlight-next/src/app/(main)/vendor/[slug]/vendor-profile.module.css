@@ -17,8 +17,17 @@
 
 .heroCover {
   width: 100%;
-  aspect-ratio: 920 / 360;
-  max-height: 348px;
+  /* Was 920/360 — the upload hint under this box tells vendors to
+     upload 920x300 (ratio ~3.07), so even a perfectly-sized cover was
+     being forced into a boxier 2.56 ratio, cropping the sides.
+     Desktop mostly hid this because the 348px max-height cap happened
+     to pull its effective ratio close to 3.07 anyway; mobile has no
+     such cap kicking in at these widths, so it rendered at the wrong
+     2.56 ratio outright, cropping noticeably more off the left/right
+     (Cyril, 2026-08). Matching the ratio to the actual upload spec
+     fixes both. */
+  aspect-ratio: 920 / 300;
+  max-height: 360px;
   overflow: hidden;
   border-radius: 8px;
   background: linear-gradient(135deg, var(--color-border) 0%, var(--color-surface-alt) 50%, var(--color-border) 100%);
@@ -679,7 +688,8 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 4px 12px;
   width: 100%;
 }
 
@@ -687,13 +697,27 @@
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--color-text-primary);
+  /* Was missing min-width:0 — inside a flex row, text refuses to
+     shrink/wrap below its own unbroken width without this, which
+     pushed the date (and, on the recommender-name line below, the
+     "Verified" badge) past the card's right edge on mobile (Cyril,
+     2026-08). */
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .portfolioDate {
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-text-muted);
-  white-space: nowrap;
+  /* Was white-space:nowrap on this whole class, which also applies to
+     the "{name} · {company} [Verified]" line below the title — nowrap
+     there forced that entire line (name + company + badge) onto one
+     unbreakable row that ran off the card on mobile. Wrapping is fine
+     for both use cases; min-width:0 lets it actually shrink inside
+     the flex row instead of forcing the row wider than the card. */
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .portfolioDescription {
