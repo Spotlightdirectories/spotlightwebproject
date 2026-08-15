@@ -1326,6 +1326,16 @@
 
 /* ── RESPONSIVE ────────────────────────────────────────────────── */
 @media (max-width: 600px) {
+  /* .profileHero is the outermost element on this page — nothing
+     above it adds side padding — and its own margin was `auto`
+     horizontally, which only centers a box narrower than its
+     container. On mobile the box IS the full container width, so
+     that margin computed to 0: the rounded-corner card (border-
+     radius:16px, meant to look like a card, as it does on desktop)
+     rendered edge-to-edge instead, making the cover look like it was
+     bleeding/cut off at both screen edges with no breathing room
+     (Cyril, 2026-08). Explicit side margin restores the card look. */
+  .profileHero { margin: 20px 16px 0; }
   .heroCover { max-height: 220px; }
   .heroContent { padding: 0 16px 20px; }
 

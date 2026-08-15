@@ -66,10 +66,19 @@ export default function Navbar() {
       </div>
 
       <nav className={styles.nav}>
-        <button className={styles.menuOpen} aria-label="Open menu" onClick={() => setMenuOpen(true)}>☰</button>
+        {/* Was the raw "☰"/"✕" Unicode characters — rendered using
+            whatever font the device falls back to for that glyph,
+            which on some Android system fonts comes out thin/faint
+            and hard to spot (Cyril, 2026-08: "hamburger... can hardly
+            be seen" on mobile). Font Awesome is already loaded
+            site-wide and used for this exact button in the vendor
+            dashboard's mobile topbar — swapping to it here gives a
+            crisp, consistent icon on every device instead of relying
+            on font fallback. */}
+        <button className={styles.menuOpen} aria-label="Open menu" onClick={() => setMenuOpen(true)}><i className="fa-solid fa-bars"></i></button>
 
         <ul className={`${styles.navLinks} ${menuOpen ? styles.open : ""}`}>
-          <button className={styles.menuClose} aria-label="Close menu" onClick={() => setMenuOpen(false)}>✕</button>
+          <button className={styles.menuClose} aria-label="Close menu" onClick={() => setMenuOpen(false)}><i className="fa-solid fa-xmark"></i></button>
 
           <li><Link href="/aboutUs" onClick={() => setMenuOpen(false)}>Why Spotlight?</Link></li>
           <li><Link href="/getlisted" onClick={() => setMenuOpen(false)}>Get Listed</Link></li>
