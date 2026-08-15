@@ -12,11 +12,11 @@
 export const ONBOARDING_VIDEOS = {
   fullWalkthrough: {
     desktop: "https://youtu.be/n37ooN5ZaXo",
-    mobile: "https://youtu.be/n37ooN5ZaXo", // TODO: replace once mobile video exists
+    mobile: "https://youtu.be/uUxLli4Ed-w",
   },
   dashboardWalkthrough: {
     desktop: "https://youtu.be/G2QEWiSJ9bo",
-    mobile: "https://youtu.be/G2QEWiSJ9bo", // TODO: replace once mobile video exists
+    mobile: "https://youtu.be/xksvmILIHaA",
   },
 };
 
