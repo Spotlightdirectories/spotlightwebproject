@@ -133,13 +133,6 @@ export default function AdminDashboardPage() {
       {/* HEADER */}
       <div className="adm-header-bar">
         <div className="adm-header-left">
-          <button
-            className="adm-mobile-menu-btn"
-            onClick={() => setMobileSidebarOpen(true)}
-            aria-label="Open menu"
-          >
-            <i className="fa-solid fa-bars"></i>
-          </button>
           <img src="/images/spotlightlogo-512.png" className="adm-logo" alt="Spotlight" />
           <span className="adm-title">Admin Dashboard</span>
         </div>
@@ -147,6 +140,19 @@ export default function AdminDashboardPage() {
           <span className={`adm-role-badge role-${session.role}`}>{ROLE_LABELS[session.role]}</span>
           <span className="adm-name-label">{session.email}</span>
           <button className="adm-logout-btn" onClick={handleLogout}>Logout</button>
+          {/* Was in adm-header-left, ahead of the logo/title, so on
+              mobile it sat awkwardly at the far left overlapping the
+              brand — every other mobile menu on the site (public
+              Navbar, vendor dashboard) puts the hamburger at the far
+              right instead (Cyril, 2026-08). Moved to the end of
+              adm-header-right to match. */}
+          <button
+            className="adm-mobile-menu-btn"
+            onClick={() => setMobileSidebarOpen(true)}
+            aria-label="Open menu"
+          >
+            <i className="fa-solid fa-bars"></i>
+          </button>
         </div>
       </div>
 
