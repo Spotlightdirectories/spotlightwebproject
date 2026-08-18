@@ -371,6 +371,18 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
           return;
         }
 
+        // Gate: block switching this service to a subcategory another
+        // saved service already uses (2026-08, per Cyril — closes the
+        // duplicate-listing gap the "Drone Videography" incident exposed).
+        const duplicateExists = savedServices.some(
+          (s) => s.id !== editingId && s.subcategory_id === subcategoryId
+        );
+        if (duplicateExists) {
+          alert("You already have a service listed under this subcategory. Please edit that existing listing instead of creating a duplicate.");
+          setSaving(false);
+          return;
+        }
+
         const description = descriptionRef.current?.value.trim() || "";
         const priceRaw = priceRef.current?.value || "";
         const name = subcategories.find((s) => s.id === subcategoryId)?.name || "";
@@ -453,7 +465,16 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
       );
     } catch (err) {
       console.error("Save service error:", err);
-      alert(getErrorMessage(err, "Unable to save services."));
+      // 23505 = Postgres unique-violation. A DB-level constraint backs up
+      // the client-side checks above in case of races (e.g. two rapid
+      // submits before state refreshes) — this turns that into a clear
+      // message instead of a raw DB error.
+      const code = (err as { code?: string } | null)?.code;
+      alert(
+        code === "23505"
+          ? "You already have a service listed under this subcategory. Please edit the existing one instead of adding a duplicate."
+          : getErrorMessage(err, "Unable to save services.")
+      );
     } finally {
       setSaving(false);
     }
