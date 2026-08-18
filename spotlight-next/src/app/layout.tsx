@@ -3,8 +3,15 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import TawkChat from "@/components/TawkChat";
 import CookieConsent from "@/components/CookieConsent";
+import { SITE_URL } from "@/lib/siteUrl";
 
 export const metadata: Metadata = {
+  // Was missing entirely. Without it, Next.js can't resolve relative
+  // Open Graph/canonical URLs to absolute ones reliably, which is
+  // exactly the kind of thing that makes Google less confident about
+  // which URL is the "real" one for a page (Cyril, 2026-08 — asked
+  // why product/service pages weren't turning up in Google search).
+  metadataBase: new URL(SITE_URL),
   title: "Spotlight Directories",
   description:
     "Helping Nigerian and African businesses, artisans, and professionals get found.",
