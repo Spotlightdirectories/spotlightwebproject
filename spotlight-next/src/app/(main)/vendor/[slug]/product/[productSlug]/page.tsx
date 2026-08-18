@@ -35,9 +35,11 @@ interface Product {
   price: number;
   short_description: string;
   key_details: string;
+  attributes: Record<string, string> | null;
   primary_image_url: string | null;
   secondary_image_url: string | null;
   tertiary_image_url: string | null;
+  gallery_image_urls: string[] | null;
   display_order: number;
   vendors: {
     slug: string;
@@ -118,6 +120,7 @@ export default function VendorProductPage() {
   const [activeImage, setActiveImage] = useState<string>("");
   const [moreProducts, setMoreProducts] = useState<RelatedProduct[]>([]);
   const [similarProducts, setSimilarProducts] = useState<RelatedProduct[]>([]);
+  const [attributeLabels, setAttributeLabels] = useState<{ key: string; label: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -143,6 +146,18 @@ export default function VendorProductPage() {
       setProduct(data);
       setActiveImage(data.primary_image_url || "/images/spotlightlogo-512.png");
       setLoading(false);
+
+      // Spec grid labels — only fetched if this category has any
+      // defined (most don't yet; see Cyril 2026-08 rollout), and only
+      // rendered for keys the vendor actually filled in.
+      if (data.category_id) {
+        const { data: defs } = await supabase
+          .from("product_attributes")
+          .select("key,label")
+          .eq("category_id", data.category_id)
+          .order("display_order", { ascending: true });
+        setAttributeLabels(defs || []);
+      }
 
       // Analytics
       try {
@@ -263,7 +278,14 @@ export default function VendorProductPage() {
   const thumbnails = [
     product.secondary_image_url,
     product.tertiary_image_url,
+    ...(product.gallery_image_urls || []),
   ].filter(Boolean) as string[];
+
+  // Spec grid — label/value pairs for whichever attributes this
+  // product's category has defined AND the vendor actually filled in.
+  const specEntries = attributeLabels
+    .map((def) => ({ label: def.label, value: product.attributes?.[def.key] || "" }))
+    .filter((entry) => entry.value);
 
   return (
     <div className={styles.vpPage}>
@@ -335,10 +357,26 @@ export default function VendorProductPage() {
             )}
           </div>
 
-          {/* KEY DETAILS */}
+          {/* SPECIFICATIONS — Jiji-style two-column spec grid, 2026-08
+              per Cyril. Only shows for categories with defined spec
+              fields (rolling out gradually) and only the ones the
+              vendor actually filled in. */}
+          {specEntries.length > 0 && (
+            <div className={styles.vpSpecGrid}>
+              {specEntries.map((entry) => (
+                <div className={styles.vpSpecItem} key={entry.label}>
+                  <div className={styles.vpSpecValue}>{entry.value}</div>
+                  <div className={styles.vpSpecLabel}>{entry.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* KEY DETAILS — freeform notes, still shown alongside specs
+              for anything a structured field doesn't cover yet. */}
           {keyDetails.length > 0 && (
             <div className={styles.vpKeyDetails}>
-              <h3>Key Details</h3>
+              <h3>{specEntries.length > 0 ? "Additional Notes" : "Key Details"}</h3>
               <ul>
                 {keyDetails.map((item, i) => (
                   <li key={i}>{item}</li>

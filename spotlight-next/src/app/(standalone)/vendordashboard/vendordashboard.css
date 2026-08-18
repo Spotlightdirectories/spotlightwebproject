@@ -1564,6 +1564,45 @@
   flex: 1;
 }
 
+/* Category-specific spec fields (2026-08 per Cyril) — a category can
+   have anywhere from 5 to 14 fields, so this wraps into a responsive
+   grid instead of the plain single-row flex used for brand/variant. */
+.vd-attribute-grid {
+  flex-wrap: wrap;
+}
+
+.vd-attribute-grid .vd-input {
+  flex: 1 1 220px;
+  min-width: 180px;
+}
+
+.vd-multiselect-field {
+  flex: 1 1 100%;
+}
+
+.vd-multiselect-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 8px;
+}
+
+.vd-multiselect-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--color-text-body);
+  cursor: pointer;
+}
+
+.vd-multiselect-option input {
+  accent-color: #f97316;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
 .vd-service-description-row {
   margin-top: 18px;
 }
