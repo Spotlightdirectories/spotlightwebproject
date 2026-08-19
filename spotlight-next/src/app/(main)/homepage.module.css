@@ -61,7 +61,7 @@
   justify-content: center;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border-light);
-  padding: calc(var(--header-height) + 22px) 24px 22px;
+  padding: calc(var(--header-height) + 10px) 24px 18px;
 }
 
 .ldTopSearchInner {
@@ -432,7 +432,7 @@
 
 /* RESPONSIVE */
 @media (max-width: 900px) {
-  .ldTopSearch { padding: calc(var(--header-height) + 16px) 16px 16px; }
+  .ldTopSearch { padding: calc(var(--header-height) + 8px) 16px 12px; }
   .ldHero { grid-template-columns: 1fr; padding: 28px 16px 50px; }
   .ldHeroText h1 { font-size: var(--text-3xl); }
   .ldHeroCtas { flex-direction: column; }
