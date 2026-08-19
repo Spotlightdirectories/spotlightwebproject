@@ -1,24 +1,24 @@
 /* ===============================================================
    home-category-search.module.css
-   Homepage smart search + category takeover panel (2026-08).
-   Uses the same design tokens as the rest of the site (globals.css)
-   so it feels native, not bolted-on. Brand gold (--color-primary)
-   is used deliberately throughout as the accent, per Cyril's ask
-   for it to look distinct and "on-brand".
+   Homepage smart search bar + category dropdown (2026-08).
+   Lives in its own full-width strip at the top of the homepage
+   (see .ldTopSearch in homepage.module.css) rather than inside the
+   hero text column. Uses the same design tokens as the rest of the
+   site (globals.css) so it feels native, not bolted-on. Brand gold
+   (--color-primary) is used deliberately throughout as the accent,
+   per Cyril's ask for it to look distinct and "on-brand".
 =============================================================== */
 
 .wrap {
   position: relative;
   width: 100%;
-  max-width: 520px;
 }
 
-/* SEARCH BAR — replaces the old "Search Nearby" button.
-   position + z-index: deliberately ABOVE .backdrop (9999) and .panel
-   (10000) so the search bar — and whatever the user is typing — is
-   never behind the blurred backdrop. Without this, the bar had no
-   explicit stacking position and the backdrop rendered visually on
-   top of it, blurring the input text while typing. */
+/* SEARCH BAR — replaces the old "Search Nearby" button. Always
+   visible, never covered: the category dropdown below is a plain
+   anchored panel (position: absolute; top: 100%), not a full-page
+   takeover, so there's nothing rendering on top of this bar while
+   the user types. */
 .searchForm {
   display: flex;
   align-items: center;
@@ -29,8 +29,6 @@
   padding: 6px 8px 6px 18px;
   box-shadow: var(--shadow-md);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-  position: relative;
-  z-index: 10001;
 }
 
 .searchForm:focus-within {
@@ -91,40 +89,19 @@
   color: var(--color-dark);
 }
 
-/* BACKDROP — dims the rest of the homepage while the panel is open */
-.backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(2px);
-  /* Deliberately above the Navbar's own z-index (which hardcodes 9999
-     for its mobile menu overlay) so this takeover always wins,
-     regardless of which page/breakpoint it's opened from. */
-  z-index: 9999;
-  animation: fadeIn 0.15s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* PANEL — the takeover itself, centered near the top of the viewport */
+/* PANEL — a plain dropdown anchored directly under the search bar
+   (no full-page backdrop/dim/blur — per Cyril, 2026-08: the search
+   bar must stay visible at all times and the category list should
+   simply drop below it, not cover it). Positioned relative to .wrap
+   (position: relative, above), so it always tracks the search bar
+   wherever this component renders — no JS measurement needed. */
 .panel {
-  position: fixed;
-  /* top and max-height are set inline by the component, measured
-     live from the search bar's actual on-screen position via
-     getBoundingClientRect() — so the panel is always docked directly
-     under the input, reading as one continuous card (input header +
-     category list body) rather than floating at a fixed offset that
-     may or may not line up with where the search bar actually sits.
-     These are just safe fallbacks in case that inline style hasn't
-     applied yet on first paint. */
-  top: 110px;
-  max-height: min(600px, calc(100vh - 160px));
+  position: absolute;
+  top: calc(100% + 10px);
   left: 50%;
   transform: translateX(-50%);
   width: min(880px, 92vw);
+  max-height: min(600px, calc(100vh - 220px));
   /* Desktop: the panel itself is a bounded flex column, NOT the
      scroll container — panelBody (below) flexes to fill it and each
      column scrolls independently. This fixes a real bug: with a
@@ -143,7 +120,7 @@
   box-shadow: var(--shadow-xl);
   border: 1px solid var(--color-border);
   border-top: 3px solid var(--color-primary);
-  z-index: 10000;
+  z-index: 50;
   padding: 20px 24px 28px;
   animation: slideDown 0.18s ease;
 }
@@ -379,13 +356,9 @@
    but it's kept in sync with the same 768px breakpoint used in the
    component so the two never disagree. */
 @media (max-width: 768px) {
-  .wrap { max-width: 100%; }
-
   .panel {
-    /* top/max-height come from the component's inline style (see
-       base .panel rule above) — same JS-measured docking on mobile
-       as desktop, so no hardcoded offset override needed here. */
     width: 94vw;
+    max-height: min(500px, calc(100vh - 160px));
     padding: 16px 14px 24px;
     /* Mobile uses the accordion pattern (subcategories expand inline
        under their row), so there's only ever one list to scroll —
@@ -432,10 +405,6 @@
 }
 
 /* DARK MODE */
-[data-theme="dark"] .backdrop {
-  background: rgba(0, 0, 0, 0.72);
-}
-
 [data-theme="dark"] .panel {
   border-color: var(--color-border);
 }

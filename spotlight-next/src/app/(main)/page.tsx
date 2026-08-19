@@ -79,6 +79,17 @@ export default function HomePage() {
 
   return (
     <>
+      {/* TOP SEARCH — deliberately its own full-width strip above
+          everything else on the page (per Cyril, 2026-08), rather
+          than embedded partway down inside the hero text column.
+          Sits directly under the fixed Navbar; HomeCategorySearch's
+          own dropdown panel opens below it without covering it. */}
+      <section className={styles.ldTopSearch}>
+        <div className={styles.ldTopSearchInner}>
+          <HomeCategorySearch />
+        </div>
+      </section>
+
       {/* HERO */}
       <section className={styles.ldHero}>
         <div className={styles.ldHeroText}>
@@ -87,9 +98,6 @@ export default function HomePage() {
           <p className={styles.ldHeroSub}>
             Whatever you sell or fix or build — Spotlight helps nearby customers find you, contact you, and choose you.
           </p>
-          <div className={styles.ldHeroSearchWrap}>
-            <HomeCategorySearch />
-          </div>
           <div className={styles.ldHeroCtas}>
             <a href="/getlisted" className={`${styles.ldBtn} ${styles.ldBtnPrimary}`}>Get Listed Free</a>
             <a href="/discover" className={`${styles.ldBtn} ${styles.ldBtnOutline}`}>Advanced Search</a>
