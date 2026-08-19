@@ -62,6 +62,32 @@ type Category = { id: string; name: string; kind: CategoryKind };
 type Subcategory = { id: string; name: string };
 type FlatSubcategory = { id: string; name: string; category_id: string };
 
+// Search-only singular/plural tolerance (per Cyril, 2026-08): the
+// site's category/subcategory NAMES are kept singular sitewide (e.g.
+// "Vehicle", not "Vehicles" — matches the vendor onboarding dropdowns
+// and avoids near-duplicate entries), so typing the plural form a
+// customer would naturally use ("vehicles") needs to still find it.
+// This is a light, dictionary-free heuristic covering the common
+// English patterns (-s, -es, -y/-ies) in both directions — it never
+// touches the database or the onboarding pickers, it only widens
+// what counts as a match in this search box.
+function wordVariants(word: string): string[] {
+  const variants = new Set([word]);
+  if (word.endsWith("ies") && word.length > 3) variants.add(word.slice(0, -3) + "y"); // categories -> category
+  if (word.endsWith("es") && word.length > 2) variants.add(word.slice(0, -2)); // boxes -> box
+  if (word.endsWith("s") && word.length > 1) variants.add(word.slice(0, -1)); // vehicles -> vehicle
+  if (word.endsWith("y") && word.length > 1) variants.add(word.slice(0, -1) + "ies"); // category -> categories
+  variants.add(word + "s"); // vehicle -> vehicles
+  variants.add(word + "es"); // box -> boxes
+  return Array.from(variants);
+}
+
+function matchesQuery(name: string, normalizedQuery: string): boolean {
+  const lowerName = name.toLowerCase();
+  if (lowerName.includes(normalizedQuery)) return true;
+  return wordVariants(normalizedQuery).some((v) => v !== normalizedQuery && lowerName.includes(v));
+}
+
 export default function HomeCategorySearch() {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -199,7 +225,7 @@ export default function HomeCategorySearch() {
   }
 
   const normalizedQuery = query.trim().toLowerCase();
-  const matched = normalizedQuery ? categories.filter((c) => c.name.toLowerCase().includes(normalizedQuery)) : [];
+  const matched = normalizedQuery ? categories.filter((c) => matchesQuery(c.name, normalizedQuery)) : [];
   const matchedIds = new Set(matched.map((c) => c.id));
   const rest = categories.filter((c) => !matchedIds.has(c.id));
   // Products and Services are kept in visibly separate groups when
@@ -219,7 +245,7 @@ export default function HomeCategorySearch() {
   // loaded for some reason.
   const matchedSubcatEntries = normalizedQuery
     ? allSubcategories
-        .filter((s) => s.name.toLowerCase().includes(normalizedQuery))
+        .filter((s) => matchesQuery(s.name, normalizedQuery))
         .map((s) => ({ sub: s, category: categories.find((c) => c.id === s.category_id) }))
         .filter((entry): entry is { sub: FlatSubcategory; category: Category } => !!entry.category)
     : [];
