@@ -102,9 +102,35 @@ export default function HomeCategorySearch() {
   // combined), loaded once up front so typing can match against
   // subcategory names too — e.g. "mat" should surface the "Mattress"
   // subcategory, not just categories whose own name contains "mat".
-  // Small enough to fetch in one shot rather than lazily per-category.
   const [allSubcategories, setAllSubcategories] = useState<FlatSubcategory[]>([]);
   const subcategoriesAllLoadedRef = useRef(false);
+
+  // Supabase/PostgREST caps an unpaginated select() at 1,000 rows by
+  // default — with ~2,339 subcategories total, a plain .select() was
+  // silently truncating the list around the letter K, so anything
+  // alphabetically after that (e.g. "Mama Put") never made it into
+  // allSubcategories and could never match a search, even though the
+  // row existed. Fetching in 1,000-row pages fixes it (found 2026-08,
+  // after Cyril reported "Mama Put" specifically missing from search
+  // while earlier-alphabet subcategories like "Canteen"/"Eatery"
+  // worked fine).
+  async function fetchAllSubcategories(): Promise<FlatSubcategory[]> {
+    const pageSize = 1000;
+    let from = 0;
+    const all: FlatSubcategory[] = [];
+    for (;;) {
+      const { data, error } = await supabase
+        .from("subcategories")
+        .select("id,name,category_id")
+        .order("name", { ascending: true })
+        .range(from, from + pageSize - 1);
+      if (error || !data) break;
+      all.push(...(data as FlatSubcategory[]));
+      if (data.length < pageSize) break;
+      from += pageSize;
+    }
+    return all;
+  }
 
   // Desktop: which category is currently hovered (drives the right
   // pane). Mobile: which category is currently expanded (accordion) —
@@ -130,16 +156,14 @@ export default function HomeCategorySearch() {
     if (categoriesLoadedRef.current) return;
     categoriesLoadedRef.current = true;
     setLoadingCategories(true);
-    const [categoriesRes, subcatsRes] = await Promise.all([
+    const [categoriesRes, allSubcats] = await Promise.all([
       supabase.from("categories").select("id,name,kind").in("kind", ["product", "service"]).order("name", { ascending: true }),
-      subcategoriesAllLoadedRef.current
-        ? Promise.resolve({ data: null, error: null })
-        : supabase.from("subcategories").select("id,name,category_id").order("name", { ascending: true }),
+      subcategoriesAllLoadedRef.current ? Promise.resolve(null) : fetchAllSubcategories(),
     ]);
     if (!categoriesRes.error) setCategories((categoriesRes.data || []) as Category[]);
-    if (!subcategoriesAllLoadedRef.current && !subcatsRes.error) {
+    if (!subcategoriesAllLoadedRef.current && allSubcats) {
       subcategoriesAllLoadedRef.current = true;
-      setAllSubcategories((subcatsRes.data || []) as FlatSubcategory[]);
+      setAllSubcategories(allSubcats);
     }
     setLoadingCategories(false);
   }, []);
