@@ -358,35 +358,17 @@ export default function HomeCategorySearch() {
 
                 {/* DESKTOP-ONLY RIGHT PANE. Hidden on mobile via CSS
                     (the accordion above handles mobile instead).
-                    Priority: while typing, a matching SUBCATEGORY
-                    (e.g. "mat" -> "Mattress") takes over this pane
-                    first — that's the more specific, more useful
-                    match, each one labeled with its parent category
-                    to the left so the result has context. Otherwise
-                    falls back to whichever category is hovered, then
-                    the idle hint. */}
+                    Priority: hovering a category is a deliberate
+                    action and always wins, showing that category's
+                    own subcategories — regardless of what's typed in
+                    the search bar. The "Matching Subcategories" search
+                    result (e.g. "mat" -> "Mattress") only takes this
+                    pane over when nothing is currently hovered, since
+                    a subcategory match is itself the destination —
+                    clicking it navigates straight there, no further
+                    hover needed. */}
                 <div className={styles.subcategoryColumn}>
-                  {normalizedQuery && matchedSubcatEntries.length > 0 ? (
-                    <>
-                      <p className={styles.sectionLabel}>Matching Subcategories ({matchedSubcatEntries.length})</p>
-                      <div className={styles.subcatGrid}>
-                        {matchedSubcatEntries.map(({ sub, category }) => (
-                          <button
-                            type="button"
-                            key={sub.id}
-                            className={styles.subcatMatchBtn}
-                            onClick={() => goToSubcategory(category.id, sub.id, category.kind)}
-                          >
-                            <span className={styles.subcatParentLabel}>{category.name}</span>
-                            <span className={styles.subcatMatchName}>{sub.name}</span>
-                            <span className={`${styles.kindTag} ${category.kind === "service" ? styles.kindTagService : styles.kindTagProduct}`}>
-                              {category.kind === "service" ? "Service" : "Product"}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    </>
-                  ) : hoveredCategory ? (
+                  {hoveredCategory ? (
                     <>
                       <p className={styles.sectionLabel}>{hoveredCategory.name}</p>
                       {isLoadingHoveredSubs ? (
@@ -407,6 +389,26 @@ export default function HomeCategorySearch() {
                       ) : (
                         <p className={styles.subcategoryHint}>No subcategories listed yet — browse all {hoveredCategory.name}.</p>
                       )}
+                    </>
+                  ) : normalizedQuery && matchedSubcatEntries.length > 0 ? (
+                    <>
+                      <p className={styles.sectionLabel}>Matching Subcategories ({matchedSubcatEntries.length})</p>
+                      <div className={styles.subcatGrid}>
+                        {matchedSubcatEntries.map(({ sub, category }) => (
+                          <button
+                            type="button"
+                            key={sub.id}
+                            className={styles.subcatMatchBtn}
+                            onClick={() => goToSubcategory(category.id, sub.id, category.kind)}
+                          >
+                            <span className={styles.subcatParentLabel}>{category.name}</span>
+                            <span className={styles.subcatMatchName}>{sub.name}</span>
+                            <span className={`${styles.kindTag} ${category.kind === "service" ? styles.kindTagService : styles.kindTagProduct}`}>
+                              {category.kind === "service" ? "Service" : "Product"}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
                     </>
                   ) : normalizedQuery ? (
                     <p className={styles.subcategoryHint}>No subcategories match &ldquo;{query.trim()}&rdquo;.</p>
