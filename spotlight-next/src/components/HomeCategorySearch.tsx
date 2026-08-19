@@ -11,9 +11,10 @@
 // - Focusing the input opens a full-screen takeover: a dimmed
 //   backdrop behind a centered panel, so the rest of the homepage is
 //   obscured while this is open (per Cyril's spec).
-// - Typing filters the category list — matches bubble to the top
-//   under "Best Matches", the rest of the category list stays
-//   visible below under "All Categories" so browsing is still
+// - Typing filters the category list — matches (tagged Product or
+//   Service, since a search can match both) bubble to the top under
+//   "Best Matches". The rest of the list stays visible below, split
+//   into "Products" and "Services" sections, so browsing is still
 //   possible without a perfect-match query.
 // - Desktop: hovering a category reveals its subcategories in a
 //   second pane alongside the category list (two-pane layout).
@@ -27,12 +28,18 @@
 //   itself is untouched and still exists as the "advanced search"
 //   entry point (state/LGA/distance/verified-only).
 //
-// Categories (Products only, per Cyril's phase-1 scope) are fetched
-// once, the first time the panel opens, and cached in state.
-// Subcategories are fetched lazily per category the first time it's
-// hovered/tapped, and cached per category id — same lazy-cascade
-// pattern already used in ProductsTab.tsx / the /discover filter
-// drawer, just reused here instead of rebuilt.
+// Categories — BOTH Products and Services (2026-08 expansion, per
+// Cyril — a search for e.g. "Accountant" needs to surface a service
+// category, not just products) — are fetched once, the first time
+// the panel opens, and cached in state, each tagged with its
+// `kind` so navigation and grouping stay correct. Subcategories are
+// fetched lazily per category the first time it's hovered/tapped,
+// cached per category id — same lazy-cascade pattern already used in
+// ProductsTab.tsx / the /discover filter drawer, just reused here
+// instead of rebuilt. Subcategory ids are not guaranteed unique
+// across kinds, so the cache and active-category state are keyed by
+// category id only (fine, since a given category id only ever maps
+// to one kind).
 // ===============================================================
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -40,7 +47,8 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import styles from "./home-category-search.module.css";
 
-type Category = { id: string; name: string };
+type CategoryKind = "product" | "service";
+type Category = { id: string; name: string; kind: CategoryKind };
 type Subcategory = { id: string; name: string };
 
 export default function HomeCategorySearch() {
@@ -79,10 +87,10 @@ export default function HomeCategorySearch() {
     setLoadingCategories(true);
     const { data, error } = await supabase
       .from("categories")
-      .select("id,name")
-      .eq("kind", "product")
+      .select("id,name,kind")
+      .in("kind", ["product", "service"])
       .order("name", { ascending: true });
-    if (!error) setCategories(data || []);
+    if (!error) setCategories((data || []) as Category[]);
     setLoadingCategories(false);
   }, []);
 
@@ -144,18 +152,18 @@ export default function HomeCategorySearch() {
     if (next) ensureSubcategoriesLoaded(categoryId);
   }
 
-  // type=product is set explicitly here — the category/subcategory ids
-  // in this panel are drawn from the Products taxonomy only (phase 1
-  // scope, per Cyril), so results should be scoped to Products rather
-  // than defaulting to the "All" search type on the results page.
-  function goToCategory(categoryId: string) {
+  // type is now passed in explicitly per category, since the panel
+  // mixes Products and Services categories — each result should be
+  // scoped to whichever taxonomy the clicked category belongs to,
+  // not hardcoded to "product".
+  function goToCategory(categoryId: string, kind: CategoryKind) {
     closePanel();
-    router.push(`/discover-results?category=${categoryId}&type=product`);
+    router.push(`/discover-results?category=${categoryId}&type=${kind}`);
   }
 
-  function goToSubcategory(categoryId: string, subcategoryId: string) {
+  function goToSubcategory(categoryId: string, subcategoryId: string, kind: CategoryKind) {
     closePanel();
-    router.push(`/discover-results?category=${categoryId}&subcategory=${subcategoryId}&type=product`);
+    router.push(`/discover-results?category=${categoryId}&subcategory=${subcategoryId}&type=${kind}`);
   }
 
   function handleKeywordSubmit(e: React.FormEvent) {
@@ -170,6 +178,14 @@ export default function HomeCategorySearch() {
   const matched = normalizedQuery ? categories.filter((c) => c.name.toLowerCase().includes(normalizedQuery)) : [];
   const matchedIds = new Set(matched.map((c) => c.id));
   const rest = categories.filter((c) => !matchedIds.has(c.id));
+  // Products and Services are kept in visibly separate groups when
+  // browsing (unfiltered) — with 98 + 82 categories combined, mixing
+  // them without labels would be confusing. While typing, "Best
+  // Matches" stays mixed (with a per-row kind tag) since the user is
+  // hunting for a specific word, e.g. "Accountant", not browsing a
+  // taxonomy.
+  const restProducts = rest.filter((c) => c.kind === "product");
+  const restServices = rest.filter((c) => c.kind === "service");
 
   function renderCategoryRow(cat: Category, highlighted: boolean) {
     const isActive = activeCategoryId === cat.id;
@@ -184,8 +200,13 @@ export default function HomeCategorySearch() {
         }`}
         onMouseEnter={() => handleCategoryHover(cat.id)}
       >
-        <button type="button" className={styles.categoryBtn} onClick={() => goToCategory(cat.id)}>
+        <button type="button" className={styles.categoryBtn} onClick={() => goToCategory(cat.id, cat.kind)}>
           {cat.name}
+          {highlighted && (
+            <span className={`${styles.kindTag} ${cat.kind === "service" ? styles.kindTagService : styles.kindTagProduct}`}>
+              {cat.kind === "service" ? "Service" : "Product"}
+            </span>
+          )}
         </button>
         <button
           type="button"
@@ -208,7 +229,7 @@ export default function HomeCategorySearch() {
                   type="button"
                   key={sub.id}
                   className={styles.subcatBtn}
-                  onClick={() => goToSubcategory(cat.id, sub.id)}
+                  onClick={() => goToSubcategory(cat.id, sub.id, cat.kind)}
                 >
                   {sub.name}
                 </button>
@@ -268,8 +289,10 @@ export default function HomeCategorySearch() {
                       <div className={styles.categoryList}>{matched.map((cat) => renderCategoryRow(cat, true))}</div>
                     </>
                   )}
-                  <p className={styles.sectionLabel}>{matched.length > 0 ? "All Categories" : "Browse Categories"}</p>
-                  <div className={styles.categoryList}>{rest.map((cat) => renderCategoryRow(cat, false))}</div>
+                  <p className={styles.sectionLabel}>Products</p>
+                  <div className={styles.categoryList}>{restProducts.map((cat) => renderCategoryRow(cat, false))}</div>
+                  <p className={styles.sectionLabel}>Services</p>
+                  <div className={styles.categoryList}>{restServices.map((cat) => renderCategoryRow(cat, false))}</div>
                 </div>
 
                 {/* DESKTOP-ONLY RIGHT PANE — subcategories of whichever
@@ -288,7 +311,7 @@ export default function HomeCategorySearch() {
                               type="button"
                               key={sub.id}
                               className={styles.subcatBtn}
-                              onClick={() => goToSubcategory(hoveredCategory.id, sub.id)}
+                              onClick={() => goToSubcategory(hoveredCategory.id, sub.id, hoveredCategory.kind)}
                             >
                               {sub.name}
                             </button>

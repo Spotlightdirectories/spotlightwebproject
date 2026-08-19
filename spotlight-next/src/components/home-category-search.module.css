@@ -109,8 +109,20 @@
   left: 50%;
   transform: translateX(-50%);
   width: min(880px, 92vw);
+  /* Desktop: the panel itself is a bounded flex column, NOT the
+     scroll container — panelBody (below) flexes to fill it and each
+     column scrolls independently. This fixes a real bug: with a
+     single shared scrollbar, hovering a category near the bottom of
+     a long (98-item) list rendered its subcategories in the right
+     pane's position at the TOP of the panel — off-screen above
+     the user's current scroll position, so it looked like hovering
+     "did nothing" for most categories. Overridden back to a single
+     scrolling block on mobile below, where the accordion pattern
+     wants one shared scroll. */
   max-height: calc(100vh - 150px);
-  overflow-y: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background: var(--color-surface);
   border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-xl);
@@ -160,6 +172,12 @@
   grid-template-columns: 1.15fr 1fr;
   gap: 24px;
   margin-top: 14px;
+  /* min-height: 0 is required so this grid can actually shrink below
+     its content size inside the flex .panel — without it, nested
+     overflow:auto on the columns below does nothing and the whole
+     panel just grows forever. */
+  flex: 1;
+  min-height: 0;
 }
 
 .sectionLabel {
@@ -178,6 +196,8 @@
 .categoryColumn {
   border-right: 1px solid var(--color-border-light);
   padding-right: 20px;
+  overflow-y: auto;
+  max-height: 100%;
 }
 
 .categoryList {
@@ -217,6 +237,31 @@
   font-size: var(--text-base);
   color: var(--color-text-primary);
   font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Small kind tag shown only in "Best Matches" (mixed Products +
+   Services results), so a typed search stays unambiguous. */
+.kindTag {
+  font-size: 10px;
+  font-weight: var(--font-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.kindTagProduct {
+  background: rgba(230, 194, 0, 0.16);
+  color: var(--color-primary-hover);
+}
+
+.kindTagService {
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--color-info);
 }
 
 .categoryBtn:hover {
@@ -237,9 +282,14 @@
   color: var(--color-primary-hover);
 }
 
-/* DESKTOP RIGHT PANE — subcategories of whichever category is hovered */
+/* DESKTOP RIGHT PANE — subcategories of whichever category is hovered.
+   Independent scroll (see .panel comment above) so this pane always
+   starts at the top of the visible area, regardless of how far down
+   the category list on the left has been scrolled. */
 .subcategoryColumn {
   min-height: 200px;
+  overflow-y: auto;
+  max-height: 100%;
 }
 
 .subcatGrid {
@@ -294,15 +344,25 @@
     width: 94vw;
     max-height: calc(100vh - 110px);
     padding: 16px 14px 24px;
+    /* Mobile uses the accordion pattern (subcategories expand inline
+       under their row), so there's only ever one list to scroll —
+       switch back to a single shared scroll container on the panel
+       itself instead of the independent-column desktop layout. */
+    display: block;
+    overflow-y: auto;
   }
 
   .panelBody {
     grid-template-columns: 1fr;
+    flex: none;
+    min-height: 0;
   }
 
   .categoryColumn {
     border-right: none;
     padding-right: 0;
+    overflow-y: visible;
+    max-height: none;
   }
 
   .subcategoryColumn {
