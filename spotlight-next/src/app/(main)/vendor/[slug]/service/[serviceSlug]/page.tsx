@@ -31,6 +31,9 @@ interface Service {
   short_description: string;
   representative_image_url: string | null;
   secondary_image_url: string | null;
+  gallery_image_urls: string[] | null;
+  attributes: Record<string, string> | null;
+  category_id: string | null;
   vendors: {
     slug: string;
     name: string;
@@ -116,6 +119,7 @@ export default function VendorServicePage() {
   const [activeImage, setActiveImage] = useState<string>("");
   const [moreServices, setMoreServices] = useState<RelatedService[]>([]);
   const [similarServices, setSimilarServices] = useState<RelatedService[]>([]);
+  const [attributeLabels, setAttributeLabels] = useState<{ key: string; label: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [descExpanded, setDescExpanded] = useState(false);
 
@@ -154,10 +158,22 @@ export default function VendorServicePage() {
 
       setService(data);
 
-      // Main image: representative first, then secondary
-      const mainImg = data.representative_image_url || data.secondary_image_url || "";
+      // Main image: representative first, then secondary, then gallery
+      const mainImg =
+        data.representative_image_url || data.secondary_image_url || (data.gallery_image_urls || [])[0] || "";
       setActiveImage(mainImg);
       setLoading(false);
+
+      // Spec grid labels — only fetched if this category has any
+      // defined, and only rendered for keys the vendor actually filled in.
+      if (data.category_id) {
+        const { data: defs } = await supabase
+          .from("service_attributes")
+          .select("key,label")
+          .eq("category_id", data.category_id)
+          .order("display_order", { ascending: true });
+        setAttributeLabels(defs || []);
+      }
 
       // Analytics
       try {
@@ -352,8 +368,22 @@ export default function VendorServicePage() {
   }
 
   const vendor = service.vendors;
-  const hasImage = !!(service.representative_image_url || service.secondary_image_url);
-  const hasSecondary = !!(service.secondary_image_url && service.representative_image_url);
+
+  // All images in display order: representative first (if present),
+  // then secondary, then the 2 gallery slots. Whichever lands first
+  // becomes the main image; the rest become swappable thumbnails —
+  // same convention as the product detail page's thumbnail row.
+  const allImages = [service.representative_image_url, service.secondary_image_url, ...(service.gallery_image_urls || [])].filter(
+    Boolean
+  ) as string[];
+  const hasImage = allImages.length > 0;
+  const thumbnails = allImages.slice(1);
+
+  // Spec grid — label/value pairs for whichever attributes this
+  // service's category has defined AND the vendor actually filled in.
+  const specEntries = attributeLabels
+    .map((def) => ({ label: def.label, value: service.attributes?.[def.key] || "" }))
+    .filter((entry) => entry.value);
 
   // Description: first line is intro, rest are bullet points
   const rawDesc = service.short_description || "";
@@ -390,15 +420,18 @@ export default function VendorServicePage() {
                 className={styles.vsMainImage}
               />
             </div>
-            {hasSecondary && (
+            {thumbnails.length > 0 && (
               <div className={styles.vsThumbnails}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={service.secondary_image_url!}
-                  alt="Secondary service image"
-                  className={`${styles.vsThumbnail} ${activeImage === service.secondary_image_url ? styles.vsThumbnailActive : ""}`}
-                  onClick={() => setActiveImage(service.secondary_image_url!)}
-                />
+                {thumbnails.map((src, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={i}
+                    src={src}
+                    alt={`Service image ${i + 2}`}
+                    className={`${styles.vsThumbnail} ${activeImage === src ? styles.vsThumbnailActive : ""}`}
+                    onClick={() => setActiveImage(src)}
+                  />
+                ))}
               </div>
             )}
           </div>
@@ -432,6 +465,20 @@ export default function VendorServicePage() {
               <p className={styles.vsSponsored}>Sponsored</p>
             )}
           </div>
+
+          {/* SPECIFICATIONS — Jiji-style two-column spec grid, mirrors
+              the product detail page. Only shows for categories with
+              defined spec fields and only the ones the vendor filled in. */}
+          {specEntries.length > 0 && (
+            <div className={styles.vsSpecGrid}>
+              {specEntries.map((entry) => (
+                <div className={styles.vsSpecItem} key={entry.label}>
+                  <div className={styles.vsSpecValue}>{entry.value}</div>
+                  <div className={styles.vsSpecLabel}>{entry.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* DESCRIPTION */}
           {rawDesc && (

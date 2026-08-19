@@ -34,6 +34,22 @@ import type { Vendor } from "./page";
 
 type Option = { id: string; name: string };
 
+// Category-specific spec fields (Jiji-style), 2026-08 per Cyril —
+// same pattern as ProductsTab, mirrored here for services. Defined
+// per service category in service_attributes; the form below renders
+// whichever set applies to the chosen category. Categories without
+// any defined attributes yet just skip this block — no error, no gap.
+type AttributeDef = {
+  id: string;
+  key: string;
+  label: string;
+  field_type: "text" | "number" | "select" | "multiselect";
+  options: string[] | null;
+  display_order: number;
+};
+
+type AttributeValues = Record<string, string>;
+
 type VendorService = {
   id: string;
   service_name: string;
@@ -41,6 +57,8 @@ type VendorService = {
   starting_price: number | null;
   representative_image_url: string | null;
   secondary_image_url: string | null;
+  gallery_image_urls: string[] | null;
+  attributes: AttributeValues | null;
   slug?: string | null;
   category_id: string | null;
   subcategory_id: string | null;
@@ -56,6 +74,8 @@ type PendingService = {
   starting_price: number | null;
   representative_image_url: string;
   secondary_image_url: string;
+  gallery_image_urls: string[];
+  attributes: AttributeValues;
 };
 
 // Matches production's SERVICE_LIMITS exactly (no "trial" key inside
@@ -121,6 +141,17 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
   const [primaryUploading, setPrimaryUploading] = useState(false);
   const [secondaryUploading, setSecondaryUploading] = useState(false);
 
+  // GALLERY — 2 extra, optional photo slots (2026-08 per Cyril: services
+  // get a smaller bump than products — max 4 photos total per listing,
+  // vs. products' 8). Representative + Additional above stay as images
+  // 1-2; these 2 extra slots are stored in vendor_services.gallery_image_urls.
+  const GALLERY_SLOTS = 2;
+  const [galleryUrls, setGalleryUrls] = useState<string[]>(Array(GALLERY_SLOTS).fill(""));
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>(Array(GALLERY_SLOTS).fill(""));
+  const [galleryUploading, setGalleryUploading] = useState<boolean[]>(Array(GALLERY_SLOTS).fill(false));
+  const [galleryLabels, setGalleryLabels] = useState<string[]>(Array(GALLERY_SLOTS).fill("No file chosen"));
+  const galleryInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
   const [aiModalOpen, setAiModalOpen] = useState(false);
   const { showToast, toastNode } = useAiDescribeToast();
 
@@ -129,6 +160,11 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
   const [subcategories, setSubcategories] = useState<Option[]>([]);
   const [categoryId, setCategoryId] = useState("");
   const [subcategoryId, setSubcategoryId] = useState("");
+
+  // SPEC FIELDS — category-specific attribute definitions + the
+  // vendor's entered values for whichever category is selected.
+  const [attributeDefs, setAttributeDefs] = useState<AttributeDef[]>([]);
+  const [attributeValues, setAttributeValues] = useState<AttributeValues>({});
 
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const priceRef = useRef<HTMLInputElement>(null);
@@ -199,6 +235,39 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
     setSubcategoryId("");
   }
 
+  // Set by handleEditSaved right before switching categoryId, so
+  // previously-saved spec values can be restored once the definitions
+  // for that category finish loading.
+  const pendingEditAttributeValues = useRef<AttributeValues | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      if (!categoryId) {
+        setAttributeDefs([]);
+        setAttributeValues({});
+        return;
+      }
+      const { data, error } = await supabase
+        .from("service_attributes")
+        .select("id,key,label,field_type,options,display_order")
+        .eq("category_id", categoryId)
+        .order("display_order", { ascending: true });
+      if (!error) {
+        setAttributeDefs((data as AttributeDef[]) || []);
+        if (pendingEditAttributeValues.current) {
+          setAttributeValues(pendingEditAttributeValues.current);
+          pendingEditAttributeValues.current = null;
+        } else {
+          setAttributeValues({});
+        }
+      }
+    })();
+  }, [categoryId]);
+
+  function handleAttributeChange(key: string, value: string) {
+    setAttributeValues((prev) => ({ ...prev, [key]: value }));
+  }
+
   useEffect(() => {
     let cancelled = false;
 
@@ -225,9 +294,17 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
     };
   }, [vendor.id]);
 
+  function resetGallerySlot(index: number) {
+    setGalleryUrls((prev) => prev.map((v, i) => (i === index ? "" : v)));
+    setGalleryPreviews((prev) => prev.map((v, i) => (i === index ? "" : v)));
+    setGalleryLabels((prev) => prev.map((v, i) => (i === index ? "No file chosen" : v)));
+    if (galleryInputRefs.current[index]) galleryInputRefs.current[index]!.value = "";
+  }
+
   function resetForm() {
     setCategoryId("");
     setSubcategoryId("");
+    setAttributeValues({});
     if (descriptionRef.current) descriptionRef.current.value = "";
     if (priceRef.current) priceRef.current.value = "";
     setPrimaryUrl("");
@@ -236,7 +313,32 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
     setSecondaryLabel("No file chosen");
     if (primaryInputRef.current) primaryInputRef.current.value = "";
     if (secondaryInputRef.current) secondaryInputRef.current.value = "";
+    for (let i = 0; i < GALLERY_SLOTS; i++) resetGallerySlot(i);
     setEditingId(null);
+  }
+
+  async function handleGalleryImageChange(e: ChangeEvent<HTMLInputElement>, index: number) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setGalleryPreviews((prev) => prev.map((v, i) => (i === index ? URL.createObjectURL(file) : v)));
+    setGalleryLabels((prev) => prev.map((v, i) => (i === index ? "Uploading..." : v)));
+    setGalleryUploading((prev) => prev.map((v, i) => (i === index ? true : v)));
+
+    try {
+      const result = await uploadVendorFile(file, "service");
+      setGalleryUrls((prev) => prev.map((v, i) => (i === index ? result.publicUrl || "" : v)));
+      setGalleryPreviews((prev) => prev.map((v, i) => (i === index ? result.publicUrl || "" : v)));
+      setGalleryLabels((prev) => prev.map((v, i) => (i === index ? file.name : v)));
+    } catch (err) {
+      console.error(`Gallery service image ${index + 3} upload error:`, err);
+      alert(err instanceof Error ? err.message : "Image upload failed.");
+      setGalleryLabels((prev) => prev.map((v, i) => (i === index ? "No file chosen" : v)));
+      setGalleryPreviews((prev) => prev.map((v, i) => (i === index ? "" : v)));
+      if (galleryInputRefs.current[index]) galleryInputRefs.current[index]!.value = "";
+    } finally {
+      setGalleryUploading((prev) => prev.map((v, i) => (i === index ? false : v)));
+    }
   }
 
   async function handleImageChange(e: ChangeEvent<HTMLInputElement>, slot: "primary" | "secondary") {
@@ -303,6 +405,8 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
         starting_price: Number(priceRaw) || null,
         representative_image_url: primaryUrl,
         secondary_image_url: secondaryUrl,
+        gallery_image_urls: galleryUrls.filter(Boolean),
+        attributes: attributeValues,
       },
     ]);
 
@@ -321,6 +425,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
     if (priceRef.current) priceRef.current.value = service.starting_price != null ? String(service.starting_price) : "";
 
     pendingEditSubcategoryId.current = service.subcategory_id;
+    pendingEditAttributeValues.current = service.attributes || {};
     setCategoryId(service.category_id || "");
     if (!service.category_id) setSubcategoryId(service.subcategory_id || "");
 
@@ -332,6 +437,13 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
     setSecondaryUrl(service.secondary_image_url || "");
     setSecondaryLabel(
       service.secondary_image_url ? `Current: ${service.secondary_image_url.split("/").pop()}` : "No file chosen"
+    );
+
+    const gallery = service.gallery_image_urls || [];
+    setGalleryUrls(Array.from({ length: GALLERY_SLOTS }, (_, i) => gallery[i] || ""));
+    setGalleryPreviews(Array.from({ length: GALLERY_SLOTS }, (_, i) => gallery[i] || ""));
+    setGalleryLabels(
+      Array.from({ length: GALLERY_SLOTS }, (_, i) => (gallery[i] ? `Current: ${gallery[i].split("/").pop()}` : "No file chosen"))
     );
   }
 
@@ -386,6 +498,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
         const description = descriptionRef.current?.value.trim() || "";
         const priceRaw = priceRef.current?.value || "";
         const name = subcategories.find((s) => s.id === subcategoryId)?.name || "";
+        const galleryToSave = galleryUrls.filter(Boolean);
 
         const { error } = await supabase
           .from("vendor_services")
@@ -398,6 +511,8 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
             starting_price: Number(priceRaw) || null,
             representative_image_url: primaryUrl,
             secondary_image_url: secondaryUrl,
+            gallery_image_urls: galleryToSave,
+            attributes: attributeValues,
           })
           .eq("id", editingId);
 
@@ -421,6 +536,8 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
                   starting_price: Number(priceRaw) || null,
                   representative_image_url: primaryUrl,
                   secondary_image_url: secondaryUrl,
+                  gallery_image_urls: galleryToSave,
+                  attributes: attributeValues,
                   moderation_status: refreshed?.moderation_status ?? s.moderation_status,
                   moderation_flag_reason: refreshed?.moderation_flag_reason ?? s.moderation_flag_reason,
                 }
@@ -448,6 +565,8 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
         starting_price: s.starting_price,
         representative_image_url: s.representative_image_url || null,
         secondary_image_url: s.secondary_image_url || null,
+        gallery_image_urls: s.gallery_image_urls,
+        attributes: s.attributes,
       }));
 
       const { data, error } = await supabase.from("vendor_services").insert(payload).select();
@@ -478,6 +597,107 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
     } finally {
       setSaving(false);
     }
+  }
+
+  function renderGallerySlot(index: number) {
+    const inputId = `galleryServiceImage${index}`;
+    return (
+      <div key={index}>
+        <div className="vd-product-image-row">
+          <div className="vd-product-image-label">{`Additional Image ${index + 3} (optional)`}</div>
+
+          <label htmlFor={inputId} className="vd-product-image-btn">
+            Choose Image
+          </label>
+
+          <input
+            type="file"
+            id={inputId}
+            accept="image/*"
+            ref={(el) => {
+              galleryInputRefs.current[index] = el;
+            }}
+            onChange={(e) => handleGalleryImageChange(e, index)}
+          />
+
+          <span className="vd-product-image-name">{galleryLabels[index]}</span>
+
+          {galleryPreviews[index] && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={galleryPreviews[index]}
+              alt={`Additional image ${index + 3} preview`}
+              style={{
+                width: 56,
+                height: 56,
+                objectFit: "cover",
+                borderRadius: 8,
+                border: "1px solid #e5e7eb",
+                marginLeft: 10,
+                opacity: galleryUploading[index] ? 0.5 : 1,
+              }}
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Renders one input per attribute definition for the selected
+  // category — text/number as a plain input, select/multiselect as a
+  // dropdown. Categories with no definitions yet simply render nothing.
+  function renderAttributeField(def: AttributeDef) {
+    const value = attributeValues[def.key] || "";
+
+    if (def.field_type === "select") {
+      return (
+        <select
+          key={def.id}
+          className="vd-input"
+          value={value}
+          onChange={(e) => handleAttributeChange(def.key, e.target.value)}
+        >
+          <option value="">{def.label}</option>
+          {(def.options || []).map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+      );
+    }
+
+    if (def.field_type === "multiselect") {
+      const selected = value ? value.split(",") : [];
+      const toggle = (opt: string) => {
+        const next = selected.includes(opt) ? selected.filter((o) => o !== opt) : [...selected, opt];
+        handleAttributeChange(def.key, next.join(","));
+      };
+      return (
+        <div key={def.id} className="vd-multiselect-field">
+          <div className="vd-product-image-label">{def.label}</div>
+          <div className="vd-multiselect-options">
+            {(def.options || []).map((opt) => (
+              <label key={opt} className="vd-multiselect-option">
+                <input type="checkbox" checked={selected.includes(opt)} onChange={() => toggle(opt)} />
+                {opt}
+              </label>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <input
+        key={def.id}
+        type={def.field_type === "number" ? "number" : "text"}
+        className="vd-input"
+        placeholder={def.label}
+        value={value}
+        onChange={(e) => handleAttributeChange(def.key, e.target.value)}
+      />
+    );
   }
 
   return (
@@ -532,6 +752,18 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
             business — just keep each listing genuine and accurate, so customers know exactly what to expect
             from you.
           </p>
+        )}
+
+        {attributeDefs.length > 0 && (
+          <>
+            <p className="vd-helper-text">
+              Add the specs customers look for in this category (all optional, but the more you fill in, the
+              more confident a customer can be before contacting you).
+            </p>
+            <div className="vd-service-add-row vd-attribute-grid">
+              {attributeDefs.map((def) => renderAttributeField(def))}
+            </div>
+          </>
         )}
 
         <div className="vd-service-description-row">
@@ -590,6 +822,9 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
         </div>
         <p className="vd-product-image-hint">{IMAGE_HINT}</p>
 
+        {Array.from({ length: GALLERY_SLOTS }, (_, i) => renderGallerySlot(i))}
+        <p className="vd-product-image-hint">{IMAGE_HINT} • Up to 4 photos total per listing.</p>
+
         <div className="vd-service-add-actions">
           <button type="button" className="vd-service-btn" disabled={!!editingId} onClick={handleAddToPending}>
             {editingId ? "Editing..." : "Add"}
@@ -624,6 +859,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
                 <div className="vd-service-assets">
                   {service.representative_image_url ? "📷 Representative Image" : ""}
                   {service.secondary_image_url ? " 📷 Additional Image" : ""}
+                  {service.gallery_image_urls?.length ? ` 📷 +${service.gallery_image_urls.length} more` : ""}
                 </div>
               </div>
 

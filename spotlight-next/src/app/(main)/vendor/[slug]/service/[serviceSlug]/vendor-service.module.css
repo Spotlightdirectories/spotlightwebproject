@@ -65,6 +65,7 @@
 .vsContainerNoImage .vsRatingRow { justify-content: center; }
 
 .vsContainerNoImage .vsDescription { text-align: left; width: 100%; }
+.vsContainerNoImage .vsSpecGrid { text-align: left; width: 100%; }
 
 /* MEDIA */
 .vsMedia {
@@ -92,7 +93,7 @@
   transition: opacity 0.25s ease;
 }
 
-.vsThumbnails { display: flex; gap: 10px; }
+.vsThumbnails { display: flex; flex-wrap: wrap; gap: 10px; }
 
 .vsThumbnail {
   width: 90px;
@@ -153,6 +154,33 @@
 .vsRatingRow i { color: var(--color-primary); }
 .vsBadge { width: 16px; height: 16px; }
 .vsSponsored { margin: 6px 0 0; font-size: 12px; font-weight: 700; color: var(--color-primary); }
+
+/* SPECIFICATIONS — Jiji-style two-column spec grid, mirrors the
+   product detail page's .vpSpecGrid (2026-08 per Cyril). */
+.vsSpecGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 20px;
+  margin: 14px 0 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.vsSpecValue {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+
+.vsSpecLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
 
 /* DESCRIPTION */
 .vsDescription {
