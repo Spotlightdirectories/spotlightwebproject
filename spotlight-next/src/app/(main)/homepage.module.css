@@ -61,7 +61,12 @@
   justify-content: center;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border-light);
-  padding: calc(var(--header-height) + 10px) 24px 18px;
+  /* Same 16px on both sides of the search bar itself (extra space
+     above header-height, and below before the strip ends) — paired
+     with .ldHero's own reduced top padding below, so the gap above
+     the search bar and the gap below it read as roughly equal
+     instead of top being noticeably larger (Cyril, 2026-08). */
+  padding: calc(var(--header-height) + 16px) 24px 16px;
 }
 
 .ldTopSearchInner {
@@ -72,7 +77,7 @@
 .ldHero {
   max-width: 1300px;
   margin: 0 auto;
-  padding: 44px 24px 70px;
+  padding: 20px 24px 70px;
   display: grid;
   grid-template-columns: 1fr 1.3fr;
   gap: 48px;
@@ -432,8 +437,8 @@
 
 /* RESPONSIVE */
 @media (max-width: 900px) {
-  .ldTopSearch { padding: calc(var(--header-height) + 8px) 16px 12px; }
-  .ldHero { grid-template-columns: 1fr; padding: 28px 16px 50px; }
+  .ldTopSearch { padding: calc(var(--header-height) + 12px) 16px 12px; }
+  .ldHero { grid-template-columns: 1fr; padding: 12px 16px 50px; }
   .ldHeroText h1 { font-size: var(--text-3xl); }
   .ldHeroCtas { flex-direction: column; }
   /* Was a fixed 300px height — on narrow phone widths that made the
