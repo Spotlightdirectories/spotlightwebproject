@@ -60,6 +60,7 @@ import styles from "./home-category-search.module.css";
 type CategoryKind = "product" | "service";
 type Category = { id: string; name: string; kind: CategoryKind };
 type Subcategory = { id: string; name: string };
+type FlatSubcategory = { id: string; name: string; category_id: string };
 
 export default function HomeCategorySearch() {
   const router = useRouter();
@@ -70,6 +71,14 @@ export default function HomeCategorySearch() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const categoriesLoadedRef = useRef(false);
+
+  // Flat list of every subcategory (~2,300 rows, product + service
+  // combined), loaded once up front so typing can match against
+  // subcategory names too — e.g. "mat" should surface the "Mattress"
+  // subcategory, not just categories whose own name contains "mat".
+  // Small enough to fetch in one shot rather than lazily per-category.
+  const [allSubcategories, setAllSubcategories] = useState<FlatSubcategory[]>([]);
+  const subcategoriesAllLoadedRef = useRef(false);
 
   // Desktop: which category is currently hovered (drives the right
   // pane). Mobile: which category is currently expanded (accordion) —
@@ -95,12 +104,17 @@ export default function HomeCategorySearch() {
     if (categoriesLoadedRef.current) return;
     categoriesLoadedRef.current = true;
     setLoadingCategories(true);
-    const { data, error } = await supabase
-      .from("categories")
-      .select("id,name,kind")
-      .in("kind", ["product", "service"])
-      .order("name", { ascending: true });
-    if (!error) setCategories((data || []) as Category[]);
+    const [categoriesRes, subcatsRes] = await Promise.all([
+      supabase.from("categories").select("id,name,kind").in("kind", ["product", "service"]).order("name", { ascending: true }),
+      subcategoriesAllLoadedRef.current
+        ? Promise.resolve({ data: null, error: null })
+        : supabase.from("subcategories").select("id,name,category_id").order("name", { ascending: true }),
+    ]);
+    if (!categoriesRes.error) setCategories((categoriesRes.data || []) as Category[]);
+    if (!subcategoriesAllLoadedRef.current && !subcatsRes.error) {
+      subcategoriesAllLoadedRef.current = true;
+      setAllSubcategories((subcatsRes.data || []) as FlatSubcategory[]);
+    }
     setLoadingCategories(false);
   }, []);
 
@@ -197,6 +211,19 @@ export default function HomeCategorySearch() {
   const restProducts = rest.filter((c) => c.kind === "product");
   const restServices = rest.filter((c) => c.kind === "service");
 
+  // Subcategory matches — e.g. typing "mat" should surface the
+  // "Mattress" subcategory even though no CATEGORY name contains
+  // "mat". Each match is paired with its parent category (for the
+  // "Category > Subcategory" label and for navigation/kind-tagging),
+  // dropping any orphaned rows where the parent category hasn't
+  // loaded for some reason.
+  const matchedSubcatEntries = normalizedQuery
+    ? allSubcategories
+        .filter((s) => s.name.toLowerCase().includes(normalizedQuery))
+        .map((s) => ({ sub: s, category: categories.find((c) => c.id === s.category_id) }))
+        .filter((entry): entry is { sub: FlatSubcategory; category: Category } => !!entry.category)
+    : [];
+
   function renderCategoryRow(cat: Category, highlighted: boolean) {
     const isActive = activeCategoryId === cat.id;
     const subs = subcategoriesCache[cat.id];
@@ -212,11 +239,9 @@ export default function HomeCategorySearch() {
       >
         <button type="button" className={styles.categoryBtn} onClick={() => goToCategory(cat.id, cat.kind)}>
           {cat.name}
-          {highlighted && (
-            <span className={`${styles.kindTag} ${cat.kind === "service" ? styles.kindTagService : styles.kindTagProduct}`}>
-              {cat.kind === "service" ? "Service" : "Product"}
-            </span>
-          )}
+          <span className={`${styles.kindTag} ${cat.kind === "service" ? styles.kindTagService : styles.kindTagProduct}`}>
+            {cat.kind === "service" ? "Service" : "Product"}
+          </span>
         </button>
         <button
           type="button"
@@ -297,17 +322,71 @@ export default function HomeCategorySearch() {
                       <div className={styles.categoryList}>{matched.map((cat) => renderCategoryRow(cat, true))}</div>
                     </>
                   )}
+
+                  {/* MOBILE-ONLY — same "Matching Subcategories" result
+                      as the desktop right pane below, but inline here
+                      since mobile has no separate right pane (hidden
+                      via CSS on desktop, where the right pane handles
+                      this instead). */}
+                  {normalizedQuery && matchedSubcatEntries.length > 0 && (
+                    <div className={styles.mobileSubcatMatches}>
+                      <p className={styles.sectionLabel}>Matching Subcategories ({matchedSubcatEntries.length})</p>
+                      <div className={styles.subcatGrid}>
+                        {matchedSubcatEntries.map(({ sub, category }) => (
+                          <button
+                            type="button"
+                            key={sub.id}
+                            className={styles.subcatMatchBtn}
+                            onClick={() => goToSubcategory(category.id, sub.id, category.kind)}
+                          >
+                            <span className={styles.subcatParentLabel}>{category.name}</span>
+                            <span className={styles.subcatMatchName}>{sub.name}</span>
+                            <span className={`${styles.kindTag} ${category.kind === "service" ? styles.kindTagService : styles.kindTagProduct}`}>
+                              {category.kind === "service" ? "Service" : "Product"}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <p className={styles.sectionLabel}>Products ({restProducts.length})</p>
                   <div className={styles.categoryList}>{restProducts.map((cat) => renderCategoryRow(cat, false))}</div>
                   <p className={styles.sectionLabel}>Services ({restServices.length})</p>
                   <div className={styles.categoryList}>{restServices.map((cat) => renderCategoryRow(cat, false))}</div>
                 </div>
 
-                {/* DESKTOP-ONLY RIGHT PANE — subcategories of whichever
-                    category is currently hovered. Hidden on mobile via
-                    CSS (the accordion above handles mobile instead). */}
+                {/* DESKTOP-ONLY RIGHT PANE. Hidden on mobile via CSS
+                    (the accordion above handles mobile instead).
+                    Priority: while typing, a matching SUBCATEGORY
+                    (e.g. "mat" -> "Mattress") takes over this pane
+                    first — that's the more specific, more useful
+                    match, each one labeled with its parent category
+                    to the left so the result has context. Otherwise
+                    falls back to whichever category is hovered, then
+                    the idle hint. */}
                 <div className={styles.subcategoryColumn}>
-                  {hoveredCategory ? (
+                  {normalizedQuery && matchedSubcatEntries.length > 0 ? (
+                    <>
+                      <p className={styles.sectionLabel}>Matching Subcategories ({matchedSubcatEntries.length})</p>
+                      <div className={styles.subcatGrid}>
+                        {matchedSubcatEntries.map(({ sub, category }) => (
+                          <button
+                            type="button"
+                            key={sub.id}
+                            className={styles.subcatMatchBtn}
+                            onClick={() => goToSubcategory(category.id, sub.id, category.kind)}
+                          >
+                            <span className={styles.subcatParentLabel}>{category.name}</span>
+                            <span className={styles.subcatMatchName}>{sub.name}</span>
+                            <span className={`${styles.kindTag} ${category.kind === "service" ? styles.kindTagService : styles.kindTagProduct}`}>
+                              {category.kind === "service" ? "Service" : "Product"}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  ) : hoveredCategory ? (
                     <>
                       <p className={styles.sectionLabel}>{hoveredCategory.name}</p>
                       {isLoadingHoveredSubs ? (
@@ -329,6 +408,8 @@ export default function HomeCategorySearch() {
                         <p className={styles.subcategoryHint}>No subcategories listed yet — browse all {hoveredCategory.name}.</p>
                       )}
                     </>
+                  ) : normalizedQuery ? (
+                    <p className={styles.subcategoryHint}>No subcategories match &ldquo;{query.trim()}&rdquo;.</p>
                   ) : (
                     <p className={styles.subcategoryHint}>
                       <i className="fa-solid fa-arrow-left"></i> Hover a category to see its subcategories

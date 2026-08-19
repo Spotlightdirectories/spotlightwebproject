@@ -334,6 +334,55 @@
   color: var(--color-primary-hover);
 }
 
+/* SUBCATEGORY SEARCH MATCHES — e.g. typing "mat" surfaces the
+   "Mattress" subcategory even though no category itself is named
+   "mat". Each result shows its parent category to the left as a
+   small caption, so the match has context, plus the same
+   Product/Service kind tag used everywhere else. */
+.subcatMatchBtn {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 9px 10px;
+  font-family: inherit;
+  border-radius: var(--radius-md);
+  width: 100%;
+}
+
+.subcatMatchBtn:hover {
+  background: rgba(230, 194, 0, 0.14);
+}
+
+.subcatParentLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+  white-space: nowrap;
+}
+
+.subcatParentLabel::after {
+  content: "›";
+  margin-left: 6px;
+  color: var(--color-text-faint);
+}
+
+.subcatMatchName {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+}
+
+/* Mobile-only inline version of the subcategory-match results —
+   hidden on desktop, where the right pane (.subcategoryColumn)
+   shows the same results instead. */
+.mobileSubcatMatches {
+  display: none;
+}
+
 .subcategoryHint {
   color: var(--color-text-faint);
   font-size: var(--text-sm);
@@ -383,6 +432,13 @@
 
   .subcategoryColumn {
     display: none;
+  }
+
+  .mobileSubcatMatches {
+    display: block;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--color-border-light);
   }
 
   .mobileSubcatList {
