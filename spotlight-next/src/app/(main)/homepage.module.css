@@ -53,20 +53,21 @@
 
 /* HERO */
 /* TOP SEARCH STRIP — sits directly under the fixed Navbar, above the
-   hero heading. padding-top clears the Navbar itself (--header-height)
-   since this is now the first thing on the page; .ldHero below no
-   longer needs to (see its own reduced top padding). */
+   hero heading.
+   IMPORTANT: navbar clearance is already handled once, globally, by
+   the (main)/layout.tsx wrapper (`paddingTop: var(--header-height)`
+   around {children}) — every page in this route group gets that for
+   free. This rule must NOT add --header-height again on top of that,
+   or the navbar gets cleared twice, stacking an extra ~70px of dead
+   space above the search bar (found 2026-08, after Cyril reported a
+   gap far bigger than the 16px this was meant to be). Just the plain
+   16px below is needed here. */
 .ldTopSearch {
   display: flex;
   justify-content: center;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border-light);
-  /* Same 16px on both sides of the search bar itself (extra space
-     above header-height, and below before the strip ends) — paired
-     with .ldHero's own reduced top padding below, so the gap above
-     the search bar and the gap below it read as roughly equal
-     instead of top being noticeably larger (Cyril, 2026-08). */
-  padding: calc(var(--header-height) + 16px) 24px 16px;
+  padding: 16px 24px 16px;
 }
 
 .ldTopSearchInner {
@@ -437,7 +438,7 @@
 
 /* RESPONSIVE */
 @media (max-width: 900px) {
-  .ldTopSearch { padding: calc(var(--header-height) + 12px) 16px 12px; }
+  .ldTopSearch { padding: 12px 16px 12px; }
   .ldHero { grid-template-columns: 1fr; padding: 12px 16px 50px; }
   .ldHeroText h1 { font-size: var(--text-3xl); }
   .ldHeroCtas { flex-direction: column; }
