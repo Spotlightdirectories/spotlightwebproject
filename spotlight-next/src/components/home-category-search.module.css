@@ -13,7 +13,12 @@
   max-width: 520px;
 }
 
-/* SEARCH BAR — replaces the old "Search Nearby" button */
+/* SEARCH BAR — replaces the old "Search Nearby" button.
+   position + z-index: deliberately ABOVE .backdrop (9999) and .panel
+   (10000) so the search bar — and whatever the user is typing — is
+   never behind the blurred backdrop. Without this, the bar had no
+   explicit stacking position and the backdrop rendered visually on
+   top of it, blurring the input text while typing. */
 .searchForm {
   display: flex;
   align-items: center;
@@ -24,6 +29,8 @@
   padding: 6px 8px 6px 18px;
   box-shadow: var(--shadow-md);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  position: relative;
+  z-index: 10001;
 }
 
 .searchForm:focus-within {
@@ -105,7 +112,16 @@
 /* PANEL — the takeover itself, centered near the top of the viewport */
 .panel {
   position: fixed;
+  /* top and max-height are set inline by the component, measured
+     live from the search bar's actual on-screen position via
+     getBoundingClientRect() — so the panel is always docked directly
+     under the input, reading as one continuous card (input header +
+     category list body) rather than floating at a fixed offset that
+     may or may not line up with where the search bar actually sits.
+     These are just safe fallbacks in case that inline style hasn't
+     applied yet on first paint. */
   top: 110px;
+  max-height: min(600px, calc(100vh - 160px));
   left: 50%;
   transform: translateX(-50%);
   width: min(880px, 92vw);
@@ -119,7 +135,6 @@
      "did nothing" for most categories. Overridden back to a single
      scrolling block on mobile below, where the accordion pattern
      wants one shared scroll. */
-  max-height: calc(100vh - 150px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -198,6 +213,33 @@
   padding-right: 20px;
   overflow-y: auto;
   max-height: 100%;
+}
+
+/* Deliberately visible (not the OS-default auto-hide) scrollbar on
+   both scrolling columns, so it's obvious at a glance that there's
+   more to scroll to — some OS/browser combinations hide scrollbars
+   until actively scrolling, which made a long list look like it
+   simply stopped rather than continued below the fold. */
+.categoryColumn,
+.subcategoryColumn {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.categoryColumn::-webkit-scrollbar,
+.subcategoryColumn::-webkit-scrollbar {
+  width: 6px;
+}
+
+.categoryColumn::-webkit-scrollbar-thumb,
+.subcategoryColumn::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+.categoryColumn::-webkit-scrollbar-thumb:hover,
+.subcategoryColumn::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-faint);
 }
 
 .categoryList {
@@ -340,9 +382,10 @@
   .wrap { max-width: 100%; }
 
   .panel {
-    top: 84px;
+    /* top/max-height come from the component's inline style (see
+       base .panel rule above) — same JS-measured docking on mobile
+       as desktop, so no hardcoded offset override needed here. */
     width: 94vw;
-    max-height: calc(100vh - 110px);
     padding: 16px 14px 24px;
     /* Mobile uses the accordion pattern (subcategories expand inline
        under their row), so there's only ever one list to scroll —

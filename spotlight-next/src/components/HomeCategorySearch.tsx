@@ -10,7 +10,14 @@
 // Behavior:
 // - Focusing the input opens a full-screen takeover: a dimmed
 //   backdrop behind a centered panel, so the rest of the homepage is
-//   obscured while this is open (per Cyril's spec).
+//   obscured while this is open (per Cyril's spec). The search bar
+//   itself sits ABOVE the backdrop's blur (z-index higher than the
+//   backdrop) and the panel is docked directly beneath it — measured
+//   live via getBoundingClientRect() rather than a hardcoded offset
+//   — so the two read as one continuous card: input as the header,
+//   category list as the body. Fixes an earlier bug where the search
+//   bar had no explicit stacking position, so the blurred backdrop
+//   rendered visually on top of it and blurred the text being typed.
 // - Typing filters the category list — matches (tagged Product or
 //   Service, since a search can match both) bubble to the top under
 //   "Best Matches". The rest of the list stays visible below, split
@@ -71,6 +78,21 @@ export default function HomeCategorySearch() {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Panel is docked directly under the search bar, measured live
+  // rather than hard-coded, so it stays attached to the input
+  // wherever this component renders and however tall the hero above
+  // it is. Recomputed on open and on resize while open.
+  const [panelStyle, setPanelStyle] = useState<{ top: number; maxHeight: number } | null>(null);
+
+  function computePanelStyle() {
+    if (!containerRef.current) return null;
+    const rect = containerRef.current.getBoundingClientRect();
+    const gap = 10;
+    const top = rect.bottom + gap;
+    const maxHeight = Math.max(280, window.innerHeight - top - 20);
+    return { top, maxHeight };
+  }
+
   // Track mobile vs desktop live, so rotating a tablet or resizing a
   // browser window switches behavior without needing a reload.
   useEffect(() => {
@@ -95,9 +117,23 @@ export default function HomeCategorySearch() {
   }, []);
 
   function openPanel() {
+    setPanelStyle(computePanelStyle());
     setOpen(true);
     ensureCategoriesLoaded();
   }
+
+  // Keep the panel docked to the search bar if the window resizes
+  // while it's open (e.g. rotating a tablet, or the browser window
+  // being resized).
+  useEffect(() => {
+    if (!open) return;
+    function handleResize() {
+      setPanelStyle(computePanelStyle());
+    }
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   function closePanel() {
     setOpen(false);
@@ -273,7 +309,12 @@ export default function HomeCategorySearch() {
       {open && (
         <>
           <div className={styles.backdrop} onClick={closePanel} />
-          <div className={styles.panel} role="dialog" aria-label="Category search">
+          <div
+            className={styles.panel}
+            style={panelStyle ? { top: panelStyle.top, maxHeight: panelStyle.maxHeight } : undefined}
+            role="dialog"
+            aria-label="Category search"
+          >
             <button type="button" className={styles.panelClose} onClick={closePanel} aria-label="Close">
               <i className="fa-solid fa-xmark"></i>
             </button>
@@ -289,9 +330,9 @@ export default function HomeCategorySearch() {
                       <div className={styles.categoryList}>{matched.map((cat) => renderCategoryRow(cat, true))}</div>
                     </>
                   )}
-                  <p className={styles.sectionLabel}>Products</p>
+                  <p className={styles.sectionLabel}>Products ({restProducts.length})</p>
                   <div className={styles.categoryList}>{restProducts.map((cat) => renderCategoryRow(cat, false))}</div>
-                  <p className={styles.sectionLabel}>Services</p>
+                  <p className={styles.sectionLabel}>Services ({restServices.length})</p>
                   <div className={styles.categoryList}>{restServices.map((cat) => renderCategoryRow(cat, false))}</div>
                 </div>
 
