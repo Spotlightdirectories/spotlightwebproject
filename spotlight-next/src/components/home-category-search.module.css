@@ -1,0 +1,342 @@
+/* ===============================================================
+   home-category-search.module.css
+   Homepage smart search + category takeover panel (2026-08).
+   Uses the same design tokens as the rest of the site (globals.css)
+   so it feels native, not bolted-on. Brand gold (--color-primary)
+   is used deliberately throughout as the accent, per Cyril's ask
+   for it to look distinct and "on-brand".
+=============================================================== */
+
+.wrap {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+}
+
+/* SEARCH BAR — replaces the old "Search Nearby" button */
+.searchForm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 6px 8px 6px 18px;
+  box-shadow: var(--shadow-md);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.searchForm:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(230, 194, 0, 0.18), var(--shadow-md);
+}
+
+.searchForm > i.fa-magnifying-glass {
+  color: var(--color-text-faint);
+  font-size: 15px;
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: var(--text-base);
+  font-family: inherit;
+  color: var(--color-text-primary);
+  padding: 10px 0;
+  min-width: 0;
+}
+
+.searchInput::placeholder {
+  color: var(--color-text-faint);
+}
+
+.clearBtn {
+  border: none;
+  background: transparent;
+  color: var(--color-text-faint);
+  cursor: pointer;
+  padding: 6px;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.clearBtn:hover {
+  color: var(--color-text-body);
+}
+
+.submitBtn {
+  border: none;
+  background: var(--color-dark);
+  color: #ffffff;
+  font-weight: var(--font-semibold);
+  font-size: var(--text-sm);
+  padding: 12px 22px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.submitBtn:hover {
+  background: var(--color-primary);
+  color: var(--color-dark);
+}
+
+/* BACKDROP — dims the rest of the homepage while the panel is open */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  /* Deliberately above the Navbar's own z-index (which hardcodes 9999
+     for its mobile menu overlay) so this takeover always wins,
+     regardless of which page/breakpoint it's opened from. */
+  z-index: 9999;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* PANEL — the takeover itself, centered near the top of the viewport */
+.panel {
+  position: fixed;
+  top: 110px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(880px, 92vw);
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+  background: var(--color-surface);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--color-border);
+  border-top: 3px solid var(--color-primary);
+  z-index: 10000;
+  padding: 20px 24px 28px;
+  animation: slideDown 0.18s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.panelClose {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  border: none;
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panelClose:hover {
+  background: var(--color-primary);
+  color: var(--color-dark);
+}
+
+.panelLoading {
+  padding: 24px 4px;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.panelBody {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 24px;
+  margin-top: 14px;
+}
+
+.sectionLabel {
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-primary-hover);
+  margin: 14px 0 8px;
+}
+
+.sectionLabel:first-child {
+  margin-top: 0;
+}
+
+.categoryColumn {
+  border-right: 1px solid var(--color-border-light);
+  padding-right: 20px;
+}
+
+.categoryList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.categoryRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast);
+}
+
+.categoryRow:hover,
+.categoryRowActive {
+  background: var(--color-surface-alt);
+}
+
+.categoryRowHighlighted .categoryBtn {
+  font-weight: var(--font-bold);
+}
+
+.categoryRowActive {
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+.categoryBtn {
+  flex: 1;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 9px 8px;
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  font-family: inherit;
+}
+
+.categoryBtn:hover {
+  color: var(--color-primary-hover);
+}
+
+.categoryChevron {
+  border: none;
+  background: none;
+  color: var(--color-text-faint);
+  cursor: pointer;
+  padding: 8px 10px;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.categoryChevron:hover {
+  color: var(--color-primary-hover);
+}
+
+/* DESKTOP RIGHT PANE — subcategories of whichever category is hovered */
+.subcategoryColumn {
+  min-height: 200px;
+}
+
+.subcatGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.subcatBtn {
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 10px;
+  font-size: var(--text-sm);
+  color: var(--color-text-body);
+  font-family: inherit;
+  border-radius: var(--radius-md);
+}
+
+.subcatBtn:hover {
+  background: rgba(230, 194, 0, 0.14);
+  color: var(--color-primary-hover);
+}
+
+.subcategoryHint {
+  color: var(--color-text-faint);
+  font-size: var(--text-sm);
+  padding: 10px 8px;
+}
+
+.subcategoryHint i {
+  margin-right: 6px;
+}
+
+/* MOBILE ACCORDION — subcategories render inline under the row */
+.mobileSubcatList {
+  display: none;
+}
+
+/* RESPONSIVE — mobile switches from two-pane hover layout to a
+   single-column accordion. The component itself only renders the
+   accordion markup when isMobile is true (JS-driven via
+   matchMedia), so this media query mainly handles layout/spacing —
+   but it's kept in sync with the same 768px breakpoint used in the
+   component so the two never disagree. */
+@media (max-width: 768px) {
+  .wrap { max-width: 100%; }
+
+  .panel {
+    top: 84px;
+    width: 94vw;
+    max-height: calc(100vh - 110px);
+    padding: 16px 14px 24px;
+  }
+
+  .panelBody {
+    grid-template-columns: 1fr;
+  }
+
+  .categoryColumn {
+    border-right: none;
+    padding-right: 0;
+  }
+
+  .subcategoryColumn {
+    display: none;
+  }
+
+  .mobileSubcatList {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px 4px 8px 18px;
+    border-left: 2px solid var(--color-primary);
+    margin: 2px 0 6px;
+  }
+
+  .searchInput {
+    font-size: var(--text-sm);
+  }
+
+  .submitBtn {
+    padding: 10px 16px;
+    font-size: var(--text-xs);
+  }
+}
+
+/* DARK MODE */
+[data-theme="dark"] .backdrop {
+  background: rgba(0, 0, 0, 0.72);
+}
+
+[data-theme="dark"] .panel {
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .searchForm {
+  background: var(--color-surface);
+}

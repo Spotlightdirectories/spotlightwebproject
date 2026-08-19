@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Footer from "@/components/Footer";
+import HomeCategorySearch from "@/components/HomeCategorySearch";
 import styles from "./homepage.module.css";
 
 const SLIDES = [
@@ -86,9 +87,12 @@ export default function HomePage() {
           <p className={styles.ldHeroSub}>
             Whatever you sell or fix or build — Spotlight helps nearby customers find you, contact you, and choose you.
           </p>
+          <div className={styles.ldHeroSearchWrap}>
+            <HomeCategorySearch />
+          </div>
           <div className={styles.ldHeroCtas}>
             <a href="/getlisted" className={`${styles.ldBtn} ${styles.ldBtnPrimary}`}>Get Listed Free</a>
-            <a href="/discover" className={`${styles.ldBtn} ${styles.ldBtnOutline}`}>Search Nearby</a>
+            <a href="/discover" className={`${styles.ldBtn} ${styles.ldBtnOutline}`}>Advanced Search</a>
           </div>
           <p className={styles.ldHeroMicro}>
             <i className="fa-solid fa-bolt"></i>

@@ -98,6 +98,7 @@
   max-width: 520px;
 }
 
+.ldHeroSearchWrap { margin-bottom: var(--spacing-lg); }
 .ldHeroCtas { display: flex; gap: 16px; margin-bottom: var(--spacing-md); }
 .ldHeroMicro { font-size: var(--text-sm); color: var(--color-text-faint); }
 .ldHeroMicro i { color: var(--color-primary); margin-right: 4px; }
