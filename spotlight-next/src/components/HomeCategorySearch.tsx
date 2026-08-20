@@ -105,6 +105,41 @@ export default function HomeCategorySearch() {
   const [allSubcategories, setAllSubcategories] = useState<FlatSubcategory[]>([]);
   const subcategoriesAllLoadedRef = useRef(false);
 
+  // Live "X listings" counts per category/subcategory (Cyril, 2026-08:
+  // "the moment vendors start onboarding, the number of products and
+  // services for each category and subcat should also show"). Backed
+  // by two DB views (category_listing_counts / subcategory_listing_
+  // counts) that already match the same public-visibility rules the
+  // rest of the site uses, so a count shown here always lines up with
+  // what a customer actually finds by clicking through. A category/
+  // subcategory with no listings simply has no entry in these maps —
+  // the UI hides the badge rather than showing "0".
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+  const [subcategoryCounts, setSubcategoryCounts] = useState<Record<string, number>>({});
+  const countsLoadedRef = useRef(false);
+
+  async function fetchAllCounts(
+    table: "category_listing_counts" | "subcategory_listing_counts",
+    idColumn: "category_id" | "subcategory_id"
+  ): Promise<Record<string, number>> {
+    const pageSize = 1000;
+    let from = 0;
+    const map: Record<string, number> = {};
+    for (;;) {
+      const { data, error } = await supabase
+        .from(table)
+        .select(`${idColumn},listing_count`)
+        .range(from, from + pageSize - 1);
+      if (error || !data) break;
+      for (const row of data as Record<string, number | string>[]) {
+        map[String(row[idColumn])] = Number(row.listing_count);
+      }
+      if (data.length < pageSize) break;
+      from += pageSize;
+    }
+    return map;
+  }
+
   // Supabase/PostgREST caps an unpaginated select() at 1,000 rows by
   // default — with ~2,339 subcategories total, a plain .select() was
   // silently truncating the list around the letter K, so anything
@@ -166,14 +201,21 @@ export default function HomeCategorySearch() {
     if (categoriesLoadedRef.current) return;
     categoriesLoadedRef.current = true;
     setLoadingCategories(true);
-    const [categoriesRes, allSubcats] = await Promise.all([
+    const [categoriesRes, allSubcats, catCounts, subcatCounts] = await Promise.all([
       supabase.from("categories").select("id,name,kind").in("kind", ["product", "service"]).order("name", { ascending: true }),
       subcategoriesAllLoadedRef.current ? Promise.resolve(null) : fetchAllSubcategories(),
+      countsLoadedRef.current ? Promise.resolve(null) : fetchAllCounts("category_listing_counts", "category_id"),
+      countsLoadedRef.current ? Promise.resolve(null) : fetchAllCounts("subcategory_listing_counts", "subcategory_id"),
     ]);
     if (!categoriesRes.error) setCategories((categoriesRes.data || []) as Category[]);
     if (!subcategoriesAllLoadedRef.current && allSubcats) {
       subcategoriesAllLoadedRef.current = true;
       setAllSubcategories(allSubcats);
+    }
+    if (!countsLoadedRef.current && catCounts && subcatCounts) {
+      countsLoadedRef.current = true;
+      setCategoryCounts(catCounts);
+      setSubcategoryCounts(subcatCounts);
     }
     setLoadingCategories(false);
   }, []);
@@ -314,6 +356,7 @@ export default function HomeCategorySearch() {
           <span className={`${styles.kindTag} ${cat.kind === "service" ? styles.kindTagService : styles.kindTagProduct}`}>
             {cat.kind === "service" ? "Service" : "Product"}
           </span>
+          {!!categoryCounts[cat.id] && <span className={styles.listingCount}>{categoryCounts[cat.id]}</span>}
         </button>
         <button
           type="button"
@@ -338,7 +381,8 @@ export default function HomeCategorySearch() {
                   className={styles.subcatBtn}
                   onClick={() => goToSubcategory(cat.id, sub.id, cat.kind)}
                 >
-                  {sub.name}
+                  <span>{sub.name}</span>
+                  {!!subcategoryCounts[sub.id] && <span className={styles.listingCount}>{subcategoryCounts[sub.id]}</span>}
                 </button>
               ))
             ) : (
@@ -416,6 +460,7 @@ export default function HomeCategorySearch() {
                             <span className={`${styles.kindTag} ${category.kind === "service" ? styles.kindTagService : styles.kindTagProduct}`}>
                               {category.kind === "service" ? "Service" : "Product"}
                             </span>
+                            {!!subcategoryCounts[sub.id] && <span className={styles.listingCount}>{subcategoryCounts[sub.id]}</span>}
                           </button>
                         ))}
                       </div>
@@ -454,7 +499,8 @@ export default function HomeCategorySearch() {
                               className={styles.subcatBtn}
                               onClick={() => goToSubcategory(hoveredCategory.id, sub.id, hoveredCategory.kind)}
                             >
-                              {sub.name}
+                              <span>{sub.name}</span>
+                              {!!subcategoryCounts[sub.id] && <span className={styles.listingCount}>{subcategoryCounts[sub.id]}</span>}
                             </button>
                           ))}
                         </div>
@@ -478,6 +524,7 @@ export default function HomeCategorySearch() {
                             <span className={`${styles.kindTag} ${category.kind === "service" ? styles.kindTagService : styles.kindTagProduct}`}>
                               {category.kind === "service" ? "Service" : "Product"}
                             </span>
+                            {!!subcategoryCounts[sub.id] && <span className={styles.listingCount}>{subcategoryCounts[sub.id]}</span>}
                           </button>
                         ))}
                       </div>

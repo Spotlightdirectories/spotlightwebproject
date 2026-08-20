@@ -318,6 +318,11 @@
 }
 
 .subcatBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
   text-align: left;
   background: none;
   border: none;
@@ -332,6 +337,21 @@
 .subcatBtn:hover {
   background: rgba(230, 194, 0, 0.14);
   color: var(--color-primary-hover);
+}
+
+/* LIVE LISTING COUNT — small muted badge showing how many active
+   products/services currently sit in a category or subcategory.
+   Deliberately understated (no pill/background) so it reads as a
+   quiet number, not competing visually with the Product/Service
+   kindTag. Populated from the category_listing_counts /
+   subcategory_listing_counts DB views, which mirror the exact same
+   public-visibility rules as the live site (see fetchAllCounts). */
+.listingCount {
+  font-size: 11px;
+  font-weight: var(--font-medium);
+  color: var(--color-text-faint);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* SUBCATEGORY SEARCH MATCHES — e.g. typing "mat" surfaces the
