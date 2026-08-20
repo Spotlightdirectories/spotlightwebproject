@@ -245,9 +245,21 @@ function PartnerProgramInner() {
 
     const { data: partnerRow } = await partnerSupabase
       .from("partners")
-      .select("id, name, email, referral_code")
+      .select("id, name, email, referral_code, payout_details_submitted_at")
       .eq("id", partnerId)
       .single();
+
+    // 2026-08 fix: a partner who reaches the dashboard this way (general
+    // login, e.g. after a password reset) previously skipped payout-details
+    // collection entirely — that step only ever ran on the one-time
+    // partner-create-account page. Gate on it here too, so there's no path
+    // to the dashboard that bypasses bank/NIN collection. That page detects
+    // the live session already created above and skips straight to the
+    // payout form — no need to re-enter the password just verified here.
+    if (!partnerRow?.payout_details_submitted_at) {
+      router.push(`/partner-create-account?partner_id=${partnerId}`);
+      return;
+    }
 
     setPartnerSession({
       user_id: signInData.user.id,

@@ -96,7 +96,12 @@ function PartnerCreateAccountForm() {
   // vendor, usually) — the visitor signs in with their EXISTING
   // password instead, and we attach the partner role to that same
   // identity.
-  const [mode, setMode] = useState<"new" | "link">("new");
+  // "authenticated" = the visitor is ALREADY signed in as this email
+  // when the page loads (e.g. redirected here straight from the
+  // Partner Login form because payout details were still missing) —
+  // no password needed at all, just collect payout details.
+  const [mode, setMode] = useState<"new" | "link" | "authenticated">("new");
+  const [authedUserId, setAuthedUserId] = useState<string | null>(null);
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -137,7 +142,24 @@ function PartnerCreateAccountForm() {
       setName(data.name || "");
       if (data.payout_details_submitted_at) {
         setAlreadyDone(true);
+        setLoading(false);
+        return;
       }
+
+      // If the visitor is already signed in as this exact email (e.g.
+      // redirected here from Partner Login, which verifies the password
+      // itself before sending them here), skip the password step
+      // entirely — asking them to re-type a password they just entered
+      // seconds ago would be redundant.
+      const {
+        data: { session },
+      } = await partnerSupabase.auth.getSession();
+
+      if (session?.user?.email && session.user.email.toLowerCase() === data.email.toLowerCase()) {
+        setAuthedUserId(session.user.id);
+        setMode("authenticated");
+      }
+
       setLoading(false);
     })();
   }, [partnerId]);
@@ -243,12 +265,13 @@ function PartnerCreateAccountForm() {
         setError("Passwords do not match.");
         return;
       }
-    } else {
+    } else if (mode === "link") {
       if (!password) {
         setError("Please enter your existing Spotlight password.");
         return;
       }
     }
+    // mode === "authenticated": no password needed, already signed in.
 
     const payoutError = validatePayoutFields();
     if (payoutError) {
@@ -257,6 +280,11 @@ function PartnerCreateAccountForm() {
     }
 
     setSubmitting(true);
+
+    if (mode === "authenticated") {
+      await finishLinkingAndPayout(authedUserId as string);
+      return;
+    }
 
     if (mode === "new") {
       const { data: signUpData, error: signUpError } = await partnerSupabase.auth.signUp({
@@ -361,12 +389,18 @@ function PartnerCreateAccountForm() {
     <main className={styles.authWrapper}>
       <div className={styles.authCard}>
         <h1 className={styles.authTitle}>
-          {mode === "new" ? "Create Your Partner Account" : "Link Your Partner Account"}
+          {mode === "new"
+            ? "Create Your Partner Account"
+            : mode === "link"
+            ? "Link Your Partner Account"
+            : "Add Your Payout Details"}
         </h1>
         <p className={styles.authSubtitle}>
           {mode === "new"
             ? "Set a password and add your payout details to activate your Spotlight Partner login."
-            : "Sign in with your existing Spotlight password to add Partner access, then add your payout details."}
+            : mode === "link"
+            ? "Sign in with your existing Spotlight password to add Partner access, then add your payout details."
+            : `You're signed in as ${email}. Just add your payout details below to finish activating your Partner access.`}
         </p>
 
         <div className={styles.authForm}>
@@ -374,32 +408,34 @@ function PartnerCreateAccountForm() {
             <label htmlFor="email">Email</label>
             <input id="email" type="email" value={email} readOnly disabled />
           </div>
-          <div>
-            <label htmlFor="password">{mode === "new" ? "Password" : "Your Existing Password"}</label>
-            <div className={styles.passwordWrap}>
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                className={styles.togglePassword}
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? "🙈" : "👁️"}
-              </button>
+          {mode !== "authenticated" && (
+            <div>
+              <label htmlFor="password">{mode === "new" ? "Password" : "Your Existing Password"}</label>
+              <div className={styles.passwordWrap}>
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className={styles.togglePassword}
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? "🙈" : "👁️"}
+                </button>
+              </div>
+              {mode === "link" && (
+                <p style={{ fontSize: 13, marginTop: 4 }}>
+                  <a href={`/forgot-password?type=partner&email=${encodeURIComponent(email)}`}>
+                    Forgot your password?
+                  </a>
+                </p>
+              )}
             </div>
-            {mode === "link" && (
-              <p style={{ fontSize: 13, marginTop: 4 }}>
-                <a href={`/forgot-password?type=partner&email=${encodeURIComponent(email)}`}>
-                  Forgot your password?
-                </a>
-              </p>
-            )}
-          </div>
+          )}
           {mode === "new" && (
             <div>
               <label htmlFor="confirmPassword">Confirm Password</label>
@@ -460,7 +496,13 @@ function PartnerCreateAccountForm() {
           </div>
 
           <button type="button" className={styles.authBtn} onClick={handleSubmit} disabled={submitting}>
-            {submitting ? "Submitting..." : mode === "new" ? "Create Account" : "Link Account"}
+            {submitting
+              ? "Submitting..."
+              : mode === "new"
+              ? "Create Account"
+              : mode === "link"
+              ? "Link Account"
+              : "Save Payout Details"}
           </button>
           {error && <p className={styles.authError}>{error}</p>}
         </div>
