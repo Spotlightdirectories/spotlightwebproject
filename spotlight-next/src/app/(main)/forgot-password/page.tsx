@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
 
 function ForgotPasswordInner() {
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(searchParams.get("email") || "");
   const [statusMsg, setStatusMsg] = useState("");
   const [sending, setSending] = useState(false);
 

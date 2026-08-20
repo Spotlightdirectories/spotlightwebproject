@@ -392,6 +392,13 @@ function PartnerCreateAccountForm() {
                 {showPassword ? "🙈" : "👁️"}
               </button>
             </div>
+            {mode === "link" && (
+              <p style={{ fontSize: 13, marginTop: 4 }}>
+                <a href={`/forgot-password?type=partner&email=${encodeURIComponent(email)}`}>
+                  Forgot your password?
+                </a>
+              </p>
+            )}
           </div>
           {mode === "new" && (
             <div>
