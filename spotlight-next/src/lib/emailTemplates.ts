@@ -404,6 +404,7 @@ function partnerApproved({
           infoRow("Partner Referral Link", `<a href="${partnerReferralLink}" style="color:#2563eb;">${partnerReferralLink}</a>`)
       )}
       ${paragraph("Share your Vendor Referral Link with businesses to help them get listed on Spotlight. You earn a commission for every vendor who subscribes through your link.")}
+      ${paragraph("One more step before you're fully set up: when you create your account below, you'll also be asked for your payout bank details and your NIN. Your bank account name must match the name on your NIN — please have both ready.")}
       ${primaryButton("Create My Partner Account", createAccountLink)}
       ${inductionLink
         ? `<p style="margin:0 0 16px;font-size:14px;color:#64748b;">New to the programme? <a href="${inductionLink}" style="color:#2563eb;text-decoration:underline;">Read the partner induction guide</a> to get started.</p>`

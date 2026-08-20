@@ -32,7 +32,15 @@ type CommissionRow = {
   status: string | null;
   type: string | null;
   created_at: string | null;
-  partners: { id: string; name: string | null; referral_code: string | null; status: string | null } | null;
+  partners: {
+    id: string;
+    name: string | null;
+    referral_code: string | null;
+    status: string | null;
+    bank_name: string | null;
+    bank_account_number: string | null;
+    bank_account_name: string | null;
+  } | null;
   vendors: { name: string | null } | null;
   vendor_payments: { plan: string | null } | null;
 };
@@ -44,6 +52,9 @@ type PartnerSummary = {
   pending: number;
   available: number;
   paid: number;
+  bankName: string | null;
+  bankAccountNumber: string | null;
+  bankAccountName: string | null;
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -71,7 +82,7 @@ export default function CommissionsTab({ currentRole }: { currentRole: AdminRole
         status,
         type,
         created_at,
-        partners ( id, name, referral_code, status ),
+        partners ( id, name, referral_code, status, bank_name, bank_account_number, bank_account_name ),
         vendors ( name ),
         vendor_payments ( plan )
       `
@@ -107,6 +118,9 @@ export default function CommissionsTab({ currentRole }: { currentRole: AdminRole
           pending: 0,
           available: 0,
           paid: 0,
+          bankName: c.partners?.bank_name || null,
+          bankAccountNumber: c.partners?.bank_account_number || null,
+          bankAccountName: c.partners?.bank_account_name || null,
         };
       }
       const amount = Number(c.amount || 0) / 100;
@@ -157,6 +171,7 @@ export default function CommissionsTab({ currentRole }: { currentRole: AdminRole
             <tr>
               <th>Partner</th>
               <th>Referral Code</th>
+              <th>Payout Details</th>
               <th>Pending</th>
               <th>Available</th>
               <th>Paid</th>
@@ -164,13 +179,13 @@ export default function CommissionsTab({ currentRole }: { currentRole: AdminRole
             </tr>
           </thead>
           <tbody>
-            {commissions === null && <tr><td colSpan={6} className="adm-empty-cell">Loading…</td></tr>}
+            {commissions === null && <tr><td colSpan={7} className="adm-empty-cell">Loading…</td></tr>}
             {commissions !== null && loadError && (
-              <tr><td colSpan={6} className="adm-empty-cell">{loadError}</td></tr>
+              <tr><td colSpan={7} className="adm-empty-cell">{loadError}</td></tr>
             )}
             {commissions !== null && !loadError && summary.length === 0 && (
               <tr>
-                <td colSpan={6} className="adm-empty-cell">
+                <td colSpan={7} className="adm-empty-cell">
                   ✓ No commissions recorded yet. They will appear automatically when referred vendors make payments.
                 </td>
               </tr>
@@ -179,6 +194,16 @@ export default function CommissionsTab({ currentRole }: { currentRole: AdminRole
               <tr key={p.id}>
                 <td>{p.name}</td>
                 <td>{p.code !== "—" ? <strong>{p.code}</strong> : "—"}</td>
+                <td>
+                  {p.bankName || p.bankAccountNumber || p.bankAccountName ? (
+                    <span style={{ fontSize: 13 }}>
+                      {p.bankAccountName || "—"}<br />
+                      {p.bankName || "—"} · {p.bankAccountNumber || "—"}
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: 13, color: "var(--color-text-muted, #94a3b8)" }}>Not submitted yet</span>
+                  )}
+                </td>
                 <td>₦{Math.round(p.pending).toLocaleString()}</td>
                 <td>₦{Math.round(p.available).toLocaleString()}</td>
                 <td>₦{Math.round(p.paid).toLocaleString()}</td>

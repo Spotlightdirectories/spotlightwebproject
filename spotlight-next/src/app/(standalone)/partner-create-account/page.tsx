@@ -21,6 +21,18 @@
 //    auto-confirms new accounts), the partner is sent straight to
 //    /partner-dashboard instead of back to a login screen they'd
 //    have to fill in again.
+//
+// 2026-08 addition, per Cyril: payout bank details + NIN are now
+// collected on this same one-time form, right after password setup —
+// his explicit choice of procedure, tied to the moment a partner
+// completes account setup post-approval (same link, no separate
+// email/page). Saved via submit_partner_payout_details(), the same
+// self-service-write pattern as link_partner_account() above: a
+// narrow SECURITY DEFINER function that only ever updates the
+// caller's own row. Account holder name must match the name on the
+// NIN — stated on the form, not machine-checked (no NIN-verification
+// API access), matching how identity docs are already handled
+// elsewhere on the platform (e.g. vendor verification badges).
 // ===============================================================
 
 import { useEffect, useState, Suspense } from "react";
@@ -55,6 +67,13 @@ function PartnerCreateAccountForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  // Payout details — Cyril's requested procedure: collected here,
+  // right after approval, alongside account setup.
+  const [bankName, setBankName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [nin, setNin] = useState("");
 
   useEffect(() => {
     if (!partnerId) {
@@ -93,6 +112,18 @@ function PartnerCreateAccountForm() {
       setError("Passwords do not match.");
       return;
     }
+    if (!bankName.trim() || !accountNumber.trim() || !accountName.trim() || !nin.trim()) {
+      setError("Please fill in all payout details, including your NIN.");
+      return;
+    }
+    if (!/^\d{10}$/.test(accountNumber.trim())) {
+      setError("Account number must be exactly 10 digits.");
+      return;
+    }
+    if (!/^\d{11}$/.test(nin.trim())) {
+      setError("NIN must be exactly 11 digits.");
+      return;
+    }
 
     setSubmitting(true);
 
@@ -124,6 +155,22 @@ function PartnerCreateAccountForm() {
       console.error("Partner account linking failed:", linkError);
       setError(
         "Your login was created, but we couldn't connect it to your partner application. Please contact support@spotlightdirectories.com."
+      );
+      setSubmitting(false);
+      return;
+    }
+
+    const { error: payoutError } = await partnerSupabase.rpc("submit_partner_payout_details", {
+      p_bank_name: bankName.trim(),
+      p_account_number: accountNumber.trim(),
+      p_account_name: accountName.trim(),
+      p_nin: nin.trim(),
+    });
+
+    if (payoutError) {
+      console.error("Partner payout details failed to save:", payoutError);
+      setError(
+        `Your account was created, but your payout details couldn't be saved (${payoutError.message}). Please contact support@spotlightdirectories.com so we can add them for you.`
       );
       setSubmitting(false);
       return;
@@ -195,7 +242,7 @@ function PartnerCreateAccountForm() {
     <main className={styles.authWrapper}>
       <div className={styles.authCard}>
         <h1 className={styles.authTitle}>Create Your Partner Account</h1>
-        <p className={styles.authSubtitle}>Set a password to activate your Spotlight Partner login.</p>
+        <p className={styles.authSubtitle}>Set a password and add your payout details to activate your Spotlight Partner login.</p>
 
         <div className={styles.authForm}>
           <div>
@@ -230,6 +277,54 @@ function PartnerCreateAccountForm() {
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </div>
+          <hr style={{ margin: "20px 0", border: "none", borderTop: "1px solid var(--color-border, #e5e7eb)" }} />
+
+          <p style={{ fontWeight: 600, marginBottom: 4 }}>Payout Details</p>
+          <p style={{ fontSize: 13, color: "var(--color-text-muted, #64748b)", marginBottom: 16 }}>
+            This is where your commissions get paid to, so please double-check everything.{" "}
+            <strong>Your bank account name must match the name on your NIN</strong> — a mismatch can delay or block
+            your payout.
+          </p>
+
+          <div>
+            <label htmlFor="bankName">Bank Name</label>
+            <input id="bankName" type="text" placeholder="e.g. GTBank" value={bankName} onChange={(e) => setBankName(e.target.value)} />
+          </div>
+          <div>
+            <label htmlFor="accountNumber">Account Number</label>
+            <input
+              id="accountNumber"
+              type="text"
+              inputMode="numeric"
+              maxLength={10}
+              placeholder="10-digit account number"
+              value={accountNumber}
+              onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ""))}
+            />
+          </div>
+          <div>
+            <label htmlFor="accountName">Account Holder Name</label>
+            <input
+              id="accountName"
+              type="text"
+              placeholder="Must match your NIN name exactly"
+              value={accountName}
+              onChange={(e) => setAccountName(e.target.value)}
+            />
+          </div>
+          <div>
+            <label htmlFor="nin">NIN (National Identification Number)</label>
+            <input
+              id="nin"
+              type="text"
+              inputMode="numeric"
+              maxLength={11}
+              placeholder="11-digit NIN"
+              value={nin}
+              onChange={(e) => setNin(e.target.value.replace(/\D/g, ""))}
+            />
+          </div>
+
           <button type="button" className={styles.authBtn} onClick={handleSubmit} disabled={submitting}>
             {submitting ? "Creating Account..." : "Create Account"}
           </button>

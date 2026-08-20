@@ -99,14 +99,21 @@ export default function SignupPage() {
     const billingType = localStorage.getItem("billingType") || "monthly";
 
     // 2. Resolve referral code → partner ID
+    // 2026-08 fix, per Cyril's partner-program security audit: this
+    // used to pull EVERY partner's id + referral_code into the
+    // browser just to find one match client-side — only possible
+    // because the `partners` table had a fully public read policy
+    // (now removed, since it also exposed every partner's name,
+    // email, phone, DOB, etc. to anyone with the public API key).
+    // Uses the same narrow, id-only lookup RPC partner-program's own
+    // sign-up form already used correctly.
     let partnerId: string | null = null;
     const storedReferral = localStorage.getItem("referral_code")?.trim().toUpperCase();
     if (storedReferral) {
-      const { data: partners } = await supabase.from("partners").select("id, referral_code");
-      if (partners) {
-        const match = partners.find(p => p.referral_code?.trim().toUpperCase() === storedReferral);
-        if (match) partnerId = match.id;
-      }
+      const { data: resolvedId } = await supabase
+        .rpc("get_partner_id_by_referral_code", { p_code: storedReferral })
+        .maybeSingle();
+      if (resolvedId) partnerId = resolvedId as unknown as string;
     }
 
     // 3. Insert vendor row
