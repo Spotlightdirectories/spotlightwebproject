@@ -1056,7 +1056,21 @@ export default function DiscoverResultsPage() {
               placeholder="Select Subcategory"
               searchPlaceholder="Search subcategories..."
               value={selectedSubcategory}
-              onChange={setSelectedSubcategory}
+              onChange={(val) => {
+                // Cyril's search-logic audit, 2026-08: picking a
+                // subcategory here used to leave a stale
+                // selectedSubSubcategory in place from whatever the
+                // user arrived with (e.g. a homepage sub-subcategory
+                // click). Since the search RPCs require the
+                // subcategory and sub-subcategory to belong to the
+                // SAME listing row, a mismatched pair like this
+                // silently returned zero results instead of showing
+                // the newly picked subcategory's items. There's no
+                // sub-subcategory picker in this drawer, so any
+                // change here must clear it.
+                setSelectedSubcategory(val);
+                setSelectedSubSubcategory("");
+              }}
               disabled={!selectedCategory}
               options={subcategories.map(s => ({ value: s, label: s }))}
             />
