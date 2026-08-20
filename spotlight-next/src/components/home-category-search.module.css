@@ -295,8 +295,8 @@
    object-fit:cover so source photos of any aspect ratio crop cleanly
    instead of stretching. */
 .categoryThumb {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: var(--radius-sm);
   object-fit: cover;
   flex-shrink: 0;

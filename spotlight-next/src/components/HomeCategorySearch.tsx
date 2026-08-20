@@ -307,10 +307,20 @@ export default function HomeCategorySearch() {
   // actually changes, so new results are always immediately visible
   // rather than hidden above wherever the previous search left the
   // scroll position.
+  //
+  // Also clear activeCategoryId here (Cyril, 2026-08: typed
+  // "refrigerator" but the right pane kept showing "Fashion &
+  // Tailoring" — a category he'd hovered earlier and then stopped
+  // touching). Hovering a category is meant to win over search
+  // results only while it's the CURRENT deliberate action; once the
+  // user goes back to typing a new query, that old hover is stale
+  // and should no longer dominate the pane. If they genuinely hover
+  // a category again, handleCategoryHover sets this right back.
   useEffect(() => {
     categoryColumnRef.current?.scrollTo({ top: 0 });
     subcategoryColumnRef.current?.scrollTo({ top: 0 });
     panelRef.current?.scrollTo({ top: 0 });
+    setActiveCategoryId(null);
   }, [normalizedQuery]);
 
   const matched = normalizedQuery ? categories.filter((c) => matchesQuery(c.name, normalizedQuery)) : [];
