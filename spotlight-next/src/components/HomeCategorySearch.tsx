@@ -207,7 +207,21 @@ export default function HomeCategorySearch() {
       countsLoadedRef.current ? Promise.resolve(null) : fetchAllCounts("category_listing_counts", "category_id"),
       countsLoadedRef.current ? Promise.resolve(null) : fetchAllCounts("subcategory_listing_counts", "subcategory_id"),
     ]);
-    if (!categoriesRes.error) setCategories((categoriesRes.data || []) as Category[]);
+    if (!categoriesRes.error) {
+      const loadedCategories = (categoriesRes.data || []) as Category[];
+      setCategories(loadedCategories);
+      // Warm the browser's image cache for every category thumbnail
+      // right away, so by the time the panel actually opens the
+      // pictures are already downloaded and just pop straight in
+      // instead of streaming in one-by-one as each <img> scrolls
+      // into view (Cyril, 2026-08 — the "go slow" fade-in effect).
+      for (const cat of loadedCategories) {
+        if (cat.image_url) {
+          const preload = new window.Image();
+          preload.src = cat.image_url;
+        }
+      }
+    }
     if (!subcategoriesAllLoadedRef.current && allSubcats) {
       subcategoriesAllLoadedRef.current = true;
       setAllSubcategories(allSubcats);
@@ -224,6 +238,25 @@ export default function HomeCategorySearch() {
     setOpen(true);
     ensureCategoriesLoaded();
   }
+
+  // Prefetch categories (+ subcategories + counts + thumbnail images)
+  // as soon as the homepage loads, in the background, instead of
+  // waiting for the user to click/focus the search bar. Cyril,
+  // 2026-08: "Loading categories..." was visibly showing for a few
+  // seconds on click, and category thumbnails were popping in one by
+  // one — both because this ~2,300-row fetch + ~180 image downloads
+  // only started the moment the bar was clicked. By kicking it off on
+  // mount, the data (and images) are almost always already sitting in
+  // the browser's cache by the time someone actually taps the bar, so
+  // the panel opens instantly with images already in place. Wrapped
+  // in a short delay so it doesn't compete with the hero/above-the-
+  // fold content for bandwidth on first paint.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      ensureCategoriesLoaded();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [ensureCategoriesLoaded]);
 
   function closePanel() {
     setOpen(false);
