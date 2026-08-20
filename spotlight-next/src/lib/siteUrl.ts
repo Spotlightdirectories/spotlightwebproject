@@ -17,6 +17,13 @@
 // canonical page (Cyril asked why product/service pages weren't
 // showing up in Google search results — this and the missing Search
 // Console verification are the two real gaps found investigating it).
+//
+// 2026-08-20 follow-up: the code fallback above was already correct,
+// but Netlify's NEXT_PUBLIC_SITE_URL environment variable was still
+// set to the old www version (set 2026-08-02, before this fix landed
+// in code), so the live site kept generating www URLs anyway. Fixed
+// the Netlify env var directly to the non-www domain — this comment
+// update is here specifically to trigger a rebuild that picks it up.
 // ===============================================================
 
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://spotlightdirectories.com").replace(/\/+$/, "");
