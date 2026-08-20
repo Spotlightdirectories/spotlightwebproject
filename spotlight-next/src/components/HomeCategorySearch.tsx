@@ -142,6 +142,16 @@ export default function HomeCategorySearch() {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Scrollable containers — reset to the top whenever the query
+  // changes (below), so a fresh search always opens on its own
+  // results instead of leaving the view scrolled to wherever the
+  // PREVIOUS search happened to leave it (Cyril, 2026-08: typing
+  // "house", scrolling down, then retyping "Real Estate" left the
+  // new matches sitting off-screen above the still-scrolled view).
+  const categoryColumnRef = useRef<HTMLDivElement>(null);
+  const subcategoryColumnRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null); // mobile: single shared scroll
+
   // Track mobile vs desktop live, so rotating a tablet or resizing a
   // browser window switches behavior without needing a reload.
   useEffect(() => {
@@ -249,6 +259,18 @@ export default function HomeCategorySearch() {
   }
 
   const normalizedQuery = query.trim().toLowerCase();
+
+  // See categoryColumnRef/subcategoryColumnRef/panelRef above — jump
+  // every scrollable pane back to the top whenever the query text
+  // actually changes, so new results are always immediately visible
+  // rather than hidden above wherever the previous search left the
+  // scroll position.
+  useEffect(() => {
+    categoryColumnRef.current?.scrollTo({ top: 0 });
+    subcategoryColumnRef.current?.scrollTo({ top: 0 });
+    panelRef.current?.scrollTo({ top: 0 });
+  }, [normalizedQuery]);
+
   const matched = normalizedQuery ? categories.filter((c) => matchesQuery(c.name, normalizedQuery)) : [];
   const matchedIds = new Set(matched.map((c) => c.id));
   const rest = categories.filter((c) => !matchedIds.has(c.id));
@@ -356,7 +378,7 @@ export default function HomeCategorySearch() {
       </form>
 
       {open && (
-        <div className={styles.panel} role="dialog" aria-label="Category search">
+        <div className={styles.panel} role="dialog" aria-label="Category search" ref={panelRef}>
             <button type="button" className={styles.panelClose} onClick={closePanel} aria-label="Close">
               <i className="fa-solid fa-xmark"></i>
             </button>
@@ -365,7 +387,7 @@ export default function HomeCategorySearch() {
               <div className={styles.panelLoading}>Loading categories...</div>
             ) : (
               <div className={styles.panelBody}>
-                <div className={styles.categoryColumn}>
+                <div className={styles.categoryColumn} ref={categoryColumnRef}>
                   {matched.length > 0 && (
                     <>
                       <p className={styles.sectionLabel}>Best Matches</p>
@@ -417,7 +439,7 @@ export default function HomeCategorySearch() {
                     a subcategory match is itself the destination —
                     clicking it navigates straight there, no further
                     hover needed. */}
-                <div className={styles.subcategoryColumn}>
+                <div className={styles.subcategoryColumn} ref={subcategoryColumnRef}>
                   {hoveredCategory ? (
                     <>
                       <p className={styles.sectionLabel}>{hoveredCategory.name}</p>
