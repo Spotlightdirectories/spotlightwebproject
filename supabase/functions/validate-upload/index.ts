@@ -69,8 +69,9 @@ type Rule = {
   minHeight?: number;
   resizeTo?: number; // longest side, in px — images only
   bucket: string;
-  folder: string; // subfolder inside the vendor's own bucket path
+  folder: string; // subfolder inside the owner's own bucket path
   isPublic: boolean; // false for private buckets (verification docs, receipts) — no public URL exists for these
+  ownerTable?: "vendors" | "partners"; // which table owns the uploader — defaults to "vendors" (every category except partner_nin)
 };
 
 const RULES: Record<string, Rule> = {
@@ -160,6 +161,20 @@ const RULES: Record<string, Rule> = {
     bucket: "sponsorship-receipts",
     folder: "bank-receipts",
     isPublic: false,
+  },
+  // 2026-08 addition, per Cyril: partner payout setup collects a NIN
+  // document (not a typed number) — same identity-document handling
+  // already established for vendor "verification", just owned by a
+  // `partners` row instead of a `vendors` row.
+  partner_nin: {
+    allowedTypes: ["image/jpeg", "image/png", "application/pdf"],
+    maxBytes: 4 * 1024 * 1024,
+    maxPdfBytes: 2 * 1024 * 1024,
+    resizeTo: 1600,
+    bucket: "partner-verifications",
+    folder: "nin",
+    isPublic: false,
+    ownerTable: "partners",
   },
 };
 
@@ -265,21 +280,6 @@ serve(async (req) => {
       );
     }
 
-    const { data: vendorRow, error: vendorLookupError } = await supabase
-      .from("vendors")
-      .select("id")
-      .eq("auth_user_id", userData.user.id)
-      .maybeSingle();
-
-    if (vendorLookupError || !vendorRow) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Vendor record not found." }),
-        { status: 403, headers: corsHeaders }
-      );
-    }
-
-    const vendorId = vendorRow.id;
-
     const body = await req.json();
     const { category, fileName, fileBase64 } = body;
 
@@ -304,6 +304,43 @@ serve(async (req) => {
     }
 
     const rule = RULES[category];
+
+    // ---- OWNER LOOKUP ----
+    // Every category except partner_nin belongs to a vendor (looked
+    // up by auth_user_id, as this always did). partner_nin belongs to
+    // a partner instead (looked up by user_id) -- same "never trust a
+    // caller-supplied id" principle, just against the other table.
+    let ownerId: string;
+
+    if (rule.ownerTable === "partners") {
+      const { data: partnerRow, error: partnerLookupError } = await supabase
+        .from("partners")
+        .select("id")
+        .eq("user_id", userData.user.id)
+        .maybeSingle();
+
+      if (partnerLookupError || !partnerRow) {
+        return new Response(
+          JSON.stringify({ success: false, error: "Partner record not found." }),
+          { status: 403, headers: corsHeaders }
+        );
+      }
+      ownerId = partnerRow.id;
+    } else {
+      const { data: vendorRow, error: vendorLookupError } = await supabase
+        .from("vendors")
+        .select("id")
+        .eq("auth_user_id", userData.user.id)
+        .maybeSingle();
+
+      if (vendorLookupError || !vendorRow) {
+        return new Response(
+          JSON.stringify({ success: false, error: "Vendor record not found." }),
+          { status: 403, headers: corsHeaders }
+        );
+      }
+      ownerId = vendorRow.id;
+    }
 
     // Decode base64 → raw bytes
     const bytes = Uint8Array.from(atob(fileBase64), (c) => c.charCodeAt(0));
@@ -409,7 +446,7 @@ serve(async (req) => {
     // ---- UPLOAD TO STORAGE (same service-role client used for auth check above) ----
     const ext = extensionFor(finalType);
     const safeName = (fileName || "file").replace(/[^a-zA-Z0-9.-]/g, "_");
-    const path = `${vendorId}/${rule.folder}/${Date.now()}-${safeName}.${ext}`;
+    const path = `${ownerId}/${rule.folder}/${Date.now()}-${safeName}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from(rule.bucket)

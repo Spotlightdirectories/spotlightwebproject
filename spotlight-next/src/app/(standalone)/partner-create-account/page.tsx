@@ -6,7 +6,7 @@
 // Reached from the "Create your account" link in the partner
 // approval email (PartnerApprovalsTab.tsx's approvePartner), which
 // includes ?partner_id=<partners.id>. Faithful port of
-// partner-create-account.js, with two deliberate fixes:
+// partner-create-account.js, with these deliberate fixes:
 //
 // 1. Account linking (partners.user_id = auth.uid()) now goes
 //    through a new SECURITY DEFINER RPC, link_partner_account(),
@@ -33,11 +33,32 @@
 // NIN — stated on the form, not machine-checked (no NIN-verification
 // API access), matching how identity docs are already handled
 // elsewhere on the platform (e.g. vendor verification badges).
+//
+// 2026-08 addition #2, per Cyril: this platform runs ONE shared
+// Supabase Auth identity per email across vendor/customer/partner/
+// admin — each role is just a separate table pointing at that same
+// login. If someone tries to create a partner account with an email
+// that already has a Spotlight login (as a customer or vendor,
+// typically), signUp() correctly rejects it as a duplicate. The old
+// version of this page just dead-ended there with a plain error
+// message and no way forward. Fixed by mirroring the existing
+// "Dual customer/vendor account model" already used on
+// customer-login: on "already registered", switch into a `link`
+// mode where the SAME form now signs in with the visitor's EXISTING
+// password instead of creating a new one, then continues through the
+// identical link_partner_account() + payout-details path.
+//
+// 2026-08 addition #3, per Cyril: NIN is collected as an uploaded ID
+// document (image or PDF), not a typed 11-digit number — matching
+// how the platform already collects vendor verification documents.
+// Uses the new "partner_nin" upload category on the shared
+// validate-upload Edge Function, via uploadPartnerFile.ts.
 // ===============================================================
 
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { partnerSupabase, setPartnerSession } from "@/lib/partnerSupabase";
+import { uploadPartnerFile } from "@/lib/uploadPartnerFile";
 import { EmailTemplates } from "@/lib/emailTemplates";
 import styles from "./partner-create-account.module.css";
 
@@ -52,6 +73,13 @@ export default function PartnerCreateAccountPage() {
   );
 }
 
+type Prefill = {
+  email: string | null;
+  name: string | null;
+  user_id: string | null;
+  payout_details_submitted_at: string | null;
+};
+
 function PartnerCreateAccountForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -59,8 +87,16 @@ function PartnerCreateAccountForm() {
 
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [alreadyDone, setAlreadyDone] = useState(false);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+
+  // "new" = creating a brand-new Spotlight login for this email.
+  // "link" = this email already has a Spotlight login (customer or
+  // vendor, usually) — the visitor signs in with their EXISTING
+  // password instead, and we attach the partner role to that same
+  // identity.
+  const [mode, setMode] = useState<"new" | "link">("new");
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -69,11 +105,11 @@ function PartnerCreateAccountForm() {
   const [error, setError] = useState("");
 
   // Payout details — Cyril's requested procedure: collected here,
-  // right after approval, alongside account setup.
+  // right after account setup/linking.
   const [bankName, setBankName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
-  const [nin, setNin] = useState("");
+  const [ninFile, setNinFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (!partnerId) {
@@ -83,14 +119,13 @@ function PartnerCreateAccountForm() {
     }
 
     (async () => {
-      // 2026-08 fix: this ran before the visitor has signed up or
-      // authenticated (straight off the approval email link), so it
-      // relied on the partners table's now-removed public read
-      // policy. Replaced with a narrow RPC that does the exact same
-      // lookup-by-id, without reopening broad read access.
+      // This runs before the visitor has signed up or authenticated
+      // (straight off the approval email link), so it goes through a
+      // narrow RPC rather than a raw table read — the partners table
+      // has no public read policy.
       const { data } = (await partnerSupabase
         .rpc("get_partner_signup_prefill", { p_partner_id: partnerId })
-        .maybeSingle()) as { data: { email: string | null; name: string | null; user_id: string | null } | null };
+        .maybeSingle()) as { data: Prefill | null };
 
       if (!data || !data.email) {
         setNotFound(true);
@@ -100,65 +135,47 @@ function PartnerCreateAccountForm() {
 
       setEmail(data.email);
       setName(data.name || "");
+      if (data.payout_details_submitted_at) {
+        setAlreadyDone(true);
+      }
       setLoading(false);
     })();
   }, [partnerId]);
 
-  async function handleSubmit() {
-    setError("");
-
-    if (!password || password.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-    if (!bankName.trim() || !accountNumber.trim() || !accountName.trim() || !nin.trim()) {
-      setError("Please fill in all payout details, including your NIN.");
-      return;
+  function validatePayoutFields(): string | null {
+    if (!bankName.trim() || !accountNumber.trim() || !accountName.trim()) {
+      return "Please fill in all payout details.";
     }
     if (!/^\d{10}$/.test(accountNumber.trim())) {
-      setError("Account number must be exactly 10 digits.");
-      return;
+      return "Account number must be exactly 10 digits.";
     }
-    if (!/^\d{11}$/.test(nin.trim())) {
-      setError("NIN must be exactly 11 digits.");
-      return;
+    if (!ninFile) {
+      return "Please upload a photo or scan of your NIN (National Identification Number) slip or card.";
     }
+    return null;
+  }
 
-    setSubmitting(true);
-
-    const { data: signUpData, error: signUpError } = await partnerSupabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: `${window.location.origin}/partner-program#login` },
-    });
-
-    if (signUpError) {
-      if (signUpError.message.toLowerCase().includes("already registered") || signUpError.message.toLowerCase().includes("already been registered")) {
-        setError("An account already exists for this email. Try logging in instead.");
-      } else {
-        setError(signUpError.message);
-      }
-      setSubmitting(false);
-      return;
-    }
-
-    if (!signUpData.user) {
-      setError("Could not create your account. Please try again.");
-      setSubmitting(false);
-      return;
-    }
-
+  async function finishLinkingAndPayout(userId: string) {
     const { data: linkedPartnerId, error: linkError } = await partnerSupabase.rpc("link_partner_account");
 
     if (linkError || !linkedPartnerId) {
       console.error("Partner account linking failed:", linkError);
       setError(
-        "Your login was created, but we couldn't connect it to your partner application. Please contact support@spotlightdirectories.com."
+        linkError?.message?.includes("already linked")
+          ? "This partner application is already linked to a different account. Please contact support@spotlightdirectories.com."
+          : "Your login was verified, but we couldn't connect it to your partner application. Please contact support@spotlightdirectories.com."
       );
+      setSubmitting(false);
+      return;
+    }
+
+    let ninPath: string;
+    try {
+      const uploadResult = await uploadPartnerFile(ninFile as File, "partner_nin");
+      ninPath = uploadResult.path;
+    } catch (err) {
+      console.error("NIN upload failed:", err);
+      setError(err instanceof Error ? err.message : "Could not upload your NIN document. Please try again.");
       setSubmitting(false);
       return;
     }
@@ -167,7 +184,7 @@ function PartnerCreateAccountForm() {
       p_bank_name: bankName.trim(),
       p_account_number: accountNumber.trim(),
       p_account_name: accountName.trim(),
-      p_nin: nin.trim(),
+      p_nin_document_path: ninPath,
     });
 
     if (payoutError) {
@@ -204,7 +221,7 @@ function PartnerCreateAccountForm() {
     }
 
     setPartnerSession({
-      user_id: signUpData.user.id,
+      user_id: userId,
       partner_id: linkedPartnerId as unknown as string,
       name: partnerRow?.name || name,
       email: partnerRow?.email || email,
@@ -212,6 +229,89 @@ function PartnerCreateAccountForm() {
     });
 
     router.push("/partner-dashboard");
+  }
+
+  async function handleSubmit() {
+    setError("");
+
+    if (mode === "new") {
+      if (!password || password.length < 8) {
+        setError("Password must be at least 8 characters.");
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError("Passwords do not match.");
+        return;
+      }
+    } else {
+      if (!password) {
+        setError("Please enter your existing Spotlight password.");
+        return;
+      }
+    }
+
+    const payoutError = validatePayoutFields();
+    if (payoutError) {
+      setError(payoutError);
+      return;
+    }
+
+    setSubmitting(true);
+
+    if (mode === "new") {
+      const { data: signUpData, error: signUpError } = await partnerSupabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: `${window.location.origin}/partner-program#login` },
+      });
+
+      if (signUpError) {
+        if (
+          signUpError.message.toLowerCase().includes("already registered") ||
+          signUpError.message.toLowerCase().includes("already been registered")
+        ) {
+          // This email already has a Spotlight login (as a customer or
+          // vendor, typically) — switch to linking an existing account
+          // instead of dead-ending. Same shared-identity model as
+          // customer-login's "Dual customer/vendor account model".
+          setMode("link");
+          setPassword("");
+          setConfirmPassword("");
+          setError(
+            "This email already has a Spotlight account. Enter your existing password below to link your Partner access to it."
+          );
+          setSubmitting(false);
+          return;
+        }
+        setError(signUpError.message);
+        setSubmitting(false);
+        return;
+      }
+
+      if (!signUpData.user) {
+        setError("Could not create your account. Please try again.");
+        setSubmitting(false);
+        return;
+      }
+
+      await finishLinkingAndPayout(signUpData.user.id);
+      return;
+    }
+
+    // mode === "link": sign in with the EXISTING password instead of
+    // creating a new account.
+    const { data: signInData, error: signInError } = await partnerSupabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError || !signInData.user) {
+      setError(signInError?.message || "Could not sign in. Please check your password and try again.");
+      setSubmitting(false);
+      return;
+    }
+
+    await finishLinkingAndPayout(signInData.user.id);
   }
 
   if (loading) {
@@ -241,11 +341,33 @@ function PartnerCreateAccountForm() {
     );
   }
 
+  if (alreadyDone) {
+    return (
+      <main className={styles.authWrapper}>
+        <div className={styles.authCard}>
+          <div className={styles.successCard}>
+            <h2>Already Set Up</h2>
+            <p>
+              This partner account has already been activated and payout details have already been submitted. Head
+              to the <a href="/partner-program#login">Partner Login</a> page to sign in.
+            </p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className={styles.authWrapper}>
       <div className={styles.authCard}>
-        <h1 className={styles.authTitle}>Create Your Partner Account</h1>
-        <p className={styles.authSubtitle}>Set a password and add your payout details to activate your Spotlight Partner login.</p>
+        <h1 className={styles.authTitle}>
+          {mode === "new" ? "Create Your Partner Account" : "Link Your Partner Account"}
+        </h1>
+        <p className={styles.authSubtitle}>
+          {mode === "new"
+            ? "Set a password and add your payout details to activate your Spotlight Partner login."
+            : "Sign in with your existing Spotlight password to add Partner access, then add your payout details."}
+        </p>
 
         <div className={styles.authForm}>
           <div>
@@ -253,7 +375,7 @@ function PartnerCreateAccountForm() {
             <input id="email" type="email" value={email} readOnly disabled />
           </div>
           <div>
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{mode === "new" ? "Password" : "Your Existing Password"}</label>
             <div className={styles.passwordWrap}>
               <input
                 id="password"
@@ -271,15 +393,17 @@ function PartnerCreateAccountForm() {
               </button>
             </div>
           </div>
-          <div>
-            <label htmlFor="confirmPassword">Confirm Password</label>
-            <input
-              id="confirmPassword"
-              type={showPassword ? "text" : "password"}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-          </div>
+          {mode === "new" && (
+            <div>
+              <label htmlFor="confirmPassword">Confirm Password</label>
+              <input
+                id="confirmPassword"
+                type={showPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </div>
+          )}
           <hr style={{ margin: "20px 0", border: "none", borderTop: "1px solid var(--color-border, #e5e7eb)" }} />
 
           <p style={{ fontWeight: 600, marginBottom: 4 }}>Payout Details</p>
@@ -316,20 +440,20 @@ function PartnerCreateAccountForm() {
             />
           </div>
           <div>
-            <label htmlFor="nin">NIN (National Identification Number)</label>
+            <label htmlFor="nin">NIN Document (slip or card — photo or PDF)</label>
             <input
               id="nin"
-              type="text"
-              inputMode="numeric"
-              maxLength={11}
-              placeholder="11-digit NIN"
-              value={nin}
-              onChange={(e) => setNin(e.target.value.replace(/\D/g, ""))}
+              type="file"
+              accept="image/jpeg,image/png,application/pdf"
+              onChange={(e) => setNinFile(e.target.files?.[0] ?? null)}
             />
+            <p style={{ fontSize: 12, color: "var(--color-text-muted, #94a3b8)", marginTop: 4 }}>
+              Upload a clear photo or scan showing your 11-digit NIN. JPG, PNG, or PDF, up to 4MB.
+            </p>
           </div>
 
           <button type="button" className={styles.authBtn} onClick={handleSubmit} disabled={submitting}>
-            {submitting ? "Creating Account..." : "Create Account"}
+            {submitting ? "Submitting..." : mode === "new" ? "Create Account" : "Link Account"}
           </button>
           {error && <p className={styles.authError}>{error}</p>}
         </div>

@@ -26,6 +26,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { adminSupabase, type AdminRole } from "@/lib/adminSupabase";
+import { viewSignedUrl } from "@/lib/adminSignedUrl";
 
 type CommissionRow = {
   amount: number | string | null;
@@ -40,6 +41,7 @@ type CommissionRow = {
     bank_name: string | null;
     bank_account_number: string | null;
     bank_account_name: string | null;
+    nin_document_path: string | null;
   } | null;
   vendors: { name: string | null } | null;
   vendor_payments: { plan: string | null } | null;
@@ -55,6 +57,7 @@ type PartnerSummary = {
   bankName: string | null;
   bankAccountNumber: string | null;
   bankAccountName: string | null;
+  ninDocumentPath: string | null;
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -82,7 +85,7 @@ export default function CommissionsTab({ currentRole }: { currentRole: AdminRole
         status,
         type,
         created_at,
-        partners ( id, name, referral_code, status, bank_name, bank_account_number, bank_account_name ),
+        partners ( id, name, referral_code, status, bank_name, bank_account_number, bank_account_name, nin_document_path ),
         vendors ( name ),
         vendor_payments ( plan )
       `
@@ -121,6 +124,7 @@ export default function CommissionsTab({ currentRole }: { currentRole: AdminRole
           bankName: c.partners?.bank_name || null,
           bankAccountNumber: c.partners?.bank_account_number || null,
           bankAccountName: c.partners?.bank_account_name || null,
+          ninDocumentPath: c.partners?.nin_document_path || null,
         };
       }
       const amount = Number(c.amount || 0) / 100;
@@ -199,6 +203,27 @@ export default function CommissionsTab({ currentRole }: { currentRole: AdminRole
                     <span style={{ fontSize: 13 }}>
                       {p.bankAccountName || "—"}<br />
                       {p.bankName || "—"} · {p.bankAccountNumber || "—"}
+                      {p.ninDocumentPath && (
+                        <>
+                          <br />
+                          <button
+                            type="button"
+                            style={{
+                              fontSize: 12,
+                              padding: 0,
+                              marginTop: 2,
+                              background: "none",
+                              border: "none",
+                              color: "var(--color-primary, #2563eb)",
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => viewSignedUrl("partner-verifications", p.ninDocumentPath)}
+                          >
+                            View NIN Document
+                          </button>
+                        </>
+                      )}
                     </span>
                   ) : (
                     <span style={{ fontSize: 13, color: "var(--color-text-muted, #94a3b8)" }}>Not submitted yet</span>
