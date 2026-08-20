@@ -61,6 +61,12 @@ type CategoryKind = "product" | "service";
 type Category = { id: string; name: string; kind: CategoryKind; image_url: string | null };
 type Subcategory = { id: string; name: string };
 type FlatSubcategory = { id: string; name: string; category_id: string };
+// Third taxonomy level — Fashion (products) / Tailoring & Fashion
+// Designer (services), 2026-08 per Cyril: "let fashion be exactly as
+// is in jiji". A subcategory with no rows here simply has no third
+// level, so every other category keeps working exactly as before.
+type SubSubcategory = { id: string; name: string };
+type FlatSubSubcategory = { id: string; name: string; subcategory_id: string };
 
 // Search-only singular/plural tolerance (per Cyril, 2026-08): the
 // site's category/subcategory NAMES are kept singular sitewide (e.g.
@@ -104,6 +110,12 @@ export default function HomeCategorySearch() {
   // subcategory, not just categories whose own name contains "mat".
   const [allSubcategories, setAllSubcategories] = useState<FlatSubcategory[]>([]);
   const subcategoriesAllLoadedRef = useRef(false);
+
+  // Flat list of every sub-subcategory (third level — small for now,
+  // just the Fashion/Tailoring pilot), loaded once up front alongside
+  // allSubcategories so typing can match against these names too.
+  const [allSubSubcategories, setAllSubSubcategories] = useState<FlatSubSubcategory[]>([]);
+  const subSubcategoriesAllLoadedRef = useRef(false);
 
   // Live "X listings" counts per category/subcategory (Cyril, 2026-08:
   // "the moment vendors start onboarding, the number of products and
@@ -167,12 +179,34 @@ export default function HomeCategorySearch() {
     return all;
   }
 
+  // Sub-subcategories are few for now (just the Fashion/Tailoring
+  // pilot), so a single plain select is plenty — no pagination needed
+  // like fetchAllSubcategories above.
+  async function fetchAllSubSubcategories(): Promise<FlatSubSubcategory[]> {
+    const { data, error } = await supabase
+      .from("sub_subcategories")
+      .select("id,name,subcategory_id")
+      .order("name", { ascending: true });
+    if (error || !data) return [];
+    return data as FlatSubSubcategory[];
+  }
+
   // Desktop: which category is currently hovered (drives the right
   // pane). Mobile: which category is currently expanded (accordion) —
   // same piece of state serves both, since only one applies at a time.
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [subcategoriesCache, setSubcategoriesCache] = useState<Record<string, Subcategory[]>>({});
   const [loadingSubcatId, setLoadingSubcatId] = useState<string | null>(null);
+
+  // THIRD LEVEL — same pattern one level deeper. Desktop: which
+  // subcategory (within the currently-hovered category) is itself
+  // hovered, revealing a third pane. Mobile: which subcategory is
+  // expanded inline as a nested accordion. Only ever populated for a
+  // subcategory that actually has sub-subcategories (Fashion/Tailoring
+  // pilot) — every other subcategory just has nothing here.
+  const [activeSubcategoryId, setActiveSubcategoryId] = useState<string | null>(null);
+  const [subSubcategoriesCache, setSubSubcategoriesCache] = useState<Record<string, SubSubcategory[]>>({});
+  const [loadingSubSubcatId, setLoadingSubSubcatId] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -201,9 +235,10 @@ export default function HomeCategorySearch() {
     if (categoriesLoadedRef.current) return;
     categoriesLoadedRef.current = true;
     setLoadingCategories(true);
-    const [categoriesRes, allSubcats, catCounts, subcatCounts] = await Promise.all([
+    const [categoriesRes, allSubcats, allSubSubcats, catCounts, subcatCounts] = await Promise.all([
       supabase.from("categories").select("id,name,kind,image_url").in("kind", ["product", "service"]).order("name", { ascending: true }),
       subcategoriesAllLoadedRef.current ? Promise.resolve(null) : fetchAllSubcategories(),
+      subSubcategoriesAllLoadedRef.current ? Promise.resolve(null) : fetchAllSubSubcategories(),
       countsLoadedRef.current ? Promise.resolve(null) : fetchAllCounts("category_listing_counts", "category_id"),
       countsLoadedRef.current ? Promise.resolve(null) : fetchAllCounts("subcategory_listing_counts", "subcategory_id"),
     ]);
@@ -225,6 +260,10 @@ export default function HomeCategorySearch() {
     if (!subcategoriesAllLoadedRef.current && allSubcats) {
       subcategoriesAllLoadedRef.current = true;
       setAllSubcategories(allSubcats);
+    }
+    if (!subSubcategoriesAllLoadedRef.current && allSubSubcats) {
+      subSubcategoriesAllLoadedRef.current = true;
+      setAllSubSubcategories(allSubSubcats);
     }
     if (!countsLoadedRef.current && catCounts && subcatCounts) {
       countsLoadedRef.current = true;
@@ -296,9 +335,24 @@ export default function HomeCategorySearch() {
     setLoadingSubcatId(null);
   }
 
+  async function ensureSubSubcategoriesLoaded(subcategoryId: string) {
+    if (subSubcategoriesCache[subcategoryId] || loadingSubSubcatId === subcategoryId) return;
+    setLoadingSubSubcatId(subcategoryId);
+    const { data, error } = await supabase
+      .from("sub_subcategories")
+      .select("id,name")
+      .eq("subcategory_id", subcategoryId)
+      .order("display_order", { ascending: true });
+    if (!error) {
+      setSubSubcategoriesCache((prev) => ({ ...prev, [subcategoryId]: data || [] }));
+    }
+    setLoadingSubSubcatId(null);
+  }
+
   function handleCategoryHover(categoryId: string) {
     if (isMobile) return; // hover doesn't apply on mobile
     setActiveCategoryId(categoryId);
+    setActiveSubcategoryId(null);
     ensureSubcategoriesLoaded(categoryId);
   }
 
@@ -308,21 +362,80 @@ export default function HomeCategorySearch() {
     e.stopPropagation();
     const next = activeCategoryId === categoryId ? null : categoryId;
     setActiveCategoryId(next);
+    setActiveSubcategoryId(null);
     if (next) ensureSubcategoriesLoaded(categoryId);
+  }
+
+  // Desktop: hovering a subcategory row (within the already-hovered
+  // category's list) reveals its sub-subcategories in a third pane —
+  // only actually has an effect for a subcategory that has any (see
+  // subSubcategoriesCache/allSubSubcategories, Fashion/Tailoring
+  // pilot, 2026-08 per Cyril).
+  function handleSubcategoryHover(subcategoryId: string) {
+    if (isMobile) return;
+    setActiveSubcategoryId(subcategoryId);
+    ensureSubSubcategoriesLoaded(subcategoryId);
+  }
+
+  // Mobile-only: tapping a subcategory row that has a third level
+  // expands it inline (nested accordion) instead of navigating
+  // straight there — matches handleToggleExpand one level down.
+  function handleSubcategoryToggleExpand(e: React.MouseEvent, subcategoryId: string) {
+    e.stopPropagation();
+    const next = activeSubcategoryId === subcategoryId ? null : subcategoryId;
+    setActiveSubcategoryId(next);
+    if (next) ensureSubSubcategoriesLoaded(subcategoryId);
   }
 
   // type is now passed in explicitly per category, since the panel
   // mixes Products and Services categories — each result should be
   // scoped to whichever taxonomy the clicked category belongs to,
   // not hardcoded to "product".
+  //
+  // NOTE: discover-results reads category/subcategory/subsubcategory
+  // as NAMES, not ids — the search_vendors/search_products/
+  // search_services RPCs all match on the category/subcategory/
+  // sub_subcategory NAME text column, not any id. These three
+  // functions take the id only to look its name up here, so the
+  // actual URL always carries the name (matches how the filter
+  // drawer on discover-results already works).
   function goToCategory(categoryId: string, kind: CategoryKind) {
     closePanel();
-    router.push(`/discover-results?category=${categoryId}&type=${kind}`);
+    const name = categories.find((c) => c.id === categoryId)?.name || "";
+    router.push(`/discover-results?category=${encodeURIComponent(name)}&type=${kind}`);
   }
 
   function goToSubcategory(categoryId: string, subcategoryId: string, kind: CategoryKind) {
     closePanel();
-    router.push(`/discover-results?category=${categoryId}&subcategory=${subcategoryId}&type=${kind}`);
+    const categoryName = categories.find((c) => c.id === categoryId)?.name || "";
+    const subcategoryName =
+      subcategoriesCache[categoryId]?.find((s) => s.id === subcategoryId)?.name ||
+      allSubcategories.find((s) => s.id === subcategoryId)?.name ||
+      "";
+    router.push(
+      `/discover-results?category=${encodeURIComponent(categoryName)}&subcategory=${encodeURIComponent(subcategoryName)}&type=${kind}`
+    );
+  }
+
+  function goToSubSubcategory(
+    categoryId: string,
+    subcategoryId: string,
+    subSubcategoryId: string,
+    kind: CategoryKind
+  ) {
+    closePanel();
+    const categoryName = categories.find((c) => c.id === categoryId)?.name || "";
+    const subcategoryName =
+      subcategoriesCache[categoryId]?.find((s) => s.id === subcategoryId)?.name ||
+      allSubcategories.find((s) => s.id === subcategoryId)?.name ||
+      "";
+    const subSubcategoryName =
+      subSubcategoriesCache[subcategoryId]?.find((s) => s.id === subSubcategoryId)?.name ||
+      allSubSubcategories.find((s) => s.id === subSubcategoryId)?.name ||
+      "";
+    router.push(
+      `/discover-results?category=${encodeURIComponent(categoryName)}&subcategory=${encodeURIComponent(subcategoryName)}&subsubcategory=${encodeURIComponent(subSubcategoryName)}&type=${kind}`
+    );
   }
 
   function handleKeywordSubmit(e: React.FormEvent) {
@@ -354,6 +467,7 @@ export default function HomeCategorySearch() {
     subcategoryColumnRef.current?.scrollTo({ top: 0 });
     panelRef.current?.scrollTo({ top: 0 });
     setActiveCategoryId(null);
+    setActiveSubcategoryId(null);
   }, [normalizedQuery]);
 
   const matched = normalizedQuery ? categories.filter((c) => matchesQuery(c.name, normalizedQuery)) : [];
@@ -379,6 +493,25 @@ export default function HomeCategorySearch() {
         .filter((s) => matchesQuery(s.name, normalizedQuery))
         .map((s) => ({ sub: s, category: categories.find((c) => c.id === s.category_id) }))
         .filter((entry): entry is { sub: FlatSubcategory; category: Category } => !!entry.category)
+    : [];
+
+  // Sub-subcategory matches — e.g. typing "watches" should surface
+  // "Men's Watches" even though neither "Clothing & Fashion" nor
+  // "Men's Fashion" contain that word. Each match carries its full
+  // breadcrumb (category > subcategory > sub-subcategory) for the
+  // label and for navigation.
+  const matchedSubSubcatEntries = normalizedQuery
+    ? allSubSubcategories
+        .filter((ss) => matchesQuery(ss.name, normalizedQuery))
+        .map((ss) => {
+          const sub = allSubcategories.find((s) => s.id === ss.subcategory_id);
+          const category = sub ? categories.find((c) => c.id === sub.category_id) : undefined;
+          return { subSub: ss, sub, category };
+        })
+        .filter(
+          (entry): entry is { subSub: FlatSubSubcategory; sub: FlatSubcategory; category: Category } =>
+            !!entry.sub && !!entry.category
+        )
     : [];
 
   function renderCategoryRow(cat: Category, highlighted: boolean) {
@@ -420,25 +553,70 @@ export default function HomeCategorySearch() {
         </button>
 
         {/* MOBILE ACCORDION — subcategories render inline, directly
-            under this row, when expanded. */}
+            under this row, when expanded. A subcategory that itself
+            has sub-subcategories (Fashion/Tailoring pilot) nests a
+            second accordion level instead of navigating straight
+            there — see renderSubcatRow below. */}
         {isMobile && isActive && (
           <div className={styles.mobileSubcatList}>
             {isLoadingSubs ? (
               <div className={styles.panelLoading}>Loading...</div>
             ) : subs && subs.length > 0 ? (
-              subs.map((sub) => (
+              subs.map((sub) => renderSubcatRow(sub, cat))
+            ) : (
+              <div className={styles.panelLoading}>No subcategories yet — browse all {cat.name}</div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Mobile-only row for a single subcategory inside the first-level
+  // accordion. If it has a third level, tapping it expands a nested
+  // accordion (like the category row above, one level down) instead
+  // of navigating; otherwise it behaves exactly as before.
+  function renderSubcatRow(sub: Subcategory, cat: Category) {
+    const isSubActive = activeSubcategoryId === sub.id;
+    const subSubs = subSubcategoriesCache[sub.id];
+    const isLoadingSubSubs = loadingSubSubcatId === sub.id;
+    const knownHasChildren = allSubSubcategories.some((ss) => ss.subcategory_id === sub.id);
+
+    return (
+      <div key={sub.id}>
+        <button
+          type="button"
+          className={styles.subcatBtn}
+          onClick={(e) =>
+            knownHasChildren ? handleSubcategoryToggleExpand(e, sub.id) : goToSubcategory(cat.id, sub.id, cat.kind)
+          }
+        >
+          <span>{sub.name}</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            {!!subcategoryCounts[sub.id] && <span className={styles.listingCount}>{subcategoryCounts[sub.id]}</span>}
+            {knownHasChildren && (
+              <i className={`fa-solid ${isSubActive ? "fa-chevron-down" : "fa-chevron-right"} ${styles.subcatHasMore}`}></i>
+            )}
+          </span>
+        </button>
+
+        {isMobile && isSubActive && (
+          <div className={styles.subSubcatList}>
+            {isLoadingSubSubs ? (
+              <div className={styles.panelLoading}>Loading...</div>
+            ) : subSubs && subSubs.length > 0 ? (
+              subSubs.map((subSub) => (
                 <button
                   type="button"
-                  key={sub.id}
+                  key={subSub.id}
                   className={styles.subcatBtn}
-                  onClick={() => goToSubcategory(cat.id, sub.id, cat.kind)}
+                  onClick={() => goToSubSubcategory(cat.id, sub.id, subSub.id, cat.kind)}
                 >
-                  <span>{sub.name}</span>
-                  {!!subcategoryCounts[sub.id] && <span className={styles.listingCount}>{subcategoryCounts[sub.id]}</span>}
+                  <span>{subSub.name}</span>
                 </button>
               ))
             ) : (
-              <div className={styles.panelLoading}>No subcategories yet — browse all {cat.name}</div>
+              <div className={styles.panelLoading}>Browse all {sub.name}</div>
             )}
           </div>
         )}
@@ -449,6 +627,16 @@ export default function HomeCategorySearch() {
   const hoveredSubs = activeCategoryId ? subcategoriesCache[activeCategoryId] : undefined;
   const hoveredCategory = categories.find((c) => c.id === activeCategoryId);
   const isLoadingHoveredSubs = loadingSubcatId === activeCategoryId;
+
+  // Desktop third pane — only relevant when the currently-hovered
+  // subcategory actually belongs to the currently-hovered category
+  // (guards against a stale activeSubcategoryId briefly surviving a
+  // category switch) and has sub-subcategories.
+  const hoveredSubcategory = hoveredSubs?.find((s) => s.id === activeSubcategoryId);
+  const hoveredSubSubs = hoveredSubcategory ? subSubcategoriesCache[hoveredSubcategory.id] : undefined;
+  const isLoadingHoveredSubSubs = hoveredSubcategory ? loadingSubSubcatId === hoveredSubcategory.id : false;
+  const showThirdPane =
+    !!hoveredSubcategory && allSubSubcategories.some((ss) => ss.subcategory_id === hoveredSubcategory.id);
 
   return (
     <div className={styles.wrap} ref={containerRef}>
@@ -482,7 +670,7 @@ export default function HomeCategorySearch() {
             {loadingCategories ? (
               <div className={styles.panelLoading}>Loading categories...</div>
             ) : (
-              <div className={styles.panelBody}>
+              <div className={`${styles.panelBody} ${showThirdPane ? styles.panelBodyThree : ""}`}>
                 <div className={styles.categoryColumn} ref={categoryColumnRef}>
                   {matched.length > 0 && (
                     <>
@@ -513,6 +701,33 @@ export default function HomeCategorySearch() {
                               {category.kind === "service" ? "Service" : "Product"}
                             </span>
                             {!!subcategoryCounts[sub.id] && <span className={styles.listingCount}>{subcategoryCounts[sub.id]}</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* MOBILE-ONLY — sub-subcategory search matches (e.g.
+                      "watches" -> "Men's Watches"), same idea one level
+                      deeper. Desktop's right pane covers this instead. */}
+                  {normalizedQuery && matchedSubSubcatEntries.length > 0 && (
+                    <div className={styles.mobileSubcatMatches}>
+                      <p className={styles.sectionLabel}>More Specific Matches ({matchedSubSubcatEntries.length})</p>
+                      <div className={styles.subcatGrid}>
+                        {matchedSubSubcatEntries.map(({ subSub, sub, category }) => (
+                          <button
+                            type="button"
+                            key={subSub.id}
+                            className={styles.subcatMatchBtn}
+                            onClick={() => goToSubSubcategory(category.id, sub.id, subSub.id, category.kind)}
+                          >
+                            <span className={styles.subcatParentLabel}>
+                              {category.name} › {sub.name}
+                            </span>
+                            <span className={styles.subcatMatchName}>{subSub.name}</span>
+                            <span className={`${styles.kindTag} ${category.kind === "service" ? styles.kindTagService : styles.kindTagProduct}`}>
+                              {category.kind === "service" ? "Service" : "Product"}
+                            </span>
                           </button>
                         ))}
                       </div>
@@ -550,42 +765,77 @@ export default function HomeCategorySearch() {
                         <div className={styles.panelLoading}>Loading...</div>
                       ) : hoveredSubs && hoveredSubs.length > 0 ? (
                         <div className={styles.subcatGrid}>
-                          {hoveredSubs.map((sub) => (
-                            <button
-                              type="button"
-                              key={sub.id}
-                              className={styles.subcatBtn}
-                              onClick={() => goToSubcategory(hoveredCategory.id, sub.id, hoveredCategory.kind)}
-                            >
-                              <span>{sub.name}</span>
-                              {!!subcategoryCounts[sub.id] && <span className={styles.listingCount}>{subcategoryCounts[sub.id]}</span>}
-                            </button>
-                          ))}
+                          {hoveredSubs.map((sub) => {
+                            const hasChildren = allSubSubcategories.some((ss) => ss.subcategory_id === sub.id);
+                            return (
+                              <button
+                                type="button"
+                                key={sub.id}
+                                className={styles.subcatBtn}
+                                onMouseEnter={() => handleSubcategoryHover(sub.id)}
+                                onClick={() => goToSubcategory(hoveredCategory.id, sub.id, hoveredCategory.kind)}
+                              >
+                                <span>{sub.name}</span>
+                                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                  {!!subcategoryCounts[sub.id] && <span className={styles.listingCount}>{subcategoryCounts[sub.id]}</span>}
+                                  {hasChildren && <i className={`fa-solid fa-chevron-right ${styles.subcatHasMore}`}></i>}
+                                </span>
+                              </button>
+                            );
+                          })}
                         </div>
                       ) : (
                         <p className={styles.subcategoryHint}>No subcategories listed yet — browse all {hoveredCategory.name}.</p>
                       )}
                     </>
-                  ) : normalizedQuery && matchedSubcatEntries.length > 0 ? (
+                  ) : normalizedQuery && (matchedSubcatEntries.length > 0 || matchedSubSubcatEntries.length > 0) ? (
                     <>
-                      <p className={styles.sectionLabel}>Matching Subcategories ({matchedSubcatEntries.length})</p>
-                      <div className={styles.subcatGrid}>
-                        {matchedSubcatEntries.map(({ sub, category }) => (
-                          <button
-                            type="button"
-                            key={sub.id}
-                            className={styles.subcatMatchBtn}
-                            onClick={() => goToSubcategory(category.id, sub.id, category.kind)}
-                          >
-                            <span className={styles.subcatParentLabel}>{category.name}</span>
-                            <span className={styles.subcatMatchName}>{sub.name}</span>
-                            <span className={`${styles.kindTag} ${category.kind === "service" ? styles.kindTagService : styles.kindTagProduct}`}>
-                              {category.kind === "service" ? "Service" : "Product"}
-                            </span>
-                            {!!subcategoryCounts[sub.id] && <span className={styles.listingCount}>{subcategoryCounts[sub.id]}</span>}
-                          </button>
-                        ))}
-                      </div>
+                      {matchedSubcatEntries.length > 0 && (
+                        <>
+                          <p className={styles.sectionLabel}>Matching Subcategories ({matchedSubcatEntries.length})</p>
+                          <div className={styles.subcatGrid}>
+                            {matchedSubcatEntries.map(({ sub, category }) => (
+                              <button
+                                type="button"
+                                key={sub.id}
+                                className={styles.subcatMatchBtn}
+                                onClick={() => goToSubcategory(category.id, sub.id, category.kind)}
+                              >
+                                <span className={styles.subcatParentLabel}>{category.name}</span>
+                                <span className={styles.subcatMatchName}>{sub.name}</span>
+                                <span className={`${styles.kindTag} ${category.kind === "service" ? styles.kindTagService : styles.kindTagProduct}`}>
+                                  {category.kind === "service" ? "Service" : "Product"}
+                                </span>
+                                {!!subcategoryCounts[sub.id] && <span className={styles.listingCount}>{subcategoryCounts[sub.id]}</span>}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+
+                      {matchedSubSubcatEntries.length > 0 && (
+                        <>
+                          <p className={styles.sectionLabel}>More Specific Matches ({matchedSubSubcatEntries.length})</p>
+                          <div className={styles.subcatGrid}>
+                            {matchedSubSubcatEntries.map(({ subSub, sub, category }) => (
+                              <button
+                                type="button"
+                                key={subSub.id}
+                                className={styles.subcatMatchBtn}
+                                onClick={() => goToSubSubcategory(category.id, sub.id, subSub.id, category.kind)}
+                              >
+                                <span className={styles.subcatParentLabel}>
+                                  {category.name} › {sub.name}
+                                </span>
+                                <span className={styles.subcatMatchName}>{subSub.name}</span>
+                                <span className={`${styles.kindTag} ${category.kind === "service" ? styles.kindTagService : styles.kindTagProduct}`}>
+                                  {category.kind === "service" ? "Service" : "Product"}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </>
                   ) : normalizedQuery ? (
                     <p className={styles.subcategoryHint}>No subcategories match &ldquo;{query.trim()}&rdquo;.</p>
@@ -595,6 +845,36 @@ export default function HomeCategorySearch() {
                     </p>
                   )}
                 </div>
+
+                {/* THIRD PANE — only rendered when the hovered
+                    subcategory has sub-subcategories (Fashion/
+                    Tailoring pilot). Hidden entirely for every other
+                    category. */}
+                {showThirdPane && hoveredSubcategory && (
+                  <div className={styles.subSubcategoryColumn}>
+                    <p className={styles.sectionLabel}>{hoveredSubcategory.name}</p>
+                    {isLoadingHoveredSubSubs ? (
+                      <div className={styles.panelLoading}>Loading...</div>
+                    ) : hoveredSubSubs && hoveredSubSubs.length > 0 ? (
+                      <div className={styles.subcatGrid}>
+                        {hoveredSubSubs.map((subSub) => (
+                          <button
+                            type="button"
+                            key={subSub.id}
+                            className={styles.subcatBtn}
+                            onClick={() =>
+                              goToSubSubcategory(hoveredCategory!.id, hoveredSubcategory.id, subSub.id, hoveredCategory!.kind)
+                            }
+                          >
+                            <span>{subSub.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className={styles.subcategoryHint}>Browse all {hoveredSubcategory.name}.</p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

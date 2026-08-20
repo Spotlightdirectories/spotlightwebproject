@@ -62,6 +62,7 @@ type VendorService = {
   slug?: string | null;
   category_id: string | null;
   subcategory_id: string | null;
+  sub_subcategory_id?: string | null;
   moderation_status?: string | null;
   moderation_flag_reason?: string | null;
 };
@@ -70,6 +71,7 @@ type PendingService = {
   service_name: string;
   category_id: string;
   subcategory_id: string;
+  sub_subcategory_id: string | null;
   short_description: string;
   starting_price: number | null;
   representative_image_url: string;
@@ -161,6 +163,13 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
   const [categoryId, setCategoryId] = useState("");
   const [subcategoryId, setSubcategoryId] = useState("");
 
+  // SUB-SUBCATEGORY — third taxonomy level (Tailoring & Fashion
+  // Designer, 2026-08 per Cyril). Empty for every other subcategory,
+  // in which case this step is skipped entirely and the subcategory
+  // itself stays the service name, exactly as before.
+  const [subSubcategories, setSubSubcategories] = useState<Option[]>([]);
+  const [subSubcategoryId, setSubSubcategoryId] = useState("");
+
   // SPEC FIELDS — category-specific attribute definitions + the
   // vendor's entered values for whichever category is selected.
   const [attributeDefs, setAttributeDefs] = useState<AttributeDef[]>([]);
@@ -177,10 +186,21 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
 
   // Subcategories already in use (saved or pending) — a vendor can't add
   // the same service (i.e. the same subcategory) twice, since the service
-  // name IS the subcategory name now.
+  // name IS the subcategory name now. For a subcategory that has a third
+  // level (Tailoring), this only applies to services that DIDN'T pick a
+  // sub-subcategory — a vendor can otherwise list several distinct
+  // services under the same subcategory as long as each picks a
+  // different sub-subcategory (see usedSubSubcategoryIds below).
   const usedSubcategoryIds = new Set([
-    ...savedServices.map((s) => s.subcategory_id).filter(Boolean),
-    ...pendingServices.map((s) => s.subcategory_id).filter(Boolean),
+    ...savedServices.filter((s) => !s.sub_subcategory_id).map((s) => s.subcategory_id).filter(Boolean),
+    ...pendingServices.filter((s) => !s.sub_subcategory_id).map((s) => s.subcategory_id).filter(Boolean),
+  ]);
+
+  // Sub-subcategories already in use — same "no duplicate" rule, one
+  // level deeper, for subcategories with a third level.
+  const usedSubSubcategoryIds = new Set([
+    ...savedServices.map((s) => s.sub_subcategory_id).filter(Boolean),
+    ...pendingServices.map((s) => s.sub_subcategory_id).filter(Boolean),
   ]);
 
   // Categories already in use (saved or pending) — used only for the
@@ -230,9 +250,40 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
     })();
   }, [categoryId]);
 
+  // Set by handleEditSaved right before switching subcategoryId, so
+  // the sub-subcategory can be re-selected once its list loads.
+  const pendingEditSubSubcategoryId = useRef<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      if (!subcategoryId) {
+        setSubSubcategories([]);
+        return;
+      }
+      const { data, error } = await supabase
+        .from("sub_subcategories")
+        .select("id,name")
+        .eq("subcategory_id", subcategoryId)
+        .order("display_order", { ascending: true });
+      if (!error) {
+        setSubSubcategories(data || []);
+        if (pendingEditSubSubcategoryId.current) {
+          setSubSubcategoryId(pendingEditSubSubcategoryId.current);
+          pendingEditSubSubcategoryId.current = null;
+        }
+      }
+    })();
+  }, [subcategoryId]);
+
   function handleCategoryChange(id: string) {
     setCategoryId(id);
     setSubcategoryId("");
+    setSubSubcategoryId("");
+  }
+
+  function handleSubcategoryChange(id: string) {
+    setSubcategoryId(id);
+    setSubSubcategoryId("");
   }
 
   // Set by handleEditSaved right before switching categoryId, so
@@ -304,6 +355,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
   function resetForm() {
     setCategoryId("");
     setSubcategoryId("");
+    setSubSubcategoryId("");
     setAttributeValues({});
     if (descriptionRef.current) descriptionRef.current.value = "";
     if (priceRef.current) priceRef.current.value = "";
@@ -375,6 +427,10 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
       alert("Select a category and subcategory — this is what your service will be listed as.");
       return;
     }
+    if (subSubcategories.length > 0 && !subSubcategoryId) {
+      alert("This subcategory has more specific options — please select one.");
+      return;
+    }
     // Same description validation production has always had.
     if (description.length < 280) {
       alert("Service description must contain at least 280 characters including spaces.");
@@ -388,12 +444,19 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
       alert("You have reached your current plan limit.");
       return;
     }
-    if (!editingId && usedSubcategoryIds.has(subcategoryId)) {
+    if (!editingId && subSubcategoryId && usedSubSubcategoryIds.has(subSubcategoryId)) {
+      alert("You've already added a service under this specific type.");
+      return;
+    }
+    if (!editingId && !subSubcategoryId && usedSubcategoryIds.has(subcategoryId)) {
       alert("You've already added a service under this subcategory.");
       return;
     }
 
-    const name = subcategories.find((s) => s.id === subcategoryId)?.name || "";
+    const name =
+      subSubcategories.find((s) => s.id === subSubcategoryId)?.name ||
+      subcategories.find((s) => s.id === subcategoryId)?.name ||
+      "";
 
     setPendingServices((prev) => [
       ...prev,
@@ -401,6 +464,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
         service_name: name,
         category_id: categoryId,
         subcategory_id: subcategoryId,
+        sub_subcategory_id: subSubcategoryId || null,
         short_description: description,
         starting_price: Number(priceRaw) || null,
         representative_image_url: primaryUrl,
@@ -425,6 +489,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
     if (priceRef.current) priceRef.current.value = service.starting_price != null ? String(service.starting_price) : "";
 
     pendingEditSubcategoryId.current = service.subcategory_id;
+    pendingEditSubSubcategoryId.current = service.sub_subcategory_id || null;
     pendingEditAttributeValues.current = service.attributes || {};
     setCategoryId(service.category_id || "");
     if (!service.category_id) setSubcategoryId(service.subcategory_id || "");
@@ -483,12 +548,19 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
           return;
         }
 
-        // Gate: block switching this service to a subcategory another
-        // saved service already uses (2026-08, per Cyril — closes the
+        if (subSubcategories.length > 0 && !subSubcategoryId) {
+          alert("This subcategory has more specific options — please select one.");
+          setSaving(false);
+          return;
+        }
+
+        // Gate: block switching this service to a subcategory (or, for
+        // Tailoring-style categories, a sub-subcategory) another saved
+        // service already uses (2026-08, per Cyril — closes the
         // duplicate-listing gap the "Drone Videography" incident exposed).
-        const duplicateExists = savedServices.some(
-          (s) => s.id !== editingId && s.subcategory_id === subcategoryId
-        );
+        const duplicateExists = subSubcategoryId
+          ? savedServices.some((s) => s.id !== editingId && s.sub_subcategory_id === subSubcategoryId)
+          : savedServices.some((s) => s.id !== editingId && !s.sub_subcategory_id && s.subcategory_id === subcategoryId);
         if (duplicateExists) {
           alert("You already have a service listed under this subcategory. Please edit that existing listing instead of creating a duplicate.");
           setSaving(false);
@@ -497,7 +569,10 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
 
         const description = descriptionRef.current?.value.trim() || "";
         const priceRaw = priceRef.current?.value || "";
-        const name = subcategories.find((s) => s.id === subcategoryId)?.name || "";
+        const name =
+          subSubcategories.find((s) => s.id === subSubcategoryId)?.name ||
+          subcategories.find((s) => s.id === subcategoryId)?.name ||
+          "";
         const galleryToSave = galleryUrls.filter(Boolean);
 
         const { error } = await supabase
@@ -507,6 +582,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
             slug: slugify(name),
             category_id: categoryId,
             subcategory_id: subcategoryId,
+            sub_subcategory_id: subSubcategoryId || null,
             short_description: description,
             starting_price: Number(priceRaw) || null,
             representative_image_url: primaryUrl,
@@ -532,6 +608,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
                   service_name: name,
                   category_id: categoryId,
                   subcategory_id: subcategoryId,
+                  sub_subcategory_id: subSubcategoryId || null,
                   short_description: description,
                   starting_price: Number(priceRaw) || null,
                   representative_image_url: primaryUrl,
@@ -561,6 +638,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
         slug: slugify(s.service_name),
         category_id: s.category_id,
         subcategory_id: s.subcategory_id,
+        sub_subcategory_id: s.sub_subcategory_id,
         short_description: s.short_description,
         starting_price: s.starting_price,
         representative_image_url: s.representative_image_url || null,
@@ -733,7 +811,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
             placeholder="Select Subcategory"
             searchPlaceholder="Search subcategories..."
             value={subcategoryId}
-            onChange={setSubcategoryId}
+            onChange={handleSubcategoryChange}
             disabled={!categoryId}
             options={subcategories.map((s) => {
               const alreadyAdded = s.id !== subcategoryId && usedSubcategoryIds.has(s.id);
@@ -744,6 +822,28 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
               };
             })}
           />
+
+          {/* Third level — only appears when the chosen subcategory
+              actually has more specific options (Tailoring & Fashion
+              Designer, for now). Every other subcategory skips
+              straight to the description below, exactly as before. */}
+          {subSubcategories.length > 0 && (
+            <SearchableSelect
+              placeholder="Select Specific Type"
+              searchPlaceholder="Search..."
+              value={subSubcategoryId}
+              onChange={setSubSubcategoryId}
+              disabled={!subcategoryId}
+              options={subSubcategories.map((s) => {
+                const alreadyAdded = s.id !== subSubcategoryId && usedSubSubcategoryIds.has(s.id);
+                return {
+                  value: s.id,
+                  label: alreadyAdded ? `${s.name} (already added)` : s.name,
+                  disabled: alreadyAdded,
+                };
+              })}
+            />
+          )}
         </div>
 
         {isDifferentField && (
@@ -940,7 +1040,10 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
       <AiDescribeModal
         open={aiModalOpen}
         type="service"
-        itemName={subcategories.find((s) => s.id === subcategoryId)?.name}
+        itemName={
+          subSubcategories.find((s) => s.id === subSubcategoryId)?.name ||
+          subcategories.find((s) => s.id === subcategoryId)?.name
+        }
         onClose={() => setAiModalOpen(false)}
         onGenerated={(text, meta) => {
           if (descriptionRef.current) descriptionRef.current.value = text;

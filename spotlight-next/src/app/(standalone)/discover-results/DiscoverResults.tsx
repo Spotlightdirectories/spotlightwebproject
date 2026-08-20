@@ -148,6 +148,11 @@ export default function DiscoverResultsPage() {
   const initType = (searchParams.get("type") || "all") as "all" | "product" | "service" | "vendor";
   const initCategory = searchParams.get("category") || "";
   const initSubcategory = searchParams.get("subcategory") || "";
+  // Third level (Fashion/Tailoring pilot, 2026-08 per Cyril) — carried
+  // through from the homepage search's sub-subcategory click. Not
+  // exposed as its own filter-drawer dropdown yet, just honored when
+  // it arrives via the URL.
+  const initSubSubcategory = searchParams.get("subsubcategory") || "";
   const initState = searchParams.get("state") || "";
   const initLga = searchParams.get("lga") || "";
   const initVerified = searchParams.get("verified") === "true";
@@ -172,6 +177,7 @@ export default function DiscoverResultsPage() {
   const [subcategories, setSubcategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState(initCategory);
   const [selectedSubcategory, setSelectedSubcategory] = useState(initSubcategory);
+  const [selectedSubSubcategory, setSelectedSubSubcategory] = useState(initSubSubcategory);
   const [selectedState, setSelectedState] = useState(initState);
   const [selectedLga, setSelectedLga] = useState(initLga);
   const [lgaList, setLgaList] = useState<string[]>([]);
@@ -218,6 +224,7 @@ export default function DiscoverResultsPage() {
     }
     load();
     setSelectedSubcategory("");
+    setSelectedSubSubcategory("");
   }, [selectedCategory]);
 
   // ── State → LGA ──────────────────────────────────────────
@@ -234,6 +241,7 @@ export default function DiscoverResultsPage() {
     verifiedOnly?: boolean;
     category?: string;
     subcategory?: string;
+    subsubcategory?: string;
     state?: string;
     lga?: string;
     distanceEnabled?: boolean;
@@ -246,6 +254,7 @@ export default function DiscoverResultsPage() {
     const verified = overrides?.verifiedOnly ?? verifiedOnly;
     const cat = overrides?.category ?? selectedCategory;
     const subcat = overrides?.subcategory ?? selectedSubcategory;
+    const subsubcat = overrides?.subsubcategory ?? selectedSubSubcategory;
     const st = overrides?.state ?? selectedState;
     const lg = overrides?.lga ?? selectedLga;
     const distOn = overrides?.distanceEnabled ?? distanceEnabled;
@@ -277,6 +286,7 @@ export default function DiscoverResultsPage() {
             p_state: st || null,
             p_lga: lg || null,
             p_verified_only: verified,
+            p_subsubcategory: subsubcat || null,
           }),
           (async (): Promise<any[]> => {
             // Branch search — two-step query to avoid join syntax issues
@@ -380,6 +390,7 @@ export default function DiscoverResultsPage() {
           p_state: st || null,
           p_lga: lg || null,
           p_verified_only: verified,
+          p_subsubcategory: subsubcat || null,
         });
         return applyDistance(
           data || [], p => p.vendor_latitude, p => p.vendor_longitude,
@@ -396,6 +407,7 @@ export default function DiscoverResultsPage() {
           p_state: st || null,
           p_lga: lg || null,
           p_verified_only: verified,
+          p_subsubcategory: subsubcat || null,
         });
         return applyDistance(
           data || [],
@@ -539,7 +551,7 @@ export default function DiscoverResultsPage() {
     } finally {
       setLoading(false);
     }
-  }, [keyword, searchType, verifiedOnly, selectedCategory, selectedSubcategory,
+  }, [keyword, searchType, verifiedOnly, selectedCategory, selectedSubcategory, selectedSubSubcategory,
       selectedState, selectedLga, distanceEnabled, userLat, userLng, radius]);
 
   // Run search on mount with URL params
@@ -584,6 +596,7 @@ export default function DiscoverResultsPage() {
     runSearch({
       category: selectedCategory,
       subcategory: selectedSubcategory,
+      subsubcategory: selectedSubSubcategory,
       state: selectedState,
       lga: selectedLga,
     });
@@ -592,6 +605,7 @@ export default function DiscoverResultsPage() {
   function resetFilters() {
     setSelectedCategory("");
     setSelectedSubcategory("");
+    setSelectedSubSubcategory("");
     setSelectedState("");
     setSelectedLga("");
   }

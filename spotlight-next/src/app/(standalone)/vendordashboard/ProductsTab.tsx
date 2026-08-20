@@ -77,6 +77,7 @@ type VendorProduct = {
   attributes: AttributeValues | null;
   category_id: string | null;
   subcategory_id: string | null;
+  sub_subcategory_id?: string | null;
   brand: string | null;
   variant: string | null;
   moderation_status?: string | null;
@@ -95,18 +96,23 @@ type PendingProduct = {
   attributes: AttributeValues;
   category_id: string;
   subcategory_id: string;
+  sub_subcategory_id: string | null;
   brand: string;
   variant: string;
 };
 
 // Composes the product's display name from Brand + Model/Variant +
-// Subcategory (e.g. "Samsung 15-inch Television"), skipping any part
-// the vendor left blank. Subcategory is the only mandatory piece —
-// unlike Services, Products aren't locked to a single name per
-// subcategory, since brand/variant naturally differentiate multiple
-// products in the same subcategory (e.g. two different TV models).
-function composeProductName(brand: string, variant: string, subcategoryName: string): string {
-  return [brand.trim(), variant.trim(), subcategoryName.trim()].filter(Boolean).join(" ");
+// the most specific taxonomy level chosen (e.g. "Samsung 15-inch
+// Television"), skipping any part the vendor left blank. That level is
+// the only mandatory piece — unlike Services, Products aren't locked
+// to a single name per subcategory, since brand/variant naturally
+// differentiate multiple products in the same subcategory (e.g. two
+// different TV models). For categories with a third level (Fashion,
+// 2026-08 per Cyril — "like Jiji"), the sub-subcategory name is used
+// instead of the subcategory name, since it's the more specific of
+// the two (e.g. "Men's Clothing", not just "Men's Fashion").
+function composeProductName(brand: string, variant: string, leafName: string): string {
+  return [brand.trim(), variant.trim(), leafName.trim()].filter(Boolean).join(" ");
 }
 
 // Matches production's PRODUCT_LIMITS exactly.
@@ -205,6 +211,14 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
   const [categoryId, setCategoryId] = useState("");
   const [subcategoryId, setSubcategoryId] = useState("");
 
+  // SUB-SUBCATEGORY — third taxonomy level, only populated for a
+  // handful of subcategories so far (Fashion, 2026-08 per Cyril).
+  // Empty for every other subcategory, in which case this step is
+  // simply skipped — the picker doesn't render and nothing is
+  // required, so every other category keeps working exactly as before.
+  const [subSubcategories, setSubSubcategories] = useState<Option[]>([]);
+  const [subSubcategoryId, setSubSubcategoryId] = useState("");
+
   // SPEC FIELDS — category-specific attribute definitions + the
   // vendor's entered values for whichever category is selected.
   const [attributeDefs, setAttributeDefs] = useState<AttributeDef[]>([]);
@@ -267,9 +281,40 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
     })();
   }, [categoryId]);
 
+  // Set by handleEditSaved right before switching subcategoryId, so
+  // the sub-subcategory can be re-selected once its list loads.
+  const pendingEditSubSubcategoryId = useRef<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      if (!subcategoryId) {
+        setSubSubcategories([]);
+        return;
+      }
+      const { data, error } = await supabase
+        .from("sub_subcategories")
+        .select("id,name")
+        .eq("subcategory_id", subcategoryId)
+        .order("display_order", { ascending: true });
+      if (!error) {
+        setSubSubcategories(data || []);
+        if (pendingEditSubSubcategoryId.current) {
+          setSubSubcategoryId(pendingEditSubSubcategoryId.current);
+          pendingEditSubSubcategoryId.current = null;
+        }
+      }
+    })();
+  }, [subcategoryId]);
+
   function handleCategoryChange(id: string) {
     setCategoryId(id);
     setSubcategoryId("");
+    setSubSubcategoryId("");
+  }
+
+  function handleSubcategoryChange(id: string) {
+    setSubcategoryId(id);
+    setSubSubcategoryId("");
   }
 
   // Set by handleEditSaved right before switching categoryId, so
@@ -360,6 +405,7 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
   function resetForm() {
     setCategoryId("");
     setSubcategoryId("");
+    setSubSubcategoryId("");
     setAttributeValues({});
     if (brandRef.current) brandRef.current.value = "";
     if (variantRef.current) variantRef.current.value = "";
@@ -443,8 +489,14 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
       return;
     }
 
+    if (subSubcategories.length > 0 && !subSubcategoryId) {
+      alert("This subcategory has more specific options — please select one.");
+      return;
+    }
+
     const subcategoryName = subcategories.find((s) => s.id === subcategoryId)?.name || "";
-    const name = composeProductName(brand, variant, subcategoryName);
+    const subSubcategoryName = subSubcategories.find((s) => s.id === subSubcategoryId)?.name || "";
+    const name = composeProductName(brand, variant, subSubcategoryName || subcategoryName);
 
     if (!description || !price) {
       alert("Product description and price are required.");
@@ -475,6 +527,7 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
         attributes: attributeValues,
         category_id: categoryId,
         subcategory_id: subcategoryId,
+        sub_subcategory_id: subSubcategoryId || null,
         brand,
         variant,
       },
@@ -492,6 +545,7 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
     setFormOpen(true);
 
     pendingEditSubcategoryId.current = product.subcategory_id;
+    pendingEditSubSubcategoryId.current = product.sub_subcategory_id || null;
     pendingEditAttributeValues.current = product.attributes || {};
     setCategoryId(product.category_id || "");
     if (!product.category_id) setSubcategoryId(product.subcategory_id || "");
@@ -575,10 +629,17 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
           return;
         }
 
+        if (subSubcategories.length > 0 && !subSubcategoryId) {
+          alert("This subcategory has more specific options — please select one.");
+          setSaving(false);
+          return;
+        }
+
         const brand = brandRef.current?.value.trim() || "";
         const variant = variantRef.current?.value.trim() || "";
         const subcategoryName = subcategories.find((s) => s.id === subcategoryId)?.name || "";
-        const name = composeProductName(brand, variant, subcategoryName);
+        const subSubcategoryName = subSubcategories.find((s) => s.id === subSubcategoryId)?.name || "";
+        const name = composeProductName(brand, variant, subSubcategoryName || subcategoryName);
         const description = descriptionRef.current?.value.trim() || "";
         const price = Number(priceRef.current?.value || 0);
         const keyDetails = keyDetailsRef.current?.value.trim() || "";
@@ -591,6 +652,7 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
             product_name: name,
             category_id: categoryId,
             subcategory_id: subcategoryId,
+            sub_subcategory_id: subSubcategoryId || null,
             brand,
             variant,
             short_description: description,
@@ -620,6 +682,7 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
                   product_name: name,
                   category_id: categoryId,
                   subcategory_id: subcategoryId,
+                  sub_subcategory_id: subSubcategoryId || null,
                   brand,
                   variant,
                   short_description: description,
@@ -652,6 +715,7 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
         product_name: p.product_name,
         category_id: p.category_id,
         subcategory_id: p.subcategory_id,
+        sub_subcategory_id: p.sub_subcategory_id,
         brand: p.brand,
         variant: p.variant,
         short_description: p.short_description,
@@ -872,10 +936,25 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
             placeholder="Select Subcategory"
             searchPlaceholder="Search subcategories..."
             value={subcategoryId}
-            onChange={setSubcategoryId}
+            onChange={handleSubcategoryChange}
             options={subcategories.map((s) => ({ value: s.id, label: s.name }))}
             disabled={!categoryId}
           />
+
+          {/* Third level — only appears when the chosen subcategory
+              actually has more specific options (Fashion, for now).
+              Every other subcategory skips straight to the fields
+              below, exactly as before. */}
+          {subSubcategories.length > 0 && (
+            <SearchableSelect
+              placeholder="Select Specific Type"
+              searchPlaceholder="Search..."
+              value={subSubcategoryId}
+              onChange={setSubSubcategoryId}
+              options={subSubcategories.map((s) => ({ value: s.id, label: s.name }))}
+              disabled={!subcategoryId}
+            />
+          )}
         </div>
 
         {isDifferentField && (
@@ -1052,7 +1131,9 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
         itemName={composeProductName(
           brandRef.current?.value || "",
           variantRef.current?.value || "",
-          subcategories.find((s) => s.id === subcategoryId)?.name || ""
+          subSubcategories.find((s) => s.id === subSubcategoryId)?.name ||
+            subcategories.find((s) => s.id === subcategoryId)?.name ||
+            ""
         )}
         onClose={() => setAiModalOpen(false)}
         onGenerated={(text, meta) => {

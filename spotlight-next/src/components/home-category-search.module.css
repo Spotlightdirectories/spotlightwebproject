@@ -442,6 +442,53 @@
   display: none;
 }
 
+/* THIRD LEVEL (sub-subcategory) — Fashion / Tailoring & Fashion
+   Designer pilot, 2026-08 per Cyril ("exactly like Jiji"). Desktop
+   grows to a third column when the hovered subcategory itself has
+   more specific options; mobile nests a second accordion level
+   inside the first. Every other category has nothing here and
+   nothing renders — see subSubcategoriesCache in the component. */
+.panelBodyThree {
+  grid-template-columns: 1fr 0.9fr 0.9fr;
+}
+
+.subSubcategoryColumn {
+  min-height: 200px;
+  overflow-y: auto;
+  max-height: 100%;
+  border-left: 1px solid var(--color-border-light);
+  padding-left: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.subSubcategoryColumn::-webkit-scrollbar {
+  width: 6px;
+}
+
+.subSubcategoryColumn::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+/* Small chevron hint on a subcategory row that has a third level, so
+   it's clear there's more to reveal (hover on desktop, tap on
+   mobile) rather than it just being a plain clickable row. */
+.subcatHasMore {
+  color: var(--color-text-faint);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.subSubcatList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 4px 8px 14px;
+  border-left: 2px solid var(--color-border);
+  margin: 2px 0 6px 4px;
+}
+
 /* RESPONSIVE — mobile switches from two-pane hover layout to a
    single-column accordion. The component itself only renders the
    accordion markup when isMobile is true (JS-driven via
