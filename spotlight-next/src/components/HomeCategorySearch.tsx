@@ -58,7 +58,7 @@ import { supabase } from "@/lib/supabase";
 import styles from "./home-category-search.module.css";
 
 type CategoryKind = "product" | "service";
-type Category = { id: string; name: string; kind: CategoryKind };
+type Category = { id: string; name: string; kind: CategoryKind; image_url: string | null };
 type Subcategory = { id: string; name: string };
 type FlatSubcategory = { id: string; name: string; category_id: string };
 
@@ -202,7 +202,7 @@ export default function HomeCategorySearch() {
     categoriesLoadedRef.current = true;
     setLoadingCategories(true);
     const [categoriesRes, allSubcats, catCounts, subcatCounts] = await Promise.all([
-      supabase.from("categories").select("id,name,kind").in("kind", ["product", "service"]).order("name", { ascending: true }),
+      supabase.from("categories").select("id,name,kind,image_url").in("kind", ["product", "service"]).order("name", { ascending: true }),
       subcategoriesAllLoadedRef.current ? Promise.resolve(null) : fetchAllSubcategories(),
       countsLoadedRef.current ? Promise.resolve(null) : fetchAllCounts("category_listing_counts", "category_id"),
       countsLoadedRef.current ? Promise.resolve(null) : fetchAllCounts("subcategory_listing_counts", "subcategory_id"),
@@ -352,7 +352,16 @@ export default function HomeCategorySearch() {
         onMouseEnter={() => handleCategoryHover(cat.id)}
       >
         <button type="button" className={styles.categoryBtn} onClick={() => goToCategory(cat.id, cat.kind)}>
-          {cat.name}
+          {/* Category photo (Cyril, 2026-08: "like Jiji" — pilot batch of
+              ~15 categories only for now, sourced from Wikimedia Commons.
+              Categories without a photo yet just render without one —
+              no placeholder — so the pilot doesn't look broken next to
+              the ~165 still pending. */}
+          {cat.image_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={cat.image_url} alt="" className={styles.categoryThumb} loading="lazy" />
+          )}
+          <span className={styles.categoryName}>{cat.name}</span>
           <span className={`${styles.kindTag} ${cat.kind === "service" ? styles.kindTagService : styles.kindTagProduct}`}>
             {cat.kind === "service" ? "Service" : "Product"}
           </span>
@@ -487,7 +496,13 @@ export default function HomeCategorySearch() {
                 <div className={styles.subcategoryColumn} ref={subcategoryColumnRef}>
                   {hoveredCategory ? (
                     <>
-                      <p className={styles.sectionLabel}>{hoveredCategory.name}</p>
+                      <p className={styles.sectionLabel}>
+                        {hoveredCategory.image_url && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={hoveredCategory.image_url} alt="" className={styles.categoryThumb} loading="lazy" />
+                        )}
+                        {hoveredCategory.name}
+                      </p>
                       {isLoadingHoveredSubs ? (
                         <div className={styles.panelLoading}>Loading...</div>
                       ) : hoveredSubs && hoveredSubs.length > 0 ? (

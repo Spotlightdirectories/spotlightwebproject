@@ -179,6 +179,9 @@
   letter-spacing: 0.06em;
   color: var(--color-primary-hover);
   margin: 14px 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .sectionLabel:first-child {
@@ -285,6 +288,27 @@
 
 .categoryBtn:hover {
   color: var(--color-primary-hover);
+}
+
+/* CATEGORY PHOTO — pilot batch only (Cyril, 2026-08: "like Jiji").
+   Small rounded square so it reads as a thumbnail, not a hero image;
+   object-fit:cover so source photos of any aspect ratio crop cleanly
+   instead of stretching. */
+.categoryThumb {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--color-surface-alt);
+}
+
+.categoryName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .categoryChevron {
