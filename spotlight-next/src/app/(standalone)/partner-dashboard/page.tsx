@@ -153,10 +153,12 @@ export default function PartnerDashboardPage() {
       setCommissions((commissionData || []) as unknown as CommissionRow[]);
     }
 
-    const { data: downlineData } = await partnerSupabase
-      .from("partners")
-      .select("id, name")
-      .eq("referred_by", p.id);
+    // 2026-08 fix: reading OTHER partners' rows (the ones referred by
+    // the logged-in partner) was never covered by "Partners can view
+    // own profile" (own row only) -- it silently worked before only
+    // because of the now-removed public read policy. Replaced with a
+    // narrow RPC, scoped server-side to the caller's own downline.
+    const { data: downlineData } = await partnerSupabase.rpc("get_partner_downline");
 
     const downlineList = (downlineData || []) as DownlinePartner[];
     setDownline(downlineList);

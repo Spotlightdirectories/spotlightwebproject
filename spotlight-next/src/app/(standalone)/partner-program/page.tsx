@@ -124,13 +124,18 @@ function PartnerProgramInner() {
     // Matches both unique constraints that actually exist on the
     // table (unique_partner_email, unique_partner_phone) — the
     // current live page only ever checked email.
-    const { data: existing } = await partnerSupabase
-      .from("partners")
-      .select("id")
-      .or(`email.eq.${trimmedEmail},phone.eq.${trimmedPhone}`)
-      .maybeSingle();
+    //
+    // 2026-08 fix: this used to be a raw `.select("id")` against the
+    // partners table, which relied on the table's now-removed public
+    // read policy. Now uses a narrow RPC that returns true/false only
+    // — no row data — so the check works without exposing every
+    // partner's details to anonymous visitors again.
+    const { data: alreadyExists } = await partnerSupabase.rpc("partner_email_or_phone_exists", {
+      p_email: trimmedEmail,
+      p_phone: trimmedPhone,
+    });
 
-    if (existing) {
+    if (alreadyExists) {
       setApplyError("An application already exists with this email or phone number.");
       setApplying(false);
       return;
@@ -149,23 +154,28 @@ function PartnerProgramInner() {
       if (resolvedId) referredBy = resolvedId as unknown as string;
     }
 
-    const { data: partner, error } = await partnerSupabase
-      .from("partners")
-      .insert({
-        name: name.trim(),
-        email: trimmedEmail,
-        phone: trimmedPhone,
-        state: stateVal,
-        local_government: lga,
-        date_of_birth: dob,
-        status: "pending",
-        referred_by: referredBy,
-      })
-      .select("id, name")
-      .single();
+    // 2026-08 fix: no longer chains .select().single() after the
+    // insert. Supabase's insert().select() asks Postgres to RETURN
+    // the new row, which (with RLS enabled) requires a SELECT policy
+    // that permits reading it back — the removed public read policy
+    // used to cover that; without it, this exact call started
+    // failing with "new row violates row-level security policy" even
+    // though the insert itself was fine. Not needed anyway: every
+    // value used below (name, email) is already sitting in this
+    // component's own state, entered by the applicant a moment ago.
+    const { error } = await partnerSupabase.from("partners").insert({
+      name: name.trim(),
+      email: trimmedEmail,
+      phone: trimmedPhone,
+      state: stateVal,
+      local_government: lga,
+      date_of_birth: dob,
+      status: "pending",
+      referred_by: referredBy,
+    });
 
-    if (error || !partner) {
-      setApplyError(error?.message || "Could not submit your application. Please try again.");
+    if (error) {
+      setApplyError(error.message || "Could not submit your application. Please try again.");
       setApplying(false);
       return;
     }
@@ -177,7 +187,7 @@ function PartnerProgramInner() {
         body: JSON.stringify({
           to: trimmedEmail,
           subject: "Application Received — Spotlight Partner Programme",
-          html: EmailTemplates.partnerApplicationReceived({ partnerName: partner.name || "" }),
+          html: EmailTemplates.partnerApplicationReceived({ partnerName: name.trim() }),
         }),
       });
     } catch (err) {

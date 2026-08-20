@@ -83,11 +83,14 @@ function PartnerCreateAccountForm() {
     }
 
     (async () => {
-      const { data } = await partnerSupabase
-        .from("partners")
-        .select("email, name, user_id")
-        .eq("id", partnerId)
-        .maybeSingle();
+      // 2026-08 fix: this ran before the visitor has signed up or
+      // authenticated (straight off the approval email link), so it
+      // relied on the partners table's now-removed public read
+      // policy. Replaced with a narrow RPC that does the exact same
+      // lookup-by-id, without reopening broad read access.
+      const { data } = (await partnerSupabase
+        .rpc("get_partner_signup_prefill", { p_partner_id: partnerId })
+        .maybeSingle()) as { data: { email: string | null; name: string | null; user_id: string | null } | null };
 
       if (!data || !data.email) {
         setNotFound(true);
