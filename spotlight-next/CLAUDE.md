@@ -1,6 +1,64 @@
 @AGENTS.md
 
-## NEXT SESSION — Cyril's explicit priority order (set 2026-07-28)
+## STATUS AS OF 2026-08-21 — read this first
+
+Everything in the original "NEXT SESSION (2026-07-28)" list below this
+section is **done** — Products, Services, Payment (Subscription +
+Sponsorship), Admin dashboard, and Partner dashboard are all built and
+live. That old priority list is kept below purely as history; don't
+treat it as pending work. Platform is live in production, taking real
+vendor signups, with Search Console + sitemap indexing confirmed
+working (2026-08).
+
+**Currently open / worth knowing about:**
+
+1. **Partner incentive-structure question — deliberately unresolved,
+   Cyril's explicit choice.** He raised a real concern: the current
+   20%/10%/override commission structure asks partners to work ~90
+   days (the free-trial period) before any commission is even
+   possible, with no guaranteed payout at the end of it — realistic
+   worry that this won't motivate real recruitment, especially given
+   inflation and the risk of partners gaming referrals for a quick
+   payout instead of bringing real vendors. He said he needs to "sleep
+   on" this and has not revisited it since. **Do not restructure
+   commissions or the trial-period tie-in without him explicitly
+   raising it again.**
+2. **Partner program — security audit done, both real gaps closed
+   (2026-08-20/21).** Full audit found two live issues: `partners`
+   table was fully public-readable (name/email/phone/DOB, no auth
+   needed), and there was no mechanism at all to collect a partner's
+   payout bank details. Both fixed — see "Partner program hardening +
+   payout collection" section below for the complete story, including
+   two rounds of regressions this caused and how they were resolved.
+3. **Backup system — built and working (2026-08-21).** Cyril
+   discontinued Supabase's paid daily-backup add-on (not enough real
+   data yet to justify the cost) in favor of a manual routine every 48
+   hours: `C:\Users\Dell\Documents\spotlightwebproject_staging\backups\`
+   has `BACKUP-CHECKLIST.md` plus three scripts (`pg_dump` for the DB,
+   `download-public-files.ps1` for public storage, `download-private-
+   files.ps1` via rclone for private storage — payment receipts,
+   verification docs, sponsorship receipts, partner NIN documents). A
+   scheduled task (`spotlight-backup-reminder`, every 48h) nudges Cyril
+   and auto-refreshes `public_files_list.txt` from live `storage.
+   objects` before each reminder, so that list never goes stale again
+   (it had silently missed 3 weeks of new vendor uploads before this
+   was caught and fixed). Full detail in the "Backup system" section
+   below.
+4. **Search/discovery logic audit — 3 real bugs found and fixed
+   (2026-08).** Duplicate overloaded `search_vendors`-family RPCs,
+   `search_vendors` cross-category false positives, and a stale sub-
+   subcategory filter surviving a category change in the discover
+   drawer. See "Search audit" section below.
+5. **Sitemap/indexing — one real bug found and fixed (2026-08).** A
+   stale Netlify env var was causing `www.` URLs in the generated
+   sitemap, mismatched against the canonical non-www domain. Fixed;
+   Search Console setup itself was already correctly done (confirmed
+   after initially, incorrectly, telling Cyril otherwise — corrected
+   same session).
+
+## NEXT SESSION — Cyril's explicit priority order (set 2026-07-28, historical)
+
+**All items below are DONE — kept for history only, see STATUS section above.**
 
 1. **Resolve the `main` branch's `MIGRATIONS_FAILED` status first.**
    See the "Supabase — project mismatch found and fixed" section
@@ -839,3 +897,216 @@ the end of the Partner Dashboard build):**
    a scheduled server-side job (mirroring the `unlock-commissions-job`
    `pg_cron` pattern) or a dedicated RPC, resolved together with gap #2
    since both hinge on the same detach-on-close decision.
+
+## Search audit — 3 real bugs found and fixed (2026-08)
+
+Cyril asked for a gap check on the search/discover-results logic.
+Audited `search_vendors`/`search_products`/`search_services` RPCs,
+`HomeCategorySearch.tsx`, and `DiscoverResults.tsx` end to end. Three
+real bugs found, all fixed:
+
+1. **Duplicate, overloaded RPC definitions.** More than one version of
+   the same-named search RPC existed in the database (different
+   parameter signatures from earlier iterations never cleaned up),
+   which risked Postgres/PostgREST picking an unintended overload
+   depending on which parameters a given call happened to supply.
+   Dropped the stale versions, leaving one canonical definition per
+   RPC.
+2. **`search_vendors` cross-category false positives.** The query
+   matched a search term against vendor name/description/category
+   text broadly enough that a search for one category's keyword could
+   surface vendors from an unrelated category if their description
+   happened to contain the word incidentally. Tightened the matching
+   logic so category-scoped searches actually stay scoped.
+3. **Stale sub-subcategory filter in the discover drawer.** Changing
+   the top-level category in `DiscoverResults.tsx`'s filter panel
+   didn't clear a previously-selected sub-subcategory from a different
+   category tree, so the results silently applied an impossible/
+   leftover filter combination. Fixed by resetting the sub-subcategory
+   selection whenever its parent category changes.
+
+Frontend call sites updated to match any RPC signature changes;
+verified via `npx tsc --noEmit` (clean) and DB-level checks that no
+orphaned RPC overloads remained.
+
+## Sitemap/indexing fix + Search Console correction (2026-08)
+
+Cyril asked (1) to confirm indexing/sitemap correctness and (2) for
+platform-growth recommendations. Sitemap check found one real bug: a
+stale Netlify environment variable had the sitemap generator emitting
+`www.spotlightdirectories.com` URLs, while the canonical/production
+domain is the non-www version — a mismatch that actively works against
+indexing (search engines see two different-looking domains). Fixed the
+env var and confirmed the sitemap now emits the correct canonical
+domain throughout.
+
+Separately, incorrectly told Cyril at first that Google Search Console
+wasn't set up — he corrected this (it was set up together, 2026-08-18)
+and the record was corrected same session. Search Console itself was
+never the problem; only the sitemap's domain mismatch was.
+
+## Partner program hardening + payout collection (2026-08-20/21)
+
+Cyril asked for a full audit of the partner program "before acquiring
+partners as opposed to ads," and separately raised a sharp economic
+question about whether the commission structure actually motivates
+partners given the 90-day free-trial delay before any payout is even
+possible (see STATUS section item #1 above — deliberately left
+unresolved, his choice).
+
+**Audit found two real, separate gaps**, which Cyril approved fixing
+outright ("let's fix them for as long as they strengthen this platform
+and do not break or alter any existing logic"):
+
+1. **`partners` table was fully public-readable** — name, email,
+   phone, DOB, all of it, no auth needed, via a leftover `qual: true`-
+   style open SELECT policy. Closed by dropping the open policy and
+   replacing every legitimate read path (duplicate-checks, self-lookup
+   during signup, downline queries, admin views) with narrow
+   `SECURITY DEFINER` RPCs that return only what each caller actually
+   needs: `partner_email_or_phone_exists`, `get_partner_signup_prefill`
+   (now also returns `payout_details_submitted_at`), `get_partner_
+   downline`, plus reuse of the already-existing `get_partner_id_by_
+   referral_code` / `link_partner_account`.
+2. **No mechanism existed to collect a partner's payout bank details
+   at all.** Cyril's explicit procedure: partner applies → admin
+   approves → the approval email's "create account" link is where bank
+   details AND a NIN get collected, with the account name required to
+   match the NIN name (stated on the form, not machine-verified — same
+   trust model as vendor identity docs elsewhere on the platform).
+   Built via `submit_partner_payout_details()`, a narrow `SECURITY
+   DEFINER` RPC that only ever updates the caller's own row, called
+   from `partner-create-account/page.tsx` right after account
+   setup/linking.
+
+**Two rounds of regressions surfaced from fix #1** (removing the open
+read policy broke other things that had silently depended on it — all
+found and fixed the same day, either by Cyril reporting via screenshot
+or caught proactively before he saw them): the Apply form's duplicate-
+check and insert-with-`.select()` pattern (Postgres requires a SELECT
+policy for `INSERT...RETURNING` to succeed even when the INSERT's own
+WITH CHECK passes), the create-account page's anonymous pre-fill
+lookup, and the dashboard's downline query. All fixed via the RPCs
+listed above.
+
+**Then a real architectural question surfaced from live testing**:
+Cyril's test email had already been used to create a customer account,
+and the partner-create-account flow dead-ended with "account already
+exists" — no way forward. Root cause: this platform runs ONE shared
+Supabase Auth identity per email across vendor/customer/partner/admin
+by design (confirmed via the existing "Dual customer/vendor account
+model" pattern already used in `customer-login/page.tsx`) — a partner
+role is just another table pointing at the same login, not a separate
+identity to create. Fixed by rewriting `partner-create-account/
+page.tsx` into a proper state machine:
+- **`new`** — signUp() with a chosen password (first-time, brand new
+  email).
+- **`link`** — triggered automatically when signUp() returns "already
+  registered": switches to asking for the visitor's EXISTING password
+  and calls `signInWithPassword()` + `link_partner_account()` instead,
+  attaching partner access to the identity that already exists. Has a
+  "Forgot your password?" link (was initially missing — added after
+  reasoning through what happens if someone genuinely doesn't remember
+  an old vendor/customer password).
+- **`authenticated`** — detects an already-live `partnerSupabase`
+  session matching the prefilled email on page load (e.g. arriving via
+  the payout-details redirect below) and skips the password step
+  entirely, going straight to the payout form.
+- Idempotency: if `payout_details_submitted_at` is already set for a
+  given `partner_id`, shows an "Already Set Up" screen instead of
+  re-showing the form.
+
+**Separately closed a second entry point that bypassed payout
+collection entirely**: the general Partner Login tab on `/partner-
+program` (used for ordinary returning-partner logins, e.g. after a
+password reset) signed a partner in and sent them straight to `/
+partner-dashboard` with no check at all for whether payout details had
+ever been submitted — meaning a partner could reach a fully working
+dashboard having never given bank/NIN info. Fixed: `handleLogin()` now
+checks `payout_details_submitted_at` after sign-in and redirects to
+`/partner-create-account?partner_id=...` if missing, which (per the
+`authenticated` mode above) skips straight to the payout form without
+asking for the password again.
+
+**NIN converted from a typed number to an uploaded document**, per
+Cyril's correction ("The NIN is the ID to be submitted inside of which
+the NIN eleven digit is usually provided... that place must be changed
+to an uploader"). New `partner_nin` category on the shared `validate-
+upload` Edge Function (generalized via a new `ownerTable?: "vendors" |
+"partners"` field on the `Rule` type, since every category before this
+one always resolved the owner via `vendors`), new private
+`partner-verifications` storage bucket, new `src/lib/uploadPartnerFile.
+ts` (partner-session sibling of `uploadVendorFile.ts`). DB: `partners.
+nin_number` dropped, `nin_document_path text` added; `submit_partner_
+payout_details` rewritten to accept `p_nin_document_path` instead of a
+digit string. Admin `CommissionsTab.tsx` got a "View NIN Document" link
+next to each partner's bank details, using the existing `viewSignedUrl`
+helper.
+
+**Migration hiccup worth knowing about**: an early migration attempt
+to rename `submit_partner_payout_details`'s 4th parameter failed
+outright (Postgres 42P13 — `CREATE OR REPLACE FUNCTION` cannot rename
+an existing parameter, needs `DROP FUNCTION` first) and the whole
+transaction rolled back, including an unrelated column change and
+storage bucket insert bundled into the same migration. This was only
+caught later when a partner's payout submission failed in production
+with "Could not find the function... in the schema cache" — the
+function had silently reverted to its pre-migration signature while
+everything built on top of the *intended* new signature had already
+shipped. Lesson applied: after any migration failure, re-verify every
+object the migration touched individually rather than assuming a
+retry of just the failing statement fully repairs the situation.
+
+**By design, deliberately NOT fixed / left for Cyril to decide later**:
+the commission-structure/trial-timing motivation question (STATUS
+section item #1).
+
+## Backup system (2026-08-21)
+
+Cyril discontinued Supabase's paid daily-backup add-on (not enough
+real production data yet to justify the recurring compute cost) in
+favor of a manual routine, walked through end-to-end this session.
+Lives at `C:\Users\Dell\Documents\spotlightwebproject_staging\backups\`:
+
+- **`BACKUP-CHECKLIST.md`** — the human-facing instructions, kept in
+  sync with reality (updated this session once private-file backup
+  actually started working).
+- **Database**: `pg_dump` direct to a dated `.sql` file, run manually
+  by Cyril (needs his DB password, which Claude never has/enters).
+- **Public files** (`download-public-files.ps1`): reads a manifest,
+  `public_files_list.txt` (`bucket|path` per line), and downloads each
+  file from Supabase's public storage URLs into a `public_backup`
+  folder, overwriting fresh each run. **Real gap found and fixed**:
+  this manifest is a static snapshot, not live-generated — it had gone
+  3 weeks stale (dated 2026-08-07) and was silently missing every file
+  any vendor uploaded since then (335 → 372 files once regenerated).
+  Permanent fix: the scheduled reminder task now regenerates this file
+  from a live `select bucket_id, name from storage.objects where
+  bucket_id in ('vendor-branding','vendor-gallery','vendor-videos')`
+  query before every reminder fires, so it can never go stale again
+  without Cyril needing to do anything differently.
+- **Private files** (`download-private-files.ps1`, via `rclone`):
+  copies `payment-receipts`, `vendor-verifications`, `sponsorship-
+  receipts`, and `partner-verifications` (added this session, didn't
+  exist when the script was first written) into a `private_backup`
+  folder. Uses a named rclone remote (`rclone config create`) rather
+  than an inline S3 connection string — the inline-string approach
+  kept mis-parsing the `https://` endpoint value as a field delimiter
+  no matter how it was quoted (tried three times before switching
+  approaches); the named-remote form is the reliable, rclone-
+  recommended way to do this.
+- **Scheduled task** `spotlight-backup-reminder` (`0 9 */2 * *`, every
+  2 days at 9am) — sends Cyril the copy-paste routine and silently
+  refreshes `public_files_list.txt` first, per above.
+- Archiving convention given to Cyril: since `public_backup`/
+  `private_backup` share the same folder name every run, give each
+  backup session its own dated subfolder in Google Drive (e.g.
+  `Spotlight Backups/2026-08-21/`) rather than renaming anything —
+  Drive doesn't require folder names to be unique across different
+  parents, only within the same one.
+
+**Not yet done**: nothing outstanding here — all three legs (DB,
+public, private) confirmed working end to end this session, first
+real run completed successfully (28MB payment-receipts, 55MB vendor-
+verifications, ~1MB sponsorship-receipts + partner-verifications,
+zero errors).
