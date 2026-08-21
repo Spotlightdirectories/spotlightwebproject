@@ -107,7 +107,7 @@ export default function PaymentHistoryTab({ currentRole }: { currentRole: AdminR
                 <td>{p.vendors?.name || "—"}</td>
                 <td>{p.plan || "—"}</td>
                 <td>{p.billing_type || "—"}</td>
-                <td>{p.amount ? `₦${Number(p.amount).toLocaleString()}` : "—"}</td>
+                <td>{p.amount ? `₦${(Number(p.amount) / 100).toLocaleString()}` : "—"}</td>
                 <td>{p.reviewed_at ? new Date(p.reviewed_at).toLocaleDateString() : "—"}</td>
                 <td>
                   <span className={`adm-status-badge adm-status-${p.status}`}>{p.status || "—"}</span>
