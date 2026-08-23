@@ -560,28 +560,24 @@ export default function HomeCategorySearch() {
         <button
           type="button"
           className={styles.categoryChevron}
-          onClick={(e) => (isMobile ? handleToggleExpand(e, cat.id) : e.preventDefault())}
+          onClick={(e) => handleToggleExpand(e, cat.id)}
           aria-label={`Show ${cat.name} subcategories`}
         >
-          {/* Bug fix, 2026-08-23 per Cyril: switched from a Font
-              Awesome icon (<i className="fa-solid ...">) to a plain
-              text character. The icon depends on an external icon
-              font loading successfully -- if that font fails to load
-              on a given device/network, the icon renders as nothing
-              at all, invisible, even though the button and its color/
-              size are all correct. A plain character has no such
-              dependency -- it's just text, guaranteed to render the
-              same way "›" already reliably does elsewhere on this
-              same page (subcatParentLabel). */}
-          <span className={styles.chevronChar}>{isMobile ? (isActive ? "\u2304" : "\u203a") : "\u203a"}</span>
+          {/* Updated 2026-08-23 per Cyril: this now works the same way
+              on desktop as it already did on mobile -- click/tap the
+              arrow, subcategories appear directly below this row,
+              arrow flips from › to ⌄ to confirm which category
+              they belong to. Desktop's existing hover-to-reveal side
+              panel (subcategoryColumn, further down) is untouched and
+              still works too -- this is an additional, explicit way
+              to get the same result, not a replacement. */}
+          <span className={styles.chevronChar}>{isActive ? "\u2304" : "\u203a"}</span>
         </button>
 
-        {/* MOBILE ACCORDION — subcategories render inline, directly
-            under this row, when expanded. A subcategory that itself
-            has sub-subcategories (Fashion/Tailoring pilot) nests a
-            second accordion level instead of navigating straight
-            there — see renderSubcatRow below. */}
-        {isMobile && isActive && (
+        {/* Updated 2026-08-23 per Cyril: no longer mobile-only -- see
+            categoryChevron comment above. Renders inline under this
+            row on any screen size once expanded via the arrow. */}
+        {isActive && (
           <div className={styles.mobileSubcatList}>
             {isLoadingSubs ? (
               <div className={styles.panelLoading}>Loading...</div>
@@ -624,7 +620,9 @@ export default function HomeCategorySearch() {
           </span>
         </button>
 
-        {isMobile && isSubActive && (
+        {/* Updated 2026-08-23 per Cyril: no longer mobile-only --
+            same reasoning as the category level above. */}
+        {isSubActive && (
           <div className={styles.subSubcatList}>
             {isLoadingSubSubs ? (
               <div className={styles.panelLoading}>Loading...</div>
