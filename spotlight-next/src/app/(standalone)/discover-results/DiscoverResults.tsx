@@ -195,6 +195,16 @@ export default function DiscoverResultsPage() {
   // real delay is network latency (Lagos <-> US-hosted DB) or something
   // else. Safe to remove once the "Loading" concern is resolved.
   const [lastSearchMs, setLastSearchMs] = useState<number | null>(null);
+  // Bug fix, 2026-08-23 per Cyril: the results summary ("X results
+  // found for '...'") was reading `initKeyword`, which is only ever
+  // set ONCE from the URL when the page first loads. Every later
+  // search on this same page (tabs, the search box, filters) updated
+  // the actual results correctly but left this label frozen on
+  // whatever the very first keyword was -- confirmed via screenshots
+  // where results for "agent"/"bar" displayed correctly but the label
+  // still said 'editing'. This tracks the keyword actually used in the
+  // most recently completed search instead.
+  const [lastSearchedKeyword, setLastSearchedKeyword] = useState(initKeyword);
   const [showAllProducts, setShowAllProducts] = useState(false);
   const [showAllServices, setShowAllServices] = useState(false);
   const [showAllVendors, setShowAllVendors] = useState(false);
@@ -557,6 +567,7 @@ export default function DiscoverResultsPage() {
       console.error("Search error:", err);
     } finally {
       setLastSearchMs(Math.round(performance.now() - searchStartedAt));
+      setLastSearchedKeyword(kw || "");
       setLoading(false);
     }
   }, [keyword, searchType, verifiedOnly, selectedCategory, selectedSubcategory, selectedSubSubcategory,
@@ -756,7 +767,7 @@ export default function DiscoverResultsPage() {
       <section className={styles.summarySection}>
         <p className={styles.summaryText}>
           {loading ? "Searching..." : `${totalCount} result${totalCount !== 1 ? "s" : ""} found`}
-          {initKeyword ? ` for "${initKeyword}"` : ""}
+          {lastSearchedKeyword ? ` for "${lastSearchedKeyword}"` : ""}
           {/* Temporary diagnostic, added 2026-08-23 -- see lastSearchMs state above */}
           {!loading && lastSearchMs != null && (
             <span style={{ opacity: 0.6, fontWeight: 400 }}> ({lastSearchMs}ms)</span>
