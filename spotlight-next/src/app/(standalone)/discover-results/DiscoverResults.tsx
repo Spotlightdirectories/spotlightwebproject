@@ -768,6 +768,22 @@ export default function DiscoverResultsPage() {
         <p className={styles.summaryText}>
           {loading ? "Searching..." : `${totalCount} result${totalCount !== 1 ? "s" : ""} found`}
           {lastSearchedKeyword ? ` for "${lastSearchedKeyword}"` : ""}
+          {/* Bug fix, 2026-08-23 per Cyril: browsing by category/
+              subcategory (tapping a category on mobile, or applying
+              the filter drawer, with no typed keyword) updated the
+              actual results correctly but showed NOTHING on screen to
+              confirm what was actually being filtered -- the search
+              box stayed on its empty "Search Spotlight" placeholder,
+              making it look like no filter was applied at all even
+              when one genuinely was. This shows the active category/
+              subcategory/sub-subcategory whenever one is set. */}
+          {(selectedCategory || selectedSubcategory || selectedSubSubcategory) && (
+            <span>
+              {" "}in {selectedCategory}
+              {selectedSubcategory ? ` \u203a ${selectedSubcategory}` : ""}
+              {selectedSubSubcategory ? ` \u203a ${selectedSubSubcategory}` : ""}
+            </span>
+          )}
           {/* Temporary diagnostic, added 2026-08-23 -- see lastSearchMs state above */}
           {!loading && lastSearchMs != null && (
             <span style={{ opacity: 0.6, fontWeight: 400 }}> ({lastSearchMs}ms)</span>

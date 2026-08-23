@@ -563,7 +563,16 @@ export default function HomeCategorySearch() {
           onClick={(e) => (isMobile ? handleToggleExpand(e, cat.id) : e.preventDefault())}
           aria-label={`Show ${cat.name} subcategories`}
         >
-          <i className={`fa-solid ${isMobile ? "fa-chevron-down" : "fa-chevron-right"}`}></i>
+          {/* Bug fix, 2026-08-23 per Cyril: this was hardcoded to
+              always show a downward arrow on mobile, so it never
+              actually confirmed whether a category was expanded or
+              collapsed -- unlike the subcategory level one tier down
+              (renderSubcatRow below), which already correctly toggles
+              chevron-right (closed) / chevron-down (open). This now
+              matches that same convention: right when closed, down
+              once tapped open -- same visual language as desktop's
+              arrow, just interactive here since mobile has no hover. */}
+          <i className={`fa-solid ${isMobile ? (isActive ? "fa-chevron-down" : "fa-chevron-right") : "fa-chevron-right"}`}></i>
         </button>
 
         {/* MOBILE ACCORDION — subcategories render inline, directly
