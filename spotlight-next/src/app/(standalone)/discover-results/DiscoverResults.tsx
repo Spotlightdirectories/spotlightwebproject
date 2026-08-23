@@ -189,6 +189,12 @@ export default function DiscoverResultsPage() {
   const [sponsored, setSponsored] = useState<(Product | Service | Vendor)[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  // Temporary diagnostic, added 2026-08-23 per Cyril: shows how long
+  // the actual search round-trip takes, since the database side alone
+  // was independently confirmed to be ~33ms -- this reveals whether any
+  // real delay is network latency (Lagos <-> US-hosted DB) or something
+  // else. Safe to remove once the "Loading" concern is resolved.
+  const [lastSearchMs, setLastSearchMs] = useState<number | null>(null);
   const [showAllProducts, setShowAllProducts] = useState(false);
   const [showAllServices, setShowAllServices] = useState(false);
   const [showAllVendors, setShowAllVendors] = useState(false);
@@ -263,6 +269,7 @@ export default function DiscoverResultsPage() {
     const rad = overrides?.radius ?? radius;
 
     setLoading(true);
+    const searchStartedAt = performance.now();
 
     try {
       // 2026-08 perf fix, per Cyril: vendors/branches, products, and
@@ -549,6 +556,7 @@ export default function DiscoverResultsPage() {
     } catch (err) {
       console.error("Search error:", err);
     } finally {
+      setLastSearchMs(Math.round(performance.now() - searchStartedAt));
       setLoading(false);
     }
   }, [keyword, searchType, verifiedOnly, selectedCategory, selectedSubcategory, selectedSubSubcategory,
@@ -749,6 +757,10 @@ export default function DiscoverResultsPage() {
         <p className={styles.summaryText}>
           {loading ? "Searching..." : `${totalCount} result${totalCount !== 1 ? "s" : ""} found`}
           {initKeyword ? ` for "${initKeyword}"` : ""}
+          {/* Temporary diagnostic, added 2026-08-23 -- see lastSearchMs state above */}
+          {!loading && lastSearchMs != null && (
+            <span style={{ opacity: 0.6, fontWeight: 400 }}> ({lastSearchMs}ms)</span>
+          )}
         </p>
       </section>
 
