@@ -325,6 +325,17 @@
   color: var(--color-primary-hover);
 }
 
+/* Bug fix, 2026-08-23 per Cyril: see chevronChar comment in
+   HomeCategorySearch.tsx -- plain text character instead of a
+   Font-Awesome icon, so it can never fail to render due to an icon
+   font loading problem. font-size here controls the character's
+   visible size directly (no icon font sizing quirks to account for). */
+.chevronChar {
+  font-size: 16px;
+  font-weight: var(--font-bold);
+  line-height: 1;
+}
+
 /* DESKTOP RIGHT PANE — subcategories of whichever category is hovered.
    Independent scroll (see .panel comment above) so this pane always
    starts at the top of the visible area, regardless of how far down
@@ -558,7 +569,6 @@
      bigger, higher-contrast, with its own light background so it
      reads as a real button, not a faint decoration. */
   .categoryChevron {
-    font-size: 16px;
     color: var(--color-text-body);
     background: var(--color-surface-alt);
     border-radius: var(--radius-full);

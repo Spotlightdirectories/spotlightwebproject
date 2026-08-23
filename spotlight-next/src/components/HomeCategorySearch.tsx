@@ -563,16 +563,17 @@ export default function HomeCategorySearch() {
           onClick={(e) => (isMobile ? handleToggleExpand(e, cat.id) : e.preventDefault())}
           aria-label={`Show ${cat.name} subcategories`}
         >
-          {/* Bug fix, 2026-08-23 per Cyril: this was hardcoded to
-              always show a downward arrow on mobile, so it never
-              actually confirmed whether a category was expanded or
-              collapsed -- unlike the subcategory level one tier down
-              (renderSubcatRow below), which already correctly toggles
-              chevron-right (closed) / chevron-down (open). This now
-              matches that same convention: right when closed, down
-              once tapped open -- same visual language as desktop's
-              arrow, just interactive here since mobile has no hover. */}
-          <i className={`fa-solid ${isMobile ? (isActive ? "fa-chevron-down" : "fa-chevron-right") : "fa-chevron-right"}`}></i>
+          {/* Bug fix, 2026-08-23 per Cyril: switched from a Font
+              Awesome icon (<i className="fa-solid ...">) to a plain
+              text character. The icon depends on an external icon
+              font loading successfully -- if that font fails to load
+              on a given device/network, the icon renders as nothing
+              at all, invisible, even though the button and its color/
+              size are all correct. A plain character has no such
+              dependency -- it's just text, guaranteed to render the
+              same way "›" already reliably does elsewhere on this
+              same page (subcatParentLabel). */}
+          <span className={styles.chevronChar}>{isMobile ? (isActive ? "\u2304" : "\u203a") : "\u203a"}</span>
         </button>
 
         {/* MOBILE ACCORDION — subcategories render inline, directly
