@@ -549,6 +549,27 @@
     padding: 10px 16px;
     font-size: var(--text-xs);
   }
+
+  /* Bug fix, 2026-08-23 per Cyril: the category chevron (arrow that
+     expands subcategories on tap) was sized/colored for a desktop
+     hover hint -- 11px, light gray -- and was effectively invisible
+     on a real phone screen, even though the tap logic itself worked.
+     Made clearly visible and clearly tappable on mobile specifically:
+     bigger, higher-contrast, with its own light background so it
+     reads as a real button, not a faint decoration. */
+  .categoryChevron {
+    font-size: 16px;
+    color: var(--color-text-body);
+    background: var(--color-surface-alt);
+    border-radius: var(--radius-full);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-left: 4px;
+  }
 }
 
 /* DARK MODE */
