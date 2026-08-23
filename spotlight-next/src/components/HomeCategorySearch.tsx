@@ -402,7 +402,12 @@ export default function HomeCategorySearch() {
   function goToCategory(categoryId: string, kind: CategoryKind) {
     closePanel();
     const name = categories.find((c) => c.id === categoryId)?.name || "";
-    router.push(`/discover-results?category=${encodeURIComponent(name)}&type=${kind}`);
+    const trimmed = query.trim();
+    const params = new URLSearchParams();
+    params.set("category", name);
+    params.set("type", kind);
+    if (trimmed) params.set("keyword", trimmed);
+    router.push(`/discover-results?${params.toString()}`);
   }
 
   function goToSubcategory(categoryId: string, subcategoryId: string, kind: CategoryKind) {
@@ -412,9 +417,13 @@ export default function HomeCategorySearch() {
       subcategoriesCache[categoryId]?.find((s) => s.id === subcategoryId)?.name ||
       allSubcategories.find((s) => s.id === subcategoryId)?.name ||
       "";
-    router.push(
-      `/discover-results?category=${encodeURIComponent(categoryName)}&subcategory=${encodeURIComponent(subcategoryName)}&type=${kind}`
-    );
+    const trimmed = query.trim();
+    const params = new URLSearchParams();
+    params.set("category", categoryName);
+    params.set("subcategory", subcategoryName);
+    params.set("type", kind);
+    if (trimmed) params.set("keyword", trimmed);
+    router.push(`/discover-results?${params.toString()}`);
   }
 
   function goToSubSubcategory(
@@ -433,9 +442,14 @@ export default function HomeCategorySearch() {
       subSubcategoriesCache[subcategoryId]?.find((s) => s.id === subSubcategoryId)?.name ||
       allSubSubcategories.find((s) => s.id === subSubcategoryId)?.name ||
       "";
-    router.push(
-      `/discover-results?category=${encodeURIComponent(categoryName)}&subcategory=${encodeURIComponent(subcategoryName)}&subsubcategory=${encodeURIComponent(subSubcategoryName)}&type=${kind}`
-    );
+    const trimmed = query.trim();
+    const params = new URLSearchParams();
+    params.set("category", categoryName);
+    params.set("subcategory", subcategoryName);
+    params.set("subsubcategory", subSubcategoryName);
+    params.set("type", kind);
+    if (trimmed) params.set("keyword", trimmed);
+    router.push(`/discover-results?${params.toString()}`);
   }
 
   function handleKeywordSubmit(e: React.FormEvent) {
