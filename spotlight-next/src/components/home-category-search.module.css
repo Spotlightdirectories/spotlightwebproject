@@ -199,6 +199,15 @@
   padding-right: 20px;
   overflow-y: auto;
   max-height: 100%;
+  /* Bug fix, 2026-08-23 per Cyril: same nested flex/grid shrink issue
+     as .categoryBtn below, one level higher up -- .categoryColumn is
+     a CSS Grid item (child of .panelBody) and, like flex items, grid
+     items default to min-width:auto, refusing to shrink below their
+     content's natural width. On mobile (.panelBody: 1fr single
+     column) that pushed the whole row -- arrow included -- wider than
+     the screen again, the same symptom as the earlier categoryBtn fix
+     but one level up the chain. */
+  min-width: 0;
 }
 
 /* Deliberately visible (not the OS-default auto-hide) scrollbar on
@@ -238,6 +247,12 @@
   position: relative;
   border-radius: var(--radius-md);
   transition: background var(--transition-fast);
+  /* Bug fix, 2026-08-23 per Cyril: same nested shrink issue as
+     .categoryColumn and .categoryBtn -- .categoryRow is itself a
+     flex item of .categoryList (flex-direction: column), so it also
+     needs min-width:0 to actually respect the container's width
+     instead of growing to fit its content. */
+  min-width: 0;
 }
 
 /* Bug fix, 2026-08-23 per Cyril: .categoryRow used to be the flex
