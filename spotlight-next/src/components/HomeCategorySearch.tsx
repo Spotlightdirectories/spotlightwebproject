@@ -561,25 +561,24 @@ export default function HomeCategorySearch() {
         <button
           type="button"
           className={styles.categoryChevron}
-          onClick={(e) => handleToggleExpand(e, cat.id)}
+          onClick={(e) => (isMobile ? handleToggleExpand(e, cat.id) : e.preventDefault())}
           aria-label={`Show ${cat.name} subcategories`}
         >
-          {/* Updated 2026-08-23 per Cyril: this now works the same way
-              on desktop as it already did on mobile -- click/tap the
-              arrow, subcategories appear directly below this row,
-              arrow flips from › to ⌄ to confirm which category
-              they belong to. Desktop's existing hover-to-reveal side
-              panel (subcategoryColumn, further down) is untouched and
-              still works too -- this is an additional, explicit way
-              to get the same result, not a replacement. */}
-          <span className={styles.chevronChar}>{isActive ? "\u2304" : "\u203a"}</span>
+          {/* Reverted 2026-08-23 per Cyril: mobile-only again. Desktop
+              keeps its original hover-only behavior (subcategoryColumn
+              further down) -- unifying this earlier lost a real
+              advantage: hovering a subcategory that has its own
+              sub-subcategories reveals them immediately (third pane),
+              while the click/tap accordion pattern has no equivalent
+              for that third level -- it just sits inert. Not a fair
+              trade for "consistency", so reverted. */}
+          <span className={styles.chevronChar}>{isMobile ? (isActive ? "\u2304" : "\u203a") : "\u203a"}</span>
         </button>
         </div>
 
-        {/* Updated 2026-08-23 per Cyril: no longer mobile-only -- see
-            categoryChevron comment above. Renders inline under this
-            row on any screen size once expanded via the arrow. */}
-        {isActive && (
+        {/* Reverted 2026-08-23 per Cyril: mobile-only again, see
+            categoryChevron comment above. */}
+        {isMobile && isActive && (
           <div className={styles.mobileSubcatList}>
             {isLoadingSubs ? (
               <div className={styles.panelLoading}>Loading...</div>
@@ -622,9 +621,9 @@ export default function HomeCategorySearch() {
           </span>
         </button>
 
-        {/* Updated 2026-08-23 per Cyril: no longer mobile-only --
-            same reasoning as the category level above. */}
-        {isSubActive && (
+        {/* Reverted 2026-08-23 per Cyril: mobile-only again, same
+            reasoning as the category level above. */}
+        {isMobile && isSubActive && (
           <div className={styles.subSubcatList}>
             {isLoadingSubSubs ? (
               <div className={styles.panelLoading}>Loading...</div>
