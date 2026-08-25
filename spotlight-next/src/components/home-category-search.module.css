@@ -236,10 +236,22 @@
 
 .categoryRow {
   position: relative;
-  display: flex;
-  align-items: center;
   border-radius: var(--radius-md);
   transition: background var(--transition-fast);
+}
+
+/* Bug fix, 2026-08-23 per Cyril: .categoryRow used to be the flex
+   ROW itself, directly containing categoryBtn + categoryChevron +
+   (once tappable) mobileSubcatList as three side-by-side items --
+   so tapping the arrow laid the subcategory list out BESIDE the row
+   instead of below it, splitting the screen in half like the desktop
+   panel. This wrapper now holds only the button + arrow as their own
+   horizontal row; mobileSubcatList sits outside it, as a normal
+   block-level sibling within .categoryRow, so it stacks underneath
+   instead of squeezing in beside them. */
+.categoryRowTop {
+  display: flex;
+  align-items: center;
 }
 
 .categoryRow:hover,

@@ -541,6 +541,7 @@ export default function HomeCategorySearch() {
         }`}
         onMouseEnter={() => handleCategoryHover(cat.id)}
       >
+        <div className={styles.categoryRowTop}>
         <button type="button" className={styles.categoryBtn} onClick={() => goToCategory(cat.id, cat.kind)}>
           {/* Category photo (Cyril, 2026-08: "like Jiji" — pilot batch of
               ~15 categories only for now, sourced from Wikimedia Commons.
@@ -573,6 +574,7 @@ export default function HomeCategorySearch() {
               to get the same result, not a replacement. */}
           <span className={styles.chevronChar}>{isActive ? "\u2304" : "\u203a"}</span>
         </button>
+        </div>
 
         {/* Updated 2026-08-23 per Cyril: no longer mobile-only -- see
             categoryChevron comment above. Renders inline under this
