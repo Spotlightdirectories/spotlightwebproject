@@ -30,3 +30,18 @@
   font-size: 0.7rem;
   width: 100%;
 }
+
+.complianceLine {
+  color: #6b7280;
+  margin-top: 6px !important;
+}
+
+.complianceLine a {
+  color: #6b7280;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.complianceLine a:hover {
+  color: #ffffff;
+}

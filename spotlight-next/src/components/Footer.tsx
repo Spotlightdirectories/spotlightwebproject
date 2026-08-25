@@ -10,6 +10,12 @@ export default function Footer() {
         <a href="/privacy">Privacy</a>
         <a href="/disclaimer">Disclaimer</a>
         <p>&copy; 2026 Spotlight Digital Services Ltd. All Rights Reserved</p>
+        <p className={styles.complianceLine}>
+          NDPC Registered (Reg. No. NDPC/DCP/14269) &middot;{" "}
+          <a href="https://ndpc.gov.ng" target="_blank" rel="noopener noreferrer">
+            Verify with NDPC
+          </a>
+        </p>
       </div>
     </footer>
   );

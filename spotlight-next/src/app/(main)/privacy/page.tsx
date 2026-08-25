@@ -20,6 +20,7 @@ export default function PrivacyPage() {
 
           <h2>2. Data Controller</h2>
           <p>Spotlight Digital Services Ltd is the Data Controller responsible for your personal data.</p>
+          <p>Spotlight Digital Services Ltd is registered with the Nigeria Data Protection Commission (NDPC) as a Data Controller under the Nigeria Data Protection Act, 2023 &mdash; Registration No. <strong>NDPC/DCP/14269</strong> (valid 21/08/2026 to 21/08/2027). You can verify this registration and lodge any data protection complaints directly with NDPC at <a href="https://ndpc.gov.ng" target="_blank" rel="noopener noreferrer">ndpc.gov.ng</a>.</p>
           <p>📧 <a href="mailto:support@spotlightdirectories.com">support@spotlightdirectories.com</a><br />🏢 3 Alafia Lane, Shomolu, Lagos</p>
 
           <h2>3. Information We Collect</h2>

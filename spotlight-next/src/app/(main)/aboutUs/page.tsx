@@ -51,7 +51,7 @@ export default function AboutPage() {
                 { title: "Support", desc: "Guided onboarding for businesses." },
                 { title: "Transparency", desc: "Clear listing structure and processes." },
                 { title: "Empowerment", desc: "Affordable digital visibility tools." },
-                { title: "Privacy", desc: "Controlled handling of business data." },
+                { title: "Privacy", desc: "Controlled handling of business data — NDPC registered (Reg. No. NDPC/DCP/14269)." },
                 { title: "Integrity", desc: "A neutral platform facilitating discovery." },
               ].map((v, i) => (
                 <div key={i} className={styles.card}>
