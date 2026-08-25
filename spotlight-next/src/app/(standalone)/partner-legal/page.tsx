@@ -203,6 +203,7 @@ export default function PartnerLegalPage() {
                 <div className={styles.plBlock}>
                   <h3>1. Introduction</h3>
                   <p>Spotlight Digital Services Ltd respects your privacy and is committed to protecting your personal information. This policy applies only to partners using the platform.</p>
+                  <p>Spotlight Digital Services Ltd is registered with the Nigeria Data Protection Commission (NDPC) as a Data Controller under the Nigeria Data Protection Act, 2023 &mdash; Registration No. <strong>NDPC/DCP/14269</strong> (valid 21/08/2026 to 21/08/2027). You can verify this registration and lodge any data protection complaints directly with NDPC at <a href="https://ndpc.gov.ng" target="_blank" rel="noopener noreferrer">ndpc.gov.ng</a>.</p>
                 </div>
 
                 <div className={styles.plBlock}>
@@ -467,6 +468,14 @@ export default function PartnerLegalPage() {
             <a href="/terms">Terms</a>
             <a href="/privacy">Privacy</a>
           </div>
+        </div>
+        <div className={styles.hcontainer}>
+          <p className={styles.hfooterCompliance}>
+            NDPC Registered (Reg. No. NDPC/DCP/14269) &middot;{" "}
+            <a href="https://ndpc.gov.ng" target="_blank" rel="noopener noreferrer">
+              Verify with NDPC
+            </a>
+          </p>
         </div>
       </footer>
     </>
