@@ -403,6 +403,22 @@
 .hfooterLegal a:last-child { margin-right: 0; }
 .hfooterLegal a:hover { color: white; }
 
+.hfooterCompliance {
+  text-align: center;
+  color: #6b7280;
+  font-size: 12px;
+  margin-top: 10px;
+}
+
+.hfooterCompliance a {
+  color: #6b7280;
+  text-decoration: underline;
+}
+
+.hfooterCompliance a:hover {
+  color: white;
+}
+
 /* RESPONSIVE */
 @media (max-width: 900px) {
   .ppHero { padding: 110px 0 50px; }

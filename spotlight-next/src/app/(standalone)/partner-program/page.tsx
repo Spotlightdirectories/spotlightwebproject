@@ -559,6 +559,14 @@ function PartnerFooter() {
           <a href="/disclaimer">Disclaimer</a>
         </div>
       </div>
+      <div className={styles.hcontainer}>
+        <p className={styles.hfooterCompliance}>
+          NDPC Registered (Reg. No. NDPC/DCP/14269) &middot;{" "}
+          <a href="https://ndpc.gov.ng" target="_blank" rel="noopener noreferrer">
+            Verify with NDPC
+          </a>
+        </p>
+      </div>
     </footer>
   );
 }
