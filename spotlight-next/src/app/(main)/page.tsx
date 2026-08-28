@@ -33,11 +33,11 @@ function useRevealOnScroll<T extends HTMLElement>() {
 }
 
 const SLIDES = [
-  { img: "/images/mechanic-portrait.jpeg", video: "/videos/mechanic-clip.mp4", alt: "Auto mechanic and repair business owner", tag: "Auto & Technical Services", caption: "Trusted by the customers already searching for you" },
-  { img: "/images/tailoring-portrait.jpeg", video: "/videos/tailoring-clip.mp4", alt: "Tailoring and fashion business owner", tag: "Fashion & Tailoring", caption: "Get found by customers looking for your craft nearby" },
-  { img: "/images/provision-seller--portrait.jpeg", video: "/videos/provision-seller-clip.mp4", alt: "Provision store and grocery business owner", tag: "Provisions & Groceries", caption: "From daily essentials to bulk orders — be their first stop" },
-  { img: "/images/accountant-portrait.jpeg", video: "/videos/accountant-clip.mp4", alt: "Accountant and financial services provider", tag: "Accounting & Finance", caption: "Trusted professionals, found by the clients who need them" },
-  { img: "/images/electrician-portrait.jpeg", video: "/videos/electrician-clip.mp4", alt: "Electrician and electrical services provider", tag: "Electrical Services", caption: "The customer with a blown fuse is searching right now" },
+  { img: "/images/mechanic-portrait.webp", video: "/videos/mechanic-clip.mp4", alt: "Auto mechanic and repair business owner", tag: "Auto & Technical Services", caption: "Trusted by the customers already searching for you" },
+  { img: "/images/tailoring-portrait.webp", video: "/videos/tailoring-clip.mp4", alt: "Tailoring and fashion business owner", tag: "Fashion & Tailoring", caption: "Get found by customers looking for your craft nearby" },
+  { img: "/images/provision-seller--portrait.webp", video: "/videos/provision-seller-clip.mp4", alt: "Provision store and grocery business owner", tag: "Provisions & Groceries", caption: "From daily essentials to bulk orders — be their first stop" },
+  { img: "/images/accountant-portrait.webp", video: "/videos/accountant-clip.mp4", alt: "Accountant and financial services provider", tag: "Accounting & Finance", caption: "Trusted professionals, found by the clients who need them" },
+  { img: "/images/electrician-portrait.webp", video: "/videos/electrician-clip.mp4", alt: "Electrician and electrical services provider", tag: "Electrical Services", caption: "The customer with a blown fuse is searching right now" },
 ];
 
 const BENEFITS = [
@@ -216,6 +216,36 @@ export default function HomePage() {
               </div>
             );
           })}
+
+          {/* Reduces the poster-image flash Cyril noticed between
+              video transitions, 2026-08-23: since only the ACTIVE
+              slide's video normally loads at all (deliberate, to
+              protect mobile data), switching to a slide starts its
+              download from zero, and the poster shows until enough of
+              it has buffered to actually play. This quietly starts
+              fetching the NEXT slide's video in the background while
+              the current one is still playing -- never visible,
+              never autoplaying, one slide ahead at most -- so by the
+              time it becomes active, most of it is already there.
+              Skipped if the next slide has no video or already failed
+              to load. */}
+          {(() => {
+            const nextIndex = (activeSlide + 1) % SLIDES.length;
+            const nextSlideData = SLIDES[nextIndex];
+            if (!nextSlideData.video || videoErrors[nextIndex]) return null;
+            return (
+              <video
+                key={`preload-${nextSlideData.video}`}
+                src={nextSlideData.video}
+                preload="auto"
+                muted
+                playsInline
+                aria-hidden="true"
+                tabIndex={-1}
+                style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+              />
+            );
+          })()}
 
           <button type="button"
             className={`${styles.ldSlideArrow} ${styles.ldSlideArrowPrev}`}
