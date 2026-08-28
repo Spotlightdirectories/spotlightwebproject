@@ -69,9 +69,32 @@ const GROWTH = [
 ];
 
 export default function HomePage() {
-  const [activeSlide, setActiveSlide] = useState(0);
+  // Dual-video-slot technique, 2026-08-23 per Cyril, replacing two
+  // earlier attempts that didn't fully remove the flash (a hidden
+  // preload <video>, then a background fetch()). Both only got the
+  // BYTES there sooner -- neither warmed up the browser's actual video
+  // decode pipeline, which is what still caused a visible startup
+  // delay even with the file already downloaded.
+  //
+  // This keeps exactly two permanent <video> elements ("slots") for
+  // the whole slideshow's lifetime -- never more, so the "only ever
+  // ~2 videos loading" data promise from earlier today still holds.
+  // Whichever slot isn't currently on screen is always quietly
+  // playing its assigned clip muted and invisible in the background;
+  // the moment it reports it has actually started playing
+  // (onPlaying), it's immediately paused and rewound to frame zero --
+  // so it sits fully decoded and ready, not just downloaded. When the
+  // visible slot's video naturally ends, the slots swap: the
+  // already-warmed one becomes visible and resumes instantly, while
+  // the one that just finished is reassigned the slide after next and
+  // starts silently warming up again for its future turn.
+  const [state, setState] = useState<{ slots: [number, number]; visibleSlot: 0 | 1 }>({
+    slots: [0, 1 % SLIDES.length],
+    visibleSlot: 0,
+  });
+  const activeSlide = state.slots[state.visibleSlot];
+  const videoRefs = [useRef<HTMLVideoElement | null>(null), useRef<HTMLVideoElement | null>(null)] as const;
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // Accessibility fix, 2026-08-23: an auto-advancing slideshow with no
   // way to stop it fails WCAG 2.2.2 (Pause, Stop, Hide) -- required
@@ -86,11 +109,12 @@ export default function HomePage() {
     const next = !isPausedRef.current;
     isPausedRef.current = next;
     setIsPaused(next);
-    if (videoRef.current) {
-      if (next) videoRef.current.pause();
-      else videoRef.current.play().catch(() => {});
+    const visibleVideo = videoRefs[state.visibleSlot].current;
+    if (visibleVideo) {
+      if (next) visibleVideo.pause();
+      else visibleVideo.play().catch(() => {});
     }
-  }, []);
+  }, [state.visibleSlot]);
 
   // Tracks which slides' video files failed to load (e.g. not added
   // yet) so those specific slides fall back to their still photo
@@ -110,51 +134,77 @@ export default function HomePage() {
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     // Extended 6s -> 10s, 2026-08-23 per Cyril: slides now play real
-    // 10-second video clips of each artisan at work -- 6s was cutting
-    // every clip off mid-way before it finished.
+    // 10-second video clips of each artisan at work. This fixed timer
+    // is now only a SAFETY NET (in case a video's onEnded somehow
+    // never fires) -- normal advancement is driven by advanceSlot()
+    // below, triggered by the video actually finishing.
     timerRef.current = setInterval(() => {
       if (isPausedRef.current) return;
-      setActiveSlide(s => (s + 1) % SLIDES.length);
+      advanceSlot();
     }, 10000);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // The core swap described above. Always advances forward by exactly
+  // one slide, reusing the two existing slot elements rather than
+  // creating new ones.
+  const advanceSlot = useCallback(() => {
+    setState(prev => {
+      const newVisible: 0 | 1 = prev.visibleSlot === 0 ? 1 : 0;
+      const newVisibleSlideIndex = prev.slots[newVisible];
+      const slideAfterThat = (newVisibleSlideIndex + 1) % SLIDES.length;
+      const newSlots: [number, number] = [...prev.slots];
+      newSlots[prev.visibleSlot] = slideAfterThat;
+
+      const becomingVisible = videoRefs[newVisible].current;
+      if (becomingVisible) {
+        becomingVisible.currentTime = 0;
+        becomingVisible.play().catch(() => {});
+      }
+
+      return { slots: newSlots, visibleSlot: newVisible };
+    });
+    startTimer();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startTimer]);
 
   useEffect(() => {
     startTimer();
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [startTimer]);
 
-  // Stronger preload, 2026-08-23 per Cyril: the earlier hidden-<video>
-  // preload attempt still left a visible flash before each transition
-  // -- likely because browsers (mobile ones especially) are known to
-  // deliberately ignore preload hints on video elements that aren't
-  // actually visible/playing, specifically to protect mobile data. A
-  // plain background fetch() isn't subject to that same video-specific
-  // throttling -- it pulls the next clip's bytes into the browser's
-  // ordinary HTTP cache while the current one plays, so by the time
-  // the <video> tag actually requests that same URL, it should be
-  // served from cache almost instantly instead of over the network.
-  useEffect(() => {
-    const nextIndex = (activeSlide + 1) % SLIDES.length;
-    const nextVideo = SLIDES[nextIndex].video;
-    if (!nextVideo || videoErrors[nextIndex]) return;
-    fetch(nextVideo).catch(() => {});
-  }, [activeSlide, videoErrors]);
-
-  // Manual navigation (arrows/dots) jumps straight to a slide, then resets
-  // the auto-advance clock so it doesn't immediately jump again right after
-  // someone has just clicked — auto-scroll keeps running either way.
-  const goToSlide = useCallback((i: number) => {
-    setActiveSlide(i);
-    startTimer();
-  }, [startTimer]);
-
   const nextSlide = useCallback(() => {
-    setActiveSlide(s => (s + 1) % SLIDES.length);
+    advanceSlot();
+  }, [advanceSlot]);
+
+  // Manual navigation (arrows/dots) jumps to an arbitrary slide, which
+  // the two-slot preload can't have already warmed up in every case --
+  // so these two, unlike natural forward auto-advancing, may still
+  // show a brief flash. That's an acceptable, honest trade-off: only
+  // ever preloading one slide ahead is what keeps this from re-opening
+  // the "loading all 5 videos at once" mobile-data problem from
+  // earlier today.
+  const goToSlide = useCallback((i: number) => {
+    setState(prev => {
+      const otherSlot: 0 | 1 = prev.visibleSlot === 0 ? 1 : 0;
+      const newSlots: [number, number] = [...prev.slots];
+      newSlots[prev.visibleSlot] = i;
+      newSlots[otherSlot] = (i + 1) % SLIDES.length;
+      return { slots: newSlots, visibleSlot: prev.visibleSlot };
+    });
     startTimer();
   }, [startTimer]);
 
   const prevSlide = useCallback(() => {
-    setActiveSlide(s => (s - 1 + SLIDES.length) % SLIDES.length);
+    setState(prev => {
+      const activeIdx = prev.slots[prev.visibleSlot];
+      const target = (activeIdx - 1 + SLIDES.length) % SLIDES.length;
+      const otherSlot: 0 | 1 = prev.visibleSlot === 0 ? 1 : 0;
+      const newSlots: [number, number] = [...prev.slots];
+      newSlots[prev.visibleSlot] = target;
+      newSlots[otherSlot] = (target + 1) % SLIDES.length;
+      return { slots: newSlots, visibleSlot: prev.visibleSlot };
+    });
     startTimer();
   }, [startTimer]);
 
@@ -192,45 +242,72 @@ export default function HomePage() {
         <div className={styles.ldHeroSlideshow}>
           {SLIDES.map((slide, i) => {
             const isActive = activeSlide === i;
-            const useVideo = isActive && slide.video && !videoErrors[i];
             return (
               <div key={i} className={`${styles.ldSlide} ${isActive ? styles.ldSlideActive : ""}`}>
-                {useVideo ? (
-                  // Only the ACTIVE slide ever gets a real <video> element --
-                  // the other four stay as plain images and never download
-                  // any video at all, so switching between them costs
-                  // nothing extra in mobile data.
-                  // Bug fix, 2026-08-23 per Cyril: `loop` was making a
-                  // clip shorter than the 10s slide window restart and
-                  // play part of itself again before the timer moved on
-                  // -- an awkward stutter. Removed loop; onEnded now
-                  // advances to the next slide the instant THIS clip
-                  // actually finishes, so it's always correct regardless
-                  // of whether a given clip runs 8s or 11s, no manual
-                  // number-tuning needed per video.
-                  <video
-                    key={slide.video}
-                    ref={videoRef}
-                    src={slide.video}
-                    poster={slide.img}
-                    autoPlay
-                    muted
-                    playsInline
-                    preload="auto"
-                    aria-hidden="true"
-                    tabIndex={-1}
-                    onEnded={nextSlide}
-                    onError={() => setVideoErrors((prev) => ({ ...prev, [i]: true }))}
-                  />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={slide.img} alt={slide.alt} className={isActive ? styles.ldSlideActiveImg : ""} />
-                )}
+                {/* Simplified 2026-08-23: this layer is now purely the
+                    still-photo backdrop for every slide -- the actual
+                    playing video is a separate overlay (two persistent
+                    slots, rendered just below) sitting on top of it.
+                    Guarantees a correct photo is always shown
+                    immediately, with zero dependency on whether any
+                    video has loaded yet. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={slide.img} alt={slide.alt} className={isActive ? styles.ldSlideActiveImg : ""} />
                 <div className={styles.ldSlideCaption} key={activeSlide}>
                   <span className={styles.ldSlideTag}>{slide.tag}</span>
                   <p>{slide.caption}</p>
                 </div>
               </div>
+            );
+          })}
+
+          {/* Dual video-slot overlay, 2026-08-23 -- see the big comment
+              on `state` above for the full explanation. Exactly two
+              <video> elements exist for the slideshow's entire
+              lifetime; which one is visible/on top is controlled by
+              opacity + zIndex, not by mounting/unmounting -- that's
+              what lets the hidden one stay fully warmed up and ready
+              rather than starting fresh every time. */}
+          {([0, 1] as const).map((slot) => {
+            const slideIdx = state.slots[slot];
+            const slideData = SLIDES[slideIdx];
+            const isVisible = state.visibleSlot === slot;
+            if (!slideData.video || videoErrors[slideIdx]) return null;
+            return (
+              <video
+                key={`slot-${slot}`}
+                ref={videoRefs[slot]}
+                src={slideData.video}
+                autoPlay
+                muted
+                playsInline
+                preload="auto"
+                aria-hidden="true"
+                tabIndex={-1}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  opacity: isVisible ? 1 : 0,
+                  zIndex: isVisible ? 2 : 1,
+                  pointerEvents: "none",
+                }}
+                onPlaying={(e) => {
+                  // This slot just started playing. If it's the HIDDEN
+                  // one, that means it was only meant to be silently
+                  // warming up for its future turn -- freeze it at
+                  // frame zero immediately, fully decoded and ready,
+                  // rather than letting it keep playing unseen.
+                  if (!isVisible) {
+                    e.currentTarget.pause();
+                    e.currentTarget.currentTime = 0;
+                  }
+                }}
+                onEnded={() => { if (isVisible) advanceSlot(); }}
+                onError={() => setVideoErrors((prev) => ({ ...prev, [slideIdx]: true }))}
+              />
             );
           })}
 
