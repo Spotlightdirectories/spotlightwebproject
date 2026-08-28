@@ -5,14 +5,39 @@ import Footer from "@/components/Footer";
 import HomeCategorySearch from "@/components/HomeCategorySearch";
 import styles from "./homepage.module.css";
 
+// Scroll-reveal hook, added 2026-08-23 per Cyril: watches one section
+// and flips `visible` to true the first time it scrolls into the
+// viewport, then stops watching -- the reveal only ever plays once
+// per page load, not every time someone scrolls past it again.
+function useRevealOnScroll<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || visible) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [visible]);
+
+  return [ref, visible] as const;
+}
+
 const SLIDES = [
-  { img: "/images/tailorwoman.webp", alt: "Tailoring and fashion business owner", tag: "Fashion & Tailoring", caption: "Get found by customers looking for your craft nearby" },
-  { img: "/images/mechanic3.webp", alt: "Auto mechanic and repair business owner", tag: "Auto & Technical Services", caption: "Trusted by the customers already searching for you" },
-  { img: "/images/hairdresser.webp", alt: "Hairdresser and salon business owner", tag: "Beauty & Hairdressing", caption: "Your next client is already searching nearby" },
-  { img: "/images/consultant3.webp", alt: "Consultant and professional services provider", tag: "Professional & Consulting", caption: "Reach clients who need exactly what you offer" },
-  { img: "/images/caterer.webp", alt: "Caterer and event food business owner", tag: "Catering & Events", caption: "From small chops to full events — get booked faster" },
-  { img: "/images/carpenter.webp", alt: "Carpenter and woodwork business owner", tag: "Carpentry & Woodwork", caption: "Show off your craftsmanship to customers nearby" },
-  { img: "/images/accountant.webp", alt: "Accountant and financial services provider", tag: "Accounting & Finance", caption: "Trusted professionals, found by the clients who need them" },
+  { img: "/images/mechanic-portrait.jpeg", video: "/videos/mechanic-clip.mp4", alt: "Auto mechanic and repair business owner", tag: "Auto & Technical Services", caption: "Trusted by the customers already searching for you" },
+  { img: "/images/tailoring-portrait.jpeg", video: "/videos/tailoring-clip.mp4", alt: "Tailoring and fashion business owner", tag: "Fashion & Tailoring", caption: "Get found by customers looking for your craft nearby" },
+  { img: "/images/provision-seller--portrait.jpeg", video: "/videos/provision-seller-clip.mp4", alt: "Provision store and grocery business owner", tag: "Provisions & Groceries", caption: "From daily essentials to bulk orders — be their first stop" },
+  { img: "/images/accountant.webp", video: "/videos/accountant-clip.mp4", alt: "Accountant and financial services provider", tag: "Accounting & Finance", caption: "Trusted professionals, found by the clients who need them" },
+  { img: "/images/electrician-portrait.jpeg", video: "/videos/electrician-clip.mp4", alt: "Electrician and electrical services provider", tag: "Electrical Services", caption: "The customer with a blown fuse is searching right now" },
 ];
 
 const BENEFITS = [
@@ -47,11 +72,29 @@ export default function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Tracks which slides' video files failed to load (e.g. not added
+  // yet) so those specific slides fall back to their still photo
+  // instead of showing a broken/blank video box. Added 2026-08-23 per
+  // Cyril: slides are being upgraded from photos to short looping
+  // video clips of each artisan actually at work, one trade at a time
+  // as real footage becomes available -- this lets that happen
+  // gradually without anything breaking in the meantime.
+  const [videoErrors, setVideoErrors] = useState<Record<number, boolean>>({});
+
+  // One reveal hook per animated section -- see useRevealOnScroll above.
+  const [benefitsRef, benefitsVisible] = useRevealOnScroll<HTMLDivElement>();
+  const [howRef, howVisible] = useRevealOnScroll<HTMLDivElement>();
+  const [safetyRef, safetyVisible] = useRevealOnScroll<HTMLDivElement>();
+  const [growthRef, growthVisible] = useRevealOnScroll<HTMLDivElement>();
+
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
+    // Extended 6s -> 10s, 2026-08-23 per Cyril: slides now play real
+    // 10-second video clips of each artisan at work -- 6s was cutting
+    // every clip off mid-way before it finished.
     timerRef.current = setInterval(() => {
       setActiveSlide(s => (s + 1) % SLIDES.length);
-    }, 6000);
+    }, 10000);
   }, []);
 
   useEffect(() => {
@@ -109,16 +152,39 @@ export default function HomePage() {
         </div>
 
         <div className={styles.ldHeroSlideshow}>
-          {SLIDES.map((slide, i) => (
-            <div key={i} className={`${styles.ldSlide} ${activeSlide === i ? styles.ldSlideActive : ""}`}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={slide.img} alt={slide.alt} className={activeSlide === i ? styles.ldSlideActiveImg : ""} />
-              <div className={styles.ldSlideCaption}>
-                <span className={styles.ldSlideTag}>{slide.tag}</span>
-                <p>{slide.caption}</p>
+          {SLIDES.map((slide, i) => {
+            const isActive = activeSlide === i;
+            const useVideo = isActive && slide.video && !videoErrors[i];
+            return (
+              <div key={i} className={`${styles.ldSlide} ${isActive ? styles.ldSlideActive : ""}`}>
+                {useVideo ? (
+                  // Only the ACTIVE slide ever gets a real <video> element --
+                  // the other six stay as plain images and never download
+                  // any video at all, so switching between them costs
+                  // nothing extra in mobile data. `loop` keeps the clip
+                  // repeating for the full 6-second slot even if the
+                  // source footage itself is shorter (e.g. a 3-4s clip).
+                  <video
+                    key={slide.video}
+                    src={slide.video}
+                    poster={slide.img}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    onError={() => setVideoErrors((prev) => ({ ...prev, [i]: true }))}
+                  />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={slide.img} alt={slide.alt} className={isActive ? styles.ldSlideActiveImg : ""} />
+                )}
+                <div className={styles.ldSlideCaption} key={activeSlide}>
+                  <span className={styles.ldSlideTag}>{slide.tag}</span>
+                  <p>{slide.caption}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           <button type="button"
             className={`${styles.ldSlideArrow} ${styles.ldSlideArrowPrev}`}
@@ -150,7 +216,7 @@ export default function HomePage() {
       {/* BENEFITS */}
       <section className={styles.ldBenefits}>
         <h2>Why Businesses Choose Spotlight</h2>
-        <div className={styles.ldBenefitsGrid}>
+        <div className={`${styles.ldBenefitsGrid} ${styles.ldRevealGrid} ${benefitsVisible ? styles.ldRevealVisible : ""}`} ref={benefitsRef}>
           {BENEFITS.map((b, i) => (
             <div key={i} className={styles.ldBenefitCard}>
               <i className={b.icon}></i>
@@ -177,7 +243,7 @@ export default function HomePage() {
       {/* HOW IT WORKS */}
       <section className={styles.ldHow}>
         <h2>How It Works</h2>
-        <div className={styles.ldHowGrid}>
+        <div className={`${styles.ldHowGrid} ${styles.ldRevealGrid} ${howVisible ? styles.ldRevealVisible : ""}`} ref={howRef}>
           {HOW_STEPS.map((step, i) => (
             <div key={i} className={styles.ldHowStep}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -201,7 +267,7 @@ export default function HomePage() {
             Whether you&apos;re searching for a service or listing your business, here&apos;s how Spotlight
             helps keep it safe.
           </p>
-          <div className={styles.ldSafetyGrid}>
+          <div className={`${styles.ldSafetyGrid} ${styles.ldRevealGrid} ${safetyVisible ? styles.ldRevealVisible : ""}`} ref={safetyRef}>
             {SAFETY.map((s, i) => (
               <div key={i} className={styles.ldSafetyCard}>
                 <i className={s.icon}></i>
@@ -220,7 +286,7 @@ export default function HomePage() {
           <p className={styles.ldEyebrow}>For business owners</p>
           <h2>Join Spotlight Directory Today</h2>
           <p className={styles.ldGrowthSub}>Every listing — on every plan — gets these real tools to grow.</p>
-          <div className={styles.ldGrowthFeatures}>
+          <div className={`${styles.ldGrowthFeatures} ${styles.ldRevealGrid} ${growthVisible ? styles.ldRevealVisible : ""}`} ref={growthRef}>
             {GROWTH.map((f, i) => (
               <div key={i} className={styles.ldGrowthFeature}>
                 <i className={f.icon}></i>

@@ -138,7 +138,7 @@
 
 .ldSlide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.8s ease; }
 .ldSlideActive { opacity: 1; z-index: 1; }
-.ldSlide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ldSlide img, .ldSlide video { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ldSlideActiveImg { animation: kenburns 6s ease-in-out forwards; }
 
 @keyframes kenburns {
@@ -165,9 +165,36 @@
   padding: 4px 12px;
   border-radius: var(--radius-full);
   margin-bottom: 10px;
+  /* "Fly in" entrance, added 2026-08-23 per Cyril: makes each video
+     slide's caption feel intentional rather than just appearing --
+     meant to make a viewer curious enough to watch the clip through.
+     Keyed to `activeSlide` in page.tsx so this replays every single
+     time a slide becomes active, not just once on page load. */
+  animation: flyInTag 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-.ldSlideCaption p { font-size: var(--text-lg); font-weight: var(--font-semibold); margin: 0; }
+.ldSlideCaption p {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  margin: 0;
+  animation: flyInText 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both;
+}
+
+@keyframes flyInTag {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes flyInText {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ldSlideTag, .ldSlideCaption p {
+    animation: none;
+  }
+}
 
 .ldSlideArrow {
   position: absolute;
@@ -208,6 +235,39 @@
 }
 
 .ldDotActive { background: var(--color-primary); width: 22px; border-radius: var(--radius-full); }
+
+/* SCROLL-REVEAL — added 2026-08-23 per Cyril: Benefits, How It Works,
+   Safety, and Growth previously had no entrance animation at all,
+   just appearing flatly as the page loaded/scrolled. Cards now fade
+   and rise into view, one after another, the first time each grid
+   scrolls into the viewport (toggled once via IntersectionObserver in
+   page.tsx, not re-triggered on scrolling back up/down repeatedly).
+   Respects prefers-reduced-motion for anyone who has that set. */
+.ldRevealGrid > * {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.65s ease, transform 0.65s ease;
+}
+
+.ldRevealGrid.ldRevealVisible > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ldRevealGrid > *:nth-child(1) { transition-delay: 0s; }
+.ldRevealGrid > *:nth-child(2) { transition-delay: 0.12s; }
+.ldRevealGrid > *:nth-child(3) { transition-delay: 0.24s; }
+.ldRevealGrid > *:nth-child(4) { transition-delay: 0.36s; }
+.ldRevealGrid > *:nth-child(5) { transition-delay: 0.48s; }
+.ldRevealGrid > *:nth-child(6) { transition-delay: 0.6s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ldRevealGrid > * {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
 
 /* BENEFITS */
 .ldBenefits {
