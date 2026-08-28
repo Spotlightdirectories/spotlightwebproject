@@ -123,6 +123,23 @@ export default function HomePage() {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [startTimer]);
 
+  // Stronger preload, 2026-08-23 per Cyril: the earlier hidden-<video>
+  // preload attempt still left a visible flash before each transition
+  // -- likely because browsers (mobile ones especially) are known to
+  // deliberately ignore preload hints on video elements that aren't
+  // actually visible/playing, specifically to protect mobile data. A
+  // plain background fetch() isn't subject to that same video-specific
+  // throttling -- it pulls the next clip's bytes into the browser's
+  // ordinary HTTP cache while the current one plays, so by the time
+  // the <video> tag actually requests that same URL, it should be
+  // served from cache almost instantly instead of over the network.
+  useEffect(() => {
+    const nextIndex = (activeSlide + 1) % SLIDES.length;
+    const nextVideo = SLIDES[nextIndex].video;
+    if (!nextVideo || videoErrors[nextIndex]) return;
+    fetch(nextVideo).catch(() => {});
+  }, [activeSlide, videoErrors]);
+
   // Manual navigation (arrows/dots) jumps straight to a slide, then resets
   // the auto-advance clock so it doesn't immediately jump again right after
   // someone has just clicked — auto-scroll keeps running either way.
@@ -216,36 +233,6 @@ export default function HomePage() {
               </div>
             );
           })}
-
-          {/* Reduces the poster-image flash Cyril noticed between
-              video transitions, 2026-08-23: since only the ACTIVE
-              slide's video normally loads at all (deliberate, to
-              protect mobile data), switching to a slide starts its
-              download from zero, and the poster shows until enough of
-              it has buffered to actually play. This quietly starts
-              fetching the NEXT slide's video in the background while
-              the current one is still playing -- never visible,
-              never autoplaying, one slide ahead at most -- so by the
-              time it becomes active, most of it is already there.
-              Skipped if the next slide has no video or already failed
-              to load. */}
-          {(() => {
-            const nextIndex = (activeSlide + 1) % SLIDES.length;
-            const nextSlideData = SLIDES[nextIndex];
-            if (!nextSlideData.video || videoErrors[nextIndex]) return null;
-            return (
-              <video
-                key={`preload-${nextSlideData.video}`}
-                src={nextSlideData.video}
-                preload="auto"
-                muted
-                playsInline
-                aria-hidden="true"
-                tabIndex={-1}
-                style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
-              />
-            );
-          })()}
 
           <button type="button"
             className={`${styles.ldSlideArrow} ${styles.ldSlideArrowPrev}`}
