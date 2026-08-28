@@ -236,6 +236,29 @@
 
 .ldDotActive { background: var(--color-primary); width: 22px; border-radius: var(--radius-full); }
 
+/* Accessibility fix, 2026-08-23: pause/play control for the
+   auto-advancing slideshow -- see togglePause in page.tsx. Placed
+   bottom-left, mirroring where the dots sit bottom-right, so it
+   doesn't collide with the caption text or the next/prev arrows. */
+.ldSlidePause {
+  position: absolute;
+  bottom: 20px; left: 28px;
+  z-index: 3;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.35);
+  color: #ffffff;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.ldSlidePause:hover { background: rgba(0,0,0,0.6); }
+
 /* SCROLL-REVEAL — added 2026-08-23 per Cyril: Benefits, How It Works,
    Safety, and Growth previously had no entrance animation at all,
    just appearing flatly as the page loaded/scrolled. Cards now fade

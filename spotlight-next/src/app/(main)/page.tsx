@@ -36,7 +36,7 @@ const SLIDES = [
   { img: "/images/mechanic-portrait.jpeg", video: "/videos/mechanic-clip.mp4", alt: "Auto mechanic and repair business owner", tag: "Auto & Technical Services", caption: "Trusted by the customers already searching for you" },
   { img: "/images/tailoring-portrait.jpeg", video: "/videos/tailoring-clip.mp4", alt: "Tailoring and fashion business owner", tag: "Fashion & Tailoring", caption: "Get found by customers looking for your craft nearby" },
   { img: "/images/provision-seller--portrait.jpeg", video: "/videos/provision-seller-clip.mp4", alt: "Provision store and grocery business owner", tag: "Provisions & Groceries", caption: "From daily essentials to bulk orders — be their first stop" },
-  { img: "/images/accountant.webp", video: "/videos/accountant-clip.mp4", alt: "Accountant and financial services provider", tag: "Accounting & Finance", caption: "Trusted professionals, found by the clients who need them" },
+  { img: "/images/accountant-portrait.jpeg", video: "/videos/accountant-clip.mp4", alt: "Accountant and financial services provider", tag: "Accounting & Finance", caption: "Trusted professionals, found by the clients who need them" },
   { img: "/images/electrician-portrait.jpeg", video: "/videos/electrician-clip.mp4", alt: "Electrician and electrical services provider", tag: "Electrical Services", caption: "The customer with a blown fuse is searching right now" },
 ];
 
@@ -71,6 +71,26 @@ const GROWTH = [
 export default function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  // Accessibility fix, 2026-08-23: an auto-advancing slideshow with no
+  // way to stop it fails WCAG 2.2.2 (Pause, Stop, Hide) -- required
+  // for any content that changes on its own. isPausedRef exists
+  // alongside isPaused (state) because the setInterval callback below
+  // is created once and would otherwise see a stale, always-false
+  // value of isPaused if it read the state variable directly.
+  const [isPaused, setIsPaused] = useState(false);
+  const isPausedRef = useRef(false);
+
+  const togglePause = useCallback(() => {
+    const next = !isPausedRef.current;
+    isPausedRef.current = next;
+    setIsPaused(next);
+    if (videoRef.current) {
+      if (next) videoRef.current.pause();
+      else videoRef.current.play().catch(() => {});
+    }
+  }, []);
 
   // Tracks which slides' video files failed to load (e.g. not added
   // yet) so those specific slides fall back to their still photo
@@ -93,6 +113,7 @@ export default function HomePage() {
     // 10-second video clips of each artisan at work -- 6s was cutting
     // every clip off mid-way before it finished.
     timerRef.current = setInterval(() => {
+      if (isPausedRef.current) return;
       setActiveSlide(s => (s + 1) % SLIDES.length);
     }, 10000);
   }, []);
@@ -159,19 +180,29 @@ export default function HomePage() {
               <div key={i} className={`${styles.ldSlide} ${isActive ? styles.ldSlideActive : ""}`}>
                 {useVideo ? (
                   // Only the ACTIVE slide ever gets a real <video> element --
-                  // the other six stay as plain images and never download
+                  // the other four stay as plain images and never download
                   // any video at all, so switching between them costs
-                  // nothing extra in mobile data. `loop` keeps the clip
-                  // repeating for the full 6-second slot even if the
-                  // source footage itself is shorter (e.g. a 3-4s clip).
+                  // nothing extra in mobile data.
+                  // Bug fix, 2026-08-23 per Cyril: `loop` was making a
+                  // clip shorter than the 10s slide window restart and
+                  // play part of itself again before the timer moved on
+                  // -- an awkward stutter. Removed loop; onEnded now
+                  // advances to the next slide the instant THIS clip
+                  // actually finishes, so it's always correct regardless
+                  // of whether a given clip runs 8s or 11s, no manual
+                  // number-tuning needed per video.
                   <video
                     key={slide.video}
+                    ref={videoRef}
                     src={slide.video}
                     poster={slide.img}
                     autoPlay
                     muted
-                    loop
                     playsInline
+                    preload="auto"
+                    aria-hidden="true"
+                    tabIndex={-1}
+                    onEnded={nextSlide}
                     onError={() => setVideoErrors((prev) => ({ ...prev, [i]: true }))}
                   />
                 ) : (
@@ -210,6 +241,19 @@ export default function HomePage() {
               />
             ))}
           </div>
+
+          {/* Accessibility fix, 2026-08-23: see isPaused/togglePause
+              above -- WCAG 2.2.2 requires a way to stop auto-changing
+              content. Also genuinely useful for anyone on limited
+              mobile data who'd rather stop the video downloads. */}
+          <button
+            type="button"
+            className={styles.ldSlidePause}
+            onClick={togglePause}
+            aria-label={isPaused ? "Resume slideshow" : "Pause slideshow"}
+          >
+            <i className={`fa-solid ${isPaused ? "fa-play" : "fa-pause"}`}></i>
+          </button>
         </div>
       </section>
 
