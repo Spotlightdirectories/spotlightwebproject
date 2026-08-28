@@ -253,10 +253,6 @@ export default function HomePage() {
                     video has loaded yet. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={slide.img} alt={slide.alt} className={isActive ? styles.ldSlideActiveImg : ""} />
-                <div className={styles.ldSlideCaption} key={activeSlide}>
-                  <span className={styles.ldSlideTag}>{slide.tag}</span>
-                  <p>{slide.caption}</p>
-                </div>
               </div>
             );
           })}
@@ -310,6 +306,19 @@ export default function HomePage() {
               />
             );
           })}
+
+          {/* Bug fix, 2026-08-23 per Cyril: the caption used to live
+              inside each .ldSlide div, whose stacking order (z-index)
+              got pushed below the new video overlay during the
+              dual-slot rewrite -- so it was silently hidden behind the
+              playing video, even though the code itself was untouched.
+              It's now its own top-level layer with a higher z-index
+              than both the photo and video layers, so it always shows
+              regardless of which of those two is currently on top. */}
+          <div className={styles.ldSlideCaption} key={activeSlide}>
+            <span className={styles.ldSlideTag}>{SLIDES[activeSlide].tag}</span>
+            <p>{SLIDES[activeSlide].caption}</p>
+          </div>
 
           <button type="button"
             className={`${styles.ldSlideArrow} ${styles.ldSlideArrowPrev}`}

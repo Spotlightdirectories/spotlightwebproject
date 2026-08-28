@@ -152,6 +152,12 @@
   padding: 28px 32px;
   background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0));
   color: #ffffff;
+  /* Bug fix, 2026-08-23: now a standalone top-level layer in
+     .ldHeroSlideshow (see page.tsx comment) rather than nested inside
+     .ldSlide -- needs its own z-index higher than the video overlay
+     (max 2), the dots (2), and the arrows/pause button (3) so it
+     always renders on top of all of them. */
+  z-index: 4;
 }
 
 .ldSlideTag {
