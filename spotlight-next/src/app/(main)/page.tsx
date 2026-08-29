@@ -278,6 +278,8 @@ export default function HomePage() {
                 muted
                 playsInline
                 preload="auto"
+                // @ts-expect-error -- fetchPriority isn't yet in React's video element typings
+                fetchPriority={isVisible ? "high" : "low"}
                 aria-hidden="true"
                 tabIndex={-1}
                 style={{

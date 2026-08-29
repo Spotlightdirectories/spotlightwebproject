@@ -38,6 +38,7 @@ declare global {
     Tawk_API?: {
       hideWidget?: () => void;
       showWidget?: () => void;
+      minimize?: () => void;
       onLoad?: () => void;
     };
   }
@@ -99,7 +100,19 @@ export default function TawkChat() {
       applyVisibility();
     } else {
       window.Tawk_API = window.Tawk_API || {};
-      window.Tawk_API.onLoad = applyVisibility;
+      window.Tawk_API.onLoad = () => {
+        applyVisibility();
+        // Bug fix, 2026-08-23 per Cyril: the widget was popping open
+        // to a full chat window covering much of the page on its own,
+        // unprompted -- most likely a proactive/auto-chat trigger set
+        // in Tawk.to's own dashboard (Administration > Chat Widget >
+        // Behavior), which lives outside this codebase entirely. This
+        // forces it back to just the small icon the instant it loads
+        // on every page, regardless of any such dashboard trigger --
+        // it never stops someone from clicking the icon to open it
+        // themselves afterward.
+        window.Tawk_API?.minimize?.();
+      };
     }
   }, [pathname, allowed]);
 
