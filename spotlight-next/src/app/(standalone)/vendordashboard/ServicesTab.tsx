@@ -29,6 +29,7 @@ import type { ChangeEvent } from "react";
 import { supabase } from "@/lib/supabase";
 import { uploadVendorFile } from "@/lib/uploadVendorFile";
 import AiDescribeModal, { useAiDescribeToast } from "@/components/AiDescribeModal";
+import UpgradePlanModal, { getListingUpgradeMessage } from "@/components/UpgradePlanModal";
 import SearchableSelect from "@/components/SearchableSelect";
 import type { Vendor } from "./page";
 
@@ -156,6 +157,10 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
 
   const [aiModalOpen, setAiModalOpen] = useState(false);
   const { showToast, toastNode } = useAiDescribeToast();
+
+  // Step 3, 2026-08 per Cyril: replaces the plain alert() that used
+  // to fire when hitting the plan's service limit.
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
   // CATEGORY + SUBCATEGORY (services taxonomy only — kind = 'service')
   const [categories, setCategories] = useState<Option[]>([]);
@@ -441,7 +446,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
       return;
     }
     if (totalCount >= currentLimit) {
-      alert("You have reached your current plan limit.");
+      setUpgradeModalOpen(true);
       return;
     }
     if (!editingId && subSubcategoryId && usedSubSubcategoryIds.has(subSubcategoryId)) {
@@ -1054,6 +1059,12 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
         }}
       />
       {toastNode}
+
+      <UpgradePlanModal
+        open={upgradeModalOpen}
+        message={getListingUpgradeMessage(trialActive, currentLimit, vendor.plan_tier || "free")}
+        onClose={() => setUpgradeModalOpen(false)}
+      />
     </div>
   );
 }

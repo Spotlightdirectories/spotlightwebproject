@@ -202,6 +202,13 @@ export default function GetListedPage() {
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const [currentPlanActivePaid, setCurrentPlanActivePaid] = useState(false);
 
+  // Default-Free-tier-only view, 2026-08 per Cyril: a first-time,
+  // anonymous visitor sees ONLY the free plan by default. The full
+  // grid is reachable only via the existing ?context=upgrade link.
+  const isUpgradeContext = searchParams.get("context") === "upgrade";
+  const showFullGrid = isUpgradeContext;
+  const visiblePlans = showFullGrid ? PLANS : PLANS.filter((p) => p.id === "free");
+
   useEffect(() => {
     if (searchParams.get("context") !== "upgrade") return;
 
@@ -325,7 +332,7 @@ export default function GetListedPage() {
 
         {/* PRICING CARDS */}
         <section className={styles.pricingGrid}>
-          {PLANS.map(plan => {
+          {visiblePlans.map(plan => {
             const relation = getPlanRelation(plan.id);
             return (
             <article
@@ -425,7 +432,9 @@ export default function GetListedPage() {
           <i className="fa-solid fa-shield-halved"></i> Cancel or change your plan anytime from your dashboard.
         </p>
 
-        {/* COMPARE TABLE */}
+        {/* COMPARE TABLE -- only meaningful with more than one plan
+            visible, so it's hidden in the default Free-only view. */}
+        {showFullGrid && (
         <section className={styles.compare}>
           <h2>Compare every feature, plan by plan</h2>
           <div className={styles.compareScroll}>
@@ -477,6 +486,7 @@ export default function GetListedPage() {
             </div>
           </div>
         </section>
+        )}
       </main>
       <Footer />
     </>

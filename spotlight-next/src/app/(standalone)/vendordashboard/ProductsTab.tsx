@@ -43,6 +43,7 @@ import type { ChangeEvent, RefObject } from "react";
 import { supabase } from "@/lib/supabase";
 import { uploadVendorFile } from "@/lib/uploadVendorFile";
 import AiDescribeModal, { useAiDescribeToast } from "@/components/AiDescribeModal";
+import UpgradePlanModal, { getListingUpgradeMessage } from "@/components/UpgradePlanModal";
 import SearchableSelect from "@/components/SearchableSelect";
 import type { Vendor } from "./page";
 
@@ -204,6 +205,10 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
 
   const [aiModalOpen, setAiModalOpen] = useState(false);
   const { showToast, toastNode } = useAiDescribeToast();
+
+  // Step 3, 2026-08 per Cyril: replaces the plain alert() that used
+  // to fire when hitting the plan's product limit.
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
   // CATEGORY + SUBCATEGORY (products taxonomy only — kind = 'product')
   const [categories, setCategories] = useState<Option[]>([]);
@@ -509,7 +514,7 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
     }
 
     if (totalCount >= currentLimit) {
-      alert(`Your plan allows only ${currentLimit} products.`);
+      setUpgradeModalOpen(true);
       return;
     }
 
@@ -1145,6 +1150,12 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
         }}
       />
       {toastNode}
+
+      <UpgradePlanModal
+        open={upgradeModalOpen}
+        message={getListingUpgradeMessage(trialActive, currentLimit, vendor.plan_tier || "free")}
+        onClose={() => setUpgradeModalOpen(false)}
+      />
     </div>
   );
 }
