@@ -39,6 +39,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { nigeriaData } from "@/lib/nigeria-data";
+import UpgradePlanModal, { BRANCH_UPGRADE_MESSAGE } from "@/components/UpgradePlanModal";
 import styles from "./dashboard-branches.module.css";
 
 type Branch = {
@@ -122,6 +123,16 @@ export default function DashboardBranchesPage() {
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({ ...emptyForm });
+
+  // Step 4, 2026-08 per Cyril: replaces the plain alert() that used
+  // to fire on submit when hitting the plan's branch limit (0 for
+  // free/standard). Also used to show the upgrade prompt IN PLACE OF
+  // the form entirely when already at the limit -- same reasoning as
+  // the Products/Services fix: this form has even more fields (name,
+  // address, phone, WhatsApp, state, LGA, hours, days, coordinates),
+  // so letting someone fill all of that in only to be blocked at
+  // submit would be worse here, not better.
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -257,7 +268,7 @@ export default function DashboardBranchesPage() {
     if (!editingId) {
       const limit = BRANCH_LIMITS[vendor.plan_tier || "free"] ?? 0;
       if (branches.length >= limit) {
-        alert("You have reached the maximum number of branches allowed for your plan.");
+        setUpgradeModalOpen(true);
         return;
       }
     }
@@ -297,6 +308,9 @@ export default function DashboardBranchesPage() {
 
   const lgaOptions: string[] = form.state ? nigeriaData[form.state as keyof typeof nigeriaData] || [] : [];
 
+  const branchLimit = BRANCH_LIMITS[vendor?.plan_tier || "free"] ?? 0;
+  const atLimit = !editingId && branches.length >= branchLimit;
+
   if (loading) {
     return (
       <main className={styles.page}>
@@ -314,6 +328,20 @@ export default function DashboardBranchesPage() {
       <section className={styles.card}>
         <h2>{editingId ? "Edit Branch" : "Add Branch"}</h2>
 
+        {atLimit ? (
+          // Shown INSTEAD of the form when already at the branch
+          // limit -- see upgradeModalOpen comment above for why.
+          <div>
+            <p className={styles.note}>{BRANCH_UPGRADE_MESSAGE}</p>
+            <button
+              type="button"
+              className={styles.primaryBtn}
+              onClick={() => setUpgradeModalOpen(true)}
+            >
+              Upgrade Plan
+            </button>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit}>
           <input
             type="text"
@@ -424,6 +452,7 @@ export default function DashboardBranchesPage() {
             )}
           </div>
         </form>
+        )}
       </section>
 
       {/* BRANCH LIST */}
@@ -448,6 +477,12 @@ export default function DashboardBranchesPage() {
           ))
         )}
       </section>
+
+      <UpgradePlanModal
+        open={upgradeModalOpen}
+        message={BRANCH_UPGRADE_MESSAGE}
+        onClose={() => setUpgradeModalOpen(false)}
+      />
     </main>
   );
 }

@@ -71,6 +71,9 @@ type Sponsorship = {
   expires_at: string | null;
 };
 
+// No longer used for gating (see showManageBranches comment below)
+// -- left here in case Cyril wants a different display distinction
+// for these plans later, rather than deleting outright.
 const BRANCH_ALLOWED_PLANS = ["enterprise", "elite", "custom"];
 
 export default function SubscriptionTab({ vendor }: { vendor: Vendor }) {
@@ -129,6 +132,13 @@ export default function SubscriptionTab({ vendor }: { vendor: Vendor }) {
 
   const billingDateText = vendor.expires_at ? new Date(vendor.expires_at).toLocaleDateString() : "—";
 
+  // Reverted, 2026-08-23 per Cyril: "Manage Branches" is only
+  // relevant to Enterprise/Elite/Custom -- Free and Standard are
+  // single-branch plans and can never use this feature regardless of
+  // upgrade status, so there's no reason to show them the button at
+  // all. The general "Upgrade Plan" button above already covers
+  // moving Free -> Standard for more listable products/services;
+  // branches specifically only become relevant at Enterprise+.
   const showManageBranches = BRANCH_ALLOWED_PLANS.includes(vendor.plan_tier || "");
   const showManagePaymentMethod = vendor.plan_tier !== "free";
 
