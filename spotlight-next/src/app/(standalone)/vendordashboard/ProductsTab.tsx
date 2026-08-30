@@ -915,7 +915,22 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
           <p className="vd-profile-subtext">Add and manage the products your business sells.</p>
         </div>
 
-        <button type="button" className="vd-service-btn" onClick={() => setFormOpen((v) => !v)}>
+        <button
+          type="button"
+          className="vd-service-btn"
+          onClick={() => {
+            // Bug fix, 2026-08-23 per Cyril: check the limit BEFORE
+            // opening the form, not after someone has already filled
+            // it out (category, images, description, price) only to
+            // be told "limit reached" at the very end. The check
+            // inside handleAddToPending stays too, as a safety net.
+            if (!formOpen && totalCount >= currentLimit) {
+              setUpgradeModalOpen(true);
+              return;
+            }
+            setFormOpen((v) => !v);
+          }}
+        >
           <i className="fa-solid fa-plus"></i> Add Product
         </button>
       </div>

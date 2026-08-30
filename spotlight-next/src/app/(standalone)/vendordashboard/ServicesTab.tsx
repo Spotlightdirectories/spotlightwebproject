@@ -791,7 +791,20 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
           <p className="vd-profile-subtext">Add and manage the services your business provides.</p>
         </div>
 
-        <button type="button" className="vd-service-btn" onClick={() => setFormOpen((v) => !v)}>
+        <button
+          type="button"
+          className="vd-service-btn"
+          onClick={() => {
+            // Bug fix, 2026-08-23 per Cyril: check the limit BEFORE
+            // opening the form -- same fix as ProductsTab. The check
+            // inside handleAddToPending stays too, as a safety net.
+            if (!formOpen && totalCount >= currentLimit) {
+              setUpgradeModalOpen(true);
+              return;
+            }
+            setFormOpen((v) => !v);
+          }}
+        >
           <i className="fa-solid fa-plus"></i> Add Service
         </button>
       </div>
