@@ -113,6 +113,17 @@ export default function ContactPage() {
               <a href="https://www.youtube.com/@spotlightdirectories" target="_blank" rel="noopener noreferrer"><i className="fa-brands fa-youtube"></i></a>
             </div>
           </div>
+
+          {/* Step 5 sketch 2, 2026-08-23 per Cyril: a third column,
+              to the right of contact details, linking to Why
+              Spotlight/FAQ/Feedback. "Contact Us" is deliberately not
+              included here -- a page never needs to link to itself. */}
+          <div className={styles.spotExtra}>
+            <h3>You might also need</h3>
+            <a href="/aboutUs"><i className="fa-solid fa-circle-info"></i> Why Spotlight?</a>
+            <a href="/FAQ"><i className="fa-solid fa-circle-question"></i> FAQ</a>
+            <a href="/feedback"><i className="fa-solid fa-comment-dots"></i> Feedback</a>
+          </div>
         </section>
       </main>
       <Footer />

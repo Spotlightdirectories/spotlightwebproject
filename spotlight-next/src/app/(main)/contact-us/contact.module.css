@@ -136,9 +136,25 @@
 .socialIcons a { font-size: 24px; color: white; transition: 0.2s ease; }
 .socialIcons a:hover { color: #ffd400; }
 
+/* Step 5 sketch 2, 2026-08-23 per Cyril -- third column, same dark
+   theme as spotRight beside it. */
+.spotExtra { max-width: 320px; margin-top: 70px; }
+.spotExtra h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: #9ca3af; margin-bottom: 18px; font-weight: 600; }
+.spotExtra a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  text-decoration: none;
+  margin-bottom: 16px;
+  font-size: 1rem;
+}
+.spotExtra a:hover { color: #ffd400; }
+.spotExtra i { font-size: 16px; width: 20px; text-align: center; color: #ffd400; flex-shrink: 0; }
+
 @media (min-width: 1000px) {
   .contactMain { grid-template-columns: 1fr 1fr; gap: 80px; align-items: stretch; }
-  .spotlighters { grid-template-columns: 1.2fr 1fr; gap: 80px; }
+  .spotlighters { grid-template-columns: 1.2fr 1fr 0.8fr; gap: 60px; }
   .hero h1 { font-size: 3.5rem; }
 }
 

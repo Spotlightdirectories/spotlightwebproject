@@ -1,47 +1,126 @@
-/* Footer.module.css — matches production footer style */
+/* ===============================================================
+   Footer.module.css
+   Step 5, 2026-08-23 per Cyril — see Footer.tsx header comment for
+   full context. Migrated out of homepage.module.css (where this
+   lived as the homepage-only "branded footer") since this component
+   is now shared site-wide, and CSS Modules scope class names per
+   file — these rules only take effect if they live alongside the
+   component that uses them.
+=============================================================== */
 
-.footer {
-  background: #000000;
-  color: #9ca3af;
-  text-align: center;
-  padding: 15px 10px;
-  font-size: 0.7rem;
+.hfooter { background: #000000; color: #e5e7eb; padding: 90px 0 40px; }
+.hcontainer { max-width: 1300px; margin: auto; padding: 0 24px; }
+
+.hfooterGrid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 60px;
+  align-items: start;
 }
 
-.footerContent {
+.hfooterBrand p { max-width: 280px; line-height: 1.6; color: #9ca3af; margin-top: 12px; }
+.hfooterBrand img { max-width: 160px; }
+
+/* Real social links, added 2026-08-23 -- Facebook, Instagram,
+   LinkedIn, TikTok, YouTube. No X/Twitter per Cyril ("Nigerians are
+   not used to X site. Only rich people do."). */
+.hfooterSocial {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.hfooterSocial a {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #1f2937;
+  color: #e5e7eb;
+  font-size: 14px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.hfooterSocial a:hover {
+  background: #e6c200;
+  color: #000000;
+}
+
+.hfooterLinks h4, .hfooterSupport h4, .hfooterLegalCol h4 { font-size: 16px; margin-bottom: 16px; color: #ffffff; }
+.hfooterLinks a, .hfooterSupport a, .hfooterLegalCol a { display: block; text-decoration: none; color: #9ca3af; margin-bottom: 10px; font-size: 15px; }
+.hfooterLinks a:hover, .hfooterSupport a:hover, .hfooterLegalCol a:hover { color: #ffffff; }
+
+/* Self-link graying, added 2026-08-23 -- see FooterLink in Footer.tsx.
+   Applied to whichever link matches the current page: same spacing
+   as a normal link (so the layout doesn't shift), but visibly inert
+   -- no hover color change, a "not-allowed" cursor, and a bit dimmer
+   than the already-muted default link color. */
+.footerLinkCurrent {
+  display: block;
+  color: #6b7280;
+  margin-bottom: 10px;
+  font-size: 15px;
+  cursor: not-allowed;
+}
+
+.hfooterBottom {
+  border-top: 1px solid #1f2937;
+  margin-top: 50px;
+  padding-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 4px;
-}
-
-.footerContent a {
-  text-decoration: none;
+  gap: 6px;
   color: #9ca3af;
-  padding: 0 8px;
-  font-size: 0.7rem;
-}
-
-.footerContent a:hover { color: #ffffff; }
-
-.footerContent p {
-  margin: 3px 0 0;
-  font-size: 0.7rem;
-  width: 100%;
+  font-size: 14px;
 }
 
 .complianceLine {
   color: #6b7280;
-  margin-top: 6px !important;
+  font-size: 13px;
 }
 
 .complianceLine a {
   color: #6b7280;
   text-decoration: underline;
-  padding: 0;
 }
 
 .complianceLine a:hover {
   color: #ffffff;
+}
+
+.hfooterPartnerBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffd700;
+  color: #000000 !important;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  margin-top: 4px;
+}
+
+.hfooterPartnerBtn:hover { background: #e6c200; }
+
+/* Self-link graying applied to the Partner Program button
+   specifically needs its own override, since .footerLinkCurrent's
+   plain-text styling would otherwise clash with the button look. */
+.hfooterPartnerBtn.footerLinkCurrent {
+  display: inline-flex;
+  background: #3a3a3a;
+  color: #9ca3af !important;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .hfooterGrid { grid-template-columns: 1fr; gap: 40px; }
+  .hfooterBottom { flex-direction: column-reverse; align-items: center; gap: 6px; font-size: 12px; text-align: center; }
 }

@@ -450,42 +450,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* BRANDED FOOTER — 4-column, homepage only */}
-      <footer className={styles.hfooter}>
-        <div className={`${styles.hcontainer} ${styles.hfooterGrid}`}>
-          <div className={styles.hfooterBrand}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/whitelogo3.png" alt="Spotlight Directories" />
-            <p>Dedicated to digitalizing local businesses and making services accessible to everyone, everywhere.</p>
-          </div>
-          <div className={styles.hfooterLinks}>
-            <h4>Quick Links</h4>
-            <a href="/">Home</a>
-            <a href="/aboutUs">Why Spotlight</a>
-            <a href="/getlisted">Get Listed</a>
-            <a href="/discover">Search Vendors</a>
-          </div>
-          <div className={styles.hfooterSupport}>
-            <h4>Support</h4>
-            <a href="/safety">Safety Center</a>
-            <a href="/FAQ">FAQ</a>
-            <a href="/contact-us">Contact Us</a>
-            <a href="/feedback">Feedback</a>
-            <a href="/resources">Resources</a>
-            <a href="/partner-program" className={styles.hfooterPartnerBtn}>Partner Program</a>
-          </div>
-          <div className={styles.hfooterNewsletter}>
-            <h4>Newsletter</h4>
-            <p>Get the latest business tips and deals.</p>
-            <div className={styles.newsletterForm}>
-              <input type="email" placeholder="Email address (Coming Soon)" disabled />
-              <button type="button" disabled>Go</button>
-            </div>
-          </div>
-        </div>
-      </footer>
-
-      {/* SHARED FOOTER — matches all other pages */}
+      {/* SHARED FOOTER — the old homepage-only "branded footer" that
+          used to sit here, immediately followed by this same <Footer />
+          a second time, is gone. That was causing the homepage to show
+          "Safety Center" and "Resources" twice, back to back. This one
+          shared component now IS the rich, full footer, used
+          everywhere -- see Footer.tsx. */}
       <Footer />
     </>
   );

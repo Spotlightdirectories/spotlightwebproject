@@ -471,59 +471,9 @@
 .ldGrowthFeature h3 { font-size: var(--text-base); font-weight: var(--font-bold); color: var(--color-text-primary); margin: 0 0 4px; }
 .ldGrowthFeature p { font-size: var(--text-sm); color: var(--color-text-muted); margin: 0; }
 
-/* FOOTER */
-.hfooter { background: #000000; color: #e5e7eb; padding: 90px 0 40px; }
-.hcontainer { max-width: 1300px; margin: auto; padding: 0 24px; }
-
-.hfooterGrid {
-  display: grid;
-  grid-template-columns: 1.6fr 1fr 1fr 1.6fr;
-  gap: 60px;
-  align-items: start;
-}
-
-.hfooterBrand p { max-width: 280px; line-height: 1.6; color: #9ca3af; margin-top: 12px; }
-.hfooterBrand img { max-width: 160px; }
-.hfooterLinks h4, .hfooterSupport h4, .hfooterNewsletter h4 { font-size: 16px; margin-bottom: 16px; color: #ffffff; }
-.hfooterLinks a, .hfooterSupport a { display: block; text-decoration: none; color: #9ca3af; margin-bottom: 10px; font-size: 15px; }
-.hfooterLinks a:hover, .hfooterSupport a:hover { color: #ffffff; }
-.hfooterNewsletter p { color: #9ca3af; margin-bottom: 14px; font-size: 14px; }
-
-.newsletterForm { display: flex; overflow: hidden; border-radius: 8px; }
-.newsletterForm input { flex: 1; padding: 12px 14px; border: none; background: #111827; color: #ffffff; font-size: 14px; }
-.newsletterForm button { background: #e6c200; border: none; padding: 12px 18px; font-weight: 600; cursor: pointer; }
-
-.hfooterBottom {
-  border-top: 1px solid #1f2937;
-  margin-top: 50px;
-  padding-top: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #9ca3af;
-  font-size: 14px;
-}
-
-.hfooterLegal a { margin-right: 20px; color: #9ca3af; text-decoration: none; }
-.hfooterLegal a:last-child { margin-right: 0; }
-.hfooterLegal a:hover { color: #ffffff; }
-
-.hfooterPartnerBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #ffd700;
-  color: #000000;
-  font-weight: 600;
-  font-size: 13px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-}
-
-.hfooterPartnerBtn:hover { background: #e6c200; }
+/* FOOTER — moved to Footer.module.css, 2026-08-23 per Cyril (Step 5):
+   the branded footer that used to live only on this page is now the
+   one shared site-wide Footer component. See Footer.tsx/.module.css. */
 
 /* RESPONSIVE */
 @media (max-width: 900px) {
@@ -553,6 +503,4 @@
   .ldHowGrid { grid-template-columns: 1fr; }
   .ldApp { grid-template-columns: 1fr; text-align: center; }
   .ldSafetyGrid { grid-template-columns: 1fr; }
-  .hfooterGrid { grid-template-columns: 1fr; gap: 40px; }
-  .hfooterBottom { flex-direction: column-reverse; align-items: center; gap: 6px; font-size: 12px; }
 }
