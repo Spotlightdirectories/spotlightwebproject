@@ -252,6 +252,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 24px;
   color: #9ca3af;
   font-size: 14px;
 }

@@ -65,7 +65,7 @@ const FAQS = [
   { q: "2. How do I get paid?", a: "You earn 20% of a vendor's first payment and 10% of every renewal payment they make, for as long as they stay subscribed and you remain their referring partner. If someone you referred becomes a partner too, you earn an additional 5% override on their vendor commissions (one level only — this is not a multi-level structure)." },
   { q: "3. When does a commission become available to withdraw?", a: "Commissions start as 'pending' and move to 'available' automatically 7 days after the vendor's payment is confirmed. This hold protects against refunds and payment disputes. You'll see the exact unlock date next to each commission in your dashboard." },
   { q: "4. When and how are payouts processed?", a: "Payouts are processed between the 1st and 5th of each month, by bank transfer to the account you provide when your payout is due. The minimum payout amount is ₦10,000 — balances below that roll over to the next month." },
-  { q: "5. What is the monthly bonus?", a: "You earn a flat ₦30,000 bonus for every 50 yearly-plan vendor commissions you generate within the same calendar month. This is tracked automatically and shown as a progress bar on your dashboard." },
+  { q: "5. What is the monthly bonus?", a: "You earn a flat ₦50,000 bonus for every 50 yearly-plan vendor commissions you generate within the same calendar month. This is tracked automatically and shown as a progress bar on your dashboard." },
   { q: "6. What happens if a vendor refunds or cancels?", a: "Spotlight's refund window for vendors is 7 days from payment. If a vendor refunds within that window, any related pending commission is reversed before it becomes available. Commissions that have already been marked available and paid are not clawed back." },
   { q: "7. Can I close my partner account, and what happens to my commissions?", a: "Yes, anytime, from your dashboard's Account section. Closing schedules your account for deletion in 14 days (giving you a window to change your mind) but does not forfeit commissions already earned — available and paid commissions remain yours regardless of account status." },
 ];
@@ -85,7 +85,7 @@ export default function PartnerLegalPage() {
   const yearlyCommissionCount = calcCycle === "yearly" ? newVendors + renewals : 0;
   const bonusesEarned = Math.floor(yearlyCommissionCount / 50);
   const bonusProgress = yearlyCommissionCount % 50;
-  const estimatedTotal = firstPaymentCommission + renewalCommission + bonusesEarned * 30000;
+  const estimatedTotal = firstPaymentCommission + renewalCommission + bonusesEarned * 50000;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -128,7 +128,7 @@ export default function PartnerLegalPage() {
                   <ul>
                     <li>20% commission on every successful paid vendor registration</li>
                     <li>10% commission on renewals</li>
-                    <li>₦30,000 bonus upon reaching 50 yearly-paid vendors in a month</li>
+                    <li>₦50,000 bonus upon reaching 50 yearly-paid vendors in a month</li>
                   </ul>
                 </div>
 
@@ -421,8 +421,8 @@ export default function PartnerLegalPage() {
                     </div>
                     {calcCycle === "yearly" && (
                       <div className={styles.plCalcRow}>
-                        <span>Monthly bonuses earned (₦30,000 / 50 yearly commissions)</span>
-                        <strong>{bonusesEarned} (₦{(bonusesEarned * 30000).toLocaleString()}) — {bonusProgress}/50 toward next</strong>
+                        <span>Monthly bonuses earned (₦50,000 / 50 yearly commissions)</span>
+                        <strong>{bonusesEarned} (₦{(bonusesEarned * 50000).toLocaleString()}) — {bonusProgress}/50 toward next</strong>
                       </div>
                     )}
                     <div className={`${styles.plCalcRow} ${styles.plCalcTotal}`}>
@@ -463,19 +463,17 @@ export default function PartnerLegalPage() {
       <footer className={styles.hfooter}>
         <div className={`${styles.hcontainer} ${styles.hfooterBottom}`}>
           <p>&copy; 2026 Spotlight Digital Services Ltd. All Rights Reserved.</p>
-          <div className={styles.hfooterLegal}>
-            <a href="/partner-program">Partner Page</a>
-            <a href="/terms">Terms</a>
-            <a href="/privacy">Privacy</a>
-          </div>
-        </div>
-        <div className={styles.hcontainer}>
           <p className={styles.hfooterCompliance}>
             NDPC Registered (Reg. No. NDPC/DCP/14269) &middot;{" "}
             <a href="https://ndpc.gov.ng" target="_blank" rel="noopener noreferrer">
               Verify with NDPC
             </a>
           </p>
+          <div className={styles.hfooterLegal}>
+            <a href="/partner-program">Partner Page</a>
+            <a href="/terms">Terms</a>
+            <a href="/privacy">Privacy</a>
+          </div>
         </div>
       </footer>
     </>

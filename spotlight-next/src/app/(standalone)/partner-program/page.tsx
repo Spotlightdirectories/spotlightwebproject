@@ -389,8 +389,8 @@ function PartnerProgramInner() {
                 <div className={styles.ppBadgeTop}>Monthly Target</div>
                 <div className={styles.ppCardIcon}><i className="fa-solid fa-medal"></i></div>
                 <h3>Monthly Performance Bonus</h3>
-                <p>Hit 50 yearly-paid vendors in a month and earn a ₦30,000 cash bonus.</p>
-                <h2 className={styles.ppCardValue}>₦30,000</h2>
+                <p>Hit 50 yearly-paid vendors in a month and earn a ₦50,000 cash bonus.</p>
+                <h2 className={styles.ppCardValue}>₦50,000</h2>
                 <small>PER 50 YEARLY VENDORS</small>
               </div>
 
@@ -533,6 +533,18 @@ function PartnerFooter() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/whitelogo3.png" alt="Spotlight Directories Logo" className={styles.hfooterLogo} />
           <p>Dedicated to digitalizing local businesses and making services accessible to everyone, everywhere.</p>
+          {/* Added 2026-08-23 per Cyril: this page's own separate
+              footer (distinct from the main site's shared Footer
+              component) never had social links at all -- same 5 real
+              accounts already used on the main footer and Contact Us
+              page (no X/Twitter, per Cyril's earlier call). */}
+          <div className={styles.hfooterSocial}>
+            <a href="https://web.facebook.com/profile.php?id=61588123081014" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i className="fa-brands fa-facebook-f"></i></a>
+            <a href="https://www.instagram.com/spotlight_directories" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i className="fa-brands fa-instagram"></i></a>
+            <a href="https://www.linkedin.com/in/spotlightdirectories-5518813b0/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i className="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://www.tiktok.com/@spotlight_directories" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><i className="fa-brands fa-tiktok"></i></a>
+            <a href="https://www.youtube.com/@spotlightdirectories" target="_blank" rel="noopener noreferrer" aria-label="YouTube"><i className="fa-brands fa-youtube"></i></a>
+          </div>
         </div>
 
         <div className={styles.hfooterLinks}>
@@ -553,19 +565,17 @@ function PartnerFooter() {
 
       <div className={`${styles.hcontainer} ${styles.hfooterBottom}`}>
         <p>&copy; 2026 Spotlight Digital Services Ltd. All Rights Reserved.</p>
-        <div className={styles.hfooterLegal}>
-          <a href="/terms">Terms</a>
-          <a href="/privacy">Privacy</a>
-          <a href="/disclaimer">Disclaimer</a>
-        </div>
-      </div>
-      <div className={styles.hcontainer}>
         <p className={styles.hfooterCompliance}>
           NDPC Registered (Reg. No. NDPC/DCP/14269) &middot;{" "}
           <a href="https://ndpc.gov.ng" target="_blank" rel="noopener noreferrer">
             Verify with NDPC
           </a>
         </p>
+        <div className={styles.hfooterLegal}>
+          <a href="/terms">Terms</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/disclaimer">Disclaimer</a>
+        </div>
       </div>
     </footer>
   );

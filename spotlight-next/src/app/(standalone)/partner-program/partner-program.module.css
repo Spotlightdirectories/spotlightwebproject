@@ -376,6 +376,33 @@
 
 .hfooterBrand p { max-width: 280px; line-height: 1.6; color: #9ca3af; margin-top: 12px; }
 
+/* Added 2026-08-23 per Cyril -- same styling as the main site's
+   shared Footer.module.css .hfooterSocial, kept consistent since
+   this page has its own separate CSS module. */
+.hfooterSocial {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.hfooterSocial a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #1f2937;
+  color: #e5e7eb;
+  font-size: 14px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.hfooterSocial a:hover {
+  background: #e6c200;
+  color: #000000;
+}
+
 .hfooterLinks h4, .hfooterSupport h4 { font-size: 16px; margin-bottom: 16px; color: white; }
 
 .hfooterLinks a, .hfooterSupport a {
@@ -395,6 +422,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 24px;
   color: #9ca3af;
   font-size: 14px;
 }
