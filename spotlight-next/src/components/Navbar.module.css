@@ -255,6 +255,51 @@
   color: #ffffff !important;
 }
 
+/* Step 8 fix, 2026-08-23 per Cyril: the third-level drill-down for
+   the 2 categories that actually have one (Tailoring & Fashion
+   Designer, Clothing & Fashion). Click-to-expand, same visual
+   language as the surrounding dropdown/mobile list -- works
+   identically via click or tap since it isn't hover-based like the
+   outer pill. */
+.nestedBlock {
+  display: block;
+}
+
+.nestedToggle {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  padding: 9px 14px;
+}
+
+.nestedToggle i {
+  font-size: 0.7em;
+  margin-left: 8px;
+}
+
+.nestedSubList {
+  padding-left: 14px;
+  border-left: 2px solid var(--color-border);
+  margin-left: 14px;
+}
+
+.categoryMobileList .nestedToggle {
+  color: #d1d5db;
+  justify-content: center;
+  gap: 6px;
+}
+
+.categoryMobileList .nestedSubList {
+  border-left: 2px solid #3a3a3a;
+}
+
 /* ACCOUNT MENU (Log Out + "Dashboard" shortcut) — desktop only.
    Cyril's ask (2026-07-28): a vendor who's still logged in from a
    previous visit and lands on the homepage only sees "Log Out," with

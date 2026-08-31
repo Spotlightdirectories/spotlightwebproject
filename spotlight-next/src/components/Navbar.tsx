@@ -49,6 +49,35 @@ export default function Navbar() {
     loadCats();
   }, []);
 
+  // Step 8 fix, 2026-08-23 per Cyril: exactly 2 of the 179 categories
+  // (confirmed by querying the DB directly, not guessed) actually go
+  // a third level deep -- "Tailoring & Fashion Designer" (Artisan)
+  // and "Clothing & Fashion" (Goods). Everything else stops at a
+  // plain category link. Fetched once on mount as a nested lookup:
+  // { categoryName: { subcategoryName: [subsubcategoryName, ...] } }.
+  const [nestedCats, setNestedCats] = useState<Record<string, Record<string, string[]>>>({});
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [expandedSubcat, setExpandedSubcat] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadNested() {
+      const { data } = await supabase
+        .from("categories")
+        .select("name, subcategories(name, sub_subcategories(name))")
+        .in("name", ["Tailoring & Fashion Designer", "Clothing & Fashion"]);
+      if (!data) return;
+      const nested: Record<string, Record<string, string[]>> = {};
+      for (const cat of data as any[]) {
+        nested[cat.name] = {};
+        for (const sub of cat.subcategories || []) {
+          nested[cat.name][sub.name] = (sub.sub_subcategories || []).map((ss: any) => ss.name);
+        }
+      }
+      setNestedCats(nested);
+    }
+    loadNested();
+  }, []);
+
   // Step 8, 2026-08-23 per Cyril: the exact 10 Goods sub-groups
   // locked in the approved spreadsheet -- must match goods_subgroup
   // values in the categories table exactly, or the dropdown links
@@ -125,6 +154,83 @@ export default function Navbar() {
     isSubgroup: boolean
   ) {
     const isExpanded = expandedPill === audienceKey;
+
+    const closeAll = () => {
+      setMenuOpen(false);
+      setExpandedPill(null);
+      setExpandedCategory(null);
+      setExpandedSubcat(null);
+    };
+
+    const itemHref = (item: string) =>
+      isSubgroup
+        ? `/discover-results?audience=Goods&subgroup=${encodeURIComponent(item)}`
+        : `/discover-results?category=${encodeURIComponent(item)}`;
+
+    // Step 8 fix, 2026-08-23 per Cyril: renders one item in either
+    // list (desktop dropdown or mobile inline list) identically.
+    // Plain items (177 of 179 categories) are just a link, unchanged.
+    // The 2 categories with a real third level (see nestedCats above)
+    // instead render as a click-to-expand drill-down -- works the
+    // same way via click or tap on both desktop and mobile, rather
+    // than building two separate deep-nesting mechanisms.
+    function renderItem(item: string) {
+      const nested = nestedCats[item];
+      if (!nested) {
+        return (
+          <Link key={item} href={itemHref(item)} onClick={closeAll}>
+            {item}
+          </Link>
+        );
+      }
+
+      const catOpen = expandedCategory === item;
+      return (
+        <div key={item} className={styles.nestedBlock}>
+          <button
+            type="button"
+            className={styles.nestedToggle}
+            onClick={() => setExpandedCategory(catOpen ? null : item)}
+          >
+            {item}
+            <i className={`fa-solid ${catOpen ? "fa-chevron-down" : "fa-chevron-right"}`}></i>
+          </button>
+          {catOpen && (
+            <div className={styles.nestedSubList}>
+              {Object.entries(nested).map(([subName, subsubs]) => {
+                const subOpen = expandedSubcat === subName;
+                return (
+                  <div key={subName}>
+                    <button
+                      type="button"
+                      className={styles.nestedToggle}
+                      onClick={() => setExpandedSubcat(subOpen ? null : subName)}
+                    >
+                      {subName}
+                      <i className={`fa-solid ${subOpen ? "fa-chevron-down" : "fa-chevron-right"}`}></i>
+                    </button>
+                    {subOpen && (
+                      <div className={styles.nestedSubList}>
+                        {subsubs.map((ss) => (
+                          <Link
+                            key={ss}
+                            href={`/discover-results?category=${encodeURIComponent(item)}&subcategory=${encodeURIComponent(subName)}&subsubcategory=${encodeURIComponent(ss)}`}
+                            onClick={closeAll}
+                          >
+                            {ss}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    }
+
     return (
       <li className={styles.categoryMenu} key={audienceKey}>
         <Link
@@ -144,39 +250,12 @@ export default function Navbar() {
         </Link>
 
         <div className={styles.categoryDropdown}>
-          {items.map((item) => (
-            <Link
-              key={item}
-              href={
-                isSubgroup
-                  ? `/discover-results?audience=Goods&subgroup=${encodeURIComponent(item)}`
-                  : `/discover-results?category=${encodeURIComponent(item)}`
-              }
-              onClick={() => setMenuOpen(false)}
-            >
-              {item}
-            </Link>
-          ))}
+          {items.map((item) => renderItem(item))}
         </div>
 
         {isMobile && isExpanded && (
           <div className={styles.categoryMobileList}>
-            {items.map((item) => (
-              <Link
-                key={item}
-                href={
-                  isSubgroup
-                    ? `/discover-results?audience=Goods&subgroup=${encodeURIComponent(item)}`
-                    : `/discover-results?category=${encodeURIComponent(item)}`
-                }
-                onClick={() => {
-                  setMenuOpen(false);
-                  setExpandedPill(null);
-                }}
-              >
-                {item}
-              </Link>
-            ))}
+            {items.map((item) => renderItem(item))}
           </div>
         )}
       </li>
