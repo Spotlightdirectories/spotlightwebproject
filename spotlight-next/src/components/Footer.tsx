@@ -93,7 +93,7 @@ export default function Footer() {
               <i className="fa-brands fa-instagram"></i>
             </a>
             <a
-              href="https://www.linkedin.com/in/spotlightdirectories-5518813b0/"
+              href="https://www.linkedin.com/company/spotlight-directories/"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="LinkedIn"

@@ -108,7 +108,7 @@ export default function ContactPage() {
             <div className={styles.socialIcons}>
               <a href="https://web.facebook.com/profile.php?id=61588123081014" target="_blank" rel="noopener noreferrer"><i className="fa-brands fa-facebook-f"></i></a>
               <a href="https://www.instagram.com/spotlight_directories" target="_blank" rel="noopener noreferrer"><i className="fa-brands fa-instagram"></i></a>
-              <a href="https://www.linkedin.com/in/spotlightdirectories-5518813b0/" target="_blank" rel="noopener noreferrer"><i className="fa-brands fa-linkedin-in"></i></a>
+              <a href="https://www.linkedin.com/company/spotlight-directories/" target="_blank" rel="noopener noreferrer"><i className="fa-brands fa-linkedin-in"></i></a>
               <a href="https://www.tiktok.com/@spotlight_directories" target="_blank" rel="noopener noreferrer"><i className="fa-brands fa-tiktok"></i></a>
               <a href="https://www.youtube.com/@spotlightdirectories" target="_blank" rel="noopener noreferrer"><i className="fa-brands fa-youtube"></i></a>
             </div>
