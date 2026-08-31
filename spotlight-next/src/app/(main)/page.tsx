@@ -243,9 +243,9 @@ export default function HomePage() {
               as the only brand-color accent -- locked after a few
               rounds of sketching together. */}
           <p className={styles.ldTagline}>
-            <span className={styles.ldTaglineDot}>•</span>FIND{" "}
-            <span className={styles.ldTaglineDot}>•</span>TRUST{" "}
-            <span className={styles.ldTaglineDot}>•</span>CONNECT
+            FIND<span className={styles.ldTaglineDot}>.</span>{" "}
+            TRUST<span className={styles.ldTaglineDot}>.</span>{" "}
+            CONNECT<span className={styles.ldTaglineDot}>.</span>
           </p>
           <p className={styles.ldEyebrow}>Nigeria's discovery platform for real businesses</p>
           <h1>Put Your Business On The <span className={styles.ldSpotlightGlow}>Spotlight</span></h1>

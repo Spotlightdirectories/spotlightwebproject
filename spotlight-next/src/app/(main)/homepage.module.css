@@ -49,14 +49,14 @@
   letter-spacing: 0.1em;
   font-weight: var(--font-light);
   color: var(--color-text-secondary);
-  margin: 0 0 4px;
+  margin: 0 0 18px;
 }
 
 .ldTaglineDot {
   color: var(--color-primary);
-  font-weight: var(--font-extrabold);
-  vertical-align: baseline;
-  margin-right: 4px;
+  font-weight: var(--font-black);
+  font-size: 1.15em;
+  margin: 0 3px;
 }
 
 .ldEyebrow {
@@ -131,6 +131,16 @@
   grid-template-columns: 1fr 1.3fr;
   gap: 48px;
   align-items: center;
+}
+
+.ldHeroText {
+  /* Bug fix, 2026-08-23 per Cyril: .ldHero centers both grid columns
+     vertically against the taller 480px slideshow, which pushed an
+     uneven gap above the new tagline line specifically (nothing else
+     sat above it to visually absorb that space). align-self overrides
+     centering for JUST this column -- the slideshow keeps its own
+     centered position and tuned -24px offset completely untouched. */
+  align-self: start;
 }
 
 .ldHeroText h1 {
