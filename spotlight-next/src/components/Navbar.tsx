@@ -78,6 +78,35 @@ export default function Navbar() {
     loadNested();
   }, []);
 
+  // Bug fix, 2026-08-23 per Cyril: he correctly caught that "Clothing
+  // & Fashion" (the actual category with the third level) never
+  // showed up anywhere -- because the Goods dropdown only ever showed
+  // the 10 SUB-GROUPS (e.g. "Fashion & Accessories"), never the real
+  // categories underneath them. The nested-flyout check above was
+  // correct, it just had nothing to attach to for Goods specifically.
+  // Fetched once: which actual categories sit inside each sub-group.
+  const [goodsCatsBySubgroup, setGoodsCatsBySubgroup] = useState<Record<string, string[]>>({});
+  const [expandedSubgroup, setExpandedSubgroup] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadGoodsCats() {
+      const { data } = await supabase
+        .from("categories")
+        .select("name, goods_subgroup")
+        .eq("audience_type", "Goods")
+        .order("name");
+      if (!data) return;
+      const grouped: Record<string, string[]> = {};
+      for (const c of data as any[]) {
+        if (!c.goods_subgroup) continue;
+        if (!grouped[c.goods_subgroup]) grouped[c.goods_subgroup] = [];
+        grouped[c.goods_subgroup].push(c.name);
+      }
+      setGoodsCatsBySubgroup(grouped);
+    }
+    loadGoodsCats();
+  }, []);
+
   // Step 8, 2026-08-23 per Cyril: the exact 10 Goods sub-groups
   // locked in the approved spreadsheet -- must match goods_subgroup
   // values in the categories table exactly, or the dropdown links
@@ -158,27 +187,21 @@ export default function Navbar() {
     const closeAll = () => {
       setMenuOpen(false);
       setExpandedPill(null);
+      setExpandedSubgroup(null);
       setExpandedCategory(null);
       setExpandedSubcat(null);
     };
 
-    const itemHref = (item: string) =>
-      isSubgroup
-        ? `/discover-results?audience=Goods&subgroup=${encodeURIComponent(item)}`
-        : `/discover-results?category=${encodeURIComponent(item)}`;
-
-    // Step 8 fix, 2026-08-23 per Cyril: renders one item in either
-    // list (desktop dropdown or mobile inline list) identically.
-    // Plain items (177 of 179 categories) are just a link, unchanged.
-    // The 2 categories with a real third level (see nestedCats above)
-    // instead render as a click-to-expand drill-down -- works the
-    // same way via click or tap on both desktop and mobile, rather
-    // than building two separate deep-nesting mechanisms.
-    function renderItem(item: string) {
+    // Renders one CATEGORY (not a subgroup) -- shared by Artisan/
+    // Professional's plain items and, after this fix, by the actual
+    // categories revealed inside a Goods sub-group too. Handles both
+    // the plain-link case and the 2-category deep-nested case
+    // identically wherever it's called from.
+    function renderCategoryItem(item: string) {
       const nested = nestedCats[item];
       if (!nested) {
         return (
-          <Link key={item} href={itemHref(item)} onClick={closeAll}>
+          <Link key={item} href={`/discover-results?category=${encodeURIComponent(item)}`} onClick={closeAll}>
             {item}
           </Link>
         );
@@ -225,6 +248,37 @@ export default function Navbar() {
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Step 8 fix, 2026-08-23 per Cyril: for Goods, `item` here is a
+    // SUB-GROUP name (e.g. "Fashion & Accessories"), not a category --
+    // so it expands to reveal the real categories inside it (via
+    // renderCategoryItem above), instead of linking straight to
+    // results. Artisan/Professional items ARE already real category
+    // names, so they render directly via renderCategoryItem with no
+    // extra level needed.
+    function renderItem(item: string) {
+      if (!isSubgroup) return renderCategoryItem(item);
+
+      const cats = goodsCatsBySubgroup[item] || [];
+      const subgroupOpen = expandedSubgroup === item;
+      return (
+        <div key={item} className={styles.nestedBlock}>
+          <button
+            type="button"
+            className={styles.nestedToggle}
+            onClick={() => setExpandedSubgroup(subgroupOpen ? null : item)}
+          >
+            {item}
+            <i className={`fa-solid ${subgroupOpen ? "fa-chevron-down" : "fa-chevron-right"}`}></i>
+          </button>
+          {subgroupOpen && (
+            <div className={styles.nestedSubList}>
+              {cats.map((cat) => renderCategoryItem(cat))}
             </div>
           )}
         </div>
