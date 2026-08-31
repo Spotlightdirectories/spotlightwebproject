@@ -155,6 +155,13 @@ export default function DiscoverResultsPage() {
   const initSubSubcategory = searchParams.get("subsubcategory") || "";
   const initState = searchParams.get("state") || "";
   const initLga = searchParams.get("lga") || "";
+  // Step 8, 2026-08-23 per Cyril: the Artisan/Goods/Professional
+  // navbar pills land here with ?audience=X (and Goods sub-groups
+  // with &subgroup=Y). See the search_products/services/vendors RPC
+  // updates for the actual filtering logic -- this just reads what
+  // arrived in the URL.
+  const initAudience = searchParams.get("audience") || "";
+  const initSubgroup = searchParams.get("subgroup") || "";
   const initVerified = searchParams.get("verified") === "true";
   const initLat = searchParams.get("lat") ? Number(searchParams.get("lat")) : null;
   const initLng = searchParams.get("lng") ? Number(searchParams.get("lng")) : null;
@@ -180,6 +187,11 @@ export default function DiscoverResultsPage() {
   const [selectedSubSubcategory, setSelectedSubSubcategory] = useState(initSubSubcategory);
   const [selectedState, setSelectedState] = useState(initState);
   const [selectedLga, setSelectedLga] = useState(initLga);
+  // Step 8 -- not exposed in the filter drawer (no UI to change these
+  // once on the page yet), just carried through from the navbar pill
+  // that brought someone here, same as initSubSubcategory above.
+  const [audienceType] = useState(initAudience);
+  const [goodsSubgroup] = useState(initSubgroup);
   const [lgaList, setLgaList] = useState<string[]>([]);
 
   // Results state
@@ -304,6 +316,8 @@ export default function DiscoverResultsPage() {
             p_lga: lg || null,
             p_verified_only: verified,
             p_subsubcategory: subsubcat || null,
+            p_audience_type: audienceType || null,
+            p_goods_subgroup: goodsSubgroup || null,
           }),
           (async (): Promise<any[]> => {
             // Branch search — two-step query to avoid join syntax issues
@@ -408,6 +422,8 @@ export default function DiscoverResultsPage() {
           p_lga: lg || null,
           p_verified_only: verified,
           p_subsubcategory: subsubcat || null,
+          p_audience_type: audienceType || null,
+          p_goods_subgroup: goodsSubgroup || null,
         });
         return applyDistance(
           data || [], p => p.vendor_latitude, p => p.vendor_longitude,
@@ -425,6 +441,8 @@ export default function DiscoverResultsPage() {
           p_lga: lg || null,
           p_verified_only: verified,
           p_subsubcategory: subsubcat || null,
+          p_audience_type: audienceType || null,
+          p_goods_subgroup: goodsSubgroup || null,
         });
         return applyDistance(
           data || [],
@@ -571,11 +589,11 @@ export default function DiscoverResultsPage() {
       setLoading(false);
     }
   }, [keyword, searchType, verifiedOnly, selectedCategory, selectedSubcategory, selectedSubSubcategory,
-      selectedState, selectedLga, distanceEnabled, userLat, userLng, radius]);
+      selectedState, selectedLga, distanceEnabled, userLat, userLng, radius, audienceType, goodsSubgroup]);
 
   // Run search on mount with URL params
   useEffect(() => {
-    if (initKeyword || initCategory || initState || initDistanceEnabled) {
+    if (initKeyword || initCategory || initState || initDistanceEnabled || initAudience) {
       runSearch();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -782,6 +800,16 @@ export default function DiscoverResultsPage() {
               {" "}in {selectedCategory}
               {selectedSubcategory ? ` \u203a ${selectedSubcategory}` : ""}
               {selectedSubSubcategory ? ` \u203a ${selectedSubSubcategory}` : ""}
+            </span>
+          )}
+          {/* Step 8, 2026-08-23 per Cyril: same reasoning as the
+              category confirmation above -- someone arriving via the
+              Artisan/Goods/Professional navbar pills should see
+              confirmation of what's actually filtering their results. */}
+          {audienceType && (
+            <span>
+              {" "}in {audienceType}
+              {goodsSubgroup ? ` \u203a ${goodsSubgroup}` : ""}
             </span>
           )}
           {/* Temporary diagnostic, added 2026-08-23 -- see lastSearchMs state above */}

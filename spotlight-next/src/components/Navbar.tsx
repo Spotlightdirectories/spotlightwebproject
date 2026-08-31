@@ -7,6 +7,23 @@ import { supabase } from "@/lib/supabase";
 import styles from "./Navbar.module.css";
 
 export default function Navbar() {
+  // Step 8, 2026-08-23 per Cyril: the exact 10 Goods sub-groups
+  // locked in the approved spreadsheet -- must match goods_subgroup
+  // values in the categories table exactly, or the dropdown links
+  // would silently return zero results.
+  const GOODS_SUBGROUPS = [
+    "Fashion & Accessories",
+    "Electronics & Gadgets",
+    "Food, Groceries & Beverages",
+    "Home, Furniture & Kitchen",
+    "Health, Beauty & Safety",
+    "Building, Hardware & Industrial",
+    "Agriculture & Animals",
+    "Office, Print & Stationery",
+    "Gifts, Events & Leisure",
+    "Other Goods",
+  ];
+
   const [menuOpen, setMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const [loggedIn, setLoggedIn] = useState(false);
@@ -102,10 +119,30 @@ export default function Navbar() {
               <i className="fa-solid fa-hammer"></i> Artisan
             </Link>
           </li>
-          <li>
+          {/* Step 8, 2026-08-23 per Cyril: Goods specifically gets a
+              dropdown (its 10 sub-groups), unlike Artisan/Professional
+              which link straight to results -- "go with B and see how
+              it behaves." Desktop: hover reveals the dropdown, same
+              pattern as the Login dropdown below. Mobile has no hover,
+              so tapping "Goods" there just goes to the unfiltered
+              Goods results directly -- picking a specific sub-group on
+              mobile isn't built yet; flagging this honestly rather
+              than silently limiting mobile. */}
+          <li className={styles.goodsMenu}>
             <Link href="/discover-results?audience=Goods" className={styles.categoryPill} onClick={() => setMenuOpen(false)}>
               <i className="fa-solid fa-bag-shopping"></i> Goods
             </Link>
+            <div className={styles.goodsDropdown}>
+              {GOODS_SUBGROUPS.map((g) => (
+                <Link
+                  key={g}
+                  href={`/discover-results?audience=Goods&subgroup=${encodeURIComponent(g)}`}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {g}
+                </Link>
+              ))}
+            </div>
           </li>
           <li>
             <Link href="/discover-results?audience=Professional" className={styles.categoryPill} onClick={() => setMenuOpen(false)}>

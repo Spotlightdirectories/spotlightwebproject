@@ -168,6 +168,66 @@
   background: var(--color-surface-hover);
 }
 
+/* Step 8, 2026-08-23 per Cyril: Goods dropdown -- same hover pattern
+   as .accountMenu/.accountDropdown below, desktop only (no hover on
+   touch, so mobile just links straight to unfiltered Goods results
+   instead -- see Navbar.tsx comment). */
+.goodsMenu {
+  position: relative;
+}
+
+.goodsDropdown {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .goodsDropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    padding-top: 6px;
+    z-index: var(--z-dropdown);
+  }
+
+  .goodsMenu:hover .goodsDropdown {
+    display: block;
+  }
+
+  .goodsDropdown > div,
+  .goodsDropdown {
+    background: var(--color-surface);
+  }
+
+  .goodsDropdown a {
+    display: block !important;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 9px 14px;
+    color: var(--color-text-primary) !important;
+    font-size: 0.85rem !important;
+    white-space: nowrap;
+    min-width: 220px;
+  }
+
+  .goodsDropdown a:not(:last-child) {
+    border-bottom: none;
+  }
+
+  .goodsDropdown a:first-child {
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+  }
+
+  .goodsDropdown a:last-child {
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    box-shadow: var(--shadow-md);
+  }
+
+  .goodsDropdown a:hover {
+    background: var(--color-surface-alt);
+  }
+}
+
 /* ACCOUNT MENU (Log Out + "Dashboard" shortcut) — desktop only.
    Cyril's ask (2026-07-28): a vendor who's still logged in from a
    previous visit and lands on the homepage only sees "Log Out," with
