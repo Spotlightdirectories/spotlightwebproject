@@ -331,7 +331,7 @@ export default function GetListedPage() {
         </section>
 
         {/* PRICING CARDS */}
-        <section className={styles.pricingGrid}>
+        <section className={`${styles.pricingGrid} ${visiblePlans.length === 1 ? styles.pricingGridSingle : ""}`}>
           {visiblePlans.map(plan => {
             const relation = getPlanRelation(plan.id);
             return (

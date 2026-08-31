@@ -129,6 +129,22 @@
   align-items: stretch;
 }
 
+/* Bug fix, 2026-08-23 per Cyril: with only the Basic/Free plan
+   visible (the default first-time-visitor view from Step 2), the
+   single card sat in the grid's first of 5 equal columns -- looking
+   stranded in the corner instead of like the deliberate, only plan
+   it actually is. Applied only when exactly one plan renders;
+   untouched for the full 5-plan grid. */
+.pricingGridSingle {
+  display: flex;
+  justify-content: center;
+}
+
+.pricingGridSingle > * {
+  max-width: 380px;
+  width: 100%;
+}
+
 .card {
   position: relative;
   background: var(--color-surface);

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Footer from "@/components/Footer";
 import HomeCategorySearch from "@/components/HomeCategorySearch";
+import PromoBanner from "@/components/PromoBanner";
 import styles from "./homepage.module.css";
 
 // Scroll-reveal hook, added 2026-08-23 per Cyril: watches one section
@@ -210,6 +211,11 @@ export default function HomePage() {
 
   return (
     <>
+      {/* Fly-in promotional banner, locked 2026-08-23 per Cyril --
+          shows on every visit unless dismissed permanently for this
+          browser. See PromoBanner.tsx for the full behavior. */}
+      <PromoBanner />
+
       {/* TOP SEARCH — deliberately its own full-width strip above
           everything else on the page (per Cyril, 2026-08), rather
           than embedded partway down inside the hero text column.
