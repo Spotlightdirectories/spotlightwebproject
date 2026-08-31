@@ -217,7 +217,14 @@ export default function HomePage() {
           own dropdown panel opens below it without covering it. */}
       <section className={styles.ldTopSearch}>
         <div className={styles.ldTopSearchInner}>
-          <HomeCategorySearch />
+          {/* Step 7, 2026-08-23 per Cyril: "Get Listed" removed from
+              the navbar entirely (see Navbar.tsx) -- moved here to
+              sit alongside search as its own "take action now" row,
+              matching the locked navbar sketch. */}
+          <a href="/getlisted" className={styles.ldTopSearchCta}>Get Listed Free</a>
+          <div className={styles.ldTopSearchField}>
+            <HomeCategorySearch />
+          </div>
         </div>
       </section>
 

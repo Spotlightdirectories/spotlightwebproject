@@ -125,6 +125,33 @@
   color: #000 !important;
 }
 
+/* Step 7, 2026-08-23 per Cyril: category browse buttons
+   (Artisan/Goods/Professional) -- styled deliberately unlike
+   .navLinks a (plain text for genuine pages) so they read as
+   instant-filter buttons, not navigation destinations. Matches the
+   locked navbar sketch: cool blue pill, icon + label. */
+.categoryPill {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  background: #1e2a38;
+  color: #7fb8e8 !important;
+  border: 1px solid #2c4258;
+  border-radius: var(--radius-full);
+  padding: 8px 18px;
+  font-size: 0.9rem !important;
+  font-weight: var(--font-semibold);
+}
+
+.categoryPill:hover {
+  background: #2c4258;
+  color: #a8d4ff !important;
+}
+
+.categoryPill i {
+  font-size: 0.85em;
+}
+
 /* THEME TOGGLE */
 .themeToggle {
   background: none;

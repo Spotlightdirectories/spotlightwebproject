@@ -80,11 +80,38 @@ export default function Navbar() {
         <ul className={`${styles.navLinks} ${menuOpen ? styles.open : ""}`}>
           <button className={styles.menuClose} aria-label="Close menu" onClick={() => setMenuOpen(false)}><i className="fa-solid fa-xmark"></i></button>
 
-          <li><Link href="/aboutUs" onClick={() => setMenuOpen(false)}>Why Spotlight?</Link></li>
-          <li><Link href="/getlisted" onClick={() => setMenuOpen(false)}>Get Listed</Link></li>
-          <li><Link href="/contact-us" onClick={() => setMenuOpen(false)}>Contact Us</Link></li>
-          <li><Link href="/FAQ" onClick={() => setMenuOpen(false)}>FAQ</Link></li>
-          <li><Link href="/feedback" onClick={() => setMenuOpen(false)}>Feedback</Link></li>
+          {/* Step 7, 2026-08-23 per Cyril: Why Spotlight?/Get
+              Listed/Contact Us/FAQ/Feedback removed from here --
+              the first four now live in the footer (Step 5), and
+              Get Listed moved to its own dedicated row alongside
+              search on the homepage, rather than competing for space
+              here. Replaced with three category browse buttons,
+              styled distinctly (see .categoryPill below) so they
+              read as "tap for instant results," not "go to a page" --
+              matching the locked navbar sketch. Home stays plain
+              text since it genuinely is just a page.
+
+              Link destination note: these point at
+              /discover-results?audience=X. The actual FILTERING logic
+              for that param isn't built yet -- that's the next step
+              (Goods browsing flow) -- so clicking these right now will
+              land on the page but won't yet filter results. Flagging
+              this here so it isn't mistaken for a bug once tested. */}
+          <li>
+            <Link href="/discover-results?audience=Artisan" className={styles.categoryPill} onClick={() => setMenuOpen(false)}>
+              <i className="fa-solid fa-hammer"></i> Artisan
+            </Link>
+          </li>
+          <li>
+            <Link href="/discover-results?audience=Goods" className={styles.categoryPill} onClick={() => setMenuOpen(false)}>
+              <i className="fa-solid fa-bag-shopping"></i> Goods
+            </Link>
+          </li>
+          <li>
+            <Link href="/discover-results?audience=Professional" className={styles.categoryPill} onClick={() => setMenuOpen(false)}>
+              <i className="fa-solid fa-briefcase"></i> Professional
+            </Link>
+          </li>
 
           <li>
             <button
