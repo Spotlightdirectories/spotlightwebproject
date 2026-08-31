@@ -237,6 +237,16 @@ export default function HomePage() {
       {/* HERO */}
       <section className={styles.ldHero}>
         <div className={styles.ldHeroText}>
+          {/* Tagline, 2026-08-23 per Cyril -- built for use on social
+              media covers (FB/IG/TikTok/LinkedIn) too, added here on
+              the homepage as well. Slim-weight words, bold gold dots
+              as the only brand-color accent -- locked after a few
+              rounds of sketching together. */}
+          <p className={styles.ldTagline}>
+            <span className={styles.ldTaglineDot}>•</span>FIND{" "}
+            <span className={styles.ldTaglineDot}>•</span>TRUST{" "}
+            <span className={styles.ldTaglineDot}>•</span>CONNECT
+          </p>
           <p className={styles.ldEyebrow}>Nigeria's discovery platform for real businesses</p>
           <h1>Put Your Business On The <span className={styles.ldSpotlightGlow}>Spotlight</span></h1>
           <p className={styles.ldHeroSub}>

@@ -41,6 +41,24 @@
   border-color: var(--color-border);
 }
 
+/* Tagline, 2026-08-23 per Cyril: slim-weight words, bold gold dots
+   as the only brand-color accent -- built for reuse on social media
+   covers (FB/IG/TikTok/LinkedIn) too, not just this page. */
+.ldTagline {
+  font-size: var(--text-base);
+  letter-spacing: 0.1em;
+  font-weight: var(--font-light);
+  color: var(--color-text-secondary);
+  margin: 0 0 4px;
+}
+
+.ldTaglineDot {
+  color: var(--color-primary);
+  font-weight: var(--font-extrabold);
+  vertical-align: baseline;
+  margin-right: 4px;
+}
+
 .ldEyebrow {
   color: var(--color-primary);
   font-weight: var(--font-semibold);
