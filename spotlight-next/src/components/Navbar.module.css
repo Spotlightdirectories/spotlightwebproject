@@ -285,6 +285,8 @@
 }
 
 .nestedSubList {
+  display: flex;
+  flex-direction: column;
   padding-left: 14px;
   border-left: 2px solid var(--color-border);
   margin-left: 14px;
