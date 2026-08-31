@@ -7,6 +7,48 @@ import { supabase } from "@/lib/supabase";
 import styles from "./Navbar.module.css";
 
 export default function Navbar() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  // Step 8 rework, 2026-08-23 per Cyril: Artisan/Professional felt
+  // "dormant" next to Goods' hover dropdown, and on mobile, tapping
+  // them jumped straight to a broad, unfiltered wall of results
+  // instead of letting someone pick a specific category first. All
+  // three now behave the same way: desktop hover reveals the real
+  // category list (scrollable -- Professional alone has 58); on
+  // mobile, tapping the whole pill expands that same list inline
+  // (matching the tap-to-expand pattern already proven on the
+  // homepage's own category search) instead of navigating anywhere
+  // by itself.
+  const [isMobile, setIsMobile] = useState(false);
+  const [expandedPill, setExpandedPill] = useState<string | null>(null);
+  const [artisanCats, setArtisanCats] = useState<string[]>([]);
+  const [professionalCats, setProfessionalCats] = useState<string[]>([]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  useEffect(() => {
+    async function loadCats() {
+      const { data } = await supabase
+        .from("categories")
+        .select("name, audience_type")
+        .in("audience_type", ["Artisan", "Professional"])
+        .order("name");
+      if (data) {
+        setArtisanCats(data.filter((c) => c.audience_type === "Artisan").map((c) => c.name));
+        setProfessionalCats(data.filter((c) => c.audience_type === "Professional").map((c) => c.name));
+      }
+    }
+    loadCats();
+  }, []);
+
   // Step 8, 2026-08-23 per Cyril: the exact 10 Goods sub-groups
   // locked in the approved spreadsheet -- must match goods_subgroup
   // values in the categories table exactly, or the dropdown links
@@ -24,9 +66,6 @@ export default function Navbar() {
     "Other Goods",
   ];
 
-  const [menuOpen, setMenuOpen] = useState(false);
-  const { theme, toggleTheme } = useTheme();
-  const [loggedIn, setLoggedIn] = useState(false);
   // Spotlight's dual-account model means a session alone doesn't say
   // whether this person is a vendor, a customer, or both (same
   // email/password can hold both). Checked once per session change
@@ -68,6 +107,82 @@ export default function Navbar() {
     window.location.href = "/";
   }
 
+  // Step 8 rework, 2026-08-23 per Cyril: one shared renderer for all
+  // three pills so their behavior stays identical, not three
+  // near-duplicate blocks that could quietly drift apart later.
+  // isSubgroup=true (Goods only) links each item via
+  // ?audience=Goods&subgroup=X, since a Goods sub-group spans many
+  // categories at once. isSubgroup=false (Artisan/Professional) links
+  // each item via the EXISTING, already-working ?category=X filter --
+  // a single specific category doesn't need the new audience_type
+  // logic at all, only the broad "see everything tagged Artisan"
+  // pill click does.
+  function renderCategoryPill(
+    audienceKey: "Artisan" | "Goods" | "Professional",
+    label: string,
+    icon: string,
+    items: string[],
+    isSubgroup: boolean
+  ) {
+    const isExpanded = expandedPill === audienceKey;
+    return (
+      <li className={styles.categoryMenu} key={audienceKey}>
+        <Link
+          href={`/discover-results?audience=${audienceKey}`}
+          className={styles.categoryPill}
+          onClick={(e) => {
+            if (isMobile) {
+              e.preventDefault();
+              setExpandedPill(isExpanded ? null : audienceKey);
+            } else {
+              setMenuOpen(false);
+            }
+          }}
+        >
+          <i className={icon}></i> {label}
+          <i className={`fa-solid ${isMobile && isExpanded ? "fa-chevron-down" : "fa-chevron-right"} ${styles.pillArrow}`}></i>
+        </Link>
+
+        <div className={styles.categoryDropdown}>
+          {items.map((item) => (
+            <Link
+              key={item}
+              href={
+                isSubgroup
+                  ? `/discover-results?audience=Goods&subgroup=${encodeURIComponent(item)}`
+                  : `/discover-results?category=${encodeURIComponent(item)}`
+              }
+              onClick={() => setMenuOpen(false)}
+            >
+              {item}
+            </Link>
+          ))}
+        </div>
+
+        {isMobile && isExpanded && (
+          <div className={styles.categoryMobileList}>
+            {items.map((item) => (
+              <Link
+                key={item}
+                href={
+                  isSubgroup
+                    ? `/discover-results?audience=Goods&subgroup=${encodeURIComponent(item)}`
+                    : `/discover-results?category=${encodeURIComponent(item)}`
+                }
+                onClick={() => {
+                  setMenuOpen(false);
+                  setExpandedPill(null);
+                }}
+              >
+                {item}
+              </Link>
+            ))}
+          </div>
+        )}
+      </li>
+    );
+  }
+
   return (
     <header className={styles.navbar}>
       <div className={styles.logoLeft}>
@@ -97,58 +212,16 @@ export default function Navbar() {
         <ul className={`${styles.navLinks} ${menuOpen ? styles.open : ""}`}>
           <button className={styles.menuClose} aria-label="Close menu" onClick={() => setMenuOpen(false)}><i className="fa-solid fa-xmark"></i></button>
 
-          {/* Step 7, 2026-08-23 per Cyril: Why Spotlight?/Get
+          {/* Step 7/8, 2026-08-23 per Cyril: Why Spotlight?/Get
               Listed/Contact Us/FAQ/Feedback removed from here --
               the first four now live in the footer (Step 5), and
               Get Listed moved to its own dedicated row alongside
-              search on the homepage, rather than competing for space
-              here. Replaced with three category browse buttons,
-              styled distinctly (see .categoryPill below) so they
-              read as "tap for instant results," not "go to a page" --
-              matching the locked navbar sketch. Home stays plain
-              text since it genuinely is just a page.
-
-              Link destination note: these point at
-              /discover-results?audience=X. The actual FILTERING logic
-              for that param isn't built yet -- that's the next step
-              (Goods browsing flow) -- so clicking these right now will
-              land on the page but won't yet filter results. Flagging
-              this here so it isn't mistaken for a bug once tested. */}
-          <li>
-            <Link href="/discover-results?audience=Artisan" className={styles.categoryPill} onClick={() => setMenuOpen(false)}>
-              <i className="fa-solid fa-hammer"></i> Artisan
-            </Link>
-          </li>
-          {/* Step 8, 2026-08-23 per Cyril: Goods specifically gets a
-              dropdown (its 10 sub-groups), unlike Artisan/Professional
-              which link straight to results -- "go with B and see how
-              it behaves." Desktop: hover reveals the dropdown, same
-              pattern as the Login dropdown below. Mobile has no hover,
-              so tapping "Goods" there just goes to the unfiltered
-              Goods results directly -- picking a specific sub-group on
-              mobile isn't built yet; flagging this honestly rather
-              than silently limiting mobile. */}
-          <li className={styles.goodsMenu}>
-            <Link href="/discover-results?audience=Goods" className={styles.categoryPill} onClick={() => setMenuOpen(false)}>
-              <i className="fa-solid fa-bag-shopping"></i> Goods
-            </Link>
-            <div className={styles.goodsDropdown}>
-              {GOODS_SUBGROUPS.map((g) => (
-                <Link
-                  key={g}
-                  href={`/discover-results?audience=Goods&subgroup=${encodeURIComponent(g)}`}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {g}
-                </Link>
-              ))}
-            </div>
-          </li>
-          <li>
-            <Link href="/discover-results?audience=Professional" className={styles.categoryPill} onClick={() => setMenuOpen(false)}>
-              <i className="fa-solid fa-briefcase"></i> Professional
-            </Link>
-          </li>
+              search on the homepage. Replaced with three category
+              browse pills -- see renderCategoryPill below for the
+              full desktop-hover / mobile-tap-to-expand behavior. */}
+          {renderCategoryPill("Artisan", "Artisans", "fa-solid fa-hammer", artisanCats, false)}
+          {renderCategoryPill("Goods", "Goods", "fa-solid fa-bag-shopping", GOODS_SUBGROUPS, true)}
+          {renderCategoryPill("Professional", "Professionals", "fa-solid fa-briefcase", professionalCats, false)}
 
           <li>
             <button

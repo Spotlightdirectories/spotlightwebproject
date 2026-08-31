@@ -168,41 +168,46 @@
   background: var(--color-surface-hover);
 }
 
-/* Step 8, 2026-08-23 per Cyril: Goods dropdown -- same hover pattern
-   as .accountMenu/.accountDropdown below, desktop only (no hover on
-   touch, so mobile just links straight to unfiltered Goods results
-   instead -- see Navbar.tsx comment). */
-.goodsMenu {
+/* Step 8 rework, 2026-08-23 per Cyril: renamed from .goodsMenu/
+   .goodsDropdown -- now shared by all three pills (Artisan, Goods,
+   Professional), not just Goods, since "Artisan/Professional staying
+   dormant next to Goods' hover looked inconsistent." Scrollable
+   (max-height) because Professional alone has 58 real categories --
+   a plain unscrollable list that long would run off the bottom of
+   the screen. */
+.categoryMenu {
   position: relative;
 }
 
-.goodsDropdown {
+.categoryDropdown {
   display: none;
 }
 
+.pillArrow {
+  font-size: 0.7em !important;
+  margin-left: 2px;
+}
+
 @media (min-width: 1024px) {
-  .goodsDropdown {
+  .categoryDropdown {
     position: absolute;
     top: 100%;
     left: 0;
     padding-top: 6px;
     z-index: var(--z-dropdown);
+    max-height: 360px;
+    overflow-y: auto;
   }
 
-  .goodsMenu:hover .goodsDropdown {
+  .categoryMenu:hover .categoryDropdown {
     display: block;
   }
 
-  .goodsDropdown > div,
-  .goodsDropdown {
-    background: var(--color-surface);
-  }
-
-  .goodsDropdown a {
+  .categoryDropdown a {
     display: block !important;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
+    border-top: none;
     padding: 9px 14px;
     color: var(--color-text-primary) !important;
     font-size: 0.85rem !important;
@@ -210,22 +215,44 @@
     min-width: 220px;
   }
 
-  .goodsDropdown a:not(:last-child) {
-    border-bottom: none;
-  }
-
-  .goodsDropdown a:first-child {
+  .categoryDropdown a:first-child {
+    border-top: 1px solid var(--color-border);
     border-radius: var(--radius-md) var(--radius-md) 0 0;
   }
 
-  .goodsDropdown a:last-child {
+  .categoryDropdown a:last-child {
     border-radius: 0 0 var(--radius-md) var(--radius-md);
     box-shadow: var(--shadow-md);
   }
 
-  .goodsDropdown a:hover {
+  .categoryDropdown a:hover {
     background: var(--color-surface-alt);
   }
+}
+
+/* Mobile inline accordion -- tapping a pill expands this instead of
+   navigating anywhere (see renderCategoryPill in Navbar.tsx). Sits
+   inside the full-screen mobile menu, so it's centered and scrollable
+   like the rest of that menu, not a floating dropdown. */
+.categoryMobileList {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+  width: 100%;
+  padding: 4px 0;
+}
+
+.categoryMobileList a {
+  color: #9ca3af !important;
+  font-size: 0.85rem !important;
+  padding: 6px 12px;
+}
+
+.categoryMobileList a:hover {
+  color: #ffffff !important;
 }
 
 /* ACCOUNT MENU (Log Out + "Dashboard" shortcut) — desktop only.
