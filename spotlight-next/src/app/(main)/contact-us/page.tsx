@@ -105,24 +105,6 @@ export default function ContactPage() {
             <p><i className="fa-brands fa-whatsapp"></i> <a href="https://wa.me/2349012085744">WhatsApp Only: 0901-208-5744</a></p>
             <p><i className="fa-solid fa-globe"></i> <a href="https://www.spotlightdirectories.com">www.spotlightdirectories.com</a></p>
             <p><i className="fa-solid fa-location-dot"></i> 3 Alafia Lane, Shomolu, Lagos</p>
-            <div className={styles.socialIcons}>
-              <a href="https://web.facebook.com/profile.php?id=61588123081014" target="_blank" rel="noopener noreferrer"><i className="fa-brands fa-facebook-f"></i></a>
-              <a href="https://www.instagram.com/spotlight_directories" target="_blank" rel="noopener noreferrer"><i className="fa-brands fa-instagram"></i></a>
-              <a href="https://www.linkedin.com/company/spotlight-directories/" target="_blank" rel="noopener noreferrer"><i className="fa-brands fa-linkedin-in"></i></a>
-              <a href="https://www.tiktok.com/@spotlight_directories" target="_blank" rel="noopener noreferrer"><i className="fa-brands fa-tiktok"></i></a>
-              <a href="https://www.youtube.com/@spotlightdirectories" target="_blank" rel="noopener noreferrer"><i className="fa-brands fa-youtube"></i></a>
-            </div>
-          </div>
-
-          {/* Step 5 sketch 2, 2026-08-23 per Cyril: a third column,
-              to the right of contact details, linking to Why
-              Spotlight/FAQ/Feedback. "Contact Us" is deliberately not
-              included here -- a page never needs to link to itself. */}
-          <div className={styles.spotExtra}>
-            <h3>You might also need</h3>
-            <a href="/aboutUs"><i className="fa-solid fa-circle-info"></i> Why Spotlight?</a>
-            <a href="/FAQ"><i className="fa-solid fa-circle-question"></i> FAQ</a>
-            <a href="/feedback"><i className="fa-solid fa-comment-dots"></i> Feedback</a>
           </div>
         </section>
       </main>
