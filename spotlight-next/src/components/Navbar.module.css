@@ -197,6 +197,17 @@
     z-index: var(--z-dropdown);
     max-height: 360px;
     overflow-y: auto;
+    /* Bug fix, 2026-08-23 per Cyril: this container never had its own
+       background -- it relied on its children to provide one, which
+       only worked for Artisan/Professional's plain <a> links.
+       Goods' items are <button>s (since they expand a second level)
+       styled background:none, so with no backdrop on the container
+       itself, Goods' dropdown showed through to the page behind it.
+       Just the background color here -- the existing first/last-child
+       rounding + shadow on the items themselves already handles the
+       visual polish; adding it here too would clash with the 6px
+       padding-top gap above the first item. */
+    background: var(--color-surface);
   }
 
   .categoryMenu:hover .categoryDropdown {
