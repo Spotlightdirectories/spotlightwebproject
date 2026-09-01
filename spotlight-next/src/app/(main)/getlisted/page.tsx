@@ -316,6 +316,11 @@ export default function GetListedPage() {
             Every business starts with a <strong>90-day free trial</strong> — no card required, live in minutes.
           </div>
 
+          {/* Bug fix, 2026-08-23 per Cyril: this toggle was showing
+              even in the default Free-only view, where it's
+              meaningless -- ₦0 is ₦0 regardless of billing cycle.
+              Only relevant once paid plans are actually visible. */}
+          {showFullGrid && (
           <div className={styles.toggleContainer}>
             <span>Monthly</span>
             <label className={styles.switch}>
@@ -328,6 +333,7 @@ export default function GetListedPage() {
             </label>
             <span>Yearly <span className={styles.saveTag}>save 25%</span></span>
           </div>
+          )}
         </section>
 
         {/* PRICING CARDS */}
