@@ -285,7 +285,13 @@
   border: none;
   cursor: pointer;
   font: inherit;
-  color: inherit;
+  /* Bug fix, 2026-08-23 per Cyril: was color:inherit, which picked up
+     the navbar's own hardcoded white text (the navbar itself is
+     always dark-themed, independent of the site's light/dark toggle)
+     -- invisible white-on-white once the dropdown's background
+     correctly switched to light theme. Now properly theme-aware,
+     matching .categoryDropdown a's existing color. */
+  color: var(--color-text-primary) !important;
   text-align: left;
   padding: 9px 14px;
 }
@@ -304,7 +310,12 @@
 }
 
 .categoryMobileList .nestedToggle {
-  color: #d1d5db;
+  /* Needs !important to win over .nestedToggle's own !important base
+     color -- added 2026-08-23 alongside that fix. The mobile menu
+     itself is always dark-themed regardless of the site's light/dark
+     setting, so this hardcoded light color is correct here, unlike
+     the desktop dropdown which needed to become theme-aware. */
+  color: #d1d5db !important;
   justify-content: center;
   gap: 6px;
 }
