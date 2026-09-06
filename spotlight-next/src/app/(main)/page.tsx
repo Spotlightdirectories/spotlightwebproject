@@ -33,12 +33,19 @@ function useRevealOnScroll<T extends HTMLElement>() {
   return [ref, visible] as const;
 }
 
+// Bandwidth reduction, 2026-08-23 per Cyril: Netlify bandwidth usage
+// spiked heavily once all 5 videos went live (every homepage visit
+// auto-loads at least 2 full video files). Cutting the active
+// rotation down to just 2 videos (Tailoring, Accountant) for now --
+// the other 3 video FILES are untouched on disk in /public/videos,
+// simply not referenced here. Re-adding any of them later is just
+// adding back one "video:" line, no re-upload needed.
 const SLIDES = [
-  { img: "/images/mechanic-portrait.webp", video: "/videos/mechanic-clip.mp4", alt: "Auto mechanic and repair business owner", tag: "Auto & Technical Services", caption: "Trusted by the customers already searching for you" },
+  { img: "/images/mechanic-portrait.webp", alt: "Auto mechanic and repair business owner", tag: "Auto & Technical Services", caption: "Trusted by the customers already searching for you" },
   { img: "/images/tailoring-portrait.webp", video: "/videos/tailoring-clip.mp4", alt: "Tailoring and fashion business owner", tag: "Fashion & Tailoring", caption: "Get found by customers looking for your craft nearby" },
-  { img: "/images/provision-seller--portrait.webp", video: "/videos/provision-seller-clip.mp4", alt: "Provision store and grocery business owner", tag: "Provisions & Groceries", caption: "From daily essentials to bulk orders — be their first stop" },
+  { img: "/images/provision-seller--portrait.webp", alt: "Provision store and grocery business owner", tag: "Provisions & Groceries", caption: "From daily essentials to bulk orders — be their first stop" },
   { img: "/images/accountant-portrait.webp", video: "/videos/accountant-clip.mp4", alt: "Accountant and financial services provider", tag: "Accounting & Finance", caption: "Trusted professionals, found by the clients who need them" },
-  { img: "/images/electrician-portrait.webp", video: "/videos/electrician-clip.mp4", alt: "Electrician and electrical services provider", tag: "Electrical Services", caption: "The customer with a blown fuse is searching right now" },
+  { img: "/images/electrician-portrait.webp", alt: "Electrician and electrical services provider", tag: "Electrical Services", caption: "The customer with a blown fuse is searching right now" },
 ];
 
 const BENEFITS = [
