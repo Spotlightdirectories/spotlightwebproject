@@ -618,8 +618,23 @@ export default function DiscoverResultsPage() {
   }, []);
 
   // ── Geolocation ──────────────────────────────────────────
+  // Bug fix, 2026-09-07 per Cyril: this error handler used to be
+  // completely silent -- no console.error, no message shown anywhere
+  // -- so any failure (wrong permission state, timeout, position
+  // unavailable) looked exactly like "nothing happens" with zero way
+  // to diagnose it, especially on a phone with no easy console access.
+  // Also widened the timeout: 10s with enableHighAccuracy is realistic
+  // on desktop WiFi-based positioning, but real phone GPS -- especially
+  // indoors or on cellular data -- can genuinely take longer than that
+  // for a first fix, which was very likely silently timing out here.
+  const [locationError, setLocationError] = useState<string | null>(null);
+
   function fetchLocation(onDone?: (lat: number, lng: number) => void) {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      setLocationError("This browser doesn't support location.");
+      return;
+    }
+    setLocationError(null);
     setLocationLabel("Detecting...");
     navigator.geolocation.getCurrentPosition(
       pos => {
@@ -630,11 +645,18 @@ export default function DiscoverResultsPage() {
         setLocationLabel("Location Ready ✓");
         if (onDone) onDone(lat, lng);
       },
-      () => {
+      err => {
+        console.error("Geolocation error:", err.code, err.message);
+        const messages: Record<number, string> = {
+          1: "Location permission was denied for this site.",
+          2: "Couldn't determine your location right now. Try again in an open area.",
+          3: "Location request timed out. Try again -- this can happen with a weak GPS signal.",
+        };
+        setLocationError(messages[err.code] || "Couldn't get your location.");
         setDistanceEnabled(false);
         setLocationLabel("Use Current");
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 300000 }
     );
   }
 
@@ -797,6 +819,11 @@ export default function DiscoverResultsPage() {
             <span>20km</span>
           </div>
         </div>
+        {locationError && (
+          <p style={{ color: "var(--color-error, #ef4444)", fontSize: 12, fontWeight: 700, marginTop: 10 }}>
+            ⚠ {locationError}
+          </p>
+        )}
       </div>
 
       {/* SUMMARY */}

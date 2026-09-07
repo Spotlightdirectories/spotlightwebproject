@@ -98,6 +98,17 @@ interface VisitRequestRow {
   vendors: { name: string; slug: string | null } | null;
 }
 
+interface SearchLogRow {
+  id: string;
+  search_keyword: string | null;
+  search_type: string | null;
+  category: string | null;
+  subcategory: string | null;
+  state: string | null;
+  lga: string | null;
+  created_at: string;
+}
+
 interface ActivityItem {
   kind: "product" | "service";
   slug: string;
@@ -184,7 +195,7 @@ async function resolveActivityItems(events: RawActivityEvent[]): Promise<Activit
   return items;
 }
 
-type TabKey = "overview" | "favorites" | "viewed" | "inquiries" | "visits" | "reviews";
+type TabKey = "overview" | "favorites" | "viewed" | "inquiries" | "visits" | "reviews" | "searches";
 
 const TAB_TITLES: Record<TabKey, string> = {
   overview: "Overview",
@@ -193,6 +204,7 @@ const TAB_TITLES: Record<TabKey, string> = {
   inquiries: "My Inquiries",
   visits: "Visit Requests",
   reviews: "My Reviews",
+  searches: "My Search History",
 };
 
 export default function CustomerProfilePage() {
@@ -224,6 +236,13 @@ export default function CustomerProfilePage() {
   const [visitRequests, setVisitRequests] = useState<VisitRequestRow[]>([]);
   const [visitRequestsError, setVisitRequestsError] = useState(false);
   const [unreadVisitReplies, setUnreadVisitReplies] = useState(0);
+
+  // Phase 0.5 addition, 2026-09-07 per Cyril: "My Search History" --
+  // reads back the search_logs rows now being written (with
+  // customer_id) from DiscoverResults.tsx's runSearch. Same tab
+  // pattern as everything else on this page.
+  const [searchHistory, setSearchHistory] = useState<SearchLogRow[]>([]);
+  const [searchHistoryError, setSearchHistoryError] = useState(false);
   // IDs of replies that were unread at page-load — captured once so the
   // "New" highlight in the Visit Requests tab sticks around for this
   // visit even after mark_visit_requests_viewed_by_customer clears the
@@ -349,6 +368,22 @@ export default function CustomerProfilePage() {
         setNewlyRepliedIds(new Set(unreadRows.map(v => v.id)));
       }
 
+      // My search history -- Phase 0.5, 2026-09-07 per Cyril
+      const { data: searchData, error: searchError } = await supabase
+        .from("search_logs")
+        .select("id, search_keyword, search_type, category, subcategory, state, lga, created_at")
+        .eq("customer_id", customerRow.id)
+        .order("created_at", { ascending: false })
+        .limit(50)
+        .returns<SearchLogRow[]>();
+
+      if (searchError) {
+        console.error("Search history load error:", searchError);
+        setSearchHistoryError(true);
+      } else {
+        setSearchHistory(searchData || []);
+      }
+
       // My reviews — matched by email
       if (customerRow.email) {
         const { data: reviewData, error: reviewError } = await supabase
@@ -439,6 +474,9 @@ export default function CustomerProfilePage() {
             <button className={navItemClass("reviews")} onClick={() => switchTab("reviews")}>
               <i className="fa-regular fa-star"></i><span>My Reviews</span>
             </button>
+            <button className={navItemClass("searches")} onClick={() => switchTab("searches")}>
+              <i className="fa-solid fa-clock-rotate-left"></i><span>My Search History</span>
+            </button>
             {hasVendorAccount && (
               <a href="/vendordashboard" className={styles.cpNavItem}>
                 <i className="fa-solid fa-store"></i><span>Vendor Dashboard</span>
@@ -502,6 +540,11 @@ export default function CustomerProfilePage() {
               <i className="fa-regular fa-star"></i>
               <strong>{reviews.length}</strong>
               <span>Reviews Written</span>
+            </button>
+            <button type="button" className={styles.cpOverviewCard} onClick={() => switchTab("searches")}>
+              <i className="fa-solid fa-clock-rotate-left"></i>
+              <strong>{searchHistory.length}</strong>
+              <span>Recent Searches</span>
             </button>
           </div>
         )}
@@ -680,6 +723,58 @@ export default function CustomerProfilePage() {
                 <span className={styles.cpReviewDate}>{new Date(r.created_at).toLocaleDateString()}</span>
               </div>
             ))
+          )}
+        </div>
+      </section>
+      )}
+
+      {activeTab === "searches" && (
+      <section className={styles.cpSection}>
+        <h2>My Search History</h2>
+        <p className={styles.cpNote}>
+          Your last 50 searches on Spotlight. Tap any of them to search again.
+        </p>
+        <div className={styles.cpVisitList}>
+          {searchHistoryError ? (
+            <p className={styles.cpEmpty}>Couldn't load your search history right now.</p>
+          ) : searchHistory.length === 0 ? (
+            <p className={styles.cpEmpty}>No searches yet — your past searches will show up here.</p>
+          ) : (
+            searchHistory.map(log => {
+              const params = new URLSearchParams();
+              if (log.search_keyword) params.set("keyword", log.search_keyword);
+              if (log.search_type && log.search_type !== "all") params.set("type", log.search_type);
+              if (log.category) params.set("category", log.category);
+              if (log.subcategory) params.set("subcategory", log.subcategory);
+              if (log.state) params.set("state", log.state);
+              if (log.lga) params.set("lga", log.lga);
+
+              const filterParts = [
+                log.category,
+                log.subcategory,
+                [log.lga, log.state].filter(Boolean).join(", "),
+              ].filter(Boolean);
+
+              return (
+                <a
+                  key={log.id}
+                  href={`/discover-results?${params.toString()}`}
+                  className={styles.cpVisitCard}
+                >
+                  <div className={styles.cpVisitTop}>
+                    <strong>{log.search_keyword ? `"${log.search_keyword}"` : "Browsed with filters"}</strong>
+                  </div>
+                  {filterParts.length > 0 && (
+                    <p className={styles.cpVisitDetail}>
+                      <i className="fa-solid fa-filter"></i> {filterParts.join(" \u203a ")}
+                    </p>
+                  )}
+                  <p className={styles.cpVisitDate}>
+                    {new Date(log.created_at).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" })}
+                  </p>
+                </a>
+              );
+            })
           )}
         </div>
       </section>
