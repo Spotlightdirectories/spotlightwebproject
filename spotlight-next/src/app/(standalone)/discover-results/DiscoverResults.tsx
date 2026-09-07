@@ -16,6 +16,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { getViewingCustomerId } from "@/lib/getViewingCustomerId";
+import { logSearch } from "@/lib/logSearch";
 import { nigeriaData } from "@/lib/nigeria-data.js";
 import ProfileNav from "@/components/ProfileNav";
 import SearchableSelect from "@/components/SearchableSelect";
@@ -534,6 +535,23 @@ export default function DiscoverResultsPage() {
         ...filteredServices.filter(s => s.sponsored),
         ...filteredVendors.filter(v => v.sponsored),
       ];
+
+      // Phase 0.5, 2026-09-07 per Cyril: logs this search action to
+      // search_logs (separate from the analytics_events impression
+      // logging below, which is about which vendors/listings got
+      // SHOWN -- this is about the search action itself, one row per
+      // search, powering "My Search History" for web and app).
+      logSearch({
+        keyword: kw,
+        searchType: type,
+        category: cat,
+        subcategory: subcat,
+        state: st,
+        lga: lg,
+        verifiedOnly: verified,
+        distanceEnabled: distOn,
+        radiusKm: rad,
+      });
 
       // 2026-08 fix, per Cyril: Business Insights' "Search Keywords" panel
       // reads analytics_events rows with event_type "search_impression",
