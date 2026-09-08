@@ -77,7 +77,7 @@ export default function Footer() {
           <p>Dedicated to digitalizing local businesses and making services accessible to everyone, everywhere.</p>
           <div className={styles.hfooterSocial}>
             <a
-              href="https://web.facebook.com/profile.php?id=61588123081014"
+              href="https://web.facebook.com/spotlightdirectories/"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Facebook"

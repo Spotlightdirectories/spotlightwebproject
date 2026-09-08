@@ -539,7 +539,7 @@ function PartnerFooter() {
               accounts already used on the main footer and Contact Us
               page (no X/Twitter, per Cyril's earlier call). */}
           <div className={styles.hfooterSocial}>
-            <a href="https://web.facebook.com/profile.php?id=61588123081014" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i className="fa-brands fa-facebook-f"></i></a>
+            <a href="https://web.facebook.com/spotlightdirectories/" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i className="fa-brands fa-facebook-f"></i></a>
             <a href="https://www.instagram.com/spotlight_directories" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i className="fa-brands fa-instagram"></i></a>
             <a href="https://www.linkedin.com/company/spotlight-directories/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i className="fa-brands fa-linkedin-in"></i></a>
             <a href="https://www.tiktok.com/@spotlight_directories" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><i className="fa-brands fa-tiktok"></i></a>
