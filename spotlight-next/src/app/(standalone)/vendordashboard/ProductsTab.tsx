@@ -334,13 +334,28 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
         setAttributeValues({});
         return;
       }
+      // Fetch every attribute row for this category — both category-wide
+      // (subcategory_id IS NULL) and any subcategory-specific overrides —
+      // then resolve per key: a row scoped to the currently selected
+      // subcategory wins over the category-wide row for that same key.
+      // Added 2026-09-08 per Cyril, to fix PPE's Size field (Safety Boot/
+      // Shoe need numeric sizes; every other PPE subcategory needs letters).
       const { data, error } = await supabase
         .from("product_attributes")
-        .select("id,key,label,field_type,options,display_order")
+        .select("id,key,label,field_type,options,display_order,subcategory_id")
         .eq("category_id", categoryId)
         .order("display_order", { ascending: true });
       if (!error) {
-        setAttributeDefs((data as AttributeDef[]) || []);
+        const rows = (data as (AttributeDef & { subcategory_id: string | null })[]) || [];
+        const byKey = new Map<string, AttributeDef>();
+        for (const row of rows) {
+          if (row.subcategory_id !== null && row.subcategory_id !== subcategoryId) continue;
+          const existing = byKey.get(row.key);
+          // A subcategory-specific match always wins over a category-wide
+          // one for the same key, regardless of which was inserted first.
+          if (!existing || row.subcategory_id !== null) byKey.set(row.key, row);
+        }
+        setAttributeDefs(Array.from(byKey.values()).sort((a, b) => a.display_order - b.display_order));
         if (pendingEditAttributeValues.current) {
           setAttributeValues(pendingEditAttributeValues.current);
           pendingEditAttributeValues.current = null;
@@ -349,7 +364,7 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
         }
       }
     })();
-  }, [categoryId]);
+  }, [categoryId, subcategoryId]);
 
   function handleAttributeChange(key: string, value: string) {
     setAttributeValues((prev) => ({ ...prev, [key]: value }));
