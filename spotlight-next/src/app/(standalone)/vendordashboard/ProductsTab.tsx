@@ -1088,61 +1088,71 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
           ))}
         </div>
 
-        {/* SAVED PRODUCTS */}
-        <div className="vd-saved-services">
-          {loadingProducts ? (
-            <div className="vd-empty-services">Loading products...</div>
-          ) : savedProducts.length === 0 ? (
-            <div className="vd-empty-services">No saved products yet.</div>
-          ) : (
-            savedProducts.map((product) => (
-              <div className="vd-service-pill saved" key={product.id}>
-                {product.primary_image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img className="vd-product-thumb" src={product.primary_image_url} alt={product.product_name} />
-                ) : (
-                  <div className="vd-product-thumb-placeholder" aria-hidden="true">🖼️</div>
-                )}
-
-                <div className="vd-service-content">
-                  <div className="vd-service-name">
-                    {product.product_name}
-                    {product.moderation_status === "pending_review" && (
-                      <span className="vd-pending-review-badge" title={product.moderation_flag_reason || ""}>
-                        Pending Review
-                      </span>
-                    )}
-                    {product.moderation_status === "rejected" && (
-                      <span className="vd-rejected-badge" title={product.moderation_flag_reason || ""}>
-                        Not Approved
-                      </span>
-                    )}
-                  </div>
-                  <div className="vd-service-description">
-                    {(product.short_description || "").length > 200
-                      ? `${(product.short_description || "").slice(0, 200)}...`
-                      : product.short_description || ""}
-                  </div>
-                  <div className="vd-product-price">₦{Number(product.price).toLocaleString()}</div>
-                </div>
-
-                <button type="button" className="vd-edit-product-btn" onClick={() => handleEditSaved(product)}>
-                  Edit
-                </button>
-
-                <button type="button" className="vd-delete-product-btn" onClick={() => handleDeleteSaved(product.id)}>
-                  ×
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-
         <div className="vd-profile-actions">
           <button type="button" className="vd-service-btn" disabled={saving} onClick={handleSave}>
             {saving ? (editingId ? "Updating..." : "Saving...") : editingId ? "Update Product" : "Save Products"}
           </button>
         </div>
+      </div>
+
+      {/* SAVED PRODUCTS — bug fix, 2026-09-08 per Cyril: this list
+          used to live INSIDE the vd-inline-editor container above,
+          which only renders when formOpen is true. The "Add Product"
+          button is the only thing that sets formOpen(true), and it's
+          explicitly blocked once a vendor hits their plan limit --
+          meaning a vendor at their limit could never see or edit
+          their EXISTING products either, since the whole list was
+          hidden along with the add-form. Moved out here so it's
+          always visible regardless of the add-limit. Edit still
+          works correctly: handleEditSaved calls setFormOpen(true)
+          directly, bypassing the Add button's limit check entirely. */}
+      <div className="vd-saved-services">
+        {loadingProducts ? (
+          <div className="vd-empty-services">Loading products...</div>
+        ) : savedProducts.length === 0 ? (
+          <div className="vd-empty-services">No saved products yet.</div>
+        ) : (
+          savedProducts.map((product) => (
+            <div className="vd-service-pill saved" key={product.id}>
+              {product.primary_image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="vd-product-thumb" src={product.primary_image_url} alt={product.product_name} />
+              ) : (
+                <div className="vd-product-thumb-placeholder" aria-hidden="true">🖼️</div>
+              )}
+
+              <div className="vd-service-content">
+                <div className="vd-service-name">
+                  {product.product_name}
+                  {product.moderation_status === "pending_review" && (
+                    <span className="vd-pending-review-badge" title={product.moderation_flag_reason || ""}>
+                      Pending Review
+                    </span>
+                  )}
+                  {product.moderation_status === "rejected" && (
+                    <span className="vd-rejected-badge" title={product.moderation_flag_reason || ""}>
+                      Not Approved
+                    </span>
+                  )}
+                </div>
+                <div className="vd-service-description">
+                  {(product.short_description || "").length > 200
+                    ? `${(product.short_description || "").slice(0, 200)}...`
+                    : product.short_description || ""}
+                </div>
+                <div className="vd-product-price">₦{Number(product.price).toLocaleString()}</div>
+              </div>
+
+              <button type="button" className="vd-edit-product-btn" onClick={() => handleEditSaved(product)}>
+                Edit
+              </button>
+
+              <button type="button" className="vd-delete-product-btn" onClick={() => handleDeleteSaved(product.id)}>
+                ×
+              </button>
+            </div>
+          ))
+        )}
       </div>
 
       <AiDescribeModal

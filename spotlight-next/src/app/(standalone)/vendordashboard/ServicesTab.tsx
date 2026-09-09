@@ -988,71 +988,75 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
           ))}
         </div>
 
-        {/* SAVED SERVICES */}
-        <div className="vd-saved-services">
-          {loadingServices ? (
-            <div className="vd-empty-services">Loading services...</div>
-          ) : savedServices.length === 0 ? (
-            <div className="vd-empty-services">No saved services yet.</div>
-          ) : (
-            savedServices.map((service) => (
-              <div className="vd-service-pill saved" key={service.id}>
-                {service.representative_image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    className="vd-service-image"
-                    src={service.representative_image_url}
-                    alt={service.service_name}
-                  />
-                ) : (
-                  <div className="vd-service-image-placeholder" aria-hidden="true">🖼️</div>
-                )}
-
-                <div className="vd-service-content">
-                  <div className="vd-service-name">
-                    {service.service_name}
-                    {service.moderation_status === "pending_review" && (
-                      <span className="vd-pending-review-badge" title={service.moderation_flag_reason || ""}>
-                        Pending Review
-                      </span>
-                    )}
-                    {service.moderation_status === "rejected" && (
-                      <span className="vd-rejected-badge" title={service.moderation_flag_reason || ""}>
-                        Not Approved
-                      </span>
-                    )}
-                  </div>
-                  <div className="vd-service-description">
-                    {(service.short_description || "").length > 280
-                      ? `${(service.short_description || "").slice(0, 280)}...`
-                      : service.short_description || ""}
-                  </div>
-                  {service.starting_price ? (
-                    <div className="vd-service-price">From ₦{Number(service.starting_price).toLocaleString()}</div>
-                  ) : null}
-                  <div className="vd-service-assets">
-                    {service.representative_image_url ? "📷 Representative Image" : ""}
-                    {service.secondary_image_url ? " 📷 Additional Image" : ""}
-                  </div>
-                </div>
-
-                <button type="button" className="vd-edit-service-btn" onClick={() => handleEditSaved(service)}>
-                  Edit
-                </button>
-
-                <button type="button" className="vd-delete-service-btn" onClick={() => handleDeleteSaved(service.id)}>
-                  ×
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-
         <div className="vd-profile-actions">
           <button type="button" className="vd-service-btn" disabled={saving} onClick={handleSave}>
             {saving ? (editingId ? "Updating..." : "Saving...") : editingId ? "Update Service" : "Save Services"}
           </button>
         </div>
+      </div>
+
+      {/* SAVED SERVICES — bug fix, 2026-09-08 per Cyril: same issue as
+          ProductsTab -- this list used to live inside the formOpen-
+          gated vd-inline-editor container, which the "Add Service"
+          button's limit check could prevent from ever opening. Moved
+          out so it's always visible regardless of the add-limit. */}
+      <div className="vd-saved-services">
+        {loadingServices ? (
+          <div className="vd-empty-services">Loading services...</div>
+        ) : savedServices.length === 0 ? (
+          <div className="vd-empty-services">No saved services yet.</div>
+        ) : (
+          savedServices.map((service) => (
+            <div className="vd-service-pill saved" key={service.id}>
+              {service.representative_image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  className="vd-service-image"
+                  src={service.representative_image_url}
+                  alt={service.service_name}
+                />
+              ) : (
+                <div className="vd-service-image-placeholder" aria-hidden="true">🖼️</div>
+              )}
+
+              <div className="vd-service-content">
+                <div className="vd-service-name">
+                  {service.service_name}
+                  {service.moderation_status === "pending_review" && (
+                    <span className="vd-pending-review-badge" title={service.moderation_flag_reason || ""}>
+                      Pending Review
+                    </span>
+                  )}
+                  {service.moderation_status === "rejected" && (
+                    <span className="vd-rejected-badge" title={service.moderation_flag_reason || ""}>
+                      Not Approved
+                    </span>
+                  )}
+                </div>
+                <div className="vd-service-description">
+                  {(service.short_description || "").length > 280
+                    ? `${(service.short_description || "").slice(0, 280)}...`
+                    : service.short_description || ""}
+                </div>
+                {service.starting_price ? (
+                  <div className="vd-service-price">From ₦{Number(service.starting_price).toLocaleString()}</div>
+                ) : null}
+                <div className="vd-service-assets">
+                  {service.representative_image_url ? "📷 Representative Image" : ""}
+                  {service.secondary_image_url ? " 📷 Additional Image" : ""}
+                </div>
+              </div>
+
+              <button type="button" className="vd-edit-service-btn" onClick={() => handleEditSaved(service)}>
+                Edit
+              </button>
+
+              <button type="button" className="vd-delete-service-btn" onClick={() => handleDeleteSaved(service.id)}>
+                ×
+              </button>
+            </div>
+          ))
+        )}
       </div>
 
       <AiDescribeModal
