@@ -18,10 +18,8 @@
 // pick Category -> Subcategory and that becomes the service.
 //
 // NOTED, KEPT (pre-existing production behavior, unrelated to this pass):
-// Deleting a saved service does NOT remove its images from storage
-// (unlike Products' delete, which does clean up "vendor-gallery").
-// Orphaned files stay in the bucket after a service is deleted, same
-// as production.
+// (Removed 2026-09-08 per Cyril -- Services' delete now cleans up
+// storage on delete, same as Products. See storagePathFromUrl below.)
 // ===============================================================
 
 import { useEffect, useRef, useState } from "react";
@@ -125,6 +123,21 @@ function slugify(name: string): string {
     .trim()
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-");
+}
+
+// Extracts the storage path from a public URL so it can be removed
+// from the "vendor-gallery" bucket on delete -- same helper
+// ProductsTab uses. Added here 2026-09-08 per Cyril: Services'
+// delete never cleaned up storage, unlike Products -- a real gap,
+// not intentional production behavior worth preserving.
+function storagePathFromUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const path = new URL(url).pathname.split("/object/public/vendor-gallery/")[1];
+    return path ? decodeURIComponent(path) : null;
+  } catch {
+    return null;
+  }
 }
 
 const IMAGE_HINT = "Accepted: JPG, JPEG, PNG • Max: 2 MB • Minimum: 800 × 800 px";
@@ -520,8 +533,23 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
   async function handleDeleteSaved(id: string) {
     if (!confirm("Delete this service?")) return;
 
-    // Faithful port: production does not clean up storage on service
-    // delete (unlike Products). See module comment above.
+    const service = savedServices.find((s) => s.id === id);
+    const storagePaths = [
+      service?.representative_image_url,
+      service?.secondary_image_url,
+      ...(service?.gallery_image_urls || []),
+    ]
+      .map(storagePathFromUrl)
+      .filter((p): p is string => Boolean(p));
+
+    if (storagePaths.length) {
+      const { error: storageError } = await supabase.storage.from("vendor-gallery").remove(storagePaths);
+      if (storageError) console.error(storageError);
+    }
+
+    // Faithful port of the DB delete itself; only the storage cleanup
+    // above is new -- production never removed these files, but that
+    // was a real gap, not a deliberate behavior worth preserving.
     const { error } = await supabase.from("vendor_services").delete().eq("id", id);
 
     if (error) {

@@ -1669,7 +1669,7 @@
 .vd-product-price {
   font-size: 13px;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--color-success);
   margin-top: 4px;
 }
 
