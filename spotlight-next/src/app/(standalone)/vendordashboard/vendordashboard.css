@@ -1607,6 +1607,17 @@
   margin-top: 18px;
 }
 
+.vd-char-count {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  text-align: right;
+}
+
+.vd-char-count-warn {
+  color: #f59e0b;
+}
+
 .vd-service-price-row {
   margin-top: 18px;
 }

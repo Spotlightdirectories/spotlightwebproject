@@ -152,10 +152,13 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
 
   const [primaryUrl, setPrimaryUrl] = useState("");
   const [secondaryUrl, setSecondaryUrl] = useState("");
+  const [primaryPreview, setPrimaryPreview] = useState("");
+  const [secondaryPreview, setSecondaryPreview] = useState("");
   const [primaryLabel, setPrimaryLabel] = useState("No file chosen");
   const [secondaryLabel, setSecondaryLabel] = useState("No file chosen");
   const [primaryUploading, setPrimaryUploading] = useState(false);
   const [secondaryUploading, setSecondaryUploading] = useState(false);
+  const [descriptionLength, setDescriptionLength] = useState(0);
 
   // GALLERY — 2 extra, optional photo slots (2026-08 per Cyril: services
   // get a smaller bump than products — max 4 photos total per listing,
@@ -376,9 +379,12 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
     setSubSubcategoryId("");
     setAttributeValues({});
     if (descriptionRef.current) descriptionRef.current.value = "";
+    setDescriptionLength(0);
     if (priceRef.current) priceRef.current.value = "";
     setPrimaryUrl("");
     setSecondaryUrl("");
+    setPrimaryPreview("");
+    setSecondaryPreview("");
     setPrimaryLabel("No file chosen");
     setSecondaryLabel("No file chosen");
     if (primaryInputRef.current) primaryInputRef.current.value = "";
@@ -417,20 +423,27 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
 
     const setUploading = slot === "primary" ? setPrimaryUploading : setSecondaryUploading;
     const setUrl = slot === "primary" ? setPrimaryUrl : setSecondaryUrl;
+    const setPreview = slot === "primary" ? setPrimaryPreview : setSecondaryPreview;
     const setLabel = slot === "primary" ? setPrimaryLabel : setSecondaryLabel;
     const inputRef = slot === "primary" ? primaryInputRef : secondaryInputRef;
 
+    // Bug fix, 2026-09-08 per Cyril: primary/secondary never showed a
+    // live preview before saving, unlike the gallery slots (which
+    // already did this) and the app. Same pattern as gallery now.
+    setPreview(URL.createObjectURL(file));
     setLabel("Uploading...");
     setUploading(true);
 
     try {
       const result = await uploadVendorFile(file, "service");
       setUrl(result.publicUrl || "");
+      setPreview(result.publicUrl || "");
       setLabel(file.name);
     } catch (err) {
       console.error(`${slot} service image upload error:`, err);
       alert(err instanceof Error ? err.message : `${slot === "primary" ? "Representative" : "Additional"} image upload failed.`);
       setLabel("No file chosen");
+      setPreview("");
       if (inputRef.current) inputRef.current.value = "";
     } finally {
       setUploading(false);
@@ -504,6 +517,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
     setFormOpen(true);
 
     if (descriptionRef.current) descriptionRef.current.value = service.short_description || "";
+    setDescriptionLength((service.short_description || "").length);
     if (priceRef.current) priceRef.current.value = service.starting_price != null ? String(service.starting_price) : "";
 
     pendingEditSubcategoryId.current = service.subcategory_id;
@@ -513,11 +527,13 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
     if (!service.category_id) setSubcategoryId(service.subcategory_id || "");
 
     setPrimaryUrl(service.representative_image_url || "");
+    setPrimaryPreview(service.representative_image_url || "");
     setPrimaryLabel(
       service.representative_image_url ? `Current: ${service.representative_image_url.split("/").pop()}` : "No file chosen"
     );
 
     setSecondaryUrl(service.secondary_image_url || "");
+    setSecondaryPreview(service.secondary_image_url || "");
     setSecondaryLabel(
       service.secondary_image_url ? `Current: ${service.secondary_image_url.split("/").pop()}` : "No file chosen"
     );
@@ -923,7 +939,14 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
             rows={8}
             maxLength={500}
             placeholder="Describe your service (280–500 characters). You may use bullet points (•) to list features or deliverables."
+            onChange={(e) => setDescriptionLength(e.target.value.length)}
           />
+          {/* Bug fix, 2026-09-08 per Cyril: the app already had a live
+              character counter here; web never did. Same shape as
+              the app's, styled to match the warning threshold. */}
+          <p className={`vd-char-count${descriptionLength < 280 ? " vd-char-count-warn" : ""}`}>
+            {descriptionLength} / 500{descriptionLength < 280 ? " (minimum 280)" : ""}
+          </p>
         </div>
 
         <div className="vd-service-add-row">
@@ -946,6 +969,23 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
           />
 
           <span className="vd-product-image-name">{primaryUploading ? "Uploading..." : primaryLabel}</span>
+
+          {primaryPreview && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={primaryPreview}
+              alt="Representative image preview"
+              style={{
+                width: 56,
+                height: 56,
+                objectFit: "cover",
+                borderRadius: 8,
+                border: "1px solid #e5e7eb",
+                marginLeft: 10,
+                opacity: primaryUploading ? 0.5 : 1,
+              }}
+            />
+          )}
         </div>
         <p className="vd-product-image-hint">{IMAGE_HINT}</p>
 
@@ -965,6 +1005,23 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
           />
 
           <span className="vd-product-image-name">{secondaryUploading ? "Uploading..." : secondaryLabel}</span>
+
+          {secondaryPreview && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={secondaryPreview}
+              alt="Additional image preview"
+              style={{
+                width: 56,
+                height: 56,
+                objectFit: "cover",
+                borderRadius: 8,
+                border: "1px solid #e5e7eb",
+                marginLeft: 10,
+                opacity: secondaryUploading ? 0.5 : 1,
+              }}
+            />
+          )}
         </div>
         <p className="vd-product-image-hint">{IMAGE_HINT}</p>
 
@@ -1097,6 +1154,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
         onClose={() => setAiModalOpen(false)}
         onGenerated={(text, meta) => {
           if (descriptionRef.current) descriptionRef.current.value = text;
+          setDescriptionLength(text.length);
           const plan = (meta.planTier || "").charAt(0).toUpperCase() + (meta.planTier || "").slice(1);
           if (meta.planTier && meta.limit) {
             showToast(`Generated within your ${plan} plan's ${meta.limit}-word limit`);
