@@ -1057,7 +1057,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
                   <div className="vd-service-description">{service.short_description}</div>
                 )}
                 {service.starting_price ? (
-                  <div className="vd-service-price">From ₦{Number(service.starting_price).toLocaleString()}</div>
+                  <div className="vd-service-price">From <span className="vd-service-price-amount">₦{Number(service.starting_price).toLocaleString()}</span></div>
                 ) : null}
                 <div className="vd-service-assets">
                   {service.representative_image_url ? "📷 Representative Image" : ""}
@@ -1124,7 +1124,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
                     : service.short_description || ""}
                 </div>
                 {service.starting_price ? (
-                  <div className="vd-service-price">From ₦{Number(service.starting_price).toLocaleString()}</div>
+                  <div className="vd-service-price">From <span className="vd-service-price-amount">₦{Number(service.starting_price).toLocaleString()}</span></div>
                 ) : null}
                 <div className="vd-service-assets">
                   {service.representative_image_url ? "📷 Representative Image" : ""}

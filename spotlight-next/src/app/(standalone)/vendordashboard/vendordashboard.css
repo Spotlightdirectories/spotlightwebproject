@@ -1676,12 +1676,29 @@
   color: var(--color-text-muted);
 }
 
-.vd-service-price,
 .vd-product-price {
   font-size: 13px;
   font-weight: 700;
   color: var(--color-success);
   margin-top: 4px;
+}
+
+/* Bug fix, 2026-09-09 per Cyril: .vd-service-price and .vd-product-price
+   used to be one shared green rule. That's correct for products (just
+   "₦X", no prefix) but wrong for services, which always render "From
+   ₦X" as one string using this same class -- making "From" green too.
+   Split apart: the price line itself stays neutral, and only the
+   amount (wrapped in its own span in the JSX) gets the green treatment,
+   matching how every other price display on the site already works. */
+.vd-service-price {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-top: 4px;
+}
+
+.vd-service-price-amount {
+  color: var(--color-success);
 }
 
 .vd-service-assets {
