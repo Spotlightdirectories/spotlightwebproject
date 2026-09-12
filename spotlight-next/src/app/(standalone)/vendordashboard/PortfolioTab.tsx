@@ -501,106 +501,112 @@ export default function PortfolioTab({ vendor }: { vendor: Vendor }) {
           ))}
         </div>
 
-        {/* SAVED ITEMS */}
-        <div className="vd-saved-services">
-          {loadingItems ? (
-            <div className="vd-empty-services">Loading portfolio...</div>
-          ) : savedItems.length === 0 ? (
-            <div className="vd-empty-services">No saved portfolio items yet.</div>
-          ) : (
-            savedItems.map((item) => {
-              const rec = recommendations[item.id];
-              return (
-                <div className="vd-service-pill saved" key={item.id} style={{ flexDirection: "column", alignItems: "stretch" }}>
-                  <div style={{ display: "flex", alignItems: "center" }}>
-                    <div style={avatarStyle}>{getInitials(item.client_name || item.title)}</div>
-
-                    <div className="vd-service-content">
-                      <div className="vd-service-name">{item.title}</div>
-                      <div className="vd-service-description">
-                        {(item.description || "").length > 200
-                          ? `${(item.description || "").slice(0, 200)}...`
-                          : item.description || ""}
-                      </div>
-                      {(item.client_name || item.completed_on) && (
-                        <div style={metaTextStyle}>
-                          {[item.client_name, item.completed_on && `Completed: ${formatCompletedDate(item.completed_on)}`]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </div>
-                      )}
-                    </div>
-
-                    <button type="button" className="vd-edit-product-btn" onClick={() => handleEditSaved(item)}>
-                      Edit
-                    </button>
-
-                    <button type="button" className="vd-delete-product-btn" onClick={() => handleDeleteSaved(item.id)}>
-                      ×
-                    </button>
-                  </div>
-
-                  {/* RECOMMENDATION — request it, show its status, or show what came back */}
-                  <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #e5e7eb" }}>
-                    {!rec && requestingId !== item.id && (
-                      <button
-                        type="button"
-                        className="vd-edit-product-btn"
-                        onClick={() => openRequestForm(item.id)}
-                      >
-                        <i className="fa-solid fa-envelope"></i> Request recommendation from client
-                      </button>
-                    )}
-
-                    {!rec && requestingId === item.id && (
-                      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                        <input
-                          type="email"
-                          className="vd-input"
-                          style={{ maxWidth: 260 }}
-                          placeholder="Client's email address"
-                          value={requestEmail}
-                          onChange={(e) => setRequestEmail(e.target.value)}
-                        />
-                        <button
-                          type="button"
-                          className="vd-service-btn"
-                          disabled={sendingRequest}
-                          onClick={() => handleSendRequest(item)}
-                        >
-                          {sendingRequest ? "Sending..." : "Send"}
-                        </button>
-                        <button type="button" className="vd-edit-product-btn" onClick={() => setRequestingId(null)}>
-                          Cancel
-                        </button>
-                      </div>
-                    )}
-
-                    {rec && rec.status === "pending" && (
-                      <div style={metaTextStyle}>
-                        <i className="fa-regular fa-clock"></i> Recommendation requested from {rec.recommender_email} — awaiting their response.
-                      </div>
-                    )}
-
-                    {rec && rec.status === "submitted" && (
-                      <div style={{ fontSize: 13, color: "#166534" }}>
-                        <i className="fa-solid fa-circle-check"></i>{" "}
-                        <strong>Verified recommendation from {rec.recommender_name}{rec.recommender_company ? ` (${rec.recommender_company})` : ""}:</strong>{" "}
-                        <span style={{ color: "#374151" }}>&ldquo;{rec.message}&rdquo;</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-
         <div className="vd-profile-actions">
           <button type="button" className="vd-service-btn" disabled={saving} onClick={handleSave}>
             {saving ? (editingId ? "Updating..." : "Saving...") : editingId ? "Update Item" : "Save Portfolio"}
           </button>
         </div>
+      </div>
+
+      {/* SAVED ITEMS — bug fix, 2026-09-09 per Cyril: same issue as
+          ProductsTab/ServicesTab, caught here late since Portfolio
+          wasn't tested until now. This list used to live inside the
+          formOpen-gated vd-inline-editor container, so saved items
+          were invisible until "Add Portfolio Item" was tapped. Moved
+          out so it's always visible, matching the app (which was
+          built correctly here from the start). */}
+      <div className="vd-saved-services">
+        {loadingItems ? (
+          <div className="vd-empty-services">Loading portfolio...</div>
+        ) : savedItems.length === 0 ? (
+          <div className="vd-empty-services">No saved portfolio items yet.</div>
+        ) : (
+          savedItems.map((item) => {
+            const rec = recommendations[item.id];
+            return (
+              <div className="vd-service-pill saved" key={item.id} style={{ flexDirection: "column", alignItems: "stretch" }}>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <div style={avatarStyle}>{getInitials(item.client_name || item.title)}</div>
+
+                  <div className="vd-service-content">
+                    <div className="vd-service-name">{item.title}</div>
+                    <div className="vd-service-description">
+                      {(item.description || "").length > 200
+                        ? `${(item.description || "").slice(0, 200)}...`
+                        : item.description || ""}
+                    </div>
+                    {(item.client_name || item.completed_on) && (
+                      <div style={metaTextStyle}>
+                        {[item.client_name, item.completed_on && `Completed: ${formatCompletedDate(item.completed_on)}`]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </div>
+                    )}
+                  </div>
+
+                  <button type="button" className="vd-edit-product-btn" onClick={() => handleEditSaved(item)}>
+                    Edit
+                  </button>
+
+                  <button type="button" className="vd-delete-product-btn" onClick={() => handleDeleteSaved(item.id)}>
+                    ×
+                  </button>
+                </div>
+
+                {/* RECOMMENDATION — request it, show its status, or show what came back */}
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #e5e7eb" }}>
+                  {!rec && requestingId !== item.id && (
+                    <button
+                      type="button"
+                      className="vd-edit-product-btn"
+                      onClick={() => openRequestForm(item.id)}
+                    >
+                      <i className="fa-solid fa-envelope"></i> Request recommendation from client
+                    </button>
+                  )}
+
+                  {!rec && requestingId === item.id && (
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                      <input
+                        type="email"
+                        className="vd-input"
+                        style={{ maxWidth: 260 }}
+                        placeholder="Client's email address"
+                        value={requestEmail}
+                        onChange={(e) => setRequestEmail(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="vd-service-btn"
+                        disabled={sendingRequest}
+                        onClick={() => handleSendRequest(item)}
+                      >
+                        {sendingRequest ? "Sending..." : "Send"}
+                      </button>
+                      <button type="button" className="vd-edit-product-btn" onClick={() => setRequestingId(null)}>
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+
+                  {rec && rec.status === "pending" && (
+                    <div style={metaTextStyle}>
+                      <i className="fa-regular fa-clock"></i> Recommendation requested from {rec.recommender_email} — awaiting their response.
+                    </div>
+                  )}
+
+                  {rec && rec.status === "submitted" && (
+                    <div style={{ fontSize: 13, color: "#166534" }}>
+                      <i className="fa-solid fa-circle-check"></i>{" "}
+                      <strong>Verified recommendation from {rec.recommender_name}{rec.recommender_company ? ` (${rec.recommender_company})` : ""}:</strong>{" "}
+                      <span style={{ color: "#374151" }}>&ldquo;{rec.message}&rdquo;</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );
