@@ -102,6 +102,7 @@ export default function HomeCategorySearch() {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const [categoriesLoadError, setCategoriesLoadError] = useState(false);
   const categoriesLoadedRef = useRef(false);
 
   // Flat list of every subcategory (~2,300 rows, product + service
@@ -235,28 +236,71 @@ export default function HomeCategorySearch() {
     if (categoriesLoadedRef.current) return;
     categoriesLoadedRef.current = true;
     setLoadingCategories(true);
-    const [categoriesRes, allSubcats, allSubSubcats, catCounts, subcatCounts] = await Promise.all([
-      supabase.from("categories").select("id,name,kind,image_url").in("kind", ["product", "service"]).order("name", { ascending: true }),
-      subcategoriesAllLoadedRef.current ? Promise.resolve(null) : fetchAllSubcategories(),
-      subSubcategoriesAllLoadedRef.current ? Promise.resolve(null) : fetchAllSubSubcategories(),
-      countsLoadedRef.current ? Promise.resolve(null) : fetchAllCounts("category_listing_counts", "category_id"),
-      countsLoadedRef.current ? Promise.resolve(null) : fetchAllCounts("subcategory_listing_counts", "subcategory_id"),
-    ]);
-    if (!categoriesRes.error) {
-      const loadedCategories = (categoriesRes.data || []) as Category[];
-      setCategories(loadedCategories);
-      // Warm the browser's image cache for every category thumbnail
-      // right away, so by the time the panel actually opens the
-      // pictures are already downloaded and just pop straight in
-      // instead of streaming in one-by-one as each <img> scrolls
-      // into view (Cyril, 2026-08 — the "go slow" fade-in effect).
-      for (const cat of loadedCategories) {
-        if (cat.image_url) {
-          const preload = new window.Image();
-          preload.src = cat.image_url;
-        }
+    setCategoriesLoadError(false);
+
+    // Bug fix, 2026-09-09: this used to have no timeout at all --
+    // if any single one of the 5 parallel requests below stalled on
+    // the network (confirmed the database side itself is healthy;
+    // this is purely a "what if a request never comes back" gap),
+    // Promise.all never settles and the panel is stuck on "Loading
+    // categories..." forever, with no way to recover short of a page
+    // reload. A 12s timeout now races against the real fetch: if the
+    // real data wins, great; if not, the panel falls back to a
+    // visible error + Retry button instead of hanging indefinitely.
+    // categoriesLoadedRef is reset on timeout/error specifically so
+    // Retry can actually try again rather than being permanently
+    // latched to "already loaded".
+    const TIMEOUT_MS = 12000;
+    const timeout = new Promise<"timeout">((resolve) => {
+      setTimeout(() => resolve("timeout"), TIMEOUT_MS);
+    });
+
+    const fetchAll = (async () => {
+      const [categoriesRes, allSubcats, allSubSubcats, catCounts, subcatCounts] = await Promise.all([
+        supabase.from("categories").select("id,name,kind,image_url").in("kind", ["product", "service"]).order("name", { ascending: true }),
+        subcategoriesAllLoadedRef.current ? Promise.resolve(null) : fetchAllSubcategories(),
+        subSubcategoriesAllLoadedRef.current ? Promise.resolve(null) : fetchAllSubSubcategories(),
+        countsLoadedRef.current ? Promise.resolve(null) : fetchAllCounts("category_listing_counts", "category_id"),
+        countsLoadedRef.current ? Promise.resolve(null) : fetchAllCounts("subcategory_listing_counts", "subcategory_id"),
+      ]);
+      return { categoriesRes, allSubcats, allSubSubcats, catCounts, subcatCounts } as const;
+    })();
+
+    const result = await Promise.race([fetchAll, timeout]);
+
+    if (result === "timeout") {
+      categoriesLoadedRef.current = false; // allow Retry to actually try again
+      setLoadingCategories(false);
+      setCategoriesLoadError(true);
+      return;
+    }
+
+    const { categoriesRes, allSubcats, allSubSubcats, catCounts, subcatCounts } = result;
+
+    if (categoriesRes.error) {
+      // A real query error (not a timeout) -- surface the same retry
+      // UI rather than silently leaving categories empty with no
+      // explanation to the customer.
+      categoriesLoadedRef.current = false;
+      setLoadingCategories(false);
+      setCategoriesLoadError(true);
+      return;
+    }
+
+    const loadedCategories = (categoriesRes.data || []) as Category[];
+    setCategories(loadedCategories);
+    // Warm the browser's image cache for every category thumbnail
+    // right away, so by the time the panel actually opens the
+    // pictures are already downloaded and just pop straight in
+    // instead of streaming in one-by-one as each <img> scrolls
+    // into view (Cyril, 2026-08 — the "go slow" fade-in effect).
+    for (const cat of loadedCategories) {
+      if (cat.image_url) {
+        const preload = new window.Image();
+        preload.src = cat.image_url;
       }
     }
+
     if (!subcategoriesAllLoadedRef.current && allSubcats) {
       subcategoriesAllLoadedRef.current = true;
       setAllSubcategories(allSubcats);
@@ -692,6 +736,25 @@ export default function HomeCategorySearch() {
 
             {loadingCategories ? (
               <div className={styles.panelLoading}>Loading categories...</div>
+            ) : categoriesLoadError ? (
+              <div className={styles.panelLoading}>
+                <p style={{ marginBottom: 10 }}>Couldn&apos;t load categories. Please check your connection and try again.</p>
+                <button
+                  type="button"
+                  onClick={() => ensureCategoriesLoaded()}
+                  style={{
+                    background: "var(--color-primary)",
+                    color: "#000",
+                    fontWeight: 700,
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "8px 20px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Retry
+                </button>
+              </div>
             ) : (
               <div className={`${styles.panelBody} ${showThirdPane ? styles.panelBodyThree : ""}`}>
                 <div className={styles.categoryColumn} ref={categoryColumnRef}>
