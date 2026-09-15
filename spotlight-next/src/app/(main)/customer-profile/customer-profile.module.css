@@ -289,7 +289,7 @@
 }
 
 .cpActivityPrice {
-  color: var(--color-text-primary) !important;
+  color: var(--color-success) !important;
   font-weight: 600;
 }
 

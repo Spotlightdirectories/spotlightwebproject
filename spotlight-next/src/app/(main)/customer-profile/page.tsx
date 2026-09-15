@@ -290,6 +290,7 @@ export default function CustomerProfilePage() {
           )
         `)
         .eq("customer_id", customerRow.id)
+        .order("created_at", { ascending: false })
         .returns<FavoriteRow[]>();
 
       if (favError) {
