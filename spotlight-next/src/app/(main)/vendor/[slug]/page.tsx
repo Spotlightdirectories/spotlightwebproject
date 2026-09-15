@@ -1719,7 +1719,7 @@ export default function VendorProfilePage() {
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={b.logo_url || "/images/spotlightlogo-512.png"}
+                  src={b.logo_url || "/images/default-vendor-logo.png"}
                   alt={b.name}
                   className={styles.similarLogo}
                 />

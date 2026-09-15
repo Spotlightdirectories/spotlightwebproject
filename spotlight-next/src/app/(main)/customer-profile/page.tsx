@@ -572,7 +572,7 @@ export default function CustomerProfilePage() {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={v.logo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(v.name)}&background=e6c200&color=000000&size=128`}
+                    src={v.logo_url || "/images/default-vendor-logo.png"}
                     alt={v.name}
                   />
                   <div className={styles.cpFavoriteInfo}>

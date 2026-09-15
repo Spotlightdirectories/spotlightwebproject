@@ -873,7 +873,7 @@ export default function DiscoverResultsPage() {
               const isProduct = "productName" in item;
               const isService = "serviceName" in item;
               const name = isProduct ? item.productName : isService ? item.serviceName : item.name;
-              const image = isProduct ? item.image : (item.vendorLogo || item.logo || "/images/spotlightlogo-512.png");
+              const image = isProduct ? item.image : (item.vendorLogo || item.logo || "/images/default-vendor-logo.png");
               const price = isProduct ? item.price : isService ? item.startingPrice : null;
               const vendorName = isProduct || isService ? item.vendorName : item.name;
               const rating = isProduct || isService ? item.vendorRating : item.rating;
@@ -996,7 +996,7 @@ export default function DiscoverResultsPage() {
                   <div className={styles.vendorLeft}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={s.vendorLogo || "/images/spotlightlogo-512.png"}
+                      src={s.vendorLogo || "/images/default-vendor-logo.png"}
                       alt={s.vendorName}
                       className={styles.vendorLogo}
                     />
@@ -1073,7 +1073,7 @@ export default function DiscoverResultsPage() {
                 <div className={styles.vendorLeft}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={v.logo || "/images/spotlightlogo-512.png"}
+                    src={v.logo || "/images/default-vendor-logo.png"}
                     alt={v.name}
                     className={styles.vendorLogo}
                   />
