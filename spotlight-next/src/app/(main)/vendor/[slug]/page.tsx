@@ -1151,10 +1151,20 @@ export default function VendorProfilePage() {
                 {vendor.logo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={vendor.logo_url} alt={vendor.name} />
-                ) : (
+                ) : isOwner ? (
                   <div className={styles.logoPlaceholder}>
                     112 × 112px<br />Max: 3MB<br />JPG, PNG
                   </div>
+                ) : (
+                  // Bug fix, 2026-09-10 per Cyril: a customer viewing a
+                  // vendor with no logo saw a blank box here -- the only
+                  // fallback that existed was the owner-only upload hint
+                  // above, which never applies to a public visitor. This
+                  // is the same default logo Results/Similar Businesses
+                  // already use; the vendor profile page was the one
+                  // place it was missing.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src="/images/default-vendor-logo.png" alt={vendor.name} />
                 )}
                 {logoUploading && (
                   <div className={styles.uploadOverlay}>

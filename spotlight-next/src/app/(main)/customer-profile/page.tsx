@@ -625,7 +625,7 @@ export default function CustomerProfilePage() {
       <section className={styles.cpSection}>
         <h2>My Inquiries</h2>
         <p className={styles.cpNote}>
-          Products and services you've reached out to a vendor about via WhatsApp or Call.
+          Vendors you&apos;ve contacted via WhatsApp or call.
         </p>
         <div className={styles.cpActivityList}>
           {inquiriesError ? (
@@ -721,7 +721,7 @@ export default function CustomerProfilePage() {
                   </span>
                 </div>
                 <p>{r.review_text}</p>
-                <span className={styles.cpReviewDate}>{new Date(r.created_at).toLocaleDateString()}</span>
+                <span className={styles.cpReviewDate}>{new Date(r.created_at).toLocaleDateString("en-NG", { dateStyle: "medium" })}</span>
               </div>
             ))
           )}
