@@ -625,7 +625,7 @@ export default function CustomerProfilePage() {
       <section className={styles.cpSection}>
         <h2>My Inquiries</h2>
         <p className={styles.cpNote}>
-          Vendors you&apos;ve contacted via WhatsApp or call.
+          Vendors you&apos;ve contacted via WhatsApp or call
         </p>
         <div className={styles.cpActivityList}>
           {inquiriesError ? (
