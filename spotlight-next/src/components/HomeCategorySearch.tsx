@@ -496,10 +496,16 @@ export default function HomeCategorySearch() {
     router.push(`/discover-results?${params.toString()}`);
   }
 
+  const [emptySearchError, setEmptySearchError] = useState(false);
+
   function handleKeywordSubmit(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = query.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      setEmptySearchError(true);
+      return;
+    }
+    setEmptySearchError(false);
     closePanel();
     router.push(`/discover-results?keyword=${encodeURIComponent(trimmed)}`);
   }
@@ -715,7 +721,7 @@ export default function HomeCategorySearch() {
           className={styles.searchInput}
           placeholder="What are you looking for? e.g. phone, generator, tailor..."
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => { setQuery(e.target.value); setEmptySearchError(false); }}
           onFocus={openPanel}
         />
         {query && (
@@ -727,6 +733,12 @@ export default function HomeCategorySearch() {
           Search
         </button>
       </form>
+
+      {emptySearchError && (
+        <p style={{ color: "#ef4444", fontSize: 13, marginTop: 6, fontWeight: 600 }}>
+          Please type a keyword to search.
+        </p>
+      )}
 
       {open && (
         <div className={styles.panel} role="dialog" aria-label="Category search" ref={panelRef}>
