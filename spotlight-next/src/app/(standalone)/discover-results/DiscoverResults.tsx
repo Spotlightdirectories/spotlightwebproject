@@ -66,6 +66,7 @@ interface Service {
   vendorId: string;
   serviceName: string;
   description: string;
+  image: string;
   vendorName: string;
   vendorCategory: string;
   vendorSubcategory: string;
