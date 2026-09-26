@@ -505,6 +505,7 @@ export default function DiscoverResultsPage() {
         serviceName: s.service_name || "",
         description: s.short_description || "",
         vendorName: s.vendor_name || "",
+        image: s.image || "",
         vendorCategory: s.vendor_category || "",
         vendorSubcategory: s.vendor_subcategory || "",
         vendorState: s.vendor_state || "",
