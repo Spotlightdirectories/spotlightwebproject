@@ -42,11 +42,11 @@ function useRevealOnScroll<T extends HTMLElement>() {
 // adding back one "video:" line, no re-upload needed.
 
 const SLIDES = [
-  { img: "/images/mechanic-portrait.webp", alt: "Auto mechanic and repair business owner", tag: "Auto & Technical Services", caption: "Trusted by the customers already searching for you" },
+  { img: "/images/electrician2.webp", alt: "Electrician and electrical services provider", tag: "Electrical Services", caption: "The customer with a blown fuse is searching right now" },
   { img: "/images/tailoring-portrait.webp", video: "/videos/tailoring-clip.mp4", alt: "Tailoring and fashion business owner", tag: "Fashion & Tailoring", caption: "Get found by customers looking for your craft nearby" },
   { img: "/images/provision-seller--portrait.webp", alt: "Provision store and grocery business owner", tag: "Provisions & Groceries", caption: "From daily essentials to bulk orders — be their first stop" },
   { img: "/images/accountant-portrait.webp", video: "/videos/accountant-clip.mp4", alt: "Accountant and financial services provider", tag: "Accounting & Finance", caption: "Trusted professionals, found by the clients who need them" },
-  { img: "/images/electrician2.webp", alt: "Electrician and electrical services provider", tag: "Electrical Services", caption: "The customer with a blown fuse is searching right now" },
+  { img: "/images/mechanic-portrait.webp", alt: "Auto mechanic and repair business owner", tag: "Auto & Technical Services", caption: "Trusted by the customers already searching for you" },
 ];
 
 const BENEFITS = [
