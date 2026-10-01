@@ -104,7 +104,7 @@ function PartnerProgramInner() {
   async function handleApply() {
     setApplyError("");
 
-    if (!name.trim() || !email.trim() || !phone.trim() || !stateVal || !lga || !dob) {
+    if (!name.trim() || !email.trim() || !phone.trim() || !stateVal || !lga || !dob || !vendorFindingPlan.trim()) {
       setApplyError("Please fill in every field.");
       return;
     }
