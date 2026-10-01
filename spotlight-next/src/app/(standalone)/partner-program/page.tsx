@@ -89,6 +89,7 @@ function PartnerProgramInner() {
   const [stateVal, setStateVal] = useState("");
   const [lga, setLga] = useState("");
   const [dob, setDob] = useState("");
+  const [vendorFindingPlan, setVendorFindingPlan] = useState("");
   const [consent, setConsent] = useState(false);
   const [applying, setApplying] = useState(false);
   const [applyError, setApplyError] = useState("");
