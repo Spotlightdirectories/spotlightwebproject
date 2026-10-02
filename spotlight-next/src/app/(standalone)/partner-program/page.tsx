@@ -171,6 +171,7 @@ function PartnerProgramInner() {
       state: stateVal,
       local_government: lga,
       date_of_birth: dob,
+      vendor_finding_plan: vendorFindingPlan.trim(),
       status: "pending",
       referred_by: referredBy,
     });
