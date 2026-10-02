@@ -351,6 +351,19 @@ function PartnerProgramInner() {
                 <label htmlFor="partner-dob">Date of Birth</label>
                 <input id="partner-dob" type="date" className={styles.ppInput} value={dob} onChange={(e) => setDob(e.target.value)} />
 
+                <label htmlFor="partner-vendor-plan">How do you plan to find vendors?</label>
+                <p className={styles.ppFieldHint}>
+                  e.g. market association, trade group, personal network, social media
+                </p>
+                <textarea
+                  id="partner-vendor-plan"
+                  className={styles.ppInput}
+                  rows={4}
+                  placeholder="Tell us how you plan to find and bring on vendors"
+                  value={vendorFindingPlan}
+                  onChange={(e) => setVendorFindingPlan(e.target.value)}
+                />
+
                 <button type="button" className={styles.ppBtnPrimary} onClick={handleApply} disabled={applying}>
                   {applying ? "Submitting..." : "Apply to Join"}
                 </button>
