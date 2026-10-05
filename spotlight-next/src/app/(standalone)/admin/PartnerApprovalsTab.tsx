@@ -31,6 +31,7 @@ type PartnerRow = {
   phone: string | null;
   state: string | null;
   local_government: string | null;
+  vendor_finding_plan: string | null;
   status: string | null;
 };
 
@@ -44,7 +45,7 @@ export default function PartnerApprovalsTab({ currentRole }: { currentRole: Admi
   const loadPartners = useCallback(async () => {
     const { data, error } = await adminSupabase
       .from("partners")
-      .select("id, name, phone, email, state, local_government, status")
+      .select("id, name, phone, email, state, local_government, vendor_finding_plan, status")
       .eq("status", "pending")
       .returns<PartnerRow[]>();
 
