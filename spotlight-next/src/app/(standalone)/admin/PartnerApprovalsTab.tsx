@@ -199,15 +199,15 @@ export default function PartnerApprovalsTab({ currentRole }: { currentRole: Admi
       <div className="adm-table-wrap">
         <table className="adm-table">
           <thead>
-            <tr><th>Name</th><th>Phone</th><th>State</th><th>LGA</th><th>Status</th><th>Action</th></tr>
+            <tr><th>Name</th><th>Phone</th><th>State</th><th>LGA</th><th>Vendor-Finding Plan</th><th>Status</th><th>Action</th></tr>
           </thead>
           <tbody>
-            {partners === null && <tr><td colSpan={6} className="adm-empty-cell">Loading…</td></tr>}
+            {partners === null && <tr><td colSpan={7} className="adm-empty-cell">Loading…</td></tr>}
             {partners !== null && loadError && (
-              <tr><td colSpan={6} className="adm-empty-cell">{loadError}</td></tr>
+              <tr><td colSpan={7} className="adm-empty-cell">{loadError}</td></tr>
             )}
             {partners !== null && !loadError && partners.length === 0 && (
-              <tr><td colSpan={6} className="adm-empty-cell">✓ All caught up — no pending partner applications.</td></tr>
+              <tr><td colSpan={7} className="adm-empty-cell">✓ All caught up — no pending partner applications.</td></tr>
             )}
             {partners?.map((p) => (
               <tr key={p.id}>
@@ -215,6 +215,7 @@ export default function PartnerApprovalsTab({ currentRole }: { currentRole: Admi
                 <td>{p.phone || "—"}</td>
                 <td>{p.state || "—"}</td>
                 <td>{p.local_government || "—"}</td>
+                <td style={{ maxWidth: 260, whiteSpace: "pre-wrap" }}>{p.vendor_finding_plan || "—"}</td>
                 <td>{p.status || "—"}</td>
                 <td>
                   <button className="adm-btn adm-approve-btn" disabled={processingId === p.id} onClick={() => approvePartner(p.id)}>
