@@ -18,6 +18,7 @@ type PartnerHistoryRow = {
   email: string | null;
   state: string | null;
   referral_code: string | null;
+  vendor_finding_plan: string | null;
   status: string | null;
   created_at: string | null;
 };
