@@ -34,19 +34,24 @@ function useRevealOnScroll<T extends HTMLElement>() {
 }
 
 // Bandwidth reduction, 2026-08-23 per Cyril: Netlify bandwidth usage
-// spiked heavily once all 5 videos went live (every homepage visit
-// auto-loads at least 2 full video files). Cutting the active
-// rotation down to just 2 videos (Tailoring, Accountant) for now --
-// the other 3 video FILES are untouched on disk in /public/videos,
-// simply not referenced here. Re-adding any of them later is just
-// adding back one "video:" line, no re-upload needed.
+// spiked heavily once all 5 videos went live under the OLD naive
+// autoplay setup (every homepage visit loaded all 5 at once). Cut
+// down to 2 active videos at the time.
+//
+// Restored to all 5, 2026-09-10 per Cyril (bandwidth headroom
+// confirmed available): safe to do now specifically because the
+// slideshow was rewritten in the meantime to a 2-slot system (see
+// the big comment on `state` below) -- only ever 2 videos are
+// actively loading at once regardless of how many slides HAVE a
+// video assigned, so this isn't reopening the original all-5-at-once
+// problem.
 
 const SLIDES = [
-  { img: "/images/electrician2.webp", alt: "Electrician and electrical services provider", tag: "Electrical Services", caption: "The customer with a blown fuse is searching right now" },
+  { img: "/images/electrician2.webp", video: "/videos/electrician-clip.mp4", alt: "Electrician and electrical services provider", tag: "Electrical Services", caption: "The customer with a blown fuse is searching right now" },
   { img: "/images/tailoring-portrait.webp", video: "/videos/tailoring-clip.mp4", alt: "Tailoring and fashion business owner", tag: "Fashion & Tailoring", caption: "Get found by customers looking for your craft nearby" },
-  { img: "/images/provision-seller--portrait.webp", alt: "Provision store and grocery business owner", tag: "Provisions & Groceries", caption: "From daily essentials to bulk orders — be their first stop" },
+  { img: "/images/provision-seller--portrait.webp", video: "/videos/provision-seller-clip.mp4", alt: "Provision store and grocery business owner", tag: "Provisions & Groceries", caption: "From daily essentials to bulk orders — be their first stop" },
   { img: "/images/accountant-portrait.webp", video: "/videos/accountant-clip.mp4", alt: "Accountant and financial services provider", tag: "Accounting & Finance", caption: "Trusted professionals, found by the clients who need them" },
-  { img: "/images/mechanic-portrait.webp", alt: "Auto mechanic and repair business owner", tag: "Auto & Technical Services", caption: "Trusted by the customers already searching for you" },
+  { img: "/images/mechanic-portrait.webp", video: "/videos/mechanic-clip.mp4", alt: "Auto mechanic and repair business owner", tag: "Auto & Technical Services", caption: "Trusted by the customers already searching for you" },
 ];
 
 const BENEFITS = [
