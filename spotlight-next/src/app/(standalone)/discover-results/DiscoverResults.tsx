@@ -505,7 +505,7 @@ export default function DiscoverResultsPage() {
         serviceName: s.service_name || "",
         description: s.short_description || "",
         vendorName: s.vendor_name || "",
-        image: s.image || "",
+        image: s.representative_image_url || s.image || "",
         vendorCategory: s.vendor_category || "",
         vendorSubcategory: s.vendor_subcategory || "",
         vendorState: s.vendor_state || "",
@@ -875,7 +875,7 @@ export default function DiscoverResultsPage() {
               const isProduct = "productName" in item;
               const isService = "serviceName" in item;
               const name = isProduct ? item.productName : isService ? item.serviceName : item.name;
-              const image = isProduct ? item.image : (item.vendorLogo || item.logo || "/images/default-vendor-logo.png");
+              const image = (isProduct || isService) && item.image ? item.image : (item.vendorLogo || item.logo || "/images/default-vendor-logo.png");
               const price = isProduct ? item.price : isService ? item.startingPrice : null;
               const vendorName = isProduct || isService ? item.vendorName : item.name;
               const rating = isProduct || isService ? item.vendorRating : item.rating;
@@ -998,15 +998,22 @@ export default function DiscoverResultsPage() {
                   <div className={styles.vendorLeft}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={s.vendorLogo || "/images/default-vendor-logo.png"}
-                      alt={s.vendorName}
+                      src={s.image || s.vendorLogo || "/images/default-vendor-logo.png"}
+                      alt={s.serviceName}
                       className={styles.vendorLogo}
+                      style={s.image ? { objectFit: "cover" } : undefined}
                     />
                   </div>
                   <div className={styles.vendorCenter}>
                     <div className={styles.vendorHeading}>
                       <h3>{s.serviceName}</h3>
                     </div>
+                    {s.startingPrice ? (
+                      <p className={styles.productPrice} style={{ margin: "2px 0 0" }}>
+                        <span className={styles.startingFromLabel}>From </span>
+                        ₦{Number(s.startingPrice).toLocaleString()}
+                      </p>
+                    ) : null}
                     <div className={styles.vendorHeading}>
                       <p style={{ fontSize: 12, color: "var(--color-text-muted)", margin: "2px 0 0", display: "flex", alignItems: "center", gap: 4 }}>
                         By {s.vendorName}

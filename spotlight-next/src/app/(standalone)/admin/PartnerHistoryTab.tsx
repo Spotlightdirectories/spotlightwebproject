@@ -35,7 +35,7 @@ export default function PartnerHistoryTab({ currentRole }: { currentRole: AdminR
     async function load() {
       const { data, error } = await adminSupabase
         .from("partners")
-        .select("id, name, email, state, referral_code, status, created_at")
+        .select("id, name, email, state, referral_code, vendor_finding_plan, status, created_at")
         .in("status", ["approved", "rejected"])
         .order("created_at", { ascending: false })
         .returns<PartnerHistoryRow[]>();
@@ -81,18 +81,18 @@ export default function PartnerHistoryTab({ currentRole }: { currentRole: AdminR
       <div className="adm-table-wrap">
         <table className="adm-table">
           <thead>
-            <tr><th>Name</th><th>Email</th><th>State</th><th>Referral Code</th><th>Applied</th><th>Status</th></tr>
+            <tr><th>Name</th><th>Email</th><th>State</th><th>Referral Code</th><th>Vendor-Finding Plan</th><th>Applied</th><th>Status</th></tr>
           </thead>
           <tbody>
-            {partners === null && <tr><td colSpan={6} className="adm-empty-cell">Loading…</td></tr>}
+            {partners === null && <tr><td colSpan={7} className="adm-empty-cell">Loading…</td></tr>}
             {partners !== null && loadError && (
-              <tr><td colSpan={6} className="adm-empty-cell">{loadError}</td></tr>
+              <tr><td colSpan={7} className="adm-empty-cell">{loadError}</td></tr>
             )}
             {partners !== null && !loadError && partners.length === 0 && (
-              <tr><td colSpan={6} className="adm-empty-cell">No reviewed partner applications yet.</td></tr>
+              <tr><td colSpan={7} className="adm-empty-cell">No reviewed partner applications yet.</td></tr>
             )}
             {partners !== null && !loadError && partners.length > 0 && filtered.length === 0 && (
-              <tr><td colSpan={6} className="adm-empty-cell">No results found.</td></tr>
+              <tr><td colSpan={7} className="adm-empty-cell">No results found.</td></tr>
             )}
             {filtered.map((p) => (
               <tr key={p.id}>
@@ -100,6 +100,7 @@ export default function PartnerHistoryTab({ currentRole }: { currentRole: AdminR
                 <td>{p.email || "—"}</td>
                 <td>{p.state || "—"}</td>
                 <td>{p.referral_code ? <strong>{p.referral_code}</strong> : "—"}</td>
+                <td>{p.vendor_finding_plan || "—"}</td>
                 <td>{p.created_at ? new Date(p.created_at).toLocaleDateString() : "—"}</td>
                 <td>
                   <span className={`adm-status-badge adm-status-${p.status}`}>{p.status || "—"}</span>
