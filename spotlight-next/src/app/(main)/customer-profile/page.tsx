@@ -223,6 +223,7 @@ export default function CustomerProfilePage() {
 
   const [favorites, setFavorites] = useState<FavoriteRow[]>([]);
   const [favoritesError, setFavoritesError] = useState(false);
+  const [favoriteCategories, setFavoriteCategories] = useState<Record<string, string>>({});
 
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
   const [reviewsError, setReviewsError] = useState(false);
@@ -297,7 +298,21 @@ export default function CustomerProfilePage() {
         console.error("Favorites load error:", favError);
         setFavoritesError(true);
       } else {
-        setFavorites(favData || []);
+        const favList = favData || [];
+        // Categories come from what each vendor actually lists (same logic as the app).
+        const vendorIds = favList.map(f => f.vendors?.id).filter(Boolean) as string[];
+        if (vendorIds.length > 0) {
+          const { data: catRows } = await supabase.rpc("get_vendor_display_categories", { p_vendor_ids: vendorIds });
+          const catMap: Record<string, string> = {};
+          (catRows || []).forEach((r: { vendor_id: string; categories: string[] | null; total_count: number | null }) => {
+            if (!r.categories || r.categories.length === 0) return;
+            const shown = r.categories.slice(0, 2).join(" • ");
+            const more = (r.total_count || r.categories.length) - 2;
+            catMap[r.vendor_id] = more > 0 ? `${shown} • +${more} more` : shown;
+          });
+          setFavoriteCategories(catMap);
+        }
+        setFavorites(favList);
       }
 
       // Recently viewed products/services + inquiries (WhatsApp/Call
@@ -577,7 +592,7 @@ export default function CustomerProfilePage() {
                   />
                   <div className={styles.cpFavoriteInfo}>
                     <strong>{v.name}</strong>
-                    <span>{v.subcategory || v.category || ""}</span>
+                    {favoriteCategories[v.id] && <span>{favoriteCategories[v.id]}</span>}
                     <span className={styles.cpFavoriteRating}>
                       <i className="fa-solid fa-star"></i> {Number(v.average_rating || 0).toFixed(1)} ({v.reviews_count || 0})
                     </span>

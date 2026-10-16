@@ -570,7 +570,7 @@
   color: inherit;
 }
 
-.hoursHighlight {
+.contactRow .hoursHighlight {
   color: var(--color-primary);
   font-weight: 700;
 }
