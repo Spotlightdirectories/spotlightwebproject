@@ -1381,7 +1381,7 @@ export default function VendorProfilePage() {
               <i className="far fa-clock"></i>
               <div>
                 <div className={styles.businessHours}>
-                  Opens {formatTime(locationView.open_time)} • Closes {formatTime(locationView.close_time)}
+                  <span className={styles.hoursHighlight}>Opens</span> {formatTime(locationView.open_time)} • <span className={styles.hoursHighlight}>Closes</span> {formatTime(locationView.close_time)}
                 </div>
                 {locationView.business_days && (
                   <div className={styles.businessDays}>

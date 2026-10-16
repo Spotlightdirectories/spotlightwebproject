@@ -566,8 +566,13 @@
 
 .businessHours {
   font-size: 1.1rem;
+  font-weight: 600;
+  color: inherit;
+}
+
+.hoursHighlight {
+  color: var(--color-primary);
   font-weight: 700;
-  color: var(--color-success);
 }
 
 .businessDays {
