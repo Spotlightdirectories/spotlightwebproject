@@ -20,6 +20,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { getViewingCustomerId } from "@/lib/getViewingCustomerId";
+import { nigeriaData } from "@/lib/nigeria-data.js";
 import styles from "./vendor-service.module.css";
 
 interface Service {
@@ -28,6 +29,7 @@ interface Service {
   vendor_id: string;
   service_name: string;
   starting_price: number | null;
+  pricing_mode?: string;
   short_description: string;
   representative_image_url: string | null;
   secondary_image_url: string | null;
@@ -135,6 +137,21 @@ export default function VendorServicePage() {
   const [submittingVisit, setSubmittingVisit] = useState(false);
   const [visitSubmitted, setVisitSubmitted] = useState(false);
   const visitParamHandled = useRef(false);
+
+  // Request a Quote (Task U, Step 1) -- separate from Request a Visit.
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [quoteSubmitted, setQuoteSubmitted] = useState(false);
+  const [submittingQuote, setSubmittingQuote] = useState(false);
+  const [quotePhone, setQuotePhone] = useState("");
+  const [quoteEmail, setQuoteEmail] = useState("");
+  const [quoteState, setQuoteState] = useState("");
+  const [quoteLga, setQuoteLga] = useState("");
+  const [quoteAddress, setQuoteAddress] = useState("");
+  const [quoteDescription, setQuoteDescription] = useState("");
+  const [quoteTimeline, setQuoteTimeline] = useState("");
+  const [quoteBudget, setQuoteBudget] = useState("");
+  const [quotePhotos, setQuotePhotos] = useState<{ file: File; url: string }[]>([]);
+  const quoteParamHandled = useRef(false);
 
   useEffect(() => {
     async function load() {
@@ -321,6 +338,122 @@ export default function VendorServicePage() {
     setVisitSubmitted(true);
   }
 
+  // Deep-link support for "Request a Quote" (?requestQuote=1), same idea as the visit one.
+  useEffect(() => {
+    if (quoteParamHandled.current) return;
+    if (!service) return;
+    if (searchParams.get("requestQuote") === "1") {
+      quoteParamHandled.current = true;
+      openQuoteModal();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [service]);
+
+  async function openQuoteModal() {
+    const customer = await getVisitCustomer();
+    if (!customer) {
+      router.push(`/customer-login?next=${encodeURIComponent(`/vendor/${vendorSlug}/service/${serviceSlug}?requestQuote=1`)}`);
+      return;
+    }
+    setQuotePhone(customer.phone || "");
+    setQuoteEmail(customer.email || "");
+    setQuoteState("");
+    setQuoteLga("");
+    setQuoteAddress("");
+    setQuoteDescription("");
+    setQuoteTimeline("");
+    setQuoteBudget("");
+    quotePhotos.forEach(p => URL.revokeObjectURL(p.url));
+    setQuotePhotos([]);
+    setQuoteSubmitted(false);
+    setQuoteModalOpen(true);
+  }
+
+  function addQuotePhotos(files: FileList | null) {
+    if (!files) return;
+    const next = [...quotePhotos];
+    for (const file of Array.from(files)) {
+      if (next.length >= 4) break;
+      if (!file.type.startsWith("image/")) { alert(`"${file.name}" is not a picture.`); continue; }
+      if (file.size > 5 * 1024 * 1024) { alert(`"${file.name}" is larger than 5 MB. Please choose a smaller picture.`); continue; }
+      next.push({ file, url: URL.createObjectURL(file) });
+    }
+    setQuotePhotos(next);
+  }
+
+  function removeQuotePhoto(index: number) {
+    const target = quotePhotos[index];
+    if (target) URL.revokeObjectURL(target.url);
+    setQuotePhotos(quotePhotos.filter((_, i) => i !== index));
+  }
+
+  async function handleSubmitQuote() {
+    if (!service) return;
+    const customer = await getVisitCustomer();
+    if (!customer) return;
+    if (!quotePhone.trim()) { alert("Please add your phone number."); return; }
+    if (!/^\S+@\S+\.\S+$/.test(quoteEmail.trim())) { alert("Please enter a valid email address."); return; }
+    if (!quoteState) { alert("Please choose the state where the job is."); return; }
+    if (!quoteLga) { alert("Please choose the local government area (LGA) where the job is."); return; }
+    if (quoteDescription.trim().length < 20) { alert("Please describe what you need in at least 20 characters, so the vendor can price it properly."); return; }
+    if (!quoteTimeline) { alert("Please tell the vendor when you need this done."); return; }
+
+    setSubmittingQuote(true);
+
+    if (quotePhone.trim() !== (customer.phone || "")) {
+      await supabase.from("customers").update({ phone: quotePhone.trim() }).eq("id", customer.id);
+      setVisitCustomer({ ...customer, phone: quotePhone.trim() });
+    }
+
+    // Upload photos (private storage folder, one sub-folder per customer)
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { setSubmittingQuote(false); alert("Your session expired. Please log in again."); return; }
+    const photoPaths: string[] = [];
+    for (const item of quotePhotos) {
+      const ext = (item.file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+      const path = `${session.user.id}/${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("quote-photos").upload(path, item.file, { contentType: item.file.type });
+      if (upErr) {
+        console.error(upErr);
+        setSubmittingQuote(false);
+        alert("One of the pictures could not be uploaded. Please try again.");
+        return;
+      }
+      photoPaths.push(path);
+    }
+
+    const { data: created, error } = await supabase.from("quote_requests").insert({
+      vendor_id: service.vendor_id,
+      customer_id: customer.id,
+      service_id: service.id,
+      service_name: service.service_name,
+      customer_name: customer.name || "",
+      customer_phone: quotePhone.trim(),
+      customer_email: quoteEmail.trim(),
+      state: quoteState,
+      lga: quoteLga,
+      location_note: quoteAddress.trim() || null,
+      description: quoteDescription.trim(),
+      timeline: quoteTimeline,
+      budget_range: quoteBudget || null,
+      photo_urls: photoPaths,
+    }).select("id").single();
+
+    if (error) {
+      setSubmittingQuote(false);
+      console.error(error);
+      alert("Unable to send the quote request. Please try again.");
+      return;
+    }
+
+    try {
+      await supabase.functions.invoke("notify-quote-request", { body: { quote_request_id: created?.id } });
+    } catch { /* non-fatal */ }
+
+    setSubmittingQuote(false);
+    setQuoteSubmitted(true);
+  }
+
   // Fires on WhatsApp/Call tap — production never logged these at
   // all (plain links, no handler). Fire-and-forget, doesn't block the
   // actual wa.me/tel: navigation.
@@ -441,7 +574,12 @@ export default function VendorServicePage() {
         <div className={styles.vsInfo}>
           <h1>{service.service_name}</h1>
 
-          {service.starting_price && (
+          {service.pricing_mode === "quote" && (
+            <p className={styles.vsPrice}>
+              <span>Contact for a quote</span>
+            </p>
+          )}
+          {service.pricing_mode !== "quote" && service.starting_price && (
             <p className={styles.vsPrice}>
               Starting From <span>₦{Number(service.starting_price).toLocaleString("en-NG", {
                 minimumFractionDigits: 2,
@@ -546,6 +684,15 @@ export default function VendorServicePage() {
               <i className="fa-solid fa-shield-heart"></i>
               Request a Visit
             </button>
+
+            <button
+              type="button"
+              className={`${styles.vsActionBtn} ${styles.vsQuoteBtn}`}
+              onClick={openQuoteModal}
+            >
+              <i className="fa-solid fa-file-invoice-dollar"></i>
+              Request a Quote
+            </button>
           </div>
         </div>
       </div>
@@ -634,6 +781,96 @@ export default function VendorServicePage() {
                   <button type="button" className={styles.vsModalCancelBtn} onClick={() => setVisitModalOpen(false)}>Cancel</button>
                   <button type="button" className={styles.vsModalSubmitBtn} onClick={handleSubmitVisit} disabled={submittingVisit}>
                     {submittingVisit ? "Sending..." : "Send Visit Request"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* REQUEST A QUOTE MODAL (Task U, Step 1) */}
+      {quoteModalOpen && (
+        <div className={styles.vsModalOverlay} onClick={e => { if (e.target === e.currentTarget) setQuoteModalOpen(false); }}>
+          <div className={`${styles.vsModal} ${styles.vsModalScroll}`}>
+            {quoteSubmitted ? (
+              <>
+                <h3 className={styles.vsModalTitle}>Quote Request Sent</h3>
+                <p className={styles.vsVisitSubmittedText}>
+                  <i className="fa-solid fa-circle-check"></i>{" "}
+                  {vendor?.name || "The vendor"} will contact you with a quote. You can follow this request
+                  under My Quote Requests in your account. Sending it does not commit you to anything.
+                </p>
+                <div className={styles.vsModalActions}>
+                  <button type="button" className={styles.vsModalSubmitBtn} onClick={() => setQuoteModalOpen(false)}>Done</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className={styles.vsModalTitle}>Request a Quote</h3>
+                <p className={styles.vsVisitModalIntro}>
+                  <i className="fa-solid fa-file-invoice-dollar"></i>{" "}
+                  Tell {vendor?.name || "the vendor"} what you need for &ldquo;{service.service_name}&rdquo; and they
+                  will contact you with a quote. Sending this does not commit you to anything.
+                </p>
+                <label className={styles.vsVisitLabel}>Your name</label>
+                <input className={styles.vsModalInput} value={visitCustomer?.name || ""} readOnly />
+                <label className={styles.vsVisitLabel}>Your phone number</label>
+                <input className={styles.vsModalInput} type="tel" placeholder="+2348021234567" value={quotePhone} onChange={e => setQuotePhone(e.target.value)} />
+                <label className={styles.vsVisitLabel}>Your email address</label>
+                <input className={styles.vsModalInput} type="email" placeholder="you@example.com" value={quoteEmail} onChange={e => setQuoteEmail(e.target.value)} />
+                <label className={styles.vsVisitLabel}>State where the job is</label>
+                <select className={styles.vsModalInput} value={quoteState} onChange={e => { setQuoteState(e.target.value); setQuoteLga(""); }}>
+                  <option value="">Select state</option>
+                  {Object.keys(nigeriaData as Record<string, string[]>).map(st => <option key={st} value={st}>{st}</option>)}
+                </select>
+                <label className={styles.vsVisitLabel}>Local government area (LGA)</label>
+                <select className={styles.vsModalInput} value={quoteLga} onChange={e => setQuoteLga(e.target.value)} disabled={!quoteState}>
+                  <option value="">{quoteState ? "Select LGA" : "Choose a state first"}</option>
+                  {((nigeriaData as Record<string, string[]>)[quoteState] || []).map(l => <option key={l} value={l}>{l}</option>)}
+                </select>
+                <label className={styles.vsVisitLabel}>Address or landmark (optional)</label>
+                <input className={styles.vsModalInput} placeholder="e.g. Off Admiralty Way, Lekki Phase 1" value={quoteAddress} onChange={e => setQuoteAddress(e.target.value)} />
+                <label className={styles.vsVisitLabel}>Describe what you need</label>
+                <textarea className={styles.vsModalTextarea} placeholder="Describe the job in detail so the vendor can price it properly (at least 20 characters)..." value={quoteDescription} onChange={e => setQuoteDescription(e.target.value)} />
+                <label className={styles.vsVisitLabel}>When do you need it?</label>
+                <select className={styles.vsModalInput} value={quoteTimeline} onChange={e => setQuoteTimeline(e.target.value)}>
+                  <option value="">Select</option>
+                  <option value="asap">As soon as possible</option>
+                  <option value="within_1_week">Within 1 week</option>
+                  <option value="within_1_month">Within 1 month</option>
+                  <option value="just_planning">Just planning</option>
+                </select>
+                <label className={styles.vsVisitLabel}>Budget range (optional)</label>
+                <select className={styles.vsModalInput} value={quoteBudget} onChange={e => setQuoteBudget(e.target.value)}>
+                  <option value="">Prefer not to say</option>
+                  <option value="Under ₦50,000">Under ₦50,000</option>
+                  <option value="₦50,000 – ₦200,000">₦50,000 – ₦200,000</option>
+                  <option value="₦200,000 – ₦500,000">₦200,000 – ₦500,000</option>
+                  <option value="₦500,000 – ₦1,000,000">₦500,000 – ₦1,000,000</option>
+                  <option value="Above ₦1,000,000">Above ₦1,000,000</option>
+                </select>
+                <label className={styles.vsVisitLabel}>Photos of the job (optional, up to 4)</label>
+                <div className={styles.vsQuotePhotoGrid}>
+                  {quotePhotos.map((p, i) => (
+                    <div key={p.url} className={styles.vsQuotePhotoSlot}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={p.url} alt={`Job photo ${i + 1}`} />
+                      <button type="button" className={styles.vsQuotePhotoRemove} onClick={() => removeQuotePhoto(i)} aria-label="Remove photo">&times;</button>
+                    </div>
+                  ))}
+                  {quotePhotos.length < 4 && (
+                    <label className={`${styles.vsQuotePhotoSlot} ${styles.vsQuotePhotoAdd}`}>
+                      <i className="fa-solid fa-camera"></i>
+                      <span>Add photo</span>
+                      <input type="file" accept="image/*" multiple hidden onChange={e => { addQuotePhotos(e.target.files); e.target.value = ""; }} />
+                    </label>
+                  )}
+                </div>
+                <div className={styles.vsModalActions}>
+                  <button type="button" className={styles.vsModalCancelBtn} onClick={() => setQuoteModalOpen(false)}>Cancel</button>
+                  <button type="button" className={styles.vsModalSubmitBtn} onClick={handleSubmitQuote} disabled={submittingQuote}>
+                    {submittingQuote ? "Sending..." : "Send Quote Request"}
                   </button>
                 </div>
               </>

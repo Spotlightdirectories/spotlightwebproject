@@ -82,7 +82,7 @@ const TAB_TITLES: Record<TabKey, string> = {
   portfolio: "Portfolio",
   subscription: "Subscription",
   verification: "Verification",
-  visitRequests: "Visit Requests",
+  visitRequests: "Visit & Quote Requests",
   settings: "Settings",
 };
 
@@ -222,7 +222,12 @@ function VendorDashboardInner() {
         .select("id", { count: "exact", head: true })
         .eq("vendor_id", vendor.id)
         .is("vendor_viewed_at", null);
-      if (!cancelled) setUnreadVisits(count || 0);
+      const { count: quoteCount } = await supabase
+        .from("quote_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("vendor_id", vendor.id)
+        .is("vendor_viewed_at", null);
+      if (!cancelled) setUnreadVisits((count || 0) + (quoteCount || 0));
     })();
     return () => { cancelled = true; };
   }, [vendor?.id]);
@@ -441,7 +446,7 @@ function VendorDashboardInner() {
                 <i className="fa-regular fa-circle-check"></i><span>Verification</span>
               </button>
               <button className={`vd-nav-item${activeTab === "visitRequests" ? " active" : ""}`} onClick={() => switchTab("visitRequests")}>
-                <i className="fa-solid fa-shield-heart"></i><span>Visit Requests</span>
+                <i className="fa-solid fa-shield-heart"></i><span>Visit &amp; Quote Requests</span>
                 {unreadVisits > 0 && <span className="vd-nav-badge">{unreadVisits}</span>}
               </button>
               <button className="vd-nav-item" onClick={() => { window.location.href = "/insight"; }}>

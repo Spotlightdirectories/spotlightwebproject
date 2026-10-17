@@ -54,6 +54,7 @@ type VendorService = {
   service_name: string;
   short_description: string | null;
   starting_price: number | null;
+  pricing_mode?: string | null;
   representative_image_url: string | null;
   secondary_image_url: string | null;
   gallery_image_urls: string[] | null;
@@ -73,6 +74,7 @@ type PendingService = {
   sub_subcategory_id: string | null;
   short_description: string;
   starting_price: number | null;
+  pricing_mode: string;
   representative_image_url: string;
   secondary_image_url: string;
   gallery_image_urls: string[];
@@ -198,6 +200,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
 
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
   const priceRef = useRef<HTMLInputElement>(null);
+  // Task U: "Starting from" a price, or "Contact for a quote" (no price shown).
   const primaryInputRef = useRef<HTMLInputElement>(null);
   const secondaryInputRef = useRef<HTMLInputElement>(null);
 
@@ -498,6 +501,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
         sub_subcategory_id: subSubcategoryId || null,
         short_description: description,
         starting_price: Number(priceRaw) || null,
+        pricing_mode: Number(priceRaw) ? "starting_from" : "quote",
         representative_image_url: primaryUrl,
         secondary_image_url: secondaryUrl,
         gallery_image_urls: galleryUrls.filter(Boolean),
@@ -634,6 +638,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
             sub_subcategory_id: subSubcategoryId || null,
             short_description: description,
             starting_price: Number(priceRaw) || null,
+            pricing_mode: Number(priceRaw) ? "starting_from" : "quote",
             representative_image_url: primaryUrl,
             secondary_image_url: secondaryUrl,
             gallery_image_urls: galleryToSave,
@@ -660,6 +665,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
                   sub_subcategory_id: subSubcategoryId || null,
                   short_description: description,
                   starting_price: Number(priceRaw) || null,
+                  pricing_mode: Number(priceRaw) ? "starting_from" : "quote",
                   representative_image_url: primaryUrl,
                   secondary_image_url: secondaryUrl,
                   gallery_image_urls: galleryToSave,
@@ -690,6 +696,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
         sub_subcategory_id: s.sub_subcategory_id,
         short_description: s.short_description,
         starting_price: s.starting_price,
+        pricing_mode: s.pricing_mode,
         representative_image_url: s.representative_image_url || null,
         secondary_image_url: s.secondary_image_url || null,
         gallery_image_urls: s.gallery_image_urls,
@@ -952,6 +959,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
         <div className="vd-service-add-row">
           <input type="number" ref={priceRef} className="vd-input" placeholder="Starting price (optional)" />
         </div>
+        <p className="vd-char-count">Leave the price empty and customers will see &ldquo;Contact for a quote&rdquo;. Every service also gets a &ldquo;Request a Quote&rdquo; button.</p>
 
         <div className="vd-product-image-row">
           <div className="vd-product-image-label">Representative Image</div>
@@ -1056,7 +1064,9 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
                 {service.short_description && (
                   <div className="vd-service-description">{service.short_description}</div>
                 )}
-                {service.starting_price ? (
+                {service.pricing_mode === "quote" ? (
+                  <div className="vd-service-price"><span className="vd-service-price-amount">Contact for a quote</span></div>
+                ) : service.starting_price ? (
                   <div className="vd-service-price">From <span className="vd-service-price-amount">₦{Number(service.starting_price).toLocaleString()}</span></div>
                 ) : null}
                 <div className="vd-service-assets">
@@ -1123,7 +1133,9 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
                     ? `${(service.short_description || "").slice(0, 280)}...`
                     : service.short_description || ""}
                 </div>
-                {service.starting_price ? (
+                {service.pricing_mode === "quote" ? (
+                  <div className="vd-service-price"><span className="vd-service-price-amount">Contact for a quote</span></div>
+                ) : service.starting_price ? (
                   <div className="vd-service-price">From <span className="vd-service-price-amount">₦{Number(service.starting_price).toLocaleString()}</span></div>
                 ) : null}
                 <div className="vd-service-assets">

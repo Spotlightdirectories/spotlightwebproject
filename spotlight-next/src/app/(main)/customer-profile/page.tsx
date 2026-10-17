@@ -98,6 +98,25 @@ interface VisitRequestRow {
   vendors: { name: string; slug: string | null } | null;
 }
 
+interface QuoteRequestRow {
+  id: string;
+  service_name: string;
+  description: string;
+  state: string;
+  lga: string;
+  timeline: string;
+  status: "received" | "viewed" | "quoted" | "closed";
+  created_at: string;
+  vendors: { name: string; slug: string | null } | null;
+}
+
+const QUOTE_TIMELINE_LABELS: Record<string, string> = {
+  asap: "As soon as possible",
+  within_1_week: "Within 1 week",
+  within_1_month: "Within 1 month",
+  just_planning: "Just planning",
+};
+
 interface SearchLogRow {
   id: string;
   search_keyword: string | null;
@@ -195,7 +214,7 @@ async function resolveActivityItems(events: RawActivityEvent[]): Promise<Activit
   return items;
 }
 
-type TabKey = "overview" | "favorites" | "viewed" | "inquiries" | "visits" | "reviews" | "searches";
+type TabKey = "overview" | "favorites" | "viewed" | "inquiries" | "visits" | "quotes" | "reviews" | "searches";
 
 const TAB_TITLES: Record<TabKey, string> = {
   overview: "Overview",
@@ -203,6 +222,7 @@ const TAB_TITLES: Record<TabKey, string> = {
   viewed: "Recently Viewed",
   inquiries: "My Inquiries",
   visits: "Visit Requests",
+  quotes: "My Quote Requests",
   reviews: "My Reviews",
   searches: "My Search History",
 };
@@ -244,6 +264,8 @@ export default function CustomerProfilePage() {
   const [visitRequests, setVisitRequests] = useState<VisitRequestRow[]>([]);
   const [visitRequestsError, setVisitRequestsError] = useState(false);
   const [unreadVisitReplies, setUnreadVisitReplies] = useState(0);
+  const [quoteRequests, setQuoteRequests] = useState<QuoteRequestRow[]>([]);
+  const [quoteRequestsError, setQuoteRequestsError] = useState(false);
 
   // Phase 0.5 addition, 2026-09-07 per Cyril: "My Search History" --
   // reads back the search_logs rows now being written (with
@@ -391,6 +413,23 @@ export default function CustomerProfilePage() {
         setNewlyRepliedIds(new Set(unreadRows.map(v => v.id)));
       }
 
+      // Quote requests this customer has sent (Task U, Request a Quote)
+      const { data: quoteData, error: quoteError } = await supabase
+        .from("quote_requests")
+        .select(`
+          id, service_name, description, state, lga, timeline, status, created_at,
+          vendors ( name, slug )
+        `)
+        .eq("customer_id", customerRow.id)
+        .order("created_at", { ascending: false })
+        .returns<QuoteRequestRow[]>();
+      if (quoteError) {
+        console.error("Quote requests load error:", quoteError);
+        setQuoteRequestsError(true);
+      } else {
+        setQuoteRequests(quoteData || []);
+      }
+
       // My search history -- Phase 0.5, 2026-09-07 per Cyril
       const { data: searchData, error: searchError } = await supabase
         .from("search_logs")
@@ -464,6 +503,13 @@ export default function CustomerProfilePage() {
 
   if (!customer) return null;
 
+  async function closeQuoteRequest(id: string) {
+    if (!window.confirm("Close this quote request? The vendor will see it as closed.")) return;
+    const { error } = await supabase.from("quote_requests").update({ status: "closed" }).eq("id", id);
+    if (error) { alert("Unable to close this request. Please try again."); return; }
+    setQuoteRequests(qs => qs.map(q => (q.id === id ? { ...q, status: "closed" } : q)));
+  }
+
   const navItemClass = (tab: TabKey) => `${styles.cpNavItem}${activeTab === tab ? " " + styles.cpNavItemActive : ""}`;
 
   return (
@@ -493,6 +539,10 @@ export default function CustomerProfilePage() {
             <button className={navItemClass("visits")} onClick={() => switchTab("visits")}>
               <i className="fa-solid fa-shield-heart"></i>
               <span>Visit Requests{unreadVisitReplies > 0 ? ` (${unreadVisitReplies})` : ""}</span>
+            </button>
+            <button className={navItemClass("quotes")} onClick={() => switchTab("quotes")}>
+              <i className="fa-solid fa-file-invoice-dollar"></i>
+              <span>My Quote Requests</span>
             </button>
             <button className={navItemClass("reviews")} onClick={() => switchTab("reviews")}>
               <i className="fa-regular fa-star"></i><span>My Reviews</span>
@@ -558,6 +608,11 @@ export default function CustomerProfilePage() {
               <i className="fa-solid fa-shield-heart"></i>
               <strong>{visitRequests.length}</strong>
               <span>Visit Requests</span>
+            </button>
+            <button type="button" className={styles.cpOverviewCard} onClick={() => switchTab("quotes")}>
+              <i className="fa-solid fa-file-invoice-dollar"></i>
+              <strong>{quoteRequests.length}</strong>
+              <span>Quote Requests</span>
             </button>
             <button type="button" className={styles.cpOverviewCard} onClick={() => switchTab("reviews")}>
               <i className="fa-regular fa-star"></i>
@@ -724,6 +779,50 @@ export default function CustomerProfilePage() {
               </div>
               );
             })
+          )}
+        </div>
+      </section>
+      )}
+
+      {activeTab === "quotes" && (
+      <section>
+        <h2>My Quote Requests</h2>
+        <p className={styles.cpNote}>
+          Requests you&apos;ve sent through &quot;Request a Quote&quot; on a service page. The vendor will contact you with a quote.
+        </p>
+        <div className={styles.cpVisitList}>
+          {quoteRequestsError ? (
+            <p className={styles.cpEmpty}>Couldn&apos;t load your quote requests right now.</p>
+          ) : quoteRequests.length === 0 ? (
+            <p className={styles.cpEmpty}>No quote requests yet — use &quot;Request a Quote&quot; on a service page to send one.</p>
+          ) : (
+            quoteRequests.map(qr => (
+              <div key={qr.id} className={styles.cpVisitCard}>
+                <div className={styles.cpVisitTop}>
+                  {qr.vendors?.slug ? (
+                    <a href={`/vendor/${encodeURIComponent(qr.vendors.slug)}`}><strong>{qr.vendors.name}</strong></a>
+                  ) : (
+                    <strong>{qr.vendors?.name || "Vendor"}</strong>
+                  )}
+                  {qr.status === "received" && <span className={`${styles.cpVisitStatus} ${styles.cpVisitStatusPending}`}>Sent</span>}
+                  {qr.status === "viewed" && <span className={`${styles.cpVisitStatus} ${styles.cpVisitStatusPending}`}>Viewed by vendor</span>}
+                  {qr.status === "quoted" && <span className={`${styles.cpVisitStatus} ${styles.cpVisitStatusAck}`}>Quoted</span>}
+                  {qr.status === "closed" && <span className={`${styles.cpVisitStatus} ${styles.cpVisitStatusDeclined}`}>Closed</span>}
+                </div>
+                <p className={styles.cpVisitDetail}><i className="fa-solid fa-briefcase"></i> {qr.service_name}</p>
+                <p className={styles.cpVisitDetail}><i className="fa-solid fa-location-dot"></i> {qr.lga}, {qr.state}</p>
+                <p className={styles.cpVisitDetail}><i className="fa-solid fa-clock"></i> {QUOTE_TIMELINE_LABELS[qr.timeline] || qr.timeline}</p>
+                <p className={styles.cpVisitDetail}><i className="fa-solid fa-comment"></i> {qr.description}</p>
+                <p className={styles.cpVisitDate}>
+                  Requested {new Date(qr.created_at).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" })}
+                </p>
+                {qr.status !== "closed" && (
+                  <button type="button" className={styles.cpFavoriteRemove} style={{ marginTop: 10 }} onClick={() => closeQuoteRequest(qr.id)}>
+                    Close request
+                  </button>
+                )}
+              </div>
+            ))
           )}
         </div>
       </section>

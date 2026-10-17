@@ -37,6 +37,38 @@ type VisitRequest = {
   acknowledged_at: string | null;
 };
 
+// Task U: Request a Quote (separate from Request a Visit)
+type QuoteRequest = {
+  id: string;
+  service_name: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_email: string;
+  state: string;
+  lga: string;
+  location_note: string | null;
+  description: string;
+  timeline: string;
+  budget_range: string | null;
+  photo_urls: string[];
+  status: "received" | "viewed" | "quoted" | "closed";
+  created_at: string;
+  quoted_at: string | null;
+};
+
+const TIMELINE_LABELS: Record<string, string> = {
+  asap: "As soon as possible",
+  within_1_week: "Within 1 week",
+  within_1_month: "Within 1 month",
+  just_planning: "Just planning",
+};
+const QUOTE_STATUS_LABELS: Record<string, string> = {
+  received: "Received",
+  viewed: "Viewed",
+  quoted: "Quoted",
+  closed: "Closed",
+};
+
 type Props = { vendor: Vendor; active: boolean; onViewed: () => void };
 
 export default function VisitRequestsTab({ vendor, active, onViewed }: Props) {
@@ -44,6 +76,8 @@ export default function VisitRequestsTab({ vendor, active, onViewed }: Props) {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirmTarget, setConfirmTarget] = useState<VisitRequest | null>(null);
+  const [quotes, setQuotes] = useState<QuoteRequest[]>([]);
+  const [quotePhotoUrls, setQuotePhotoUrls] = useState<Record<string, string[]>>({});
 
   async function load() {
     setLoading(true);
@@ -53,6 +87,23 @@ export default function VisitRequestsTab({ vendor, active, onViewed }: Props) {
       .eq("vendor_id", vendor.id)
       .order("created_at", { ascending: false });
     setRequests((data as VisitRequest[]) || []);
+
+    const { data: quoteData } = await supabase
+      .from("quote_requests")
+      .select("id, service_name, customer_name, customer_phone, customer_email, state, lga, location_note, description, timeline, budget_range, photo_urls, status, created_at, quoted_at")
+      .eq("vendor_id", vendor.id)
+      .order("created_at", { ascending: false });
+    const quoteList = (quoteData as QuoteRequest[]) || [];
+    setQuotes(quoteList);
+
+    // Photos live in a private folder, so each needs a short-lived signed link.
+    const urlMap: Record<string, string[]> = {};
+    for (const q of quoteList) {
+      if (!q.photo_urls || q.photo_urls.length === 0) continue;
+      const { data: signed } = await supabase.storage.from("quote-photos").createSignedUrls(q.photo_urls, 3600);
+      urlMap[q.id] = (signed || []).map(x => x.signedUrl).filter(Boolean) as string[];
+    }
+    setQuotePhotoUrls(urlMap);
     setLoading(false);
   }
 
@@ -75,7 +126,22 @@ export default function VisitRequestsTab({ vendor, active, onViewed }: Props) {
         .update({ vendor_viewed_at: new Date().toISOString() })
         .eq("vendor_id", vendor.id)
         .is("vendor_viewed_at", null);
-      if (!cancelled && !error) onViewed();
+      // Quote requests: opening the tab moves "Received" to "Viewed".
+      const nowIso = new Date().toISOString();
+      await supabase
+        .from("quote_requests")
+        .update({ status: "viewed", vendor_viewed_at: nowIso })
+        .eq("vendor_id", vendor.id)
+        .eq("status", "received");
+      await supabase
+        .from("quote_requests")
+        .update({ vendor_viewed_at: nowIso })
+        .eq("vendor_id", vendor.id)
+        .is("vendor_viewed_at", null);
+      if (!cancelled && !error) {
+        setQuotes(qs => qs.map(q => (q.status === "received" ? { ...q, status: "viewed" } : q)));
+        onViewed();
+      }
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -88,6 +154,17 @@ export default function VisitRequestsTab({ vendor, active, onViewed }: Props) {
     const { error } = await supabase.from("visit_requests").update(patch).eq("id", id);
     if (!error) {
       setRequests(rs => rs.map(r => (r.id === id ? { ...r, status, acknowledged_at: (patch.acknowledged_at as string) || r.acknowledged_at } : r)));
+    }
+    setBusyId(null);
+  }
+
+  async function setQuoteStatus(id: string, status: "quoted" | "closed") {
+    setBusyId(id);
+    const { error } = await supabase.from("quote_requests").update({ status }).eq("id", id);
+    if (!error) {
+      setQuotes(qs => qs.map(q => (q.id === id ? { ...q, status, quoted_at: status === "quoted" ? new Date().toISOString() : q.quoted_at } : q)));
+    } else {
+      alert("Unable to update this quote request. Please try again.");
     }
     setBusyId(null);
   }
@@ -105,7 +182,7 @@ export default function VisitRequestsTab({ vendor, active, onViewed }: Props) {
   return (
     <div>
       <div className="vd-card-header">
-        <h3>Visit Requests</h3>
+        <h3>Visit &amp; Quote Requests</h3>
         <p className="vd-visit-safety-banner">
           <i className="fa-solid fa-shield-heart"></i>
           <span>
@@ -116,6 +193,78 @@ export default function VisitRequestsTab({ vendor, active, onViewed }: Props) {
             don&apos;t know well.
           </span>
         </p>
+      </div>
+
+      {/* QUOTE REQUESTS (Task U) */}
+      <div className="vd-card-header" style={{ marginTop: 4 }}>
+        <h3>Quote Requests</h3>
+      </div>
+      {quotes.length === 0 ? (
+        <p className="vd-card-label" style={{ marginBottom: 24 }}>No quote requests yet. When a customer uses &quot;Request a Quote&quot; on one of your services, it&apos;ll show up here.</p>
+      ) : (
+        <div className="vd-visit-list" style={{ marginBottom: 28 }}>
+          {quotes.map(q => (
+            <div key={q.id} className="vd-visit-card">
+              <div className="vd-visit-card-top">
+                <div>
+                  <strong>{q.customer_name || "Unnamed customer"}</strong>
+                  <span className="vd-pending-review-badge" style={{ marginLeft: 8 }}>Quote</span>
+                  {q.status === "received" && <span className="vd-pending-review-badge">Received</span>}
+                  {q.status === "viewed" && <span className="vd-pending-review-badge">Viewed</span>}
+                  {q.status === "quoted" && <span className="vd-visit-ack-badge">Quoted</span>}
+                  {q.status === "closed" && <span className="vd-rejected-badge">Closed</span>}
+                </div>
+                <span className="vd-card-label">{new Date(q.created_at).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" })}</span>
+              </div>
+
+              <div className="vd-visit-detail"><i className="fa-solid fa-briefcase"></i> {q.service_name}</div>
+              <div className="vd-visit-detail"><i className="fa-solid fa-phone"></i> <a href={`tel:${q.customer_phone}`}>{q.customer_phone}</a></div>
+              <div className="vd-visit-detail"><i className="fa-solid fa-envelope"></i> <a href={`mailto:${q.customer_email}`}>{q.customer_email}</a></div>
+              <div className="vd-visit-detail"><i className="fa-solid fa-location-dot"></i> {[q.location_note, q.lga, q.state].filter(Boolean).join(", ")}</div>
+              <div className="vd-visit-detail"><i className="fa-solid fa-clock"></i> {TIMELINE_LABELS[q.timeline] || q.timeline}</div>
+              {q.budget_range && <div className="vd-visit-detail"><i className="fa-solid fa-naira-sign"></i> Budget: {q.budget_range}</div>}
+              <div className="vd-visit-detail"><i className="fa-solid fa-comment"></i> {q.description}</div>
+
+              {(quotePhotoUrls[q.id] || []).length > 0 && (
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+                  {(quotePhotoUrls[q.id] || []).map((u, i) => (
+                    <a key={u} href={u} target="_blank" rel="noopener noreferrer">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={u} alt={`Job photo ${i + 1}`} style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 8, border: "1px solid var(--color-border)" }} />
+                    </a>
+                  ))}
+                </div>
+              )}
+
+              {(q.status === "received" || q.status === "viewed") && (
+                <div className="vd-visit-actions">
+                  <button type="button" className="vd-visit-confirm-btn" disabled={busyId === q.id} onClick={() => setQuoteStatus(q.id, "quoted")}>
+                    <i className="fa-solid fa-file-invoice-dollar"></i> {busyId === q.id ? "Saving..." : "Mark as quoted"}
+                  </button>
+                  <button type="button" className="vd-visit-decline-btn" disabled={busyId === q.id} onClick={() => setQuoteStatus(q.id, "closed")}>
+                    Close
+                  </button>
+                </div>
+              )}
+              {q.status === "quoted" && (
+                <div className="vd-visit-actions">
+                  <button type="button" className="vd-visit-decline-btn" disabled={busyId === q.id} onClick={() => setQuoteStatus(q.id, "closed")}>
+                    Close
+                  </button>
+                </div>
+              )}
+              {q.status !== "closed" && (
+                <p className="vd-card-label" style={{ marginTop: 8 }}>
+                  Contact {q.customer_name || "the customer"} by phone or WhatsApp with your quote, then tap &quot;Mark as quoted&quot;.
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="vd-card-header">
+        <h3>Visit Requests</h3>
       </div>
 
       {requests.length === 0 ? (
