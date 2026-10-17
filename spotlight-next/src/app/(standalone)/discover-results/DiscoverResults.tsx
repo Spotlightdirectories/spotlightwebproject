@@ -712,8 +712,8 @@ export default function DiscoverResultsPage() {
 
   // ── Render helpers ───────────────────────────────────────
   function badge(status: string) {
-    if (status === "blue") return <img src="/images/bluebadge.png" alt="Verified Business" title="Verified Business" className={styles.vendorBadge} />;
-    if (status === "gray") return <img src="/images/graybadge.png" alt="Verified Identity" title="Verified Identity" className={styles.vendorBadge} />;
+    if (status === "blue") return <img src="/images/bluebadge.png" alt="Verified Business" title="Verified Business — official business documents reviewed by Spotlight. This vendor operates a registered and credible business." className={styles.vendorBadge} />;
+    if (status === "gray") return <img src="/images/graybadge.png" alt="Verified Identity" title="Verified Identity — business owner identity confirmed" className={styles.vendorBadge} />;
     return null;
   }
 
