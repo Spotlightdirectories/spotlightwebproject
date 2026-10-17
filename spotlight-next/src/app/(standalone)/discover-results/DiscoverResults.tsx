@@ -19,6 +19,7 @@ import { getViewingCustomerId } from "@/lib/getViewingCustomerId";
 import { logSearch } from "@/lib/logSearch";
 import { nigeriaData } from "@/lib/nigeria-data.js";
 import ProfileNav from "@/components/ProfileNav";
+import AccountButton from "@/components/AccountButton";
 import SearchableSelect from "@/components/SearchableSelect";
 import styles from "./discover-results.module.css";
 
@@ -718,6 +719,7 @@ export default function DiscoverResultsPage() {
           <img src="/images/spotlightlogo-512.png" alt="Spotlight" className={styles.logo} />
           <span className={styles.brandText}>Spotlight</span>
         </a>
+        <AccountButton placement="auto" />
       </header>
 
       {/* SEARCH */}

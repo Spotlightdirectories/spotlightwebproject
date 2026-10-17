@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { nigeriaData } from "@/lib/nigeria-data.js";
 import ProfileNav from "@/components/ProfileNav";
+import AccountButton from "@/components/AccountButton";
 import SearchableSelect from "@/components/SearchableSelect";
 import styles from "./discover.module.css";
 
@@ -336,6 +337,7 @@ export default function DiscoverPage() {
           />
           <span className={styles.discoverBrandText}>Spotlight</span>
         </a>
+        <AccountButton placement="absolute" />
       </header>
 
       {/* SEARCH SECTION */}
