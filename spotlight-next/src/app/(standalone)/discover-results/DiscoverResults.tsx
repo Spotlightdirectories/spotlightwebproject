@@ -42,6 +42,7 @@ interface Vendor {
   branchName?: string | null;
   branchAddress?: string | null;
   isBranchMatch?: boolean;
+  categoryLine?: string;
 }
 
 interface Product {
@@ -482,6 +483,25 @@ export default function DiscoverResultsPage() {
         isBranchMatch: !!v.isBranchMatch,
       }));
 
+      // Task R: category line comes from what each vendor actually lists
+      // (same logic as Favorites), not the single stored subcategory field.
+      if (normVendors.length > 0) {
+        try {
+          const { data: catRows } = await supabase.rpc("get_vendor_display_categories", {
+            p_vendor_ids: [...new Set(normVendors.map(v => v.id))],
+          });
+          const catMap: Record<string, any> = {};
+          (catRows || []).forEach((r: any) => { catMap[r.vendor_id] = r; });
+          normVendors.forEach(v => {
+            const r = catMap[v.id];
+            if (!r || !r.categories || r.categories.length === 0) return;
+            const shown = r.categories.slice(0, 2).join(" • ");
+            const more = (r.total_count || r.categories.length) - 2;
+            v.categoryLine = more > 0 ? `${shown} • +${more} more` : shown;
+          });
+        } catch { /* non-fatal: falls back to stored subcategory */ }
+      }
+
       const normProducts: Product[] = rawProducts.map((p: any) => ({
         id: p.id,
         slug: p.slug || "",
@@ -692,8 +712,8 @@ export default function DiscoverResultsPage() {
 
   // ── Render helpers ───────────────────────────────────────
   function badge(status: string) {
-    if (status === "blue") return <img src="/images/bluebadge.png" alt="Verified" className={styles.vendorBadge} />;
-    if (status === "gray") return <img src="/images/graybadge.png" alt="Verified" className={styles.vendorBadge} />;
+    if (status === "blue") return <img src="/images/bluebadge.png" alt="Verified Business" title="Verified Business" className={styles.vendorBadge} />;
+    if (status === "gray") return <img src="/images/graybadge.png" alt="Verified Identity" title="Verified Identity" className={styles.vendorBadge} />;
     return null;
   }
 
@@ -1105,7 +1125,7 @@ export default function DiscoverResultsPage() {
                       : `${v.lga}, ${v.state}`}
                     <DistanceInline km={v.distanceKm} />
                   </p>
-                  <span className={styles.vendorCategory}>{v.subcategory || v.category}</span>
+                  <span className={styles.vendorCategory}>{v.categoryLine || v.subcategory || v.category}</span>
                   {v.sponsored && <p className={styles.sponsoredLabel}>Sponsored</p>}
                   <div className={styles.actions}>
                     <button

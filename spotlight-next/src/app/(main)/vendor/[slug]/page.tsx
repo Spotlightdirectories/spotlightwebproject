@@ -185,14 +185,14 @@ interface Branch {
 
 // ── Badge helper ──────────────────────────────────────────────
 function Badge({ status }: { status: string }) {
-  if (status === "blue") return <img src="/images/bluebadge.png" alt="Verified Business" style={{ width: 30, height: 30 }} />;
-  if (status === "gray") return <img src="/images/graybadge.png" alt="Verified Identity" style={{ width: 30, height: 30 }} />;
+  if (status === "blue") return <img src="/images/bluebadge.png" alt="Verified Business" title="Verified Business" style={{ width: 30, height: 30 }} />;
+  if (status === "gray") return <img src="/images/graybadge.png" alt="Verified Identity" title="Verified Identity" style={{ width: 30, height: 30 }} />;
   return null;
 }
 
 function SmallBadge({ status }: { status: string }) {
-  if (status === "blue") return <img src="/images/bluebadge.png" alt="Verified" style={{ width: 18, height: 18 }} />;
-  if (status === "gray") return <img src="/images/graybadge.png" alt="Verified" style={{ width: 18, height: 18 }} />;
+  if (status === "blue") return <img src="/images/bluebadge.png" alt="Verified Business" title="Verified Business" style={{ width: 18, height: 18 }} />;
+  if (status === "gray") return <img src="/images/graybadge.png" alt="Verified Identity" title="Verified Identity" style={{ width: 18, height: 18 }} />;
   return null;
 }
 

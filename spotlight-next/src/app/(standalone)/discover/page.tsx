@@ -65,8 +65,8 @@ function getRecentSearches(): string[] {
 }
 
 function VendorBadge({ status }: { status: string }) {
-  if (status === "blue") return <img src="/images/bluebadge.png" alt="Verified Business" className={styles.discoverSponsoredBadge} />;
-  if (status === "gray") return <img src="/images/graybadge.png" alt="Verified Identity" className={styles.discoverSponsoredBadge} />;
+  if (status === "blue") return <img src="/images/bluebadge.png" alt="Verified Business" title="Verified Business" className={styles.discoverSponsoredBadge} />;
+  if (status === "gray") return <img src="/images/graybadge.png" alt="Verified Identity" title="Verified Identity" className={styles.discoverSponsoredBadge} />;
   return null;
 }
 
