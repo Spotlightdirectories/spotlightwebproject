@@ -225,6 +225,13 @@ export default function CustomerProfilePage() {
   const [favoritesError, setFavoritesError] = useState(false);
   const [favoriteCategories, setFavoriteCategories] = useState<Record<string, string>>({});
 
+  // Ask first, so an accidental click never silently removes a vendor.
+  async function removeFavorite(favoriteId: string, vendorName: string) {
+    if (!window.confirm(`Remove ${vendorName} from your favorites?\n\nYou can save it again from the vendor's profile.`)) return;
+    setFavorites(prev => prev.filter(f => f.id !== favoriteId));
+    await supabase.from("customer_favorites").delete().eq("id", favoriteId);
+  }
+
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
   const [reviewsError, setReviewsError] = useState(false);
 
@@ -597,6 +604,13 @@ export default function CustomerProfilePage() {
                       <i className="fa-solid fa-star"></i> {Number(v.average_rating || 0).toFixed(1)} ({v.reviews_count || 0})
                     </span>
                   </div>
+                  <button
+                    type="button"
+                    className={styles.cpFavoriteRemove}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeFavorite(fav.id, v.name); }}
+                  >
+                    <i className="fa-solid fa-heart-crack"></i> Remove
+                  </button>
                 </a>
               );
             })
