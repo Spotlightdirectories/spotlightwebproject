@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useTheme } from "./ThemeProvider";
 import { supabase } from "@/lib/supabase";
@@ -131,16 +131,32 @@ export default function Navbar() {
   // dashboard instead of always assuming vendor.
   const [isVendor, setIsVendor] = useState(false);
   const [isCustomer, setIsCustomer] = useState(false);
+  // Picture + name shown on the account button, and its dropdown state.
+  const [accountName, setAccountName] = useState("");
+  const [accountLogo, setAccountLogo] = useState<string | null>(null);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef<HTMLLIElement | null>(null);
+
+  // Close the account dropdown when clicking anywhere outside it.
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) setAccountOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
 
   useEffect(() => {
     async function resolveIdentity(userId: string | undefined) {
-      if (!userId) { setIsVendor(false); setIsCustomer(false); return; }
+      if (!userId) { setIsVendor(false); setIsCustomer(false); setAccountName(""); setAccountLogo(null); return; }
       const [{ data: vendor }, { data: customer }] = await Promise.all([
-        supabase.from("vendors").select("id").eq("auth_user_id", userId).maybeSingle(),
-        supabase.from("customers").select("id").eq("auth_user_id", userId).maybeSingle(),
+        supabase.from("vendors").select("id, name, logo_url").eq("auth_user_id", userId).maybeSingle(),
+        supabase.from("customers").select("id, name").eq("auth_user_id", userId).maybeSingle(),
       ]);
       setIsVendor(!!vendor);
       setIsCustomer(!!customer);
+      setAccountName(vendor?.name || customer?.name || "My account");
+      setAccountLogo(vendor?.logo_url || null);
     }
 
     // Check session on mount
@@ -367,32 +383,7 @@ export default function Navbar() {
             </button>
           </li>
 
-          {/* MOBILE ONLY — hidden at the ≥1024px desktop breakpoint
-              (see .dashboardMobileOnly in Navbar.module.css), since
-              there's no hover on touch to reveal the desktop dropdown
-              below. Cyril's ask (2026-07-28): show it as its own
-              always-visible item, right before Log Out. Only rendered
-              when logged in — a logged-out visitor has no dashboard
-              to go to. Points at whichever dashboard(s) this identity
-              actually has (2026-08 fix — previously always pointed at
-              /vendordashboard even for a customer-only account). */}
-          {loggedIn && isVendor && (
-            <li className={styles.dashboardMobileOnly}>
-              <Link href="/vendordashboard" onClick={() => setMenuOpen(false)}>
-                <i className="fa-solid fa-gauge"></i> Vendor Dashboard
-              </Link>
-            </li>
-          )}
-          {loggedIn && isCustomer && (
-            <li className={styles.dashboardMobileOnly}>
-              <Link href="/customer-profile" onClick={() => setMenuOpen(false)}>
-                <i className="fa-solid fa-user"></i> My Account
-              </Link>
-            </li>
-          )}
-
-          {/* MOBILE ONLY — logged-out equivalent of the two links
-              above. There's no hover on touch, so both login routes
+          {/* MOBILE ONLY — direct login links for logged-out visitors. There's no hover on touch, so both login routes
               need to be directly tappable rather than hidden behind
               the desktop dropdown below (2026-08, per Cyril: customer
               login was previously only reachable via an icon buried
@@ -412,27 +403,45 @@ export default function Navbar() {
             </>
           )}
 
-          <li className={styles.accountMenu}>
+          <li className={styles.accountMenu} ref={accountRef}>
             {loggedIn ? (
               <>
-                <button className={styles.navLoginBtn} onClick={handleLogout}>
-                  Log Out
+                {/* Logged in: the user's picture (vendor logo, or gold
+                    initials). Click opens a dropdown with their
+                    dashboard link(s) and Log Out -- logging out is now
+                    a deliberate second step, not a one-click button. */}
+                <button
+                  type="button"
+                  className={styles.avatarBtn}
+                  aria-label="Account menu"
+                  aria-expanded={accountOpen}
+                  onClick={() => setAccountOpen(o => !o)}
+                >
+                  {accountLogo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={accountLogo} alt="" />
+                  ) : (
+                    <span>{(accountName.trim().split(/\s+/).map(p => p.charAt(0)).join("").substring(0, 2).toUpperCase()) || "?"}</span>
+                  )}
                 </button>
-                {/* DESKTOP ONLY (≥1024px) — hover reveals whichever
-                    dashboard(s) this identity has. Clicking "Log Out"
-                    itself is unchanged — it still logs out immediately. */}
-                <div className={styles.accountDropdown}>
-                  {isVendor && (
-                    <Link href="/vendordashboard" onClick={() => setMenuOpen(false)}>
-                      <i className="fa-solid fa-gauge"></i> Vendor Dashboard
-                    </Link>
-                  )}
-                  {isCustomer && (
-                    <Link href="/customer-profile" onClick={() => setMenuOpen(false)}>
-                      <i className="fa-solid fa-user"></i> My Account
-                    </Link>
-                  )}
-                </div>
+                {accountOpen && (
+                  <div className={styles.accountPanel}>
+                    <div className={styles.accountPanelName}>{accountName}</div>
+                    {isVendor && (
+                      <Link href="/vendordashboard" onClick={() => { setAccountOpen(false); setMenuOpen(false); }}>
+                        <i className="fa-solid fa-gauge"></i> Vendor Dashboard
+                      </Link>
+                    )}
+                    {isCustomer && (
+                      <Link href="/customer-profile" onClick={() => { setAccountOpen(false); setMenuOpen(false); }}>
+                        <i className="fa-solid fa-user"></i> My Account
+                      </Link>
+                    )}
+                    <button type="button" className={styles.accountLogout} onClick={handleLogout}>
+                      <i className="fa-solid fa-right-from-bracket"></i> Log Out
+                    </button>
+                  </div>
+                )}
               </>
             ) : (
               <>
