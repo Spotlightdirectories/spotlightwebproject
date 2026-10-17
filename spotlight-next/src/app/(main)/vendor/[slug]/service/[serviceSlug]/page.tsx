@@ -72,6 +72,15 @@ interface RelatedService {
 // Shrinks a customer's photo before upload (max 1600px wide/tall, JPEG).
 // Phone photos are often 3-8 MB; without this the vendor's inbox
 // loads them painfully slowly. Falls back to the original on any error.
+type QuoteQuestion = {
+  id: string;
+  question: string;
+  question_pidgin: string | null;
+  answer_type: "choice" | "text" | "number" | "date";
+  options: { en: string; pcm: string }[];
+  placeholder: string | null;
+};
+
 async function compressPhoto(file: File): Promise<File> {
   try {
     const bitmap = await createImageBitmap(file);
@@ -171,6 +180,9 @@ export default function VendorServicePage() {
   const [quoteBudget, setQuoteBudget] = useState("");
   const [quotePhotos, setQuotePhotos] = useState<{ file: File; url: string }[]>([]);
   const quoteParamHandled = useRef(false);
+  // Step 2: extra questions for this service's category family (all optional)
+  const [quoteQuestions, setQuoteQuestions] = useState<QuoteQuestion[]>([]);
+  const [quoteExtra, setQuoteExtra] = useState<Record<string, string>>({});
 
   useEffect(() => {
     async function load() {
@@ -209,6 +221,24 @@ export default function VendorServicePage() {
           .eq("category_id", data.category_id)
           .order("display_order", { ascending: true });
         setAttributeLabels(defs || []);
+
+        // Step 2: which question family does this category use?
+        try {
+          const { data: link } = await supabase
+            .from("quote_category_families")
+            .select("family_id")
+            .eq("category_id", data.category_id)
+            .maybeSingle();
+          if (link?.family_id) {
+            const { data: qs } = await supabase
+              .from("quote_questions")
+              .select("id, question, question_pidgin, answer_type, options, placeholder")
+              .eq("family_id", link.family_id)
+              .eq("active", true)
+              .order("position", { ascending: true });
+            setQuoteQuestions((qs as QuoteQuestion[]) || []);
+          }
+        } catch { /* extra questions are optional; the form works without them */ }
       }
 
       // Analytics
@@ -442,6 +472,10 @@ export default function VendorServicePage() {
       photoPaths.push(path);
     }
 
+    const extraAnswers = quoteQuestions
+      .filter(q => (quoteExtra[q.id] || "").trim() !== "")
+      .map(q => ({ question_id: q.id, question: q.question, answer: quoteExtra[q.id].trim() }));
+
     const { data: created, error } = await supabase.from("quote_requests").insert({
       vendor_id: service.vendor_id,
       customer_id: customer.id,
@@ -457,6 +491,7 @@ export default function VendorServicePage() {
       timeline: quoteTimeline,
       budget_range: quoteBudget || null,
       photo_urls: photoPaths,
+      extra_answers: extraAnswers,
     }).select("id").single();
 
     if (error) {
@@ -870,6 +905,37 @@ export default function VendorServicePage() {
                   <option value="₦500,000 – ₦1,000,000">₦500,000 – ₦1,000,000</option>
                   <option value="Above ₦1,000,000">Above ₦1,000,000</option>
                 </select>
+                {quoteQuestions.length > 0 && (
+                  <>
+                    <p className={styles.vsVisitModalIntro} style={{ marginTop: 14 }}>
+                      A few more questions help the vendor quote faster (all optional).
+                      <br /><span style={{ opacity: 0.75 }}>Some small questions to help the vendor quote quick (you fit skip any).</span>
+                    </p>
+                    {quoteQuestions.map(q => (
+                      <div key={q.id}>
+                        <label className={styles.vsVisitLabel}>
+                          {q.question}
+                          {q.question_pidgin && <span style={{ display: "block", fontWeight: 400, opacity: 0.7, fontSize: "0.85em" }}>{q.question_pidgin}</span>}
+                        </label>
+                        {q.answer_type === "choice" && (
+                          <select className={styles.vsModalInput} value={quoteExtra[q.id] || ""} onChange={e => setQuoteExtra({ ...quoteExtra, [q.id]: e.target.value })}>
+                            <option value="">Select / Choose one</option>
+                            {q.options.map(o => <option key={o.en} value={o.en}>{o.pcm && o.pcm !== o.en ? `${o.en} — ${o.pcm}` : o.en}</option>)}
+                          </select>
+                        )}
+                        {q.answer_type === "text" && (
+                          <input className={styles.vsModalInput} placeholder={q.placeholder || ""} maxLength={300} value={quoteExtra[q.id] || ""} onChange={e => setQuoteExtra({ ...quoteExtra, [q.id]: e.target.value })} />
+                        )}
+                        {q.answer_type === "number" && (
+                          <input className={styles.vsModalInput} type="number" min="0" inputMode="numeric" value={quoteExtra[q.id] || ""} onChange={e => setQuoteExtra({ ...quoteExtra, [q.id]: e.target.value })} />
+                        )}
+                        {q.answer_type === "date" && (
+                          <input className={styles.vsModalInput} type="date" value={quoteExtra[q.id] || ""} onChange={e => setQuoteExtra({ ...quoteExtra, [q.id]: e.target.value })} />
+                        )}
+                      </div>
+                    ))}
+                  </>
+                )}
                 <label className={styles.vsVisitLabel}>Photos of the job (optional, up to 4)</label>
                 <div className={styles.vsQuotePhotoGrid}>
                   {quotePhotos.map((p, i) => (

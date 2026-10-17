@@ -35,6 +35,7 @@ import CommissionsTab from "./CommissionsTab";
 import PaymentHistoryTab from "./PaymentHistoryTab";
 import SponsorshipHistoryTab from "./SponsorshipHistoryTab";
 import VerificationHistoryTab from "./VerificationHistoryTab";
+import QuoteQuestionsTab from "./QuoteQuestionsTab";
 
 type TabKey =
   | "staff"
@@ -48,7 +49,8 @@ type TabKey =
   | "commissions"
   | "paymentHistory"
   | "sponsorshipHistory"
-  | "verificationHistory";
+  | "verificationHistory"
+  | "quoteQuestions";
 
 type TabDef = {
   key: TabKey;
@@ -73,6 +75,7 @@ const TABS: TabDef[] = [
   { key: "paymentHistory", label: "Payment History", icon: "fa-solid fa-clock-rotate-left", roles: ["super_admin", "admin", "finance_admin"], Component: PaymentHistoryTab },
   { key: "sponsorshipHistory", label: "Sponsorship History", icon: "fa-solid fa-clock-rotate-left", roles: ["super_admin", "admin", "finance_admin"], Component: SponsorshipHistoryTab },
   { key: "verificationHistory", label: "Verification History", icon: "fa-solid fa-clock-rotate-left", roles: ["super_admin", "admin", "verification_admin"], Component: VerificationHistoryTab },
+  { key: "quoteQuestions", label: "Quote Questions", icon: "fa-solid fa-file-invoice-dollar", roles: ["super_admin", "admin"], Component: QuoteQuestionsTab },
 ];
 
 const ROLE_LABELS: Record<AdminRole, string> = {

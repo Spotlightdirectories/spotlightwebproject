@@ -51,6 +51,7 @@ type QuoteRequest = {
   timeline: string;
   budget_range: string | null;
   photo_urls: string[];
+  extra_answers: { question: string; answer: string }[] | null;
   status: "received" | "viewed" | "quoted" | "closed";
   created_at: string;
   quoted_at: string | null;
@@ -90,7 +91,7 @@ export default function VisitRequestsTab({ vendor, active, onViewed }: Props) {
 
     const { data: quoteData } = await supabase
       .from("quote_requests")
-      .select("id, service_name, customer_name, customer_phone, customer_email, state, lga, location_note, description, timeline, budget_range, photo_urls, status, created_at, quoted_at")
+      .select("id, service_name, customer_name, customer_phone, customer_email, state, lga, location_note, description, timeline, budget_range, photo_urls, extra_answers, status, created_at, quoted_at")
       .eq("vendor_id", vendor.id)
       .order("created_at", { ascending: false });
     const quoteList = (quoteData as QuoteRequest[]) || [];
@@ -224,6 +225,9 @@ export default function VisitRequestsTab({ vendor, active, onViewed }: Props) {
               <div className="vd-visit-detail"><i className="fa-solid fa-clock"></i> {TIMELINE_LABELS[q.timeline] || q.timeline}</div>
               {q.budget_range && <div className="vd-visit-detail"><i className="fa-solid fa-naira-sign"></i> Budget: {q.budget_range}</div>}
               <div className="vd-visit-detail"><i className="fa-solid fa-comment"></i> {q.description}</div>
+              {(q.extra_answers || []).map((a, i) => (
+                <div key={i} className="vd-visit-detail"><i className="fa-solid fa-circle-question"></i> <span><strong>{a.question}</strong> {a.answer}</span></div>
+              ))}
 
               {(quotePhotoUrls[q.id] || []).length > 0 && (
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
