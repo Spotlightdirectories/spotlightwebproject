@@ -69,6 +69,25 @@ interface RelatedService {
   };
 }
 
+// Shrinks a customer's photo before upload (max 1600px wide/tall, JPEG).
+// Phone photos are often 3-8 MB; without this the vendor's inbox
+// loads them painfully slowly. Falls back to the original on any error.
+async function compressPhoto(file: File): Promise<File> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob: Blob | null = await new Promise((res) => canvas.toBlob(res, "image/jpeg", 0.8));
+    if (!blob || blob.size >= file.size) return file;
+    return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+  } catch {
+    return file;
+  }
+}
+
 function SmallBadge({ status }: { status: string }) {
   if (status === "blue") return <img src="/images/bluebadge.png" alt="Verified" className={styles.vsBadge} />;
   if (status === "gray") return <img src="/images/graybadge.png" alt="Verified" className={styles.vsBadge} />;
@@ -410,9 +429,10 @@ export default function VendorServicePage() {
     if (!session) { setSubmittingQuote(false); alert("Your session expired. Please log in again."); return; }
     const photoPaths: string[] = [];
     for (const item of quotePhotos) {
-      const ext = (item.file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+      const file = await compressPhoto(item.file);
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
       const path = `${session.user.id}/${crypto.randomUUID()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("quote-photos").upload(path, item.file, { contentType: item.file.type });
+      const { error: upErr } = await supabase.storage.from("quote-photos").upload(path, file, { contentType: file.type });
       if (upErr) {
         console.error(upErr);
         setSubmittingQuote(false);
