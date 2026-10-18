@@ -569,7 +569,7 @@ export default function GetSponsoredPage() {
         <div className={styles.emptyState}>
           <i className="fa-solid fa-circle-exclamation"></i>
           <p>Sponsorship isn&apos;t available on the Free plan. Upgrade your subscription to unlock sponsorship.</p>
-          <a href="/getlisted" className={styles.upgradeLink}>View Plans</a>
+          <a href="/getlisted?context=upgrade" className={styles.upgradeLink}>View Plans</a>
         </div>
       )}
 

@@ -1345,7 +1345,7 @@ export default function VendorProfilePage() {
       {isOwner && vendor.plan_tier === "free" && (
         <section className={styles.upgradeCta}>
           <p>Upgrade your profile to make it fully editable — add photos, videos, gallery and boost visibility.</p>
-          <a href="/getlisted" className={styles.upgradeBtn}>Upgrade</a>
+          <a href="/getlisted?context=upgrade" className={styles.upgradeBtn}>Upgrade</a>
         </section>
       )}
 
