@@ -474,7 +474,14 @@ export default function VendorServicePage() {
 
     const extraAnswers = quoteQuestions
       .filter(q => (quoteExtra[q.id] || "").trim() !== "")
-      .map(q => ({ question_id: q.id, question: q.question, answer: quoteExtra[q.id].trim() }));
+      .map(q => ({
+        question_id: q.id,
+        question: q.question,
+        // dates are saved in a friendly form, e.g. "15 Dec 2026"
+        answer: q.answer_type === "date"
+          ? new Date(`${quoteExtra[q.id].trim()}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+          : quoteExtra[q.id].trim(),
+      }));
 
     const { data: created, error } = await supabase.from("quote_requests").insert({
       vendor_id: service.vendor_id,
@@ -930,7 +937,15 @@ export default function VendorServicePage() {
                           <input className={styles.vsModalInput} type="number" min="0" inputMode="numeric" value={quoteExtra[q.id] || ""} onChange={e => setQuoteExtra({ ...quoteExtra, [q.id]: e.target.value })} />
                         )}
                         {q.answer_type === "date" && (
-                          <input className={styles.vsModalInput} type="date" value={quoteExtra[q.id] || ""} onChange={e => setQuoteExtra({ ...quoteExtra, [q.id]: e.target.value })} />
+                          <input
+                            className={styles.vsModalInput}
+                            type="date"
+                            style={{ colorScheme: "dark", cursor: "pointer" }}
+                            min={new Date().toISOString().slice(0, 10)}
+                            value={quoteExtra[q.id] || ""}
+                            onClick={e => { try { (e.currentTarget as HTMLInputElement).showPicker?.(); } catch { /* browser without showPicker */ } }}
+                            onChange={e => setQuoteExtra({ ...quoteExtra, [q.id]: e.target.value })}
+                          />
                         )}
                       </div>
                     ))}
