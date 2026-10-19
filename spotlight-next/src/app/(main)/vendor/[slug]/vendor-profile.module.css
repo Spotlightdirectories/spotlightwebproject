@@ -200,6 +200,10 @@
 
 .reviewStar { color: var(--color-primary); }
 
+/* A business with no category/subcategory renders an empty line; hide it
+   so the rating sits at the left instead of being pushed to the right. */
+.metaCategory:empty { display: none; }
+
 .addressLine {
   margin-top: 4px;
   font-size: 0.95rem;
@@ -1403,7 +1407,7 @@
   .metaCategory {
     font-size: 0.75rem;
     display: block;
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-width: 0;
     white-space: nowrap;
     overflow: hidden;

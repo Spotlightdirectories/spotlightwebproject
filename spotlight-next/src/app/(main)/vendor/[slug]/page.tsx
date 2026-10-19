@@ -1222,13 +1222,6 @@ export default function VendorProfilePage() {
               </div>
 
               <div className={styles.metaRow}>
-                <p className={styles.metaCategory}>
-                  {vendor.category && vendor.subcategory ? (
-                    <>{vendor.category} <span>•</span> <strong>{vendor.subcategory}</strong></>
-                  ) : (
-                    vendor.category || vendor.subcategory
-                  )}
-                </p>
                 <div className={styles.reviewSummary}>
                   <span className={styles.reviewStar}>★</span>
                   <span>{Number(vendor.average_rating || 0).toFixed(1)} ({vendor.reviews_count || 0})</span>
