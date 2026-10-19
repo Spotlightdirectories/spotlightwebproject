@@ -21,6 +21,7 @@ import type { KeyboardEvent } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { uploadVendorFile } from "@/lib/uploadVendorFile";
+import { resizeVideoToFit, canResizeVideoInBrowser } from "@/lib/resizeVideo";
 import styles from "./vendor-profile.module.css";
 
 // ── Plan limits (ported exactly from vendor-profile.js) ───────
@@ -264,6 +265,7 @@ export default function VendorProfilePage() {
   // already finished — several seconds of silence first. This fires the
   // instant a file is picked, before any of that work starts.
   const [videoUploading, setVideoUploading] = useState(false);
+  const [videoStatus, setVideoStatus] = useState("");
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
   const [showAllPortfolio, setShowAllPortfolio] = useState(false);
@@ -812,37 +814,53 @@ export default function VendorProfilePage() {
   async function handleVideoUpload(file: File) {
     if (!vendor || videoUploading) return;
     setVideoUploading(true);
+    setVideoStatus("Checking video...");
     try {
       const limits = VIDEO_LIMITS[vendor.plan_tier];
       if (!limits.allowed) { alert("Video upload not available on this plan."); return; }
-      if (file.type !== "video/mp4") { alert("Only MP4 videos are allowed."); return; }
-      if (file.size > limits.maxSize) { alert("Video file exceeds the maximum size allowed for your plan."); return; }
+      if (!file.type.startsWith("video/")) { alert("Please choose a video file."); return; }
 
       const video = document.createElement("video");
       video.preload = "metadata";
-      video.src = URL.createObjectURL(file);
-      await new Promise(resolve => { video.onloadedmetadata = resolve; });
+      const objectUrl = URL.createObjectURL(file);
+      video.src = objectUrl;
+      const readable = await new Promise<boolean>(resolve => {
+        video.onloadedmetadata = () => resolve(true);
+        video.onerror = () => resolve(false);
+      });
+      URL.revokeObjectURL(objectUrl);
+      if (!readable) { alert("Your browser can't read this video. Please choose an MP4 video."); return; }
 
+      // Length can't be shortened by resizing, so this limit stays.
       if (video.duration > limits.maxDuration) {
-        alert("Video duration exceeds the maximum allowed for your plan.");
+        alert(`This video is ${Math.round(video.duration)} seconds. Your plan allows videos up to ${limits.maxDuration} seconds.`);
         return;
       }
+
+      // Already a small 720p MP4? Upload it untouched. Otherwise resize it
+      // in the browser so it fits the plan's size limit (same idea as the app).
       const long = Math.max(video.videoWidth, video.videoHeight);
       const short = Math.min(video.videoWidth, video.videoHeight);
-      if (long > 1280 || short > 720) {
-        alert("Video resolution must be 720p or lower.");
-        return;
+      const alreadyFine = file.type === "video/mp4" && file.size <= limits.maxSize && long <= 1280 && short <= 720;
+      let toUpload: File = file;
+      if (!alreadyFine) {
+        if (!canResizeVideoInBrowser()) {
+          alert("Your browser can't resize videos. Please use Google Chrome or Microsoft Edge, or choose an MP4 that is already within your plan's limits.");
+          return;
+        }
+        setVideoStatus("Preparing video... 0%");
+        toUpload = await resizeVideoToFit(file, {
+          width: video.videoWidth,
+          height: video.videoHeight,
+          duration: video.duration,
+          maxSize: limits.maxSize,
+          onProgress: pct => setVideoStatus(`Preparing video... ${pct}%`),
+        });
       }
 
-      // Remove existing video
-      if (videoRecord) {
-        const oldPath = videoRecord.file_url.split("/vendor-videos/")[1];
-        if (oldPath) await supabase.storage.from("vendor-videos").remove([oldPath]);
-        await supabase.from("vendor_media").delete().eq("id", videoRecord.id);
-      }
-
+      setVideoStatus("Uploading...");
       const videoPath = `${vendor.id}/video/video-${Date.now()}.mp4`;
-      const { error: uploadError } = await supabase.storage.from("vendor-videos").upload(videoPath, file);
+      const { error: uploadError } = await supabase.storage.from("vendor-videos").upload(videoPath, toUpload, { contentType: "video/mp4" });
       if (uploadError) { alert(`Could not upload video: ${uploadError.message}`); return; }
       const { data: urlData } = supabase.storage.from("vendor-videos").getPublicUrl(videoPath);
       const { error: insertError } = await supabase.from("vendor_media").insert({
@@ -852,9 +870,20 @@ export default function VendorProfilePage() {
         display_order: Math.floor(Date.now() / 1000),
       });
       if (insertError) { alert(`Uploaded, but could not save video: ${insertError.message}`); return; }
+
+      // New video is saved -- only now remove the old one, so a failed
+      // upload never leaves the vendor with no video.
+      if (videoRecord) {
+        const oldPath = videoRecord.file_url.split("/vendor-videos/")[1];
+        if (oldPath) await supabase.storage.from("vendor-videos").remove([oldPath]);
+        await supabase.from("vendor_media").delete().eq("id", videoRecord.id);
+      }
       await loadVideo(vendor.id, vendor.plan_tier);
+    } catch (e: any) {
+      alert(e?.message || "Could not process the video. Please try again.");
     } finally {
       setVideoUploading(false);
+      setVideoStatus("");
     }
   }
 
@@ -1578,7 +1607,7 @@ export default function VendorProfilePage() {
                   always-present empty player. Matched exactly: hint text
                   always shown, <video> always rendered, src only set (and
                   the loading dim only applied) once a video exists. */}
-              <p className={styles.mediaHint}>MP4 only • Maximum duration and file size depend on your subscription plan.</p>
+              <p className={styles.mediaHint}>Maximum duration and file size depend on your subscription plan. Videos are resized to 720p automatically.</p>
               <div className={styles.videoPlayerWrap}>
                 {/* key forces React to fully unmount/recreate this element
                     whenever the underlying video changes (new upload or
@@ -1595,7 +1624,7 @@ export default function VendorProfilePage() {
                 {videoUploading && (
                   <div className={styles.uploadOverlay}>
                     <div className={styles.uploadSpinner}></div>
-                    Uploading...
+                    {videoStatus || "Uploading..."}
                   </div>
                 )}
               </div>
@@ -1619,7 +1648,7 @@ export default function VendorProfilePage() {
                     <input
                       id="videoInput"
                       type="file"
-                      accept="video/mp4"
+                      accept="video/*"
                       hidden
                       disabled={videoUploading}
                       onChange={e => {
@@ -1633,7 +1662,7 @@ export default function VendorProfilePage() {
                     />
                   </div>
                   <p className={styles.mediaNoteText}>
-                    MP4 only • Max {videoLimits.maxDuration}s • Max {videoLimits.maxSize / (1024 * 1024)}MB
+                    Any video • Max {videoLimits.maxDuration}s • We resize it to 720p automatically (up to {videoLimits.maxSize / (1024 * 1024)}MB)
                   </p>
                 </div>
               )}

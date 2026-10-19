@@ -1346,45 +1346,23 @@
   .heroCover { max-height: 220px; }
   .heroContent { padding: 0 16px 20px; }
 
-  /* Mobile layout now matches the Spotlight app: small logo at the
-     left, directly beside the business name and category, sitting
-     below the cover instead of overlapping it (the old centered logo
-     covered the middle of the cover image). The info block's children
-     join the card's grid directly (display: contents) so the name and
-     category can sit next to the logo while the address and social
-     links run full width underneath. (Cyril, 2026-10) */
-  .vendorInfoCard {
-    display: grid;
-    grid-template-columns: 72px 1fr;
-    column-gap: 12px;
-    align-items: center;
-    background: transparent;
-    box-shadow: none;
-    border: none;
-    margin: 0;
-    padding-top: 14px;
-    overflow: visible;
-  }
+  /* Mobile keeps the same horizontal banner as desktop (logo at the
+     left, name / category / reviews / address / social links beside
+     it, all in the height of the logo), just with a smaller logo that
+     overlaps the bottom of the cover only slightly, like a LinkedIn or
+     Facebook profile. The earlier centered 110px logo (-55px) covered
+     the middle of the cover image. (Cyril, 2026-10) */
+  .vendorInfoCard { margin: -28px 0 0; }
 
-  .heroLeft { grid-column: 1; grid-row: 1 / span 2; }
-
-  .heroText { display: contents; }
-
-  .nameRow { grid-column: 2; grid-row: 1; justify-content: flex-start; margin-bottom: 2px; align-self: end; }
-  .metaRow { grid-column: 2; grid-row: 2; justify-content: flex-start; margin-bottom: 0; align-self: start; }
-  .reviewSummary { justify-content: flex-start; }
-  .addressLine { grid-column: 1 / -1; text-align: left; margin-top: 12px; }
-  .socialLinksRow { grid-column: 1 / -1; justify-content: flex-start; margin-top: 10px; }
+  .heroText { padding: 8px 12px 8px 4px; }
 
   .logoWrap {
-    width: 72px;
-    height: 72px;
-    min-width: 72px;
-    min-height: 72px;
-    margin: 0;
+    width: 84px;
+    height: 84px;
+    min-width: 84px;
+    min-height: 84px;
+    margin: 8px;
     border-radius: 14px;
-    border: 2px solid var(--color-surface);
-    box-shadow: none;
   }
 
   .quickActions { gap: 18px; }
