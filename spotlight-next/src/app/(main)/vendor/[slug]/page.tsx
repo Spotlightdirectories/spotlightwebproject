@@ -1428,6 +1428,85 @@ export default function VendorProfilePage() {
         </div>
       </section>
 
+      {/* BUSINESS VIDEO — placed above Portfolio so visitors see it early */}
+      {videoLimits?.allowed && (isOwner || videoRecord) && (
+        <section className={styles.profileCard}>
+          <h2>Business Video</h2>
+          <div className={styles.videoWrap} style={{ marginTop: 0 }}>
+              {/* Faithful port fix (2026-07-31): production's #vendorVideo
+                  element is always present in the DOM once this wrap is
+                  visible — an empty player box shows before any video is
+                  uploaded, same as the static hint text above it, which
+                  is never conditional on owner/public. Staging had wrongly
+                  omitted the <video> element entirely (and the hint text
+                  for owners) until a video existed, so an owner with no
+                  video yet saw nothing here instead of production's
+                  always-present empty player. Matched exactly: hint text
+                  always shown, <video> always rendered, src only set (and
+                  the loading dim only applied) once a video exists. */}
+              <p className={styles.mediaHint}>Maximum duration and file size depend on your subscription plan. Videos are resized to 720p automatically.</p>
+              <div className={styles.videoPlayerWrap}>
+                {/* key forces React to fully unmount/recreate this element
+                    whenever the underlying video changes (new upload or
+                    delete back to empty) — see handleDeleteVideo comment
+                    above for why this matters. */}
+                <video
+                  key={videoRecord?.id ?? "empty"}
+                  className={styles.vendorVideoPlayer}
+                  controls
+                  src={videoRecord?.file_url || undefined}
+                  style={videoRecord ? { opacity: videoLoaded ? 1 : 0.5, transition: "opacity 0.2s" } : undefined}
+                  onLoadedData={() => setVideoLoaded(true)}
+                />
+                {videoUploading && (
+                  <div className={styles.uploadOverlay}>
+                    <div className={styles.uploadSpinner}></div>
+                    {videoStatus || "Uploading..."}
+                  </div>
+                )}
+              </div>
+              {isOwner && videoRecord && (
+                <div style={{ marginTop: 10, textAlign: "center" }}>
+                  <button type="button" className={styles.deleteVideoBtn} onClick={handleDeleteVideo}>
+                    Delete Video
+                  </button>
+                </div>
+              )}
+              {isOwner && (
+                <div className={styles.videoUploader}>
+                  <label htmlFor="videoInput" style={{ display: "block", fontWeight: 600, fontSize: "0.9rem", color: "var(--color-text-primary)", cursor: "pointer" }}>
+                    Upload Video
+                  </label>
+                  <div className={styles.videoChooseRow}>
+                    <label htmlFor="videoInput" className={styles.videoChooseBtn}>
+                      Choose File
+                    </label>
+                    <span className={styles.videoFileName}>{videoFileName}</span>
+                    <input
+                      id="videoInput"
+                      type="file"
+                      accept="video/*"
+                      hidden
+                      disabled={videoUploading}
+                      onChange={e => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        setVideoFileName(f.name);
+                        setVideoUploading(true);
+                        handleVideoUpload(f);
+                        e.target.value = "";
+                      }}
+                    />
+                  </div>
+                  <p className={styles.mediaNoteText}>
+                    Any video • Max {videoLimits.maxDuration}s • We resize it to 720p automatically (up to {videoLimits.maxSize / (1024 * 1024)}MB)
+                  </p>
+                </div>
+              )}
+          </div>
+        </section>
+      )}
+
       {/* PORTFOLIO — CV of past work, Service/Hybrid vendors only.
           Row-based, like Reviews below — no product-style card, no
           photo. Cyril's call (2026-07-28): a stock/placeholder image
@@ -1503,7 +1582,7 @@ export default function VendorProfilePage() {
       )}
 
       {/* MEDIA — Products, Services, Video */}
-      {(products.length > 0 || services.length > 0 || (videoLimits?.allowed)) && (
+      {(products.length > 0 || services.length > 0) && (
         <section className={styles.profileCard} id="mediaSection">
           <h2>Products &amp; Services</h2>
 
@@ -1582,83 +1661,6 @@ export default function VendorProfilePage() {
                   </article>
                 ))}
               </div>
-            </div>
-          )}
-
-          {/* VIDEO */}
-          {videoLimits?.allowed && (isOwner || videoRecord) && (
-            <div className={styles.videoWrap}>
-              <h3>Business Video</h3>
-              {/* Faithful port fix (2026-07-31): production's #vendorVideo
-                  element is always present in the DOM once this wrap is
-                  visible — an empty player box shows before any video is
-                  uploaded, same as the static hint text above it, which
-                  is never conditional on owner/public. Staging had wrongly
-                  omitted the <video> element entirely (and the hint text
-                  for owners) until a video existed, so an owner with no
-                  video yet saw nothing here instead of production's
-                  always-present empty player. Matched exactly: hint text
-                  always shown, <video> always rendered, src only set (and
-                  the loading dim only applied) once a video exists. */}
-              <p className={styles.mediaHint}>Maximum duration and file size depend on your subscription plan. Videos are resized to 720p automatically.</p>
-              <div className={styles.videoPlayerWrap}>
-                {/* key forces React to fully unmount/recreate this element
-                    whenever the underlying video changes (new upload or
-                    delete back to empty) — see handleDeleteVideo comment
-                    above for why this matters. */}
-                <video
-                  key={videoRecord?.id ?? "empty"}
-                  className={styles.vendorVideoPlayer}
-                  controls
-                  src={videoRecord?.file_url || undefined}
-                  style={videoRecord ? { opacity: videoLoaded ? 1 : 0.5, transition: "opacity 0.2s" } : undefined}
-                  onLoadedData={() => setVideoLoaded(true)}
-                />
-                {videoUploading && (
-                  <div className={styles.uploadOverlay}>
-                    <div className={styles.uploadSpinner}></div>
-                    {videoStatus || "Uploading..."}
-                  </div>
-                )}
-              </div>
-              {isOwner && videoRecord && (
-                <div style={{ marginTop: 10, textAlign: "center" }}>
-                  <button type="button" className={styles.deleteVideoBtn} onClick={handleDeleteVideo}>
-                    Delete Video
-                  </button>
-                </div>
-              )}
-              {isOwner && (
-                <div className={styles.videoUploader}>
-                  <label htmlFor="videoInput" style={{ display: "block", fontWeight: 600, fontSize: "0.9rem", color: "var(--color-text-primary)", cursor: "pointer" }}>
-                    Upload Video
-                  </label>
-                  <div className={styles.videoChooseRow}>
-                    <label htmlFor="videoInput" className={styles.videoChooseBtn}>
-                      Choose File
-                    </label>
-                    <span className={styles.videoFileName}>{videoFileName}</span>
-                    <input
-                      id="videoInput"
-                      type="file"
-                      accept="video/*"
-                      hidden
-                      disabled={videoUploading}
-                      onChange={e => {
-                        const f = e.target.files?.[0];
-                        if (!f) return;
-                        setVideoFileName(f.name);
-                        setVideoUploading(true);
-                        handleVideoUpload(f);
-                        e.target.value = "";
-                      }}
-                    />
-                  </div>
-                  <p className={styles.mediaNoteText}>
-                    Any video • Max {videoLimits.maxDuration}s • We resize it to 720p automatically (up to {videoLimits.maxSize / (1024 * 1024)}MB)
-                  </p>
-                </div>
-              )}
             </div>
           )}
         </section>
