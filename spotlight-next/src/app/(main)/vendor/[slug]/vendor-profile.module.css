@@ -1352,7 +1352,11 @@
      so the text is sized down to fit that height. The card overlaps
      the bottom of the cover only slightly, like a LinkedIn or
      Facebook profile. (Cyril, 2026-10) */
-  .vendorInfoCard { margin: -28px 0 0; align-items: stretch; }
+  /* Overlap is a percentage so it scales with the cover: the cover is
+     always ~32.6% as tall as its width, and 7% of the content width
+     is about 20% of the cover's height, so the card never covers
+     more than a fifth of the cover on any phone. */
+  .vendorInfoCard { margin: -7% 0 0; align-items: stretch; }
 
   .heroLeft { display: flex; }
 
@@ -1380,12 +1384,32 @@
     justify-content: center;
   }
 
-  .nameRow { margin-bottom: 2px; }
-  .nameRow h1 { font-size: 0.95rem; line-height: 1.2; }
+  .heroText { min-width: 0; }
 
-  .metaRow { gap: 0 10px; margin-bottom: 2px; }
-  .metaCategory { font-size: 0.75rem; }
-  .reviewSummary { font-size: 0.75rem; gap: 4px; }
+  /* Long business names and categories are cut short with "..." instead
+     of wrapping, so every card keeps the same neat height. */
+  .nameRow { margin-bottom: 2px; min-width: 0; }
+  .nameRow h1 {
+    font-size: 0.95rem;
+    line-height: 1.2;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .nameRow > *:not(h1) { flex-shrink: 0; }
+
+  .metaRow { gap: 0 10px; margin-bottom: 2px; flex-wrap: nowrap; min-width: 0; }
+  .metaCategory {
+    font-size: 0.75rem;
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .reviewSummary { font-size: 0.75rem; gap: 4px; flex-shrink: 0; }
 
   .addressLine {
     margin: 0 0 4px;
