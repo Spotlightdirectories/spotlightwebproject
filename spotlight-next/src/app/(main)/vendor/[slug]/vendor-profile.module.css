@@ -1346,24 +1346,60 @@
   .heroCover { max-height: 220px; }
   .heroContent { padding: 0 16px 20px; }
 
-  /* Mobile keeps the same horizontal banner as desktop (logo at the
-     left, name / category / reviews / address / social links beside
-     it, all in the height of the logo), just with a smaller logo that
-     overlaps the bottom of the cover only slightly, like a LinkedIn or
-     Facebook profile. The earlier centered 110px logo (-55px) covered
-     the middle of the cover image. (Cyril, 2026-10) */
-  .vendorInfoCard { margin: -28px 0 0; }
+  /* Mobile keeps the same horizontal banner as desktop: the logo fills
+     the full height of the card (with a tiny margin) and the name,
+     category, reviews, address and social links stack to its right,
+     so the text is sized down to fit that height. The card overlaps
+     the bottom of the cover only slightly, like a LinkedIn or
+     Facebook profile. (Cyril, 2026-10) */
+  .vendorInfoCard { margin: -28px 0 0; align-items: stretch; }
 
-  .heroText { padding: 8px 12px 8px 4px; }
+  .heroLeft { display: flex; }
 
   .logoWrap {
-    width: 84px;
-    height: 84px;
-    min-width: 84px;
-    min-height: 84px;
-    margin: 8px;
-    border-radius: 14px;
+    width: 88px;
+    min-width: 88px;
+    height: auto;
+    min-height: 88px;
+    margin: 4px;
+    border-radius: 12px;
+    align-self: stretch;
   }
+  .logoWrap img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+  }
+
+  .heroText {
+    padding: 4px 8px 4px 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .nameRow { margin-bottom: 2px; }
+  .nameRow h1 { font-size: 0.95rem; line-height: 1.2; }
+
+  .metaRow { gap: 0 10px; margin-bottom: 2px; }
+  .metaCategory { font-size: 0.75rem; }
+  .reviewSummary { font-size: 0.75rem; gap: 4px; }
+
+  .addressLine {
+    margin: 0 0 4px;
+    font-size: 0.72rem;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .socialLinksRow { gap: 6px; margin-top: 2px; }
+  .socialLink { width: 26px; height: 26px; }
+  .socialLink svg { width: 14px; height: 14px; }
 
   .quickActions { gap: 18px; }
   .galleryGrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
