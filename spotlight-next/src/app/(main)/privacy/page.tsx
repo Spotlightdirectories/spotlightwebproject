@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Footer from "@/components/Footer";
+import AnalyticsChoice from "@/components/AnalyticsChoice";
 import styles from "../terms/legal.module.css";
 
 export const metadata: Metadata = {
@@ -98,6 +99,9 @@ export default function PrivacyPage() {
 
           <h2>13. Updates</h2>
           <p>We may update this policy from time to time. Continued use means acceptance.</p>
+
+          <h2>Your Analytics Choice</h2>
+          <AnalyticsChoice />
 
           <h2>14. Contact</h2>
           <p>📧 <a href="mailto:support@spotlightdirectories.com">support@spotlightdirectories.com</a><br />

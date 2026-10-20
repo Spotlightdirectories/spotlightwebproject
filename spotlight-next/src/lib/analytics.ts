@@ -13,7 +13,25 @@ import { supabase } from "@/lib/supabase";
 
 const ID_KEY = "spotlight_vid";
 const STATE_KEY = "spotlight_vstate";
+const OPT_KEY = "spotlight_analytics_off";
 const STATE_TTL = 24 * 60 * 60 * 1000;
+
+// Visitors can switch off identifier-based analytics (Privacy page).
+export function isAnalyticsOptedOut(): boolean {
+  try { return localStorage.getItem(OPT_KEY) === "1"; } catch { return false; }
+}
+
+export function setAnalyticsOptOut(off: boolean) {
+  try {
+    if (off) {
+      localStorage.setItem(OPT_KEY, "1");
+      localStorage.removeItem(ID_KEY);
+      localStorage.removeItem(STATE_KEY);
+    } else {
+      localStorage.removeItem(OPT_KEY);
+    }
+  } catch { /* ignore */ }
+}
 
 function getVisitorId(): string | null {
   try {
@@ -44,7 +62,7 @@ function getVisitorState(): Promise<string | null> {
       try {
         const ctrl = new AbortController();
         const t = setTimeout(() => ctrl.abort(), 3000);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/visitor-geo`, { signal: ctrl.signal });
+        const res = await fetch("/api/visitor-geo", { signal: ctrl.signal });
         clearTimeout(t);
         const { state } = await res.json();
         if (state) {
@@ -65,6 +83,9 @@ function getVisitorState(): Promise<string | null> {
 export async function insertAnalytics(rows: Record<string, unknown> | Record<string, unknown>[]) {
   let meta: Record<string, unknown> = {};
   try {
+    // Opted out: the event still counts toward the business's totals,
+    // but carries no visitor code and no location.
+    if (isAnalyticsOptedOut()) throw new Error("opted out");
     const [state] = await Promise.all([getVisitorState()]);
     meta = { visitor_id: getVisitorId(), visitor_state: state };
   } catch { /* analytics must never break a page */ }
