@@ -1131,3 +1131,18 @@ zero errors).
   Cyril's compliance adviser confirms (local-storage consent, DPO, filing).
   The old Supabase `visitor-geo` function (ipwho.is) is unused and should be
   switched off once the Netlify version is confirmed live.
+
+## Supabase rule for new tables (notice received 2026-10-20)
+
+From **30 Oct 2026**, Supabase no longer auto-grants API access to NEW tables
+in the `public` schema (existing tables are unaffected). Every migration that
+creates a table must also include explicit grants, in the same migration, plus
+RLS policies, for example:
+
+    grant select on public.<table> to anon;                              -- only if public read is intended
+    grant select, insert, update, delete on public.<table> to authenticated;
+    grant select, insert, update, delete on public.<table> to service_role;
+
+Without a grant the API returns "permission denied". Grant only what each
+table really needs (RLS still decides which rows), and apply this to new
+projects, preview branches and `supabase db reset` too.

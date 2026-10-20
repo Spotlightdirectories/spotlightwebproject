@@ -14,7 +14,7 @@ export default function PrivacyPage() {
         <div className={styles.legalContainer}>
           <h1>Privacy Policy</h1>
           <p><strong>"Spotlight Directories"</strong> is a brand of <strong>SPOTLIGHT DIGITAL SERVICES LTD</strong>, a company duly registered in Nigeria with the Corporate Affairs Commission (CAC).</p>
-          <p className={styles.effectiveDate}>Effective Date: March 1, 2026</p>
+          <p className={styles.effectiveDate}>Effective Date: March 1, 2026 &middot; Last updated: October 20, 2026</p>
 
           <h2>1. Introduction</h2>
           <p>Welcome to <strong>Spotlight Directories</strong> ("we," "our," or "us"). We are committed to protecting your personal data in accordance with applicable laws, including the Nigeria Data Protection Act (NDPA).</p>
@@ -39,10 +39,14 @@ export default function PrivacyPage() {
             <li>IP address and device information</li>
             <li>Browser type and version</li>
             <li>Pages visited and interactions</li>
+            <li>A random visitor code stored on your device (in your browser&apos;s local storage or the app&apos;s storage, not a cookie), used to count how many different people viewed a business. It is not linked to your name or email unless you are logged in as a customer.</li>
+            <li>Your approximate state, worked out from your connection when you visit. We do not store your IP address.</li>
           </ul>
           <h3>c. Cookies and Tracking</h3>
           <p>We do not use cookies for advertising or analytics. Your theme preference (light/dark) and login session are stored locally in your browser, not as cookies. Cookies on this site come from two third-party services we rely on: Paystack, to securely process payments during checkout, and Tawk.to, to power our live chat support widget.</p>
           <p>When you first visit, a banner lets you accept or decline these cookies. Paystack&apos;s cookies are strictly necessary to complete a payment you initiate and cannot be declined. If you decline, the Tawk.to chat widget will not load; you can still reach us by email. You can change your choice at any time by clearing your browser&apos;s site data for spotlightdirectories.com.</p>
+
+          <p>You can switch the visitor code and approximate location off at any time: on this website under &ldquo;Your Analytics Choice&rdquo; near the bottom of this page, and in the mobile app under Settings (or the customer dashboard). Switching off removes the visitor code from your device and stops location being attached; your visit still counts in anonymous totals. Business owners only ever see totals, never individual visitors. We do not use this information for advertising. Visitor codes and locations are removed from our records after 24 months.</p>
 
           <h2>4. Public Listing Notice ⚠️</h2>
           <p>By creating a listing on Spotlight Directories:</p>
