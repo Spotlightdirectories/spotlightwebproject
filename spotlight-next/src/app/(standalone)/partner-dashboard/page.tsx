@@ -199,8 +199,9 @@ export default function PartnerDashboardPage() {
   async function handleClose() {
     const ok = confirm(
       "Are you sure you want to close your account?\n\n" +
-        "Your account will be scheduled for permanent deletion in 14 days — you can restore it any time before then.\n\n" +
-        "Closing does not cancel or refund any active vendor subscriptions, and does not affect commissions you've already earned (available or paid). Vendors and partners already linked to your account remain linked during this period."
+        "You have 14 days to change your mind and restore your account. After that the closure is final, and within 30 more days your personal data is permanently erased: contact details, date of birth, location, identity document and login.\n\n" +
+        "We keep the record of your commissions and payouts, and of the businesses and partners you registered, together with your name and referral code, because we must retain them for accounting and reporting. If any commission is still owed to you, we keep your bank details only until it is paid, then erase them.\n\n" +
+        "Closing does not cancel or refund any active vendor subscriptions, and does not affect commissions you've already earned (available or paid). Vendors and partners already linked to your account remain linked."
     );
     if (!ok) return;
 
@@ -209,7 +210,7 @@ export default function PartnerDashboardPage() {
       alert(`Failed to close account: ${error.message}`);
       return;
     }
-    alert("Your account has been scheduled for closure. You have 14 days to restore it.");
+    alert("Your account has been scheduled for closure. You have 14 days to restore it. After that, your personal data is permanently erased within 30 days.");
     load();
   }
 
@@ -340,7 +341,7 @@ export default function PartnerDashboardPage() {
         <div className="pd-content">
           <div className="pd-section" style={{ textAlign: "center" }}>
             <h2 className="pd-section-heading">Account Closed</h2>
-            <p>Your partner account has reached the end of its 14-day closure window and has been closed.</p>
+            <p>Your partner account has reached the end of its 14-day closure window. The closure is final and your personal data will be permanently erased within 30 days. We keep only commission and payout records, referral records, and your name and referral code, as required for accounting and reporting.</p>
             <p>Contact support@spotlightdirectories.com if you believe this is a mistake.</p>
           </div>
         </div>
@@ -368,7 +369,7 @@ export default function PartnerDashboardPage() {
 
       {partner.scheduled_deletion_at && (
         <div className="pd-closing-notice" style={{ margin: "16px 24px 0" }}>
-          <p style={{ margin: 0 }}>Your account is scheduled for deletion in {daysRemaining} day(s).</p>
+          <p style={{ margin: 0 }}>Your account is scheduled for closure in {daysRemaining} day(s). Restore it before then to keep it. After that the closure is final, and your personal data is permanently erased within 30 days.</p>
           <button className="pd-restore-btn" onClick={handleRestore}>Restore Account</button>
         </div>
       )}

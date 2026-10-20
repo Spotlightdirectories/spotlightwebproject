@@ -91,6 +91,14 @@ export default function PrivacyPage() {
             required to retain these for accounting and reporting. These records do not contain the profile or any way
             to sign in.
           </p>
+          <p>
+            <strong>Partner accounts:</strong> closing a partner account follows the same timeline: 14 days to restore,
+            then the closure is final and within 30 further days we permanently erase the partner&apos;s contact
+            details, date of birth, location, identity document and login. We keep the record of commissions and
+            payouts, the businesses and partners they registered, and their name and referral code, because we are
+            required to retain these for accounting and reporting. Bank details are kept only while a commission is
+            still owed, and are erased once it is paid.
+          </p>
 
           <h2>9. Your Rights</h2>
           <ul>

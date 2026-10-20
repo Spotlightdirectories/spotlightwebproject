@@ -67,7 +67,7 @@ const FAQS = [
   { q: "4. When and how are payouts processed?", a: "Payouts are processed between the 1st and 5th of each month, by bank transfer to the account you provide when your payout is due. The minimum payout amount is ₦10,000 — balances below that roll over to the next month." },
   { q: "5. What is the monthly bonus?", a: "You earn a flat ₦50,000 bonus for every 50 yearly-plan vendor commissions you generate within the same calendar month. This is tracked automatically and shown as a progress bar on your dashboard." },
   { q: "6. What happens if a vendor refunds or cancels?", a: "Spotlight's refund window for vendors is 7 days from payment. If a vendor refunds within that window, any related pending commission is reversed before it becomes available. Commissions that have already been marked available and paid are not clawed back." },
-  { q: "7. Can I close my partner account, and what happens to my commissions?", a: "Yes, anytime, from your dashboard's Account section. Closing schedules your account for deletion in 14 days (giving you a window to change your mind) but does not forfeit commissions already earned — available and paid commissions remain yours regardless of account status." },
+  { q: "7. Can I close my partner account, and what happens to my commissions?", a: "Yes, anytime, from your dashboard's Account section. Closing hides your account and gives you 14 days to change your mind and restore it. After that the closure is final, and within 30 more days your personal data (contact details, date of birth, location, identity document and login) is permanently erased. Closing does not forfeit commissions already earned: available and paid commissions remain yours regardless of account status. We keep the record of your commissions and payouts, the businesses and partners you registered, and your name and referral code, because we must retain them for accounting and reporting. If a commission is still owed to you, we keep your bank details only until it is paid, then erase them." },
 ];
 
 export default function PartnerLegalPage() {
@@ -257,7 +257,7 @@ export default function PartnerLegalPage() {
                   <ul>
                     <li>Access your personal data</li>
                     <li>Request corrections</li>
-                    <li>Request deletion (subject to limitations)</li>
+                    <li>Request deletion (subject to the accounting and reporting records we must keep)</li>
                   </ul>
                 </div>
 
