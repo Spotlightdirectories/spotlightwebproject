@@ -6,7 +6,7 @@
 // the token for a session and forward to the requested page. If anything
 // is wrong (expired/used token, no token), the person simply lands on the
 // normal login page, exactly as before.
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
@@ -21,6 +21,7 @@ function safeNext(next: string | null): string | null {
 
 export default function AppLoginPage() {
   const router = useRouter();
+  const [msg, setMsg] = useState("Signing you in\u2026");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -33,13 +34,30 @@ export default function AppLoginPage() {
     async function run() {
       if (tokenHash) {
         // Supabase has used both names for this kind of token; try the current one first.
-        let { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "email" });
-        if (error) ({ error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "magiclink" }));
-        if (!error) {
-          router.replace(next);
-          return;
+        const first = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "email" });
+        let error = first.error;
+        let second: string | null = null;
+        if (error) {
+          const r2 = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "magiclink" });
+          error = r2.error;
+          second = r2.error ? r2.error.message : null;
         }
+        if (!error) {
+          // Make sure the session really is stored before moving on.
+          const { data } = await supabase.auth.getSession();
+          if (data.session) {
+            router.replace(next);
+            return;
+          }
+          setMsg("Signed in, but the session was not saved. Redirecting to login\u2026");
+        } else {
+          setMsg(`Sign-in failed: ${first.error?.message ?? ""}${second ? " / " + second : ""}. Redirecting to login\u2026`);
+        }
+      } else {
+        setMsg("No sign-in token was received. Redirecting to login\u2026");
       }
+      // TEMPORARY (testing): pause so the reason can be read before redirecting.
+      await new Promise((r) => setTimeout(r, 6000));
       router.replace(`/login?next=${encodeURIComponent(next)}`);
     }
     run();
@@ -47,7 +65,7 @@ export default function AppLoginPage() {
 
   return (
     <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif" }}>
-      <p>Signing you in&hellip;</p>
+      <p style={{ padding: 24, textAlign: "center" }}>{msg}</p>
     </main>
   );
 }
