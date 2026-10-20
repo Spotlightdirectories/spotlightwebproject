@@ -62,6 +62,7 @@ const SUPPORT_LINKS: LinkItem[] = [
 const LEGAL_LINKS: LinkItem[] = [
   { href: "/terms", label: "Terms" },
   { href: "/privacy", label: "Privacy" },
+  { href: "/privacy#analytics-choice", label: "Analytics Choice" },
   { href: "/disclaimer", label: "Disclaimer" },
 ];
 

@@ -16,7 +16,7 @@ export default function AnalyticsChoice() {
   }
 
   return (
-    <div style={{ border: "1px solid var(--line, #ddd)", borderRadius: 10, padding: 16, margin: "12px 0" }}>
+    <div id="analytics-choice" style={{ scrollMarginTop: 80, border: "1px solid var(--line, #ddd)", borderRadius: 10, padding: 16, margin: "12px 0" }}>
       <p style={{ margin: "0 0 10px" }}>
         <strong>Visitor analytics on this device: {off ? "OFF" : "ON"}</strong>
         <br />

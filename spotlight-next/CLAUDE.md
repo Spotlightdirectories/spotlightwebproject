@@ -1110,3 +1110,24 @@ public, private) confirmed working end to end this session, first
 real run completed successfully (28MB payment-receipts, 55MB vendor-
 verifications, ~1MB sponsorship-receipts + partner-verifications,
 zero errors).
+
+## Legal & compliance (2026-10-20)
+
+- **NDPC registration:** SPOTLIGHT DIGITAL SERVICES LTD is registered with the
+  Nigeria Data Protection Commission (NDPC) as a Data Controller under the
+  NDPA 2023 — **Reg. No. NDPC/DCP/14269**. It already appears in the site
+  footer, About page, Privacy page and Partner legal pages. Search the code
+  for "NDPC" before ever treating it as unknown.
+- **Visitor analytics (web + app):** every `analytics_events` row now carries
+  an anonymous `visitor_id` and the visitor's approximate `visitor_state`,
+  written only through `insertAnalytics()` in `src/lib/analytics.ts` (app has
+  its own mirror in `src/lib/analytics.ts`). State comes from the Netlify
+  edge function `netlify/edge-functions/visitor-geo.ts` at `/api/visitor-geo`
+  (no IP is stored or sent to third parties). Visitors can opt out (Privacy
+  page; app Settings and customer dashboard) — opted-out events carry no
+  visitor code or state. A nightly job (`scrub-old-analytics-identifiers`)
+  removes visitor_id/state/customer_id from events older than 24 months.
+- **Pending:** Privacy Policy wording for the above, to be updated only after
+  Cyril's compliance adviser confirms (local-storage consent, DPO, filing).
+  The old Supabase `visitor-geo` function (ipwho.is) is unused and should be
+  switched off once the Netlify version is confirmed live.
