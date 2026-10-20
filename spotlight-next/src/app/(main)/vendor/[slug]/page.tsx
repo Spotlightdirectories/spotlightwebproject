@@ -249,6 +249,7 @@ export default function VendorProfilePage() {
   // us to check it (the video itself was fine; only the loading feedback
   // was missing). Reset to false whenever a new/different video loads.
   const [videoLoaded, setVideoLoaded] = useState(false);
+  const videoPlayLogged = useRef(false);
   // Cyril's ask (2026-07-31): make the video "Choose File" control a
   // real styled button instead of the native gray one — this state
   // tracks the picked filename since the native input is now hidden.
@@ -1457,6 +1458,13 @@ export default function VendorProfilePage() {
                   src={videoRecord?.file_url || undefined}
                   style={videoRecord ? { opacity: videoLoaded ? 1 : 0.5, transition: "opacity 0.2s" } : undefined}
                   onLoadedData={() => setVideoLoaded(true)}
+                  onPlay={() => {
+                    // Business Insights: one "video play" per visit, visitors only.
+                    if (!isOwner && !videoPlayLogged.current) {
+                      videoPlayLogged.current = true;
+                      logEvent("video_play");
+                    }
+                  }}
                 />
                 {videoUploading && (
                   <div className={styles.uploadOverlay}>

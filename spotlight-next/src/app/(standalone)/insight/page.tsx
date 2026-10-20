@@ -388,6 +388,7 @@ async function loadLeads(
       cls: styles["lead-icon-external"],
       event: "external_visit",
     },
+    { label: "Video Plays", icon: "fa-solid fa-circle-play", cls: styles["lead-icon-catalog"], event: "video_play" },
   ];
   return Promise.all(
     leadTypes.map(async (lt) => {
