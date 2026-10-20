@@ -423,16 +423,22 @@ async function loadAudience(vendorId: string, period: Period): Promise<{ total: 
     totalCountPromise,
   ]);
 
-  let total = audienceRecords.length;
-  if (typeof totalCount === "number") total = totalCount;
-
-  const stateMap: Record<string, number> = {};
+  // Real people, not raw events: count each anonymous visitor once.
+  // Older rows recorded before visitor tracking began have no visitor_id,
+  // so they are simply left out here.
+  void totalCount;
+  const visitorState: Record<string, string> = {};
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (audienceRecords as any[]).forEach((r) => {
-    const state = r.visitor_state || "Unknown";
-    stateMap[state] = (stateMap[state] || 0) + 1;
+    if (!r.visitor_id) return;
+    if (r.visitor_state || !visitorState[r.visitor_id]) visitorState[r.visitor_id] = r.visitor_state || "";
   });
-  const sampleSize = audienceRecords.length;
+  const total = Object.keys(visitorState).length;
+  const stateMap: Record<string, number> = {};
+  Object.values(visitorState).forEach((st) => {
+    if (st) stateMap[st] = (stateMap[st] || 0) + 1;
+  });
+  const sampleSize = Object.values(stateMap).reduce((a, n) => a + n, 0);
   const sortedStates = Object.entries(stateMap).sort((a, b) => b[1] - a[1]);
   const dotClasses = ["dot-red", "dot-blue", "dot-green", "dot-gold", "dot-purple", "dot-gray"];
   const top5 = sortedStates.slice(0, 5);
@@ -1305,7 +1311,7 @@ export default function InsightPage() {
           </div>
           <div className={styles["audience-summary"]}>
             <div className={styles["audience-total"]}>{fmt(audience.total)}</div>
-            <div className={styles["audience-caption"]}>People reached this period</div>
+            <div className={styles["audience-caption"]}>Unique visitors this period</div>
           </div>
           <div>
             {audience.rows.length === 0 ? (

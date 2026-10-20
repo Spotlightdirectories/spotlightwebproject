@@ -27,6 +27,7 @@ import { supabase } from "@/lib/supabase";
 import { getViewingCustomerId } from "@/lib/getViewingCustomerId";
 import styles from "./vendor-product.module.css";
 
+import { insertAnalytics } from "@/lib/analytics";
 interface Product {
   id: string;
   slug: string;
@@ -162,7 +163,7 @@ export default function VendorProductPage() {
       // Analytics
       try {
         const customerId = await getViewingCustomerId();
-        await supabase.from("analytics_events").insert({
+        await insertAnalytics({
           vendor_id: data.vendor_id,
           product_id: data.id,
           event_type: "product_view",
@@ -231,7 +232,7 @@ export default function VendorProductPage() {
     if (!product) return;
     try {
       const customerId = await getViewingCustomerId();
-      await supabase.from("analytics_events").insert({
+      await insertAnalytics({
         vendor_id: product.vendor_id,
         product_id: product.id,
         event_type: eventType,

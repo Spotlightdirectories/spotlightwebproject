@@ -23,6 +23,7 @@ import { getViewingCustomerId } from "@/lib/getViewingCustomerId";
 import { nigeriaData } from "@/lib/nigeria-data.js";
 import styles from "./vendor-service.module.css";
 
+import { insertAnalytics } from "@/lib/analytics";
 interface Service {
   id: string;
   slug: string;
@@ -244,7 +245,7 @@ export default function VendorServicePage() {
       // Analytics
       try {
         const customerId = await getViewingCustomerId();
-        await supabase.from("analytics_events").insert({
+        await insertAnalytics({
           vendor_id: data.vendor_id,
           service_id: data.id,
           event_type: "service_view",
@@ -523,7 +524,7 @@ export default function VendorServicePage() {
     if (!service) return;
     try {
       const customerId = await getViewingCustomerId();
-      await supabase.from("analytics_events").insert({
+      await insertAnalytics({
         vendor_id: service.vendor_id,
         service_id: service.id,
         event_type: eventType,

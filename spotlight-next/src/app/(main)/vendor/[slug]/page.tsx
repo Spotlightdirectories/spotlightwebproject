@@ -24,6 +24,7 @@ import { uploadVendorFile } from "@/lib/uploadVendorFile";
 import { resizeVideoToFit, canResizeVideoInBrowser } from "@/lib/resizeVideo";
 import styles from "./vendor-profile.module.css";
 
+import { insertAnalytics } from "@/lib/analytics";
 // ── Plan limits (ported exactly from vendor-profile.js) ───────
 const SOCIAL_LIMITS: Record<string, number> = {
   free: 0, standard: 2, enterprise: 3, elite: 5, custom: Infinity
@@ -385,7 +386,7 @@ export default function VendorProfilePage() {
       // real page content starts loading immediately instead of waiting
       // on an analytics write.
       if (!owner) {
-        supabase.from("analytics_events").insert({
+        insertAnalytics({
           vendor_id: vendorData.id,
           event_type: "profile_view",
         }).then(({ error }) => {
@@ -1067,7 +1068,7 @@ export default function VendorProfilePage() {
   // ── Analytics helpers ─────────────────────────────────────────
   async function logEvent(eventType: string) {
     if (!vendor) return;
-    try { await supabase.from("analytics_events").insert({ vendor_id: vendor.id, event_type: eventType }); }
+    try { await insertAnalytics({ vendor_id: vendor.id, event_type: eventType }); }
     catch { /* non-fatal */ }
 
     // Fire-and-forget: let the vendor know a customer just tried to

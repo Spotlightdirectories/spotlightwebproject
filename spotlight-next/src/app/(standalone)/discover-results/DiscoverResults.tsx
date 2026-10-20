@@ -23,6 +23,7 @@ import AccountButton from "@/components/AccountButton";
 import SearchableSelect from "@/components/SearchableSelect";
 import styles from "./discover-results.module.css";
 
+import { insertAnalytics } from "@/lib/analytics";
 // ── Types ─────────────────────────────────────────────────────
 interface Vendor {
   id: string;
@@ -611,7 +612,7 @@ export default function DiscoverResultsPage() {
             })),
           ];
           if (impressions.length) {
-            await supabase.from("analytics_events").insert(impressions);
+            await insertAnalytics(impressions);
           }
         } catch { /* non-fatal */ }
       })();
