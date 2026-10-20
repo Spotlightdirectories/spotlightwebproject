@@ -82,6 +82,15 @@ export default function PrivacyPage() {
 
           <h2>8. Data Retention</h2>
           <p>We retain data only as long as necessary for service delivery or legal compliance.</p>
+          <p>
+            <strong>Vendor accounts:</strong> when a vendor closes their account, the listing is hidden immediately and
+            can be restored within 14 days. After that the closure is final, and within 30 further days we permanently
+            erase the vendor&apos;s profile, products, services, photos, videos, verification documents, contact
+            details, enquiries, reviews and login. We keep only subscription invoices, payment receipts and sponsorship
+            receipts (and, for partner referrals, the record of which businesses were registered), because we are
+            required to retain these for accounting and reporting. These records do not contain the profile or any way
+            to sign in.
+          </p>
 
           <h2>9. Your Rights</h2>
           <ul>
@@ -90,7 +99,7 @@ export default function PrivacyPage() {
             <li>Request deletion</li>
             <li>Withdraw consent</li>
           </ul>
-          <p>You can do this via your dashboard or by emailing us. Requests are handled within 14 days.</p>
+          <p>You can do this via your dashboard or by emailing us. Requests are handled within 14 days. Vendors can also close their account at any time from Settings in the website or the app; see Data Retention above for what happens next.</p>
 
           <h2>10. Data Security</h2>
           <p>We implement appropriate security measures to protect your data. However, no system is completely secure.</p>

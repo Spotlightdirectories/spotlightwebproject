@@ -74,7 +74,7 @@ function LoginForm() {
 
     // 4. Closed account
     if (vendor.account_status === "closed") {
-      setError("Your account has been closed. Please contact support.");
+      setError("This account has been closed and the closure is final. Its data is being permanently erased. If you think this is a mistake, please contact support straight away.");
       await supabase.auth.signOut();
       setLoading(false);
       return;
