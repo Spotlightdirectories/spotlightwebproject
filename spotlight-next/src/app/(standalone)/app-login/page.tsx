@@ -49,15 +49,16 @@ export default function AppLoginPage() {
             router.replace(next);
             return;
           }
-          setMsg("Signed in, but the session was not saved. Redirecting to login\u2026");
+          setMsg("We couldn't sign you in automatically. Taking you to the login page\u2026");
         } else {
-          setMsg(`Sign-in failed: ${first.error?.message ?? ""}${second ? " / " + second : ""}. Redirecting to login\u2026`);
+          console.error("app-login failed:", first.error?.message, second);
+          setMsg("We couldn't sign you in automatically. Taking you to the login page\u2026");
         }
       } else {
-        setMsg("No sign-in token was received. Redirecting to login\u2026");
+        setMsg("We couldn't sign you in automatically. Taking you to the login page\u2026");
       }
-      // TEMPORARY (testing): pause so the reason can be read before redirecting.
-      await new Promise((r) => setTimeout(r, 6000));
+      // Brief pause so the message can be read before the login page appears.
+      await new Promise((r) => setTimeout(r, 1500));
       router.replace(`/login?next=${encodeURIComponent(next)}`);
     }
     run();
