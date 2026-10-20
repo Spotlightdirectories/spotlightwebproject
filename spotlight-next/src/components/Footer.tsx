@@ -64,6 +64,7 @@ const LEGAL_LINKS: LinkItem[] = [
   { href: "/privacy", label: "Privacy" },
   { href: "/privacy#analytics-choice", label: "Analytics Choice" },
   { href: "/disclaimer", label: "Disclaimer" },
+  { href: "/delete-account", label: "Delete Account" },
 ];
 
 export default function Footer() {

@@ -83,6 +83,12 @@ export default function PrivacyPage() {
           <h2>8. Data Retention</h2>
           <p>We retain data only as long as necessary for service delivery or legal compliance.</p>
           <p>
+            <strong>Customer accounts:</strong> when a customer deletes their account, they have 14 days to change their
+            mind. After that we permanently delete their name, email, phone number, favourites, reviews, visit and quote
+            requests, photos, search history and login, and remove any link between them and our visit statistics. We
+            keep nothing that identifies them. See <a href="/delete-account">how to delete your account</a>.
+          </p>
+          <p>
             <strong>Vendor accounts:</strong> when a vendor closes their account, the listing is hidden immediately and
             can be restored within 14 days. After that the closure is final, and within 30 further days we permanently
             erase the vendor&apos;s profile, products, services, photos, videos, verification documents, contact
@@ -107,7 +113,7 @@ export default function PrivacyPage() {
             <li>Request deletion</li>
             <li>Withdraw consent</li>
           </ul>
-          <p>You can do this via your dashboard or by emailing us. Requests are handled within 14 days. Vendors can also close their account at any time from Settings in the website or the app; see Data Retention above for what happens next.</p>
+          <p>You can do this via your dashboard or by emailing us. Requests are handled within 14 days. Customers can delete their account from their profile and vendors can close theirs from Settings, in the website or the app (see <a href="/delete-account">how to delete your account</a>); see Data Retention above for what happens next.</p>
 
           <h2>10. Data Security</h2>
           <p>We implement appropriate security measures to protect your data. However, no system is completely secure.</p>

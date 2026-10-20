@@ -38,6 +38,8 @@ interface Customer {
   id: string;
   name: string | null;
   email: string | null;
+  account_status?: string | null;
+  scheduled_deletion_at?: string | null;
 }
 
 interface FavoriteRow {
@@ -235,6 +237,34 @@ export default function CustomerProfilePage() {
   const [hasVendorAccount, setHasVendorAccount] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // Account deletion: 14 days to change your mind, then everything is deleted.
+  const [showDelete, setShowDelete] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
+  async function handleCloseAccount() {
+    if (!customer?.email || !deletePassword) { setDeleteError("Please enter your password."); return; }
+    setDeleteBusy(true);
+    setDeleteError("");
+    const { error: pwError } = await supabase.auth.signInWithPassword({ email: customer.email, password: deletePassword });
+    if (pwError) { setDeleteError("That password is not correct."); setDeleteBusy(false); return; }
+    const { data, error } = await supabase.rpc("close_customer_account");
+    if (error) { setDeleteError("We couldn't start the deletion. Please try again."); setDeleteBusy(false); return; }
+    setCustomer(c => (c ? { ...c, account_status: "closing", scheduled_deletion_at: (data as string) || null } : c));
+    setShowDelete(false);
+    setDeletePassword("");
+    setDeleteBusy(false);
+  }
+
+  async function handleRestoreAccount() {
+    setDeleteBusy(true);
+    const { error } = await supabase.rpc("restore_customer_account");
+    setDeleteBusy(false);
+    if (error) { alert("We couldn't restore your account. Please contact support."); return; }
+    setCustomer(c => (c ? { ...c, account_status: "active", scheduled_deletion_at: null } : c));
+  }
 
   function switchTab(tab: TabKey) {
     setActiveTab(tab);
@@ -579,6 +609,19 @@ export default function CustomerProfilePage() {
       <main className={styles.cpMain}>
         <h1 className={styles.cpMainTitle}>{TAB_TITLES[activeTab]}</h1>
 
+        {customer.account_status === "closing" && (
+          <div style={{ background: "#fff4e5", border: "1px solid #f0b86e", borderRadius: 10, padding: "14px 16px", marginBottom: 16 }}>
+            <strong>Your account is scheduled for deletion.</strong>
+            <p style={{ margin: "6px 0 10px" }}>
+              On {customer.scheduled_deletion_at ? new Date(customer.scheduled_deletion_at).toLocaleDateString("en-NG", { dateStyle: "long" }) : "the scheduled date"} everything will be permanently deleted. Until then you can change your mind.
+            </p>
+            <button type="button" disabled={deleteBusy} onClick={handleRestoreAccount}
+              style={{ background: "#2d6a4f", color: "#fff", border: 0, borderRadius: 8, padding: "10px 16px", cursor: "pointer" }}>
+              {deleteBusy ? "Please wait..." : "Keep my account"}
+            </button>
+          </div>
+        )}
+
         {hasVendorAccount && activeTab === "overview" && (
           <div className={styles.cpVendorSwitch}>
             <i className="fa-solid fa-store"></i>
@@ -625,6 +668,35 @@ export default function CustomerProfilePage() {
               <span>Recent Searches</span>
             </button>
           </div>
+        )}
+
+
+        {activeTab === "overview" && customer.account_status !== "closing" && (
+          <section className={styles.cpSection} style={{ marginTop: 24 }}>
+            <h2>Delete my account</h2>
+            <p className={styles.cpNote}>
+              You have 14 days to change your mind. After that, your account and everything in it is permanently deleted: your name, email, phone number, favourites, reviews, visit and quote requests, photos and search history. We keep nothing that identifies you.
+            </p>
+            {!showDelete ? (
+              <button type="button" onClick={() => setShowDelete(true)}
+                style={{ background: "#fff", color: "#b42318", border: "1px solid #b42318", borderRadius: 8, padding: "10px 16px", cursor: "pointer" }}>
+                Delete my account
+              </button>
+            ) : (
+              <div style={{ maxWidth: 360 }}>
+                <label style={{ display: "block", marginBottom: 6 }}>Enter your password to confirm</label>
+                <input type="password" value={deletePassword} onChange={e => setDeletePassword(e.target.value)}
+                  style={{ width: "100%", padding: 10, border: "1px solid #ccc", borderRadius: 8, marginBottom: 8 }} autoComplete="current-password" />
+                {deleteError && <p style={{ color: "#b42318", margin: "0 0 8px" }}>{deleteError}</p>}
+                <button type="button" disabled={deleteBusy} onClick={handleCloseAccount}
+                  style={{ background: "#b42318", color: "#fff", border: 0, borderRadius: 8, padding: "10px 16px", cursor: "pointer", marginRight: 8 }}>
+                  {deleteBusy ? "Please wait..." : "Yes, delete my account"}
+                </button>
+                <button type="button" disabled={deleteBusy} onClick={() => { setShowDelete(false); setDeletePassword(""); setDeleteError(""); }}
+                  style={{ background: "transparent", border: 0, cursor: "pointer" }}>Cancel</button>
+              </div>
+            )}
+          </section>
         )}
 
       {activeTab === "favorites" && (
