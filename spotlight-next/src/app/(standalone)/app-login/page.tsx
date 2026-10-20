@@ -32,7 +32,9 @@ export default function AppLoginPage() {
 
     async function run() {
       if (tokenHash) {
-        const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "magiclink" });
+        // Supabase has used both names for this kind of token; try the current one first.
+        let { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "email" });
+        if (error) ({ error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "magiclink" }));
         if (!error) {
           router.replace(next);
           return;
