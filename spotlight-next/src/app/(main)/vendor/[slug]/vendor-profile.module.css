@@ -752,7 +752,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   margin-bottom: 3px;
 }
 

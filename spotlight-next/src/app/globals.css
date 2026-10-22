@@ -38,12 +38,13 @@
   /* --- TEXT COLOURS --- */
   --color-text-primary:   #0f172a;
   --color-text-body:      #334155;
-  --color-text-muted:     #64748b;
-  --color-text-faint:     #94a3b8;
+  --color-text-muted:     #556377;  /* darkened 2026-10-22 for readable contrast */
+  --color-text-faint:     #5f6e84;  /* was #94a3b8 -- too faint to read */
+  --color-primary-text:   #7a6200;  /* dark gold for yellow-ish TEXT on light backgrounds */
   --color-text-inverse:   #ffffff;
 
   /* --- STATUS COLOURS --- */
-  --color-success:        #16a34a;
+  --color-success:        #166534;  /* darker green so green text is readable (was #16a34a) */
   --color-success-bg:     #dcfce7;
   --color-warning:        #d97706;
   --color-warning-bg:     #fef3c7;
@@ -150,6 +151,8 @@
   --color-text-muted:     #94a3b8;
   --color-text-faint:     #64748b;
   --color-text-inverse:   #000000;
+  --color-primary-text:   #e6c200;
+  --color-success:        #16a34a;
 
   --color-success-bg:     #052e16;
   --color-warning-bg:     #422006;

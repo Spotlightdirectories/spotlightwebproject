@@ -59,7 +59,7 @@
    than the already-muted default link color. */
 .footerLinkCurrent {
   display: block;
-  color: #6b7280;
+  color: #9ca3af;
   margin-bottom: 10px;
   font-size: 15px;
   cursor: not-allowed;
@@ -79,12 +79,12 @@
 }
 
 .complianceLine {
-  color: #6b7280;
+  color: #9ca3af;
   font-size: 13px;
 }
 
 .complianceLine a {
-  color: #6b7280;
+  color: #9ca3af;
   text-decoration: underline;
 }
 
