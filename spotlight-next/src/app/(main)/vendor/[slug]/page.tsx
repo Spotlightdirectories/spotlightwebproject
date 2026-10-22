@@ -1107,7 +1107,12 @@ export default function VendorProfilePage() {
 
   if (!vendor) {
     return (
-      <div style={{ padding: 48, textAlign: "center", color: "var(--color-text-muted)" }}>
+      // minHeight keeps the footer below the screen while the profile loads.
+      // Before (2026-10-22) this was a short box, so the footer sat right
+      // under it and was pushed far down when the page filled in -- the
+      // main cause of the big "layout shift" score on vendor pages.
+      <div style={{ minHeight: "100vh", padding: 48, textAlign: "center", color: "var(--color-text-muted)" }}>
+        <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: "2rem", display: "block", marginBottom: 14 }}></i>
         Loading vendor profile...
       </div>
     );

@@ -7,7 +7,7 @@ export default function Loading() {
       role="status"
       aria-live="polite"
       style={{
-        minHeight: "60vh",
+        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
