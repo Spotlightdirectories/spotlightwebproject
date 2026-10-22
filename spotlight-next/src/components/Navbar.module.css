@@ -504,3 +504,33 @@
     z-index: var(--z-dropdown);
   }
 }
+
+/* Category icons in the Artisans / Goods / Professionals dropdowns
+   (added 2026-10-22). Small picture + name on one line. */
+.catIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.catLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.categoryDropdown a.catRow {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.categoryMobileList a.catRow {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}

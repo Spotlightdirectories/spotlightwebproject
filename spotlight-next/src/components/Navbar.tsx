@@ -25,6 +25,10 @@ export default function Navbar() {
   const [expandedPill, setExpandedPill] = useState<string | null>(null);
   const [artisanCats, setArtisanCats] = useState<string[]>([]);
   const [professionalCats, setProfessionalCats] = useState<string[]>([]);
+  // Category name -> its picture (same illustrated icons used on the
+  // homepage menu). Added 2026-10-22 per Cyril: dropdown rows get a
+  // small icon like Jiji. Subcategories stay text-only.
+  const [catIcons, setCatIcons] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 1023px)");
@@ -38,12 +42,17 @@ export default function Navbar() {
     async function loadCats() {
       const { data } = await supabase
         .from("categories")
-        .select("name, audience_type")
+        .select("name, audience_type, image_url")
         .in("audience_type", ["Artisan", "Professional"])
         .order("name");
       if (data) {
         setArtisanCats(data.filter((c) => c.audience_type === "Artisan").map((c) => c.name));
         setProfessionalCats(data.filter((c) => c.audience_type === "Professional").map((c) => c.name));
+        setCatIcons((prev) => {
+          const next = { ...prev };
+          for (const c of data as any[]) if (c.image_url) next[c.name] = c.image_url;
+          return next;
+        });
       }
     }
     loadCats();
@@ -92,17 +101,20 @@ export default function Navbar() {
     async function loadGoodsCats() {
       const { data } = await supabase
         .from("categories")
-        .select("name, goods_subgroup")
+        .select("name, goods_subgroup, image_url")
         .eq("audience_type", "Goods")
         .order("name");
       if (!data) return;
       const grouped: Record<string, string[]> = {};
+      const icons: Record<string, string> = {};
       for (const c of data as any[]) {
+        if (c.image_url) icons[c.name] = c.image_url;
         if (!c.goods_subgroup) continue;
         if (!grouped[c.goods_subgroup]) grouped[c.goods_subgroup] = [];
         grouped[c.goods_subgroup].push(c.name);
       }
       setGoodsCatsBySubgroup(grouped);
+      setCatIcons((prev) => ({ ...prev, ...icons }));
     }
     loadGoodsCats();
   }, []);
@@ -215,10 +227,17 @@ export default function Navbar() {
     // identically wherever it's called from.
     function renderCategoryItem(item: string) {
       const nested = nestedCats[item];
+      // lazy: the dropdown is hidden until hovered, so the browser
+      // only fetches these pictures when the menu is actually opened.
+      const iconEl = catIcons[item] ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={catIcons[item]} alt="" width={28} height={28} loading="lazy" className={styles.catIcon} />
+      ) : null;
       if (!nested) {
         return (
-          <Link key={item} href={`/discover-results?category=${encodeURIComponent(item)}`} onClick={closeAll}>
-            {item}
+          <Link key={item} href={`/discover-results?category=${encodeURIComponent(item)}`} onClick={closeAll} className={styles.catRow}>
+            {iconEl}
+            <span>{item}</span>
           </Link>
         );
       }
@@ -231,7 +250,7 @@ export default function Navbar() {
             className={styles.nestedToggle}
             onClick={() => setExpandedCategory(catOpen ? null : item)}
           >
-            {item}
+            <span className={styles.catLabel}>{iconEl}{item}</span>
             <i className={`fa-solid ${catOpen ? "fa-chevron-down" : "fa-chevron-right"}`}></i>
           </button>
           {catOpen && (
