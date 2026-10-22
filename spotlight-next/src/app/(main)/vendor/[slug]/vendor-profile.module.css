@@ -575,7 +575,7 @@
 }
 
 .contactRow .hoursHighlight {
-  color: var(--color-primary);
+  color: var(--color-primary-text); /* dark gold on light, brand yellow on dark -- yellow on white was unreadable */
   font-weight: 700;
 }
 
