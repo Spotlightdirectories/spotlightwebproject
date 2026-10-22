@@ -730,6 +730,7 @@ export default function HomeCategorySearch() {
           type="text"
           className={styles.searchInput}
           placeholder="What are you looking for? e.g. phone, generator, tailor..."
+          aria-label="Search for a product, service or business"
           value={query}
           onChange={(e) => { setQuery(e.target.value); setEmptySearchError(false); }}
           onFocus={openPanel}

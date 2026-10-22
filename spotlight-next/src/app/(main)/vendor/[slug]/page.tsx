@@ -1174,7 +1174,7 @@ export default function VendorProfilePage() {
             </label>
           )}
           {isOwner && vendor.cover_url && (
-            <button type="button" className={styles.coverDelete} onClick={handleDeleteCover}>×</button>
+            <button type="button" className={styles.coverDelete} onClick={handleDeleteCover} aria-label="Delete cover image">×</button>
           )}
         </div>
 
@@ -1215,7 +1215,7 @@ export default function VendorProfilePage() {
                       <input type="file" accept="image/*" hidden disabled={logoUploading} onChange={e => { const f = e.target.files?.[0]; if (f) handleLogoUpload(f); e.target.value = ""; }} />
                     </label>
                     {vendor.logo_url && (
-                      <button type="button" className={styles.logoDelete} onClick={handleDeleteLogo}>×</button>
+                      <button type="button" className={styles.logoDelete} onClick={handleDeleteLogo} aria-label="Delete logo">×</button>
                     )}
                   </>
                 )}
@@ -1252,7 +1252,7 @@ export default function VendorProfilePage() {
                         dangerouslySetInnerHTML={{ __html: SOCIAL_ICONS[link.platform] || "" }}
                       />
                       {isOwner && (
-                        <button type="button" className={styles.socialDelete} onClick={() => handleDeleteSocial(link.id)}>×</button>
+                        <button type="button" className={styles.socialDelete} onClick={() => handleDeleteSocial(link.id)} aria-label="Delete social link">×</button>
                       )}
                     </div>
                   ))}
@@ -1336,7 +1336,7 @@ export default function VendorProfilePage() {
               <div className={styles.socialEditor}>
                 <div>
                   <label>Platform</label>
-                  <select value={newSocialPlatform} onChange={e => setNewSocialPlatform(e.target.value)}>
+                  <select aria-label="Platform" value={newSocialPlatform} onChange={e => setNewSocialPlatform(e.target.value)}>
                     <option value="instagram">Instagram</option>
                     <option value="facebook">Facebook</option>
                     <option value="tiktok">TikTok</option>
@@ -1348,6 +1348,7 @@ export default function VendorProfilePage() {
                   <label>Link</label>
                   <input
                     type="text"
+                    aria-label="Link"
                     value={newSocialUrl}
                     onChange={e => setNewSocialUrl(e.target.value)}
                     placeholder="Paste full link"
@@ -1830,6 +1831,10 @@ export default function VendorProfilePage() {
               {[1,2,3,4,5].map(n => (
                 <span
                   key={n}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${n} star${n > 1 ? "s" : ""}`}
+                  onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setReviewRating(n); } }}
                   className={`${styles.starPickerItem} ${n <= (reviewHover || reviewRating) ? styles.active : ""}`}
                   onMouseEnter={() => setReviewHover(n)}
                   onMouseLeave={() => setReviewHover(0)}
@@ -1840,6 +1845,7 @@ export default function VendorProfilePage() {
             <input
               className={styles.modalInput}
               placeholder="Your name"
+              aria-label="Your name"
               value={reviewerName}
               onChange={e => setReviewerName(e.target.value)}
               readOnly={reviewFieldsLocked}
@@ -1848,6 +1854,7 @@ export default function VendorProfilePage() {
               className={styles.modalInput}
               type="email"
               placeholder="Your email"
+              aria-label="Your email"
               value={reviewerEmail}
               onChange={e => setReviewerEmail(e.target.value)}
               readOnly={reviewFieldsLocked}
@@ -1855,6 +1862,7 @@ export default function VendorProfilePage() {
             <textarea
               className={styles.modalTextarea}
               placeholder="Write your review..."
+              aria-label="Write your review"
               value={reviewText}
               onChange={e => setReviewText(e.target.value)}
             />
@@ -1896,25 +1904,28 @@ export default function VendorProfilePage() {
                   For your safety and the vendor&apos;s, {vendor?.name || "this vendor"} will confirm your name
                   and phone number here on Spotlight before travelling to your location.
                 </p>
-                <label className={styles.visitLabel}>Your name</label>
-                <input className={styles.modalInput} value={visitCustomer?.name || ""} readOnly />
-                <label className={styles.visitLabel}>Your phone number</label>
+                <label className={styles.visitLabel} htmlFor="visitName">Your name</label>
+                <input id="visitName" className={styles.modalInput} value={visitCustomer?.name || ""} readOnly />
+                <label className={styles.visitLabel} htmlFor="visitPhone">Your phone number</label>
                 <input
+                  id="visitPhone"
                   className={styles.modalInput}
                   type="tel"
                   placeholder="+2348021234567"
                   value={visitPhone}
                   onChange={e => setVisitPhone(e.target.value)}
                 />
-                <label className={styles.visitLabel}>Location / address for the visit</label>
+                <label className={styles.visitLabel} htmlFor="visitLocation">Location / address for the visit</label>
                 <input
+                  id="visitLocation"
                   className={styles.modalInput}
                   placeholder="e.g. Off Admiralty Way, Lekki Phase 1"
                   value={visitLocation}
                   onChange={e => setVisitLocation(e.target.value)}
                 />
-                <label className={styles.visitLabel}>What do you need? (optional)</label>
+                <label className={styles.visitLabel} htmlFor="visitMessage">What do you need? (optional)</label>
                 <textarea
+                  id="visitMessage"
                   className={styles.modalTextarea}
                   placeholder="Briefly describe the job..."
                   value={visitMessage}

@@ -751,6 +751,7 @@ export default function DiscoverResultsPage() {
             type="text"
             className={styles.searchInput}
             placeholder="Search Spotlight"
+            aria-label="Search Spotlight"
             autoComplete="off"
             value={keyword}
             onChange={e => setKeyword(e.target.value)}
@@ -832,6 +833,7 @@ export default function DiscoverResultsPage() {
           <input
             type="range"
             className={styles.distanceSlider}
+            aria-label="Search distance in kilometres"
             min="1" max="20"
             value={radius}
             onChange={e => setRadius(Number(e.target.value))}
@@ -1221,7 +1223,7 @@ export default function DiscoverResultsPage() {
           </div>
           <div className={styles.filterGroup}>
             <label>State</label>
-            <select className={styles.filterSelect} value={selectedState}
+            <select aria-label="State" className={styles.filterSelect} value={selectedState}
               onChange={e => setSelectedState(e.target.value)}>
               <option value="">Select State</option>
               {stateList.map(s => <option key={s} value={s}>{s}</option>)}
@@ -1229,7 +1231,7 @@ export default function DiscoverResultsPage() {
           </div>
           <div className={styles.filterGroup}>
             <label>LGA</label>
-            <select className={styles.filterSelect} value={selectedLga}
+            <select aria-label="LGA" className={styles.filterSelect} value={selectedLga}
               onChange={e => setSelectedLga(e.target.value)}
               disabled={!selectedState}>
               <option value="">Select LGA</option>

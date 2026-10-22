@@ -1,0 +1,21 @@
+# Spotlight Directories
+
+> Spotlight Directories is a Nigerian online directory that helps customers find and contact local artisans, small businesses, traders and professionals, and helps those businesses get discovered. Customers can search by category, location and distance, view vendor profiles, and reach vendors directly by phone, WhatsApp or directions.
+
+Listings are created by the businesses themselves. Verified badges show when a vendor's identity or business documents have been reviewed by Spotlight.
+
+## Main pages
+
+- [Home](https://spotlightdirectories.com/): search by category and see featured businesses
+- [Discover](https://spotlightdirectories.com/discover): search products, services and vendors, with filters for category, state, LGA and distance
+- [Get Listed](https://spotlightdirectories.com/getlisted): how a business creates a listing
+- [About Us](https://spotlightdirectories.com/aboutUs): who we are and why Spotlight exists
+- [FAQ](https://spotlightdirectories.com/FAQ): common questions from customers and vendors
+- [Contact Us](https://spotlightdirectories.com/contact-us): how to reach the Spotlight team
+
+## Policies
+
+- [Privacy Policy](https://spotlightdirectories.com/privacy)
+- [Terms of Use](https://spotlightdirectories.com/terms)
+- [Safety](https://spotlightdirectories.com/safety)
+- [Delete Account](https://spotlightdirectories.com/delete-account)
