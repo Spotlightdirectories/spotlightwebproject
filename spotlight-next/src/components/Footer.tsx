@@ -122,14 +122,14 @@ export default function Footer() {
         </div>
 
         <div className={styles.hfooterLinks}>
-          <h4>Quick Links</h4>
+          <p className={styles.hfooterHeading}>Quick Links</p>
           {QUICK_LINKS.map((l) => (
             <FooterLink key={l.href} {...l} pathname={pathname} />
           ))}
         </div>
 
         <div className={styles.hfooterSupport}>
-          <h4>Support</h4>
+          <p className={styles.hfooterHeading}>Support</p>
           {SUPPORT_LINKS.map((l) => (
             <FooterLink key={l.href} {...l} pathname={pathname} />
           ))}
@@ -142,7 +142,7 @@ export default function Footer() {
         </div>
 
         <div className={styles.hfooterLegalCol}>
-          <h4>Legal</h4>
+          <p className={styles.hfooterHeading}>Legal</p>
           {LEGAL_LINKS.map((l) => (
             <FooterLink key={l.href} {...l} pathname={pathname} />
           ))}

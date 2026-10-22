@@ -1248,6 +1248,7 @@ export default function VendorProfilePage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className={styles.socialLink}
+                        aria-label={`${link.platform.charAt(0).toUpperCase()}${link.platform.slice(1)} (opens in a new tab)`}
                         onClick={() => logEvent("external_visit")}
                         dangerouslySetInnerHTML={{ __html: SOCIAL_ICONS[link.platform] || "" }}
                       />

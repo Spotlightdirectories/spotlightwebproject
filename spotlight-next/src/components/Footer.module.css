@@ -48,7 +48,9 @@
   color: #000000;
 }
 
-.hfooterLinks h4, .hfooterSupport h4, .hfooterLegalCol h4 { font-size: 16px; margin-bottom: 16px; color: #ffffff; }
+/* Were <h4> headings, which skipped heading levels (Lighthouse). Now plain
+   text styled exactly the same: bold, 16px, same spacing. */
+.hfooterHeading { font-size: 16px; font-weight: 700; margin: 21.28px 0 16px; color: #ffffff; }
 .hfooterLinks a, .hfooterSupport a, .hfooterLegalCol a { display: block; text-decoration: none; color: #9ca3af; margin-bottom: 10px; font-size: 15px; }
 .hfooterLinks a:hover, .hfooterSupport a:hover, .hfooterLegalCol a:hover { color: #ffffff; }
 
