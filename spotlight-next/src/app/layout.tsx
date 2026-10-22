@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
+// Font Awesome 6.5.0, now served from our own site (was cdnjs, which blocked
+// every page from showing until it arrived). Self-hosted 2026-10-22.
+import "@fortawesome/fontawesome-free/css/all.min.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import TawkChat from "@/components/TawkChat";
 import CookieConsent from "@/components/CookieConsent";
@@ -54,11 +57,6 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: noFlashScript }} />
-        {/* FontAwesome — used by ported pages (discover, etc.) for icons */}
-        <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-        />
       </head>
       <body>
         <ThemeProvider>{children}</ThemeProvider>
