@@ -8,12 +8,12 @@ import path from "path";
 const isDev = process.env.NODE_ENV !== "production";
 const cspReportOnly = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://js.paystack.co https://embed.tawk.to https://*.tawk.to`,
-  "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://*.tawk.to",
-  "font-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com https://*.tawk.to",
-  "img-src 'self' data: blob: https://*.supabase.co https://ui-avatars.com https://i.ytimg.com https://*.tawk.to https://*.paystack.co https://www.google.com https://commons.wikimedia.org https://upload.wikimedia.org",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://js.paystack.co https://*.paystack.com https://embed.tawk.to https://*.tawk.to https://cdn.jsdelivr.net/emojione/`,
+  "style-src 'self' 'unsafe-inline' https://paystack.com https://*.paystack.com https://cdnjs.cloudflare.com https://fonts.googleapis.com https://*.tawk.to",
+  "font-src 'self' data: https://paystack.com https://*.paystack.com https://cdnjs.cloudflare.com https://fonts.gstatic.com https://*.tawk.to",
+  "img-src 'self' data: blob: https://*.supabase.co https://ui-avatars.com https://i.ytimg.com https://*.tawk.to https://*.paystack.co https://paystack.com https://*.paystack.com https://www.google.com",
   "media-src 'self' blob: https://*.supabase.co",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.paystack.co https://*.tawk.to wss://*.tawk.to",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.paystack.co https://*.paystack.com https://*.tawk.to wss://*.tawk.to",
   "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://*.paystack.com https://*.paystack.co https://*.tawk.to",
   "object-src 'none'",
   "base-uri 'self'",
@@ -48,6 +48,11 @@ const nextConfig: NextConfig = {
   // against maps, videos, fonts and Supabase so it cannot break the site.
   async headers() {
     return [
+      {
+        // Category pictures: let browsers keep them for a week (changed files get a new name).
+        source: "/category-icons/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=86400" }],
+      },
       {
         source: "/:path*",
         headers: [
