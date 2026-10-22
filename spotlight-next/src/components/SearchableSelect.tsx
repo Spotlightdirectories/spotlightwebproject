@@ -129,6 +129,8 @@ export default function SearchableSelect({
         className={`${styles.control} ${open ? styles.controlOpen : ""} ${disabled ? styles.disabled : ""}`}
         onClick={() => !disabled && setOpen((v) => !v)}
         disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={open}
       >
         <i className={`fa-solid fa-magnifying-glass ${styles.icon}`} aria-hidden="true" />
         <span className={selected ? styles.valueText : styles.placeholderText}>
@@ -144,6 +146,7 @@ export default function SearchableSelect({
             type="text"
             className={styles.searchInput}
             placeholder={searchPlaceholder}
+            aria-label={searchPlaceholder}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);

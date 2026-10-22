@@ -332,7 +332,7 @@ export default function DiscoverPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/spotlightlogo-512.png"
-            alt="Spotlight"
+            alt=""
             className={styles.discoverLogo}
           />
           <span className={styles.discoverBrandText}>Spotlight</span>
@@ -350,6 +350,7 @@ export default function DiscoverPage() {
             type="text"
             className={styles.discoverSearchInput}
             placeholder="Search products, services, vendors or categories"
+            aria-label="Search products, services, vendors or categories"
             autoComplete="off"
             value={keyword}
             onChange={(e) => {
@@ -441,6 +442,7 @@ export default function DiscoverPage() {
             <input
               type="range"
               className={styles.discoverDistanceSlider}
+              aria-label="Search distance in kilometres"
               min="1"
               max="20"
               value={radiusKm}
@@ -472,7 +474,7 @@ export default function DiscoverPage() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={v.logo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(v.name)}&background=e6c200&color=000000&size=128`}
-                    alt={v.name}
+                    alt=""
                     className={styles.discoverSponsoredLogo}
                   />
                   <div className={styles.discoverSponsoredInfo}>
@@ -618,6 +620,7 @@ export default function DiscoverPage() {
           <div className={styles.discoverFilterGroup}>
             <label>State</label>
             <select
+              aria-label="State"
               className={styles.discoverFilterSelect}
               value={selectedState}
               onChange={(e) => setSelectedState(e.target.value)}
@@ -632,6 +635,7 @@ export default function DiscoverPage() {
           <div className={styles.discoverFilterGroup}>
             <label>LGA</label>
             <select
+              aria-label="LGA"
               className={styles.discoverFilterSelect}
               value={selectedLga}
               onChange={(e) => setSelectedLga(e.target.value)}
