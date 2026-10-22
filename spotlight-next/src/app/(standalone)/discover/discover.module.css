@@ -277,7 +277,7 @@
   border-radius: 999px;
   padding: 0 12px;
   background: var(--color-success-bg);
-  color: var(--color-success);
+  color: #14532d; /* darker green: the old #16a34a was too faint on this pale green */
   display: flex;
   align-items: center;
   gap: 6px;
@@ -570,13 +570,18 @@
 }
 
 /* DISTANCE ENABLED STATE */
+/* Disabled look: dim only the slider itself, never the km labels --
+   dimming the labels made them too faint to read (contrast fix). */
 .discoverDistanceCard:not(.distanceEnabled) .discoverDistanceSliderWrap {
-  opacity: 0.45;
   pointer-events: none;
 }
 
+.discoverDistanceCard:not(.distanceEnabled) .discoverDistanceSlider {
+  opacity: 0.45;
+}
+
 .discoverDistanceCard:not(.distanceEnabled) .discoverLocationBtn {
-  opacity: 0.5;
+  opacity: 0.85;
 }
 
 /* SEARCH LOADING */
@@ -942,7 +947,7 @@
    slider + location button. In dark mode that dimming was too
    strong to see anything — lift the minimum opacity so the
    disabled state is still visibly present, just clearly muted. */
-:global([data-theme="dark"]) .discoverDistanceCard:not(.distanceEnabled) .discoverDistanceSliderWrap {
+:global([data-theme="dark"]) .discoverDistanceCard:not(.distanceEnabled) .discoverDistanceSlider {
   opacity: 0.7;
 }
 

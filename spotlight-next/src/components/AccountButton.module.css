@@ -16,8 +16,18 @@
   align-items: center;
 }
 
+/* Was yellow text on a white header -- too faint to read (Lighthouse
+   contrast failure, 2026-10-22). Now a clear button: black text on the
+   brand yellow, with a comfortable tap size. */
 .loginLink {
-  color: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #000;
   font-weight: var(--font-semibold);
   font-size: 0.9rem;
   text-decoration: none;
