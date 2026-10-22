@@ -294,11 +294,21 @@ export default function HomeCategorySearch() {
     // pictures are already downloaded and just pop straight in
     // instead of streaming in one-by-one as each <img> scrolls
     // into view (Cyril, 2026-08 — the "go slow" fade-in effect).
-    for (const cat of loadedCategories) {
-      if (cat.image_url) {
-        const preload = new window.Image();
-        preload.src = cat.image_url;
+    // 2026-10-22: now done when the browser is idle (not during the
+    // page's first load), so the home page appears faster. The
+    // pictures are still ready before anyone opens the panel.
+    const warmImages = () => {
+      for (const cat of loadedCategories) {
+        if (cat.image_url) {
+          const preload = new window.Image();
+          preload.src = cat.image_url;
+        }
       }
+    };
+    if (typeof window.requestIdleCallback === "function") {
+      window.requestIdleCallback(warmImages, { timeout: 4000 });
+    } else {
+      window.setTimeout(warmImages, 1500);
     }
 
     if (!subcategoriesAllLoadedRef.current && allSubcats) {
