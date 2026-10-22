@@ -25,6 +25,7 @@ import { resizeVideoToFit, canResizeVideoInBrowser } from "@/lib/resizeVideo";
 import styles from "./vendor-profile.module.css";
 
 import { insertAnalytics } from "@/lib/analytics";
+import { sanitizeRichText } from "@/lib/sanitizeRichText";
 // ── Plan limits (ported exactly from vendor-profile.js) ───────
 const SOCIAL_LIMITS: Record<string, number> = {
   free: 0, standard: 2, enterprise: 3, elite: 5, custom: Infinity
@@ -611,7 +612,7 @@ export default function VendorProfilePage() {
   // ── Description save (owner) ─────────────────────────────────
   async function handleDescriptionBlur() {
     if (!vendor || !isOwner) return;
-    const content = aboutEditorRef.current?.innerHTML || "";
+    const content = sanitizeRichText(aboutEditorRef.current?.innerHTML || "");
     const plain = aboutEditorRef.current?.innerText?.trim() || "";
     const wordCount = plain ? plain.split(/\s+/).length : 0;
     const limit = DESCRIPTION_WORD_LIMITS[vendor.plan_tier] ?? 100;
@@ -1390,12 +1391,12 @@ export default function VendorProfilePage() {
             className={styles.aboutEditor}
             contentEditable
             suppressContentEditableWarning
-            dangerouslySetInnerHTML={{ __html: description }}
+            dangerouslySetInnerHTML={{ __html: sanitizeRichText(description) }}
             onBlur={handleDescriptionBlur}
             onKeyDown={handleAboutKeyDown}
           />
         ) : (
-          <div className={styles.aboutView} dangerouslySetInnerHTML={{ __html: vendor.description || "" }} />
+          <div className={styles.aboutView} dangerouslySetInnerHTML={{ __html: sanitizeRichText(vendor.description) }} />
         )}
 
         {/* CONTACT INFO */}

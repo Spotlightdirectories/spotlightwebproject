@@ -1,6 +1,26 @@
 import type { NextConfig } from "next";
 import path from "path";
 
+// Content Security Policy, REPORT-ONLY (2026-10-22): the browser only logs what it
+// WOULD block (see the console's "Content Security Policy" messages) and blocks
+// nothing. Once every page browses clean, rename the header below to
+// "Content-Security-Policy" to enforce it.
+const isDev = process.env.NODE_ENV !== "production";
+const cspReportOnly = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://js.paystack.co https://embed.tawk.to https://*.tawk.to`,
+  "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://*.tawk.to",
+  "font-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com https://*.tawk.to",
+  "img-src 'self' data: blob: https://*.supabase.co https://ui-avatars.com https://i.ytimg.com https://*.tawk.to https://*.paystack.co https://www.google.com",
+  "media-src 'self' blob: https://*.supabase.co",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.paystack.co https://*.tawk.to wss://*.tawk.to",
+  "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://*.paystack.com https://*.paystack.co https://*.tawk.to",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self' https://*.paystack.com",
+  "frame-ancestors 'self'",
+].join("; ");
+
 const nextConfig: NextConfig = {
   // Pin the workspace root to THIS folder, so Next.js doesn't get confused
   // by a stray package-lock.json sitting higher up in C:\Users\Dell.
@@ -23,6 +43,25 @@ const nextConfig: NextConfig = {
   // explicitly excludes both so middleware gets a chance to run instead
   // of this file rewriting them to a dead /vendor-product or
   // /vendor-service path first.
+  // 2026-10-21 security audit: standard browser protections on every page.
+  // Deliberately NO Content-Security-Policy yet: it needs a careful test
+  // against maps, videos, fonts and Supabase so it cannot break the site.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
+          { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
+          { key: "Content-Security-Policy-Report-Only", value: cspReportOnly },
+        ],
+      },
+    ];
+  },
+
   async redirects() {
     return [
       {

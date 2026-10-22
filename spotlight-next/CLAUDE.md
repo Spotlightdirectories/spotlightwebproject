@@ -1146,3 +1146,12 @@ RLS policies, for example:
 Without a grant the API returns "permission denied". Grant only what each
 table really needs (RLS still decides which rows), and apply this to new
 projects, preview branches and `supabase db reset` too.
+
+## Audit checklist (added 2026-10-21)
+Run before every store submission and about quarterly:
+1. Supabase advisors (security and performance) - look for tables without RLS, public-executable SECURITY DEFINER functions, mutable search_path.
+2. `npm audit --omit=dev` in the website and the app; plan upgrades, never run `npm audit fix --force` blindly (it can downgrade Expo).
+3. Every NEW table: enable RLS, add policies, and add explicit GRANTs (Supabase rule from 30 Oct 2026).
+4. Every NEW SECURITY DEFINER function: check the caller inside it, and revoke execute from anon/authenticated unless it must be public.
+5. Live site: security headers and Lighthouse (speed, accessibility, SEO, best practices).
+6. Report findings to Cyril first and wait for approval before fixing (see workflow rules).

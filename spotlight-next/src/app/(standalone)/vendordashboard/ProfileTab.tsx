@@ -27,6 +27,7 @@
 //   this is a faithful port, not a rewrite).
 // ===============================================================
 
+import { sanitizeRichText } from "@/lib/sanitizeRichText";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { nigeriaData } from "@/lib/nigeria-data";
@@ -162,7 +163,7 @@ export default function ProfileTab({ vendor, onVendorUpdate }: Props) {
 
   useEffect(() => {
     if (descriptionRef.current) {
-      descriptionRef.current.innerHTML = vendor.description || "";
+      descriptionRef.current.innerHTML = sanitizeRichText(vendor.description);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -208,7 +209,7 @@ export default function ProfileTab({ vendor, onVendorUpdate }: Props) {
       }
     }
 
-    const descriptionHtml = descriptionRef.current?.innerHTML || "";
+    const descriptionHtml = sanitizeRichText(descriptionRef.current?.innerHTML || "");
     const descriptionWordLimit = DESCRIPTION_WORD_LIMITS[vendor.plan_tier || "free"] ?? 100;
     const descriptionWordCount = countWords(descriptionHtml);
 
