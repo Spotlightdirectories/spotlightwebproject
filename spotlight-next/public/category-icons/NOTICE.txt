@@ -1,0 +1,9 @@
+Category pictures
+=================
+The illustrations inside these tiles come from Noto Emoji by Google
+(https://github.com/googlefonts/noto-emoji), used under the Apache License 2.0
+(https://www.apache.org/licenses/LICENSE-2.0). The rounded tile background and
+the arrangement are original to Spotlight Directories.
+
+Licence text: https://github.com/googlefonts/noto-emoji/blob/main/svg/LICENSE
+Packaged via the Iconify "noto" set (https://github.com/iconify/icon-sets).

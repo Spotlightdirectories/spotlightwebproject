@@ -11,7 +11,7 @@ const cspReportOnly = [
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://js.paystack.co https://embed.tawk.to https://*.tawk.to`,
   "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://*.tawk.to",
   "font-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com https://*.tawk.to",
-  "img-src 'self' data: blob: https://*.supabase.co https://ui-avatars.com https://i.ytimg.com https://*.tawk.to https://*.paystack.co https://www.google.com",
+  "img-src 'self' data: blob: https://*.supabase.co https://ui-avatars.com https://i.ytimg.com https://*.tawk.to https://*.paystack.co https://www.google.com https://commons.wikimedia.org https://upload.wikimedia.org",
   "media-src 'self' blob: https://*.supabase.co",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.paystack.co https://*.tawk.to wss://*.tawk.to",
   "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://*.paystack.com https://*.paystack.co https://*.tawk.to",
