@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
+import { SITE_URL } from "@/lib/siteUrl";
 
 const FALLBACK_TITLE = "Vendor Profile | Spotlight Directories";
 const FALLBACK_DESCRIPTION = "View this vendor's profile, products, services, and reviews on Spotlight Directories.";
@@ -16,13 +17,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   if (!slug) return { title: FALLBACK_TITLE, description: FALLBACK_DESCRIPTION };
 
+  // Tell Google the one real address of this page, so old links such as
+  // ?slug=... are not counted as separate duplicate pages.
+  const alternates = { canonical: `${SITE_URL}/vendor/${slug}` };
+
   const { data: vendor } = await supabase
     .from("vendors")
     .select("name, category, subcategory, state, description")
     .eq("slug", slug)
     .maybeSingle();
 
-  if (!vendor) return { title: FALLBACK_TITLE, description: FALLBACK_DESCRIPTION };
+  if (!vendor) return { title: FALLBACK_TITLE, description: FALLBACK_DESCRIPTION, alternates };
 
   const locationBit = vendor.state ? ` in ${vendor.state}` : "";
   const categoryBit = vendor.subcategory || vendor.category || "business";
@@ -31,7 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     ? vendor.description.slice(0, 155)
     : `${vendor.name} — ${categoryBit}${locationBit}. Find contact details, products, services, and reviews on Spotlight Directories.`;
 
-  return { title, description };
+  return { title, description, alternates };
 }
 
 export default function VendorProfileLayout({ children }: { children: React.ReactNode }) {

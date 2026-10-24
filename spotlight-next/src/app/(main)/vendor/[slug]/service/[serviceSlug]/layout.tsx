@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { supabase } from "@/lib/supabase";
+import { SITE_URL } from "@/lib/siteUrl";
 
 // Note (2026-08): this route is nested under vendor/[slug]/layout.tsx,
 // which already wraps everything in <main> + <Footer/>. This layout
@@ -11,9 +12,11 @@ const FALLBACK_DESCRIPTION = "View service details, pricing, and vendor informat
 // 2026-08 addition, per Cyril's SEO audit request: real service name
 // + starting price + vendor name in the title/description instead of
 // the same generic text on every service page.
-export async function generateMetadata({ params }: { params: Promise<{ serviceSlug: string }> }): Promise<Metadata> {
-  const { serviceSlug } = await params;
-  if (!serviceSlug) return { title: FALLBACK_TITLE, description: FALLBACK_DESCRIPTION };
+export async function generateMetadata({ params }: { params: Promise<{ slug: string; serviceSlug: string }> }): Promise<Metadata> {
+  const { slug, serviceSlug } = await params;
+  // One real address per page, so ?slug=... links are not counted as duplicates.
+  const alternates = { canonical: `${SITE_URL}/vendor/${slug}/service/${serviceSlug}` };
+  if (!serviceSlug) return { title: FALLBACK_TITLE, description: FALLBACK_DESCRIPTION, alternates };
 
   const { data: service } = await supabase
     .from("vendor_services")
@@ -21,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ serviceSl
     .eq("slug", serviceSlug)
     .maybeSingle<{ service_name: string; starting_price: number | null; short_description: string | null; vendors: { name: string } | null }>();
 
-  if (!service) return { title: FALLBACK_TITLE, description: FALLBACK_DESCRIPTION };
+  if (!service) return { title: FALLBACK_TITLE, description: FALLBACK_DESCRIPTION, alternates };
 
   const vendorName = service.vendors?.name || "Spotlight Directories";
   const priceBit = service.starting_price != null ? ` — from ₦${Number(service.starting_price).toLocaleString()}` : "";
@@ -30,7 +33,7 @@ export async function generateMetadata({ params }: { params: Promise<{ serviceSl
     ? service.short_description.slice(0, 155)
     : `${service.service_name} from ${vendorName} on Spotlight Directories.`;
 
-  return { title, description };
+  return { title, description, alternates };
 }
 
 export default function ServiceLayout({ children }: { children: React.ReactNode }) {
