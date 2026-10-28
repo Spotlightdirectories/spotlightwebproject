@@ -5,6 +5,51 @@ import { supabase } from "@/lib/supabase";
 import Footer from "@/components/Footer";
 import styles from "./feedback.module.css";
 
+// Feedback categories that make sense for each kind of person.
+// Picking who you are first shows only the choices that apply to you.
+const COMMON_END = ["Suggestion for improvement", "Compliment / praise", "Others"];
+const CATEGORIES_BY_ROLE: Record<string, string[]> = {
+  Customer: [
+    "Can't find what I'm looking for",
+    "Wrong or outdated business information",
+    "Report a Vendor",
+    "Review or rating problem",
+    "Quote or visit request problem",
+    "Account or login problem",
+    "Location or map accuracy",
+    ...COMMON_END,
+  ],
+  Vendor: [
+    "Difficulty with listing",
+    "Payment / subscription issues",
+    "Verification badge",
+    "Sponsorship",
+    "Insight dashboard or reports",
+    "Quote or visit requests I received",
+    "A review on my business",
+    "Location or map accuracy",
+    "Report a Partner",
+    "Account or login problem",
+    ...COMMON_END,
+  ],
+  Partner: [
+    "Commission or payout question",
+    "Referral link or code problem",
+    "Partner dashboard problem",
+    "Marketing materials or training",
+    "Report a Vendor",
+    "Account or login problem",
+    ...COMMON_END,
+  ],
+  Other: [
+    "General question",
+    "Partnership or collaboration",
+    "Media or press",
+    "Report a problem on the website or app",
+    ...COMMON_END,
+  ],
+};
+
 export default function FeedbackPage() {
   const [form, setForm] = useState({
     contact: "", role: "", category: "", message: "", rating: "",
@@ -14,7 +59,9 @@ export default function FeedbackPage() {
   const [error, setError] = useState("");
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
-    setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    // Changing who you are clears the category, since its choices change.
+    setForm(f => (name === "role" ? { ...f, role: value, category: "" } : { ...f, [name]: value }));
   }
 
   function handleClear() {
@@ -70,7 +117,7 @@ export default function FeedbackPage() {
 
               <div className={styles.row}>
                 <div>
-                  <label htmlFor="role">Are you a Vendor or Customer?</label>
+                  <label htmlFor="role">Who are you?</label>
                   <select id="role" name="role" value={form.role} onChange={handleChange}>
                     <option value="">-- Choose --</option>
                     <option value="Customer">Customer</option>
@@ -81,15 +128,11 @@ export default function FeedbackPage() {
                 </div>
                 <div>
                   <label htmlFor="category">Category of Feedback</label>
-                  <select id="category" name="category" value={form.category} onChange={handleChange}>
-                    <option value="">-- Choose --</option>
-                    <option>Difficulty with Listing</option>
-                    <option>Payment / Subscription Issues</option>
-                    <option>Location or Map Accuracy</option>
-                    <option>Suggestion for Improvement</option>
-                    <option>Report a Vendor</option>
-                    <option>Report a Partner</option>
-                    <option>Others</option>
+                  <select id="category" name="category" value={form.category} onChange={handleChange} disabled={!form.role}>
+                    <option value="">{form.role ? "-- Choose --" : "-- Choose who you are first --"}</option>
+                    {(CATEGORIES_BY_ROLE[form.role] || []).map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
                   </select>
                 </div>
               </div>
