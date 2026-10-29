@@ -40,6 +40,8 @@ export default function SignupPage() {
     password: "",
     confirmPassword: "",
     agreeTerms: false,
+    heardAboutUs: "",
+    heardAboutDetail: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -48,8 +50,8 @@ export default function SignupPage() {
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const { name, value, type, checked } = e.target;
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+    const { name, value, type, checked } = e.target as HTMLInputElement;
     if (name === "whatsapp") {
       // Normalize WhatsApp input to +234 format
       let v = value.replace(/[^\d+]/g, "");
@@ -68,13 +70,14 @@ export default function SignupPage() {
     e.preventDefault();
     setError("");
 
-    const { businessName, email, telephone, whatsapp, password, confirmPassword, agreeTerms } = form;
+    const { businessName, email, telephone, whatsapp, password, confirmPassword, agreeTerms, heardAboutUs, heardAboutDetail } = form;
 
     if (!agreeTerms) { setError("You must agree to the Terms, Privacy Policy, and Disclaimer."); return; }
     if (!businessName || !email || !telephone || !whatsapp || !password || !confirmPassword) {
       setError("All fields are required."); return;
     }
     if (password !== confirmPassword) { setError("Passwords do not match."); return; }
+    if (!heardAboutUs) { setError("Please tell us how you heard about Spotlight."); return; }
 
     const validWhatsapp = /^\+234\d{10}$/.test(whatsapp);
     if (!validWhatsapp) { setError("WhatsApp number must use valid Nigerian format (+234XXXXXXXXXX)."); return; }
@@ -116,6 +119,13 @@ export default function SignupPage() {
       if (resolvedId) partnerId = resolvedId as unknown as string;
     }
 
+    // 2b. Where the vendor first came from (saved by SourceCapture on their
+    // first visit). Missing or unreadable is fine: the fields stay empty.
+    let source: { utm_source?: string | null; utm_medium?: string | null; utm_campaign?: string | null; first_visit_at?: string | null } = {};
+    try {
+      source = JSON.parse(localStorage.getItem("spotlight_source") || "{}") || {};
+    } catch { /* ignore */ }
+
     // 3. Insert vendor row
     const { error: vendorError } = await supabase.from("vendors").insert([{
       auth_user_id: data.user!.id,
@@ -124,6 +134,12 @@ export default function SignupPage() {
       telephone,
       whatsapp,
       referred_by_partner_id: partnerId,
+      heard_about_us: heardAboutUs,
+      heard_about_detail: heardAboutDetail.trim().slice(0, 100) || null,
+      utm_source: source.utm_source ?? null,
+      utm_medium: source.utm_medium ?? null,
+      utm_campaign: source.utm_campaign ?? null,
+      first_visit_at: source.first_visit_at ?? null,
       plan_tier: selectedPlan,
       billing_cycle: billingType,
       subscription_status: selectedPlan === "free" ? "free" : "pending",
@@ -159,6 +175,7 @@ export default function SignupPage() {
     localStorage.removeItem("selectedPlan");
     localStorage.removeItem("billingType");
     localStorage.removeItem("referral_code");
+    localStorage.removeItem("spotlight_source");
 
     setSubmitting(false);
     setSuccess(true);
@@ -249,6 +266,30 @@ export default function SignupPage() {
               <button type="button" className={styles.togglePassword} onClick={() => setShowConfirm(v => !v)}>👁</button>
             </div>
           </div>
+
+          <div>
+            <label htmlFor="heardAboutUs">How did you hear about Spotlight?</label>
+            <select id="heardAboutUs" name="heardAboutUs" required value={form.heardAboutUs} onChange={handleChange}>
+              <option value="">Select one</option>
+              <option value="facebook">Facebook</option>
+              <option value="instagram">Instagram</option>
+              <option value="tiktok">TikTok</option>
+              <option value="youtube">YouTube</option>
+              <option value="linkedin">LinkedIn</option>
+              <option value="google_search">Google search</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="friend_or_referral">A friend or referral</option>
+              <option value="event_or_offline">Event, flyer or in person</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          {(form.heardAboutUs === "friend_or_referral" || form.heardAboutUs === "event_or_offline" || form.heardAboutUs === "other") && (
+            <div>
+              <label htmlFor="heardAboutDetail">Referral code or name (optional)</label>
+              <input type="text" id="heardAboutDetail" name="heardAboutDetail" placeholder="Who told you, or the code you were given" maxLength={100} value={form.heardAboutDetail} onChange={handleChange} />
+            </div>
+          )}
 
           <label className={styles.checkboxWrap}>
             <input type="checkbox" name="agreeTerms" checked={form.agreeTerms} onChange={handleChange} required />

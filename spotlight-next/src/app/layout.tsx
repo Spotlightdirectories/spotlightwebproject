@@ -6,6 +6,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import TawkChat from "@/components/TawkChat";
 import CookieConsent from "@/components/CookieConsent";
+import SourceCapture from "@/components/SourceCapture";
 import { SITE_URL } from "@/lib/siteUrl";
 
 export const metadata: Metadata = {
@@ -62,6 +63,7 @@ export default function RootLayout({
         <ThemeProvider>{children}</ThemeProvider>
         <TawkChat />
         <CookieConsent />
+        <SourceCapture />
       </body>
     </html>
   );
