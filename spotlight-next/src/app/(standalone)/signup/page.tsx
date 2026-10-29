@@ -230,29 +230,31 @@ export default function SignupPage() {
           </span>
         </a>
 
+        <p className={styles.requiredNote}><span className={styles.required}>*</span> Required</p>
+
         <form className={styles.authForm} onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="businessName">Business name</label>
+            <label htmlFor="businessName">Business name<span className={styles.required}>*</span></label>
             <input type="text" id="businessName" name="businessName" placeholder="Your business name" required value={form.businessName} onChange={handleChange} />
           </div>
 
           <div>
-            <label htmlFor="email">Email address</label>
+            <label htmlFor="email">Email address<span className={styles.required}>*</span></label>
             <input type="email" id="email" name="email" placeholder="you@business.com" required value={form.email} onChange={handleChange} />
           </div>
 
           <div>
-            <label htmlFor="telephone">Telephone number</label>
+            <label htmlFor="telephone">Telephone number<span className={styles.required}>*</span></label>
             <input type="tel" id="telephone" name="telephone" placeholder="+2348021234567" required value={form.telephone} onChange={handleChange} />
           </div>
 
           <div>
-            <label htmlFor="whatsapp">WhatsApp number</label>
+            <label htmlFor="whatsapp">WhatsApp number<span className={styles.required}>*</span></label>
             <input type="tel" id="whatsapp" name="whatsapp" placeholder="+2348021234567" required value={form.whatsapp} onChange={handleChange} />
           </div>
 
           <div>
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">Password<span className={styles.required}>*</span></label>
             <div className={styles.passwordWrap}>
               <input type={showPassword ? "text" : "password"} id="password" name="password" placeholder="Create a password" required value={form.password} onChange={handleChange} />
               <button type="button" className={styles.togglePassword} onClick={() => setShowPassword(v => !v)}>👁</button>
@@ -260,7 +262,7 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label htmlFor="confirmPassword">Confirm password</label>
+            <label htmlFor="confirmPassword">Confirm password<span className={styles.required}>*</span></label>
             <div className={styles.passwordWrap}>
               <input type={showConfirm ? "text" : "password"} id="confirmPassword" name="confirmPassword" placeholder="Repeat your password" required value={form.confirmPassword} onChange={handleChange} />
               <button type="button" className={styles.togglePassword} onClick={() => setShowConfirm(v => !v)}>👁</button>
@@ -268,7 +270,7 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label htmlFor="heardAboutUs">How did you hear about Spotlight?</label>
+            <label htmlFor="heardAboutUs">How did you hear about Spotlight?<span className={styles.required}>*</span></label>
             <select id="heardAboutUs" name="heardAboutUs" required value={form.heardAboutUs} onChange={handleChange}>
               <option value="">Select one</option>
               <option value="facebook">Facebook</option>

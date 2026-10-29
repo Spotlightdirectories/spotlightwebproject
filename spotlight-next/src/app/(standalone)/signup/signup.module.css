@@ -80,7 +80,8 @@
   margin-bottom: 4px;
 }
 
-.authForm input {
+.authForm input,
+.authForm select {
   width: 100%;
   padding: 11px 14px;
   border-radius: 8px;
@@ -92,7 +93,12 @@
   font-family: inherit;
 }
 
-.authForm input:focus { outline: none; border-color: var(--color-primary); }
+.authForm input:focus,
+.authForm select:focus { outline: none; border-color: var(--color-primary); }
+
+/* Red asterisk shown after every compulsory field's label */
+.required { color: #dc2626; margin-left: 2px; }
+.requiredNote { font-size: 0.8rem; color: var(--color-text-muted); margin: 0 0 12px; }
 
 .passwordWrap { position: relative; }
 .passwordWrap input { padding-right: 44px; }
