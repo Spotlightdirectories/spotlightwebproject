@@ -1155,3 +1155,10 @@ Run before every store submission and about quarterly:
 4. Every NEW SECURITY DEFINER function: check the caller inside it, and revoke execute from anon/authenticated unless it must be public.
 5. Live site: security headers and Lighthouse (speed, accessibility, SEO, best practices).
 6. Report findings to Cyril first and wait for approval before fixing (see workflow rules).
+
+## Performance partner logic — ON HOLD (2026-10-30)
+Cyril's decision: the build of the marketing "performance partner" logic (his separate
+performance-based deal, 12-month credit period, and a database marker to flag that partner)
+is ON HOLD until further notice. Do NOT build it, and do not start it on your own.
+Keep it separate from commission partners (20% first payment / 10% renewals / 5% override),
+which are built and live. Resume only when Cyril gives the exact terms and says go ahead.
