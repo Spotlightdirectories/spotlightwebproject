@@ -395,7 +395,7 @@ function PartnerProgramInner() {
               <div className={styles.ppRewardCard}>
                 <div className={styles.ppCardIcon}><i className="fa-solid fa-sack-dollar"></i></div>
                 <h3>High Commission</h3>
-                <p>Earn 20% commission on every paid vendor you bring, plus 10% on renewals.</p>
+                <p>Earn 20% commission on every paid vendor you bring, plus 10% when their plan renews. You earn on monthly and yearly sales — push the yearly plan, because yearly sales count toward your bonuses.</p>
                 <h2 className={styles.ppCardValue}>20%</h2>
                 <small>ON FIRST PAYMENT</small>
               </div>
@@ -416,11 +416,24 @@ function PartnerProgramInner() {
                 <h2 className={styles.ppCardValue}>5%</h2>
                 <small>OVERRIDE ON THEIR COMMISSION</small>
               </div>
+
+              <div className={styles.ppRewardCard}>
+                <div className={styles.ppCardIcon}><i className="fa-solid fa-shirt"></i></div>
+                <h3>Launch Pack</h3>
+                <p>Bring 10 paid yearly vendors and we send you 2 branded Spotlight face caps and 2 branded t-shirts to wear while you promote. It is a one-time pack.</p>
+                <h2 className={styles.ppCardValue}>2 + 2</h2>
+                <small>CAPS &amp; T-SHIRTS AT 10 YEARLY VENDORS</small>
+              </div>
             </div>
 
             <p className={styles.ppRewardsNote}>
+              <i className="fa-solid fa-gift"></i>
+              <strong>What you can tell vendors:</strong> a free On the Map listing for life, and 3 months free on any yearly plan paid on or before 31 December 2026.
+            </p>
+
+            <p className={styles.ppRewardsNote}>
               <i className="fa-solid fa-clock"></i>
-              Commissions become available 7 days after a payment is confirmed. Full terms on the{" "}
+              Commissions are worked out on the cash a vendor actually pays — free bonus months do not change them — and become available 7 days after a payment is confirmed. Full terms on the{" "}
               <a href="/partner-legal#terms">Partner Terms page</a>.
             </p>
 

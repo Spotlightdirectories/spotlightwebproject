@@ -62,12 +62,14 @@ const MONTHLY_PRICES_NAIRA: Record<string, number> = {
 
 const FAQS = [
   { q: "1. Who can join the Spotlight Partner Programme?", a: "Anyone 18 or older with a valid email, phone number, and Nigerian state/LGA of residence can apply. There's no cost to apply, and no minimum sales quota to maintain your account." },
-  { q: "2. How do I get paid?", a: "You earn 20% of a vendor's first payment and 10% of every renewal payment they make, for as long as they stay subscribed and you remain their referring partner. If someone you referred becomes a partner too, you earn an additional 5% override on their vendor commissions (one level only — this is not a multi-level structure)." },
+  { q: "2. How do I get paid?", a: "You earn 20% of a vendor's first payment and 10% of the payment they make when their plan renews, for as long as they stay subscribed and you remain their referring partner. You earn on both monthly and yearly sales, but yearly sales count toward your bonuses, so push the yearly plan. Commission is worked out on the cash the vendor actually pays: free bonus months do not change it, and a yearly plan bought during the launch offer renews at month 15, which is when your 10% is paid. If someone you referred becomes a partner too, you earn an additional 5% override on their vendor commissions (one level only — this is not a multi-level structure)." },
   { q: "3. When does a commission become available to withdraw?", a: "Commissions start as 'pending' and move to 'available' automatically 7 days after the vendor's payment is confirmed. This hold protects against refunds and payment disputes. You'll see the exact unlock date next to each commission in your dashboard." },
   { q: "4. When and how are payouts processed?", a: "Payouts are processed between the 1st and 5th of each month, by bank transfer to the account you provide when your payout is due. The minimum payout amount is ₦10,000 — balances below that roll over to the next month." },
   { q: "5. What is the monthly bonus?", a: "You earn a flat ₦50,000 bonus for every 50 yearly-plan vendor commissions you generate within the same calendar month. This is tracked automatically and shown as a progress bar on your dashboard." },
   { q: "6. What happens if a vendor refunds or cancels?", a: "Spotlight's refund window for vendors is 7 days from payment. If a vendor refunds within that window, any related pending commission is reversed before it becomes available. Commissions that have already been marked available and paid are not clawed back." },
   { q: "7. Can I close my partner account, and what happens to my commissions?", a: "Yes, anytime, from your dashboard's Account section. Closing hides your account and gives you 14 days to change your mind and restore it. After that the closure is final, and within 30 more days your personal data (contact details, date of birth, location, identity document and login) is permanently erased. Closing does not forfeit commissions already earned: available and paid commissions remain yours regardless of account status. We keep the record of your commissions and payouts, the businesses and partners you registered, and your name and referral code, because we must retain them for accounting and reporting. If a commission is still owed to you, we keep your bank details only until it is paid, then erase them." },
+  { q: "8. What is the Launch Pack?", a: "When you bring 10 paid yearly vendors, Spotlight sends you 2 branded face caps and 2 branded t-shirts to wear while you promote. It is a one-time marketing pack, not a repeating reward. Any later pack is decided by Spotlight management. Only yearly plans count toward the 10." },
+  { q: "9. What offers can I tell vendors about?", a: "Every vendor can list free for life on the On the Map plan, with no card required. Any yearly plan (Standard, Enterprise or Elite) paid on or before 31 December 2026 gets 3 extra months free, for a new purchase or a renewal. Monthly plans do not get the bonus. Always state the offer exactly as written here and never promise anything else." },
 ];
 
 export default function PartnerLegalPage() {
@@ -126,9 +128,12 @@ export default function PartnerLegalPage() {
                 <div className={styles.plBlock}>
                   <h3>1. Commission Structure</h3>
                   <ul>
-                    <li>20% commission on every successful paid vendor registration</li>
-                    <li>10% commission on renewals</li>
+                    <li>20% commission on a vendor&apos;s first payment</li>
+                    <li>10% commission when that vendor&apos;s plan renews. A yearly plan bought during the launch offer includes 3 free months, so its first renewal falls at month 15 and the 10% is paid then</li>
+                    <li>Commission is worked out on the cash the vendor actually pays. Free bonus months do not change it</li>
+                    <li>You earn on both monthly and yearly sales. Yearly sales count toward your bonuses</li>
                     <li>₦50,000 bonus upon reaching 50 yearly-paid vendors in a month</li>
+                    <li>Launch Pack: when you bring 10 paid yearly vendors, Spotlight sends you 2 branded face caps and 2 branded t-shirts, once only. Any later pack is decided by Spotlight management</li>
                   </ul>
                 </div>
 

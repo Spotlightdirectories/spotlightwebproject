@@ -10,7 +10,7 @@
 // deliberate improvement: production's ledger query never selected
 // the `type` column, so the table never showed whether a row was a
 // direct "vendor" commission, an upline "override" (5%), or a
-// monthly "bonus" (₦30,000/50 yearly commissions) — all three types
+// monthly "bonus" (₦50,000/50 yearly commissions) — all three types
 // are real and already being written by the `handle_commission_on_payment`
 // DB trigger (confirmed live 2026-07-31), just invisible in the old
 // admin UI. Added here as a Type column + filter option.
