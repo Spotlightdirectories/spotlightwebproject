@@ -106,10 +106,29 @@ export default function PaymentsTab({ currentRole }: { currentRole: AdminRole })
     }
 
     // 2. Activate the vendor's subscription
-    const expiry =
+    const plainExpiry =
       payment.billing_type === "monthly"
         ? new Date(new Date(now).setMonth(new Date(now).getMonth() + 1))
         : new Date(new Date(now).setFullYear(new Date(now).getFullYear() + 1));
+
+    // Shared expiry rule in the database (adds the 3-month launch bonus to
+    // yearly plans paid up to 31 Dec 2026). Falls back to the plain period
+    // so an approval is never blocked.
+    let expiry = plainExpiry;
+    try {
+      const { data: ruleExpiry } = await (adminSupabase as unknown as {
+        rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: string | null }>;
+      }).rpc("compute_plan_expiry", {
+        p_vendor_id: payment.vendor_id,
+        p_billing: payment.billing_type,
+        p_paid_at: now,
+        p_payment_id: paymentId,
+      });
+      if (ruleExpiry) expiry = new Date(ruleExpiry);
+    } catch (err) {
+      console.error("compute_plan_expiry failed, using plain expiry:", err);
+    }
+    const bonusApplied = expiry.getTime() - plainExpiry.getTime() > 30 * 24 * 60 * 60 * 1000;
 
     // Generate a SPOT ID for paid vendors (P = Paid vendor type).
     // Non-fatal if it fails — activation still proceeds.
@@ -158,6 +177,7 @@ export default function PaymentsTab({ currentRole }: { currentRole: AdminRole })
             billingType: payment.billing_type || "",
             spotId: confirmedSpotId,
             expiresAt: expiry.toISOString(),
+            bonusApplied,
             loginUrl: `${window.location.origin}/login`,
           }),
         }),

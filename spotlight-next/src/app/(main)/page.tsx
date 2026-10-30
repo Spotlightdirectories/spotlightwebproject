@@ -58,7 +58,7 @@ const BENEFITS = [
   { icon: "fa-solid fa-location-dot", title: "Found By Location", desc: "Customers searching near your area find you first — not buried in a generic list." },
   { icon: "fa-solid fa-comment-dots", title: "Direct Contact, No Middleman", desc: "WhatsApp, call, or get directions straight to you — no commission, no waiting on a platform." },
   { icon: "fa-solid fa-chart-line", title: "See Who's Finding You", desc: "Every plan includes a real analytics dashboard — where your visitors search from, what they're looking for." },
-  { icon: "fa-solid fa-sack-dollar", title: "Free To Start", desc: "A genuine 90-day trial with real features — not a locked-down demo. No card required." },
+  { icon: "fa-solid fa-sack-dollar", title: "Free To Start", desc: "Free for life with real features — not a locked-down demo. No card required." },
   { icon: "fa-solid fa-earth-africa", title: "Reach Customers Beyond Your Area", desc: "Search on Spotlight isn't limited to nearby only — customers anywhere in Nigeria can find and reach you." },
   { icon: "fa-solid fa-magnifying-glass", title: "Search Without Signing Up", desc: "Customers can browse and search Spotlight freely — no account needed to find you." },
 ];
@@ -271,7 +271,7 @@ export default function HomePage() {
           </div>
           <p className={styles.ldHeroMicro}>
             <i className="fa-solid fa-bolt"></i>
-            {" "}90-day free trial · No card required
+            {" "}Free for life · No card required
           </p>
         </div>
 

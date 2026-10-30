@@ -246,6 +246,7 @@ function paymentApproved({
   billingType = "",
   spotId = "",
   expiresAt = "",
+  bonusApplied = false,
   loginUrl = "https://spotlightdirectories.com/login",
 }: {
   vendorName?: string;
@@ -253,6 +254,7 @@ function paymentApproved({
   billingType?: string;
   spotId?: string;
   expiresAt?: string;
+  bonusApplied?: boolean;
   loginUrl?: string;
 }): string {
   const body = `
@@ -265,6 +267,7 @@ function paymentApproved({
           (spotId ? infoRow("Your SPOT ID", spotId) : "") +
           infoRow("Valid Until", formatDate(expiresAt))
       )}
+      ${bonusApplied ? alertBox("🎁 Launch bonus added: you get 3 extra months free on your yearly plan, already included in your Valid Until date above.", "info") : ""}
       ${paragraph("You can now complete your profile, add your listings, and start getting discovered by customers.")}
       ${primaryButton("Go to My Dashboard", loginUrl)}
       ${alertBox("Your SPOT ID is your unique business identifier on Spotlight. Keep it safe — you may need it when contacting support.", "info")}
@@ -490,14 +493,14 @@ function welcomeVendor({
   plan?: string;
   loginUrl?: string;
 }): string {
-  const planDisplay = plan ? titleCase(plan) : "Free Trial";
+  const planDisplay = !plan || plan === "free" ? "On the Map (Free)" : titleCase(plan);
 
   const body = `
       ${heading("Welcome to Spotlight Directories 🎉")}
       ${greeting(vendorName)}
       ${paragraph("Your business is now on Spotlight — Nigeria's discovery platform connecting businesses with customers.")}
       ${spotId ? infoTable(infoRow("Your SPOT ID", spotId) + infoRow("Current Plan", planDisplay)) : ""}
-      ${paragraph("Here is how to get the most from your free trial:")}
+      ${paragraph("Here is how to get the most from your free listing:")}
       <ol style="margin:0 0 16px;padding-left:20px;font-size:15px;
                  line-height:1.9;color:#334155;">
         <li>Complete your business profile — name, address, description, photo</li>
@@ -506,7 +509,7 @@ function welcomeVendor({
         <li>Apply for verification to build trust with customers</li>
       </ol>
       ${primaryButton("Complete My Profile", loginUrl)}
-      ${alertBox("Your 90-day free trial starts today. You can upgrade to a paid plan at any time to unlock more features.", "info")}
+      ${alertBox("Your On the Map listing is free for life. Upgrade to a Stand Out plan any time to unlock more features, and pay for a yearly plan before 31 December 2026 to get 3 extra months free.", "info")}
     `;
   return base({ preheader: "Welcome to Spotlight Directories. Let us help your business get found.", body });
 }
@@ -549,9 +552,9 @@ function trialExpiryWarning({
       ${greeting(vendorName)}
       ${paragraph(`Your Spotlight free trial expires on <strong>${expiryDisplay}</strong>. Upgrade now to keep your listing active and continue reaching customers.`)}
       ${infoTable(infoRow("Trial Expires", expiryDisplay))}
-      ${paragraph("After your trial ends, your profile will no longer be visible to customers until you upgrade to a paid plan.")}
+      ${paragraph("After your trial ends, your listing stays live on the free On the Map plan with 2 products and 2 services. Upgrade to keep your extra listings and features.")}
       ${ctaButton("Upgrade My Plan", upgradeUrl)}
-      ${alertBox("Upgrading before your trial expires means zero downtime — your listing stays live without interruption.", "warning")}
+      ${alertBox("Upgrade with a yearly plan before 31 December 2026 and get 3 extra months free.", "warning")}
     `;
   return base({ preheader: `Your Spotlight free trial ends in ${daysLeft} days. Upgrade to keep your listing active.`, body });
 }

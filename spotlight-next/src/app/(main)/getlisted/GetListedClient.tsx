@@ -51,31 +51,30 @@ import styles from "./getlisted.module.css";
 const PLANS = [
   {
     id: "free",
-    name: "Basic",
+    name: "On the Map",
     for: "For solo artisans & traders",
     monthlyPrice: "₦0",
     yearlyPrice: "₦0",
     yearlyNote: "Free to start — no card needed",
-    badge: "90-Day Free Trial",
+    badge: "Free for life",
     badgeTrial: true,
     cardTrial: true,
     btnClass: "trial",
-    btnText: "Start Free Trial",
+    btnText: "Get Listed Free",
     micro: "No credit card · Takes 5 minutes",
     filledDots: 1,
     locationLabel: "1 location",
-    everythingLabel: "Your first 90 days include:",
+    everythingLabel: "Free for life, includes:",
     features: [
-      "List up to 5 products or services (2 after your 90-day trial)",
+      "List 2 products and 2 services",
       "Mini web page for products & services",
-      "1 social media handle",
-      "Photo gallery — 3 images",
+      "Photo gallery — 1 image",
       "Clickable WhatsApp number",
       "Google Map & Directions",
       "Eligible for a verification badge",
       "Up to 50-word description",
     ],
-    trialNote: "After 90 days, your listing stays free with core features — upgrade anytime to keep the extras.",
+    trialNote: "Free for life with core features — upgrade to a Stand Out plan anytime for more.",
   },
   {
     id: "standard",
@@ -90,7 +89,7 @@ const PLANS = [
     btnText: "Choose Standard",
     filledDots: 1,
     locationLabel: "1 location",
-    everythingLabel: "Everything in Basic, plus:",
+    everythingLabel: "Everything in On the Map, plus:",
     features: [
       "List up to 25 products or services",
       "Profile photo, cover image & logo",
@@ -323,7 +322,7 @@ export default function GetListedClient() {
 
           <div className={styles.trialBanner}>
             <i className="fa-solid fa-bolt"></i>
-            Every business starts with a <strong>90-day free trial</strong> — no card required, live in minutes.
+            Every business starts <strong>free for life</strong> — no card required, live in minutes. Pay for a yearly plan before 31 Dec 2026 and get <strong>3 extra months free</strong>.
           </div>
 
           {/* Bug fix, 2026-08-23 per Cyril: this toggle was showing

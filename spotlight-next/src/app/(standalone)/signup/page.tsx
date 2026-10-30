@@ -13,7 +13,7 @@
 //    - plan from localStorage (selectedPlan)
 //    - billing from localStorage (billingType)
 //    - referral partner resolved from referral_code in localStorage
-//    - trial_started_at set for free plans
+//    - no trial: free signups start on the free On the Map plan (trial_started_at stays null)
 //    - terms_accepted = true
 // 4. Welcome email sent via Edge Function
 // 5. Success message shown → vendor clicks "Log in" to continue
@@ -143,7 +143,7 @@ export default function SignupPage() {
       plan_tier: selectedPlan,
       billing_cycle: billingType,
       subscription_status: selectedPlan === "free" ? "free" : "pending",
-      trial_started_at: selectedPlan === "free" ? new Date().toISOString() : null,
+      trial_started_at: null, // No new-signup trial from go-live: free vendors start on the On the Map plan
       is_premium: selectedPlan !== "free",
       terms_accepted: true,
       terms_accepted_at: new Date().toISOString(),
