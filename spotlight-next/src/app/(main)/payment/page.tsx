@@ -45,6 +45,7 @@ type Vendor = {
   plan_tier: string | null;
   subscription_status: string | null;
   billing_cycle: string | null;
+  expires_at?: string | null;
 };
 
 const PAID_PLANS = ["standard", "enterprise", "elite", "custom"];
@@ -98,7 +99,7 @@ export default function PaymentPage() {
 
       const { data: v } = await supabase
         .from("vendors")
-        .select("id, plan_tier, subscription_status, billing_cycle, created_at")
+        .select("id, plan_tier, subscription_status, billing_cycle, created_at, expires_at")
         .eq("auth_user_id", user.id)
         .maybeSingle();
 
@@ -145,7 +146,18 @@ export default function PaymentPage() {
       const midCycle = PAID_PLANS.includes((v.plan_tier || "").toLowerCase()) && v.subscription_status === "active" && upgradingPlan;
       setIsMidCycleUpgrade(midCycle);
 
-      if (PAID_PLANS.includes((v.plan_tier || "").toLowerCase()) && v.subscription_status === "active" && !upgradingPlan) {
+      // Renewal of the SAME plan: allowed in the last 30 days of the current term.
+      // The new term starts when the current one ends, so no paid days are lost
+      // (the database rule compute_plan_expiry does that).
+      const msLeft = v.expires_at ? new Date(v.expires_at).getTime() - Date.now() : null;
+      const renewingSamePlan =
+        PAID_PLANS.includes((v.plan_tier || "").toLowerCase()) &&
+        v.subscription_status === "active" &&
+        !upgradingPlan &&
+        !!selectedPlan && selectedPlan === v.plan_tier &&
+        msLeft !== null && msLeft > 0 && msLeft <= 30 * 24 * 60 * 60 * 1000;
+
+      if (PAID_PLANS.includes((v.plan_tier || "").toLowerCase()) && v.subscription_status === "active" && !upgradingPlan && !renewingSamePlan) {
         router.replace("/vendordashboard");
         return;
       }
@@ -365,10 +377,16 @@ export default function PaymentPage() {
       return;
     }
 
-    const { error: statusError } = await supabase
-      .from("vendors")
-      .update({ subscription_status: "pending" })
-      .eq("id", vendor.id);
+    // A vendor who is already ACTIVE on a paid plan (renewing or upgrading) keeps their
+    // active status while the transfer is checked, so they never lose their current
+    // plan, listings or visibility. Only a vendor who is not active goes to "pending".
+    const { error: statusError } =
+      vendor.subscription_status === "active"
+        ? { error: null }
+        : await supabase
+            .from("vendors")
+            .update({ subscription_status: "pending" })
+            .eq("id", vendor.id);
 
     if (statusError) {
       console.error("Failed to mark subscription as pending:", statusError);

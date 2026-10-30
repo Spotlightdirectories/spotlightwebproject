@@ -279,6 +279,8 @@ export default function GetListedClient() {
   // ---------------------------------------------------------------
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const [currentPlanActivePaid, setCurrentPlanActivePaid] = useState(false);
+  // True in the last 30 days of a paid term: the vendor may renew the same plan early.
+  const [canRenewCurrent, setCanRenewCurrent] = useState(false);
 
   // Default-Free-tier-only view, 2026-08 per Cyril: a first-time,
   // anonymous visitor sees ONLY the free plan by default. The full
@@ -311,7 +313,7 @@ export default function GetListedClient() {
 
       const { data: vendor } = await supabase
         .from("vendors")
-        .select("plan_tier, subscription_status")
+        .select("plan_tier, subscription_status, expires_at")
         .eq("auth_user_id", user.id)
         .maybeSingle();
 
@@ -321,6 +323,11 @@ export default function GetListedClient() {
       setCurrentPlanId(planTier);
       setCurrentPlanActivePaid(
         PAID_PLANS.includes(planTier) && vendor.subscription_status === "active"
+      );
+      const msLeft = vendor.expires_at ? new Date(vendor.expires_at).getTime() - Date.now() : null;
+      setCanRenewCurrent(
+        PAID_PLANS.includes(planTier) && vendor.subscription_status === "active" &&
+        msLeft !== null && msLeft > 0 && msLeft <= 30 * 24 * 60 * 60 * 1000
       );
     })();
   }, [searchParams]);
@@ -494,7 +501,11 @@ export default function GetListedClient() {
 
               {plan.trialNote && <p className={styles.trialNote}>{plan.trialNote}</p>}
 
-              {relation === "current" ? (
+              {relation === "current" && canRenewCurrent ? (
+                <button type="button" className={`${styles.btn} ${styles[`btn${plan.btnClass.charAt(0).toUpperCase() + plan.btnClass.slice(1)}`]}`} onClick={() => handlePlanClick(plan.id)}>
+                  Renew My Plan
+                </button>
+              ) : relation === "current" ? (
                 <button type="button" className={`${styles.btn} ${styles.btnCurrent}`} disabled>
                   Your Current Plan
                 </button>
@@ -554,7 +565,9 @@ export default function GetListedClient() {
                       plan.cardHighlight && <span className={styles.colBadge}>Most popular</span>
                     )}
                     <h3>{plan.name}</h3>
-                    {relation === "current" ? (
+                    {relation === "current" && canRenewCurrent ? (
+                      <button type="button" className={styles.planBtn} onClick={() => handlePlanClick(plan.id)}>Renew</button>
+                    ) : relation === "current" ? (
                       <button type="button" className={`${styles.planBtn} ${styles.planBtnCurrent}`} disabled>
                         Current Plan
                       </button>

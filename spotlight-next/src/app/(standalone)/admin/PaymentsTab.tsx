@@ -132,7 +132,21 @@ export default function PaymentsTab({ currentRole }: { currentRole: AdminRole })
     } catch (err) {
       console.error("compute_plan_expiry failed, using plain expiry:", err);
     }
-    const bonusApplied = expiry.getTime() - plainExpiry.getTime() > 30 * 24 * 60 * 60 * 1000;
+    // Ask the database whether the launch bonus applies (a renewal that starts later than
+    // today would otherwise look like a bonus).
+    let bonusApplied = false;
+    try {
+      const { data: bonusFlag } = await (adminSupabase as unknown as {
+        rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: boolean | null }>;
+      }).rpc("plan_bonus_applies", {
+        p_billing: payment.billing_type,
+        p_paid_at: now,
+        p_eligible_at: payment.created_at,
+      });
+      bonusApplied = bonusFlag === true;
+    } catch (err) {
+      console.error("plan_bonus_applies failed:", err);
+    }
 
     // Generate a SPOT ID for paid vendors (P = Paid vendor type).
     // Non-fatal if it fails — activation still proceeds.
@@ -244,7 +258,13 @@ export default function PaymentsTab({ currentRole }: { currentRole: AdminRole })
       return;
     }
 
-    await adminSupabase.from("vendors").update({ subscription_status: "failed" }).eq("id", payment.vendor_id);
+    // Mark the account "failed" only if it is not currently active. A vendor who already has a
+    // paid plan running (a rejected renewal or upgrade) keeps their active plan untouched.
+    await adminSupabase
+      .from("vendors")
+      .update({ subscription_status: "failed" })
+      .eq("id", payment.vendor_id)
+      .neq("subscription_status", "active");
 
     try {
       await fetch("https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/send-email", {
