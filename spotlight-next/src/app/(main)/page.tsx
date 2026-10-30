@@ -285,7 +285,7 @@ export default function HomePage() {
           </div>
           <p className={styles.ldHeroMicro}>
             <i className="fa-solid fa-bolt"></i>
-            {" "}Free for life · No card required
+            {" "}2 products or services, free for life · No card required
           </p>
           {!offerEnded && isVendor === false && (
             <a href="/getlisted" className={styles.ldBonus}>

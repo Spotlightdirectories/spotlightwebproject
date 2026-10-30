@@ -140,7 +140,7 @@ const PLANS = [
       "Eligible for a verification badge",
       "Up to 50-word description",
     ],
-    trialNote: "Free for life with core features — upgrade to a Stand Out plan anytime for more.",
+    trialNote: "Free for life with core features — upgrade to a paid plan anytime for more.",
   },
   {
     id: "standard",

@@ -28,6 +28,7 @@ type PaymentRow = {
   plan: string | null;
   billing_type: string | null;
   status: string | null;
+  created_at: string | null;
   transfer_proof_url: string | null;
   vendors: { id: string; name: string | null; email: string | null } | null;
 };
@@ -42,7 +43,7 @@ export default function PaymentsTab({ currentRole }: { currentRole: AdminRole })
   const loadPayments = useCallback(async () => {
     const { data, error } = await adminSupabase
       .from("vendor_payments")
-      .select("id, vendor_id, plan, billing_type, status, transfer_proof_url, vendors ( id, name, email )")
+      .select("id, vendor_id, plan, billing_type, status, created_at, transfer_proof_url, vendors ( id, name, email )")
       .eq("payment_method", "bank")
       .eq("status", "pending")
       .returns<PaymentRow[]>();
@@ -65,7 +66,7 @@ export default function PaymentsTab({ currentRole }: { currentRole: AdminRole })
 
     const { data: payment, error } = await adminSupabase
       .from("vendor_payments")
-      .select("id, vendor_id, plan, billing_type, status, vendors ( id, name, email )")
+      .select("id, vendor_id, plan, billing_type, status, created_at, vendors ( id, name, email )")
       .eq("id", paymentId)
       .single()
       .returns<PaymentRow>();
@@ -123,6 +124,9 @@ export default function PaymentsTab({ currentRole }: { currentRole: AdminRole })
         p_billing: payment.billing_type,
         p_paid_at: now,
         p_payment_id: paymentId,
+        // Payment date = when the vendor submitted the transfer, so a transfer made
+        // on or before 31 Dec 2026 still gets the bonus even if approved in January.
+        p_eligible_at: payment.created_at,
       });
       if (ruleExpiry) expiry = new Date(ruleExpiry);
     } catch (err) {

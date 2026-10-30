@@ -511,7 +511,7 @@ function welcomeVendor({
         <li>Apply for verification to build trust with customers</li>
       </ol>
       ${primaryButton("Complete My Profile", loginUrl)}
-      ${alertBox("Your On the Map listing is free for life. Upgrade to a Stand Out plan any time to unlock more features, and pay for a yearly plan before 31 December 2026 to get 3 extra months free.", "info")}
+      ${alertBox("Your On the Map listing is free for life. Upgrade to a paid plan any time to unlock more features, and pay for a yearly plan before 31 December 2026 to get 3 extra months free.", "info")}
     `;
   return base({ preheader: "Welcome to Spotlight Directories. Let us help your business get found.", body });
 }

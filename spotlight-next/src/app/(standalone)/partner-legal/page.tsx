@@ -364,7 +364,13 @@ export default function PartnerLegalPage() {
                     <li><strong>Don&apos;t</strong> promise features that don&apos;t exist yet (e.g. delivery arrangement, scheduling tools)</li>
                     <li><strong>Don&apos;t</strong> spam vendors with repeated messages</li>
                     <li><strong>Don&apos;t</strong> misrepresent how commissions or the monthly bonus are calculated</li>
+                    <li><strong>Do</strong> state the offers exactly as written: a free On the Map listing for life, and 3 months free on any yearly plan paid on or before 31 December 2026</li>
                   </ul>
+                </div>
+
+                <div className={styles.plBlock}>
+                  <h3>5. Branded Caps &amp; T-Shirts</h3>
+                  <p>Partners who bring 10 paid yearly vendors receive 2 branded Spotlight face caps and 2 branded t-shirts, once only. Wear them when you meet vendors and keep them clean and presentable, so people recognise Spotlight. Don&apos;t alter the logo on them, and don&apos;t sell them. Any later pack is decided by Spotlight management.</p>
                 </div>
               </div>
             )}
