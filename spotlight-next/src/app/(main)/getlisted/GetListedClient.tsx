@@ -46,7 +46,73 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Footer from "@/components/Footer";
+import { useIsLoggedInVendor } from "@/lib/useIsLoggedInVendor";
 import styles from "./getlisted.module.css";
+
+// ---------------------------------------------------------------
+// LAUNCH OFFER BANNER — 3 free months on any yearly plan paid up to the
+// end of 31 Dec 2026 (Lagos time). Live countdown; removes itself once
+// the offer is over. Must match compute_plan_expiry() in the database.
+// ---------------------------------------------------------------
+const OFFER_END_MS = new Date("2027-01-01T00:00:00+01:00").getTime();
+
+function LaunchOffer({ showFullGrid }: { showFullGrid: boolean }) {
+  const [now, setNow] = useState<number | null>(null);
+
+  useEffect(() => {
+    setNow(Date.now());
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const left = now === null ? null : OFFER_END_MS - now;
+  if (left !== null && left <= 0) return null;
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const d = left === null ? 0 : Math.floor(left / 86400000);
+  const h = left === null ? 0 : Math.floor((left % 86400000) / 3600000);
+  const m = left === null ? 0 : Math.floor((left % 3600000) / 60000);
+  const s = left === null ? 0 : Math.floor((left % 60000) / 1000);
+
+  return (
+    <div className={styles.offer}>
+      <div className={styles.offerTop}>
+        <span className={styles.offerGift}><i className="fa-solid fa-gift"></i></span>
+        <span className={styles.offerKicker}>Launch offer · ends 31 December 2026</span>
+      </div>
+
+      <h2 className={styles.offerTitle}>
+        Pay for 12 months. <span className={styles.offerHighlight}>Get 15.</span>
+      </h2>
+      <p className={styles.offerSub}>
+        <strong>3 months FREE</strong> on every yearly plan — Standard, Enterprise or Elite — when you pay on or before <strong>31/12/2026</strong>.
+      </p>
+
+      {left !== null && (
+        <div className={styles.offerClock} aria-label="Time left on the launch offer">
+          <div><b>{d}</b><span>days</span></div>
+          <div><b>{pad(h)}</b><span>hours</span></div>
+          <div><b>{pad(m)}</b><span>mins</span></div>
+          <div><b>{pad(s)}</b><span>secs</span></div>
+        </div>
+      )}
+
+      <ul className={styles.offerList}>
+        <li><i className="fa-solid fa-circle-check"></i> 15 months for the price of 12 — about <strong>40% cheaper per month</strong> than paying monthly</li>
+        <li><i className="fa-solid fa-circle-check"></i> Standard works out at just <strong>₦1,799 a month</strong> (₦26,982 for 15 months)</li>
+        <li><i className="fa-solid fa-circle-check"></i> Stand out from free listings: 25 products and 25 services on Standard (up to 100 of each on Elite), business video, bigger galleries, and branches on Enterprise and Elite</li>
+        <li><i className="fa-solid fa-circle-check"></i> The 3 bonus months cost you nothing — they are added straight to your expiry date</li>
+      </ul>
+
+      {showFullGrid ? (
+        <p className={styles.offerCta}><i className="fa-solid fa-arrow-down"></i> Pick a plan below and choose <strong>Yearly</strong> to claim your 3 free months</p>
+      ) : (
+        <a href="/signup" className={styles.offerBtn}>Get listed free — then upgrade to claim your 3 months</a>
+      )}
+      <p className={styles.offerFine}>Applies to any yearly plan paid up to 31 Dec 2026. Monthly plans are not included.</p>
+    </div>
+  );
+}
 
 const PLANS = [
   {
@@ -91,7 +157,7 @@ const PLANS = [
     locationLabel: "1 location",
     everythingLabel: "Everything in On the Map, plus:",
     features: [
-      "List up to 25 products or services",
+      "List up to 25 products and 25 services",
       "Profile photo, cover image & logo",
       "Photo gallery — 10 images",
       "Business video — up to 30 seconds",
@@ -112,7 +178,7 @@ const PLANS = [
     locationLabel: "Up to 10 locations",
     everythingLabel: "Everything in Standard, plus:",
     features: [
-      "List up to 50 products or services",
+      "List up to 50 products and 50 services",
       "Up to 10 business branches",
       "Own address & WhatsApp number per branch",
       "Photo gallery — 20 images",
@@ -134,7 +200,7 @@ const PLANS = [
     locationLabel: "Up to 30 locations",
     everythingLabel: "Everything in Enterprise, plus:",
     features: [
-      "List up to 100 products or services",
+      "List up to 100 products and 100 services",
       "Up to 30 business branches",
       "Photo gallery — 30 images",
       "Business video — up to 90 seconds",
@@ -158,7 +224,7 @@ const PLANS = [
     locationLabel: "Unlimited locations",
     everythingLabel: "Everything in Elite, plus:",
     features: [
-      "Unlimited products or services",
+      "Unlimited products and services",
       "Unlimited business branches",
       "Unlimited social media handles",
       "Up to 250-word description",
@@ -171,7 +237,7 @@ const COMPARE_ROWS = [
   { label: "Business name", values: ["1", "1", "1", "1", "1"] },
   { label: "Business address", values: ["1", "1", "Up to 10", "Up to 30", "Unlimited"] },
   { label: "Click-to-call & WhatsApp", values: ["1 number", "1 number", "Up to 10", "Up to 30", "Unlimited"] },
-  { label: "Products & services you can list", values: ["5(2)", "25", "50", "100", "Unlimited"] },
+  { label: "Products & services you can list (each)", values: ["2", "25", "50", "100", "Unlimited"] },
   { label: "Business category", values: ["✓", "✓", "Same for all branches", "Same for all branches", "Same for all branches"] },
   { label: "Mini web page for goods & services", values: ["✓", "✓", "✓", "✓", "✓"] },
   { label: "Business description", values: ["50 words", "100 words", "150 words", "200 words", "250 words"] },
@@ -200,6 +266,9 @@ export default function GetListedClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [yearly, setYearly] = useState(true);
+  // Existing logged-in vendors only see the launch offer from their dashboard
+  // (or when they arrive here via its Upgrade Plan button).
+  const isVendor = useIsLoggedInVendor();
 
   // ---------------------------------------------------------------
   // PLAN AWARENESS — only populated when a logged-in vendor arrives
@@ -217,6 +286,12 @@ export default function GetListedClient() {
   const isUpgradeContext = searchParams.get("context") === "upgrade";
   const showFullGrid = isUpgradeContext;
   const visiblePlans = showFullGrid ? PLANS : PLANS.filter((p) => p.id === "free");
+
+  // An existing vendor who lands on the plain "get listed" pitch (not the
+  // dashboard's Upgrade Plan view) is already listed -- send them to their dashboard.
+  useEffect(() => {
+    if (isVendor && !isUpgradeContext) router.replace("/vendordashboard");
+  }, [isVendor, isUpgradeContext, router]);
 
   useEffect(() => {
     if (searchParams.get("context") !== "upgrade") return;
@@ -295,6 +370,15 @@ export default function GetListedClient() {
       if (!confirmed) return;
     }
 
+    // A logged-in vendor tapping the free plan is already on it -- back to the dashboard.
+    if (planId === "free") {
+      const { data: { user: freeUser } } = await supabase.auth.getUser();
+      if (freeUser) {
+        router.push("/vendordashboard");
+        return;
+      }
+    }
+
     localStorage.setItem("selectedPlan", planId);
     localStorage.setItem("billingType", yearly ? "yearly" : "monthly");
 
@@ -322,8 +406,10 @@ export default function GetListedClient() {
 
           <div className={styles.trialBanner}>
             <i className="fa-solid fa-bolt"></i>
-            Every business starts <strong>free for life</strong> — no card required, live in minutes. Pay for a yearly plan before 31 Dec 2026 and get <strong>3 extra months free</strong>.
+            Every business starts <strong>free for life</strong> — no card required, live in minutes.
           </div>
+
+          {(showFullGrid || isVendor === false) && <LaunchOffer showFullGrid={showFullGrid} />}
 
           {/* Bug fix, 2026-08-23 per Cyril: this toggle was showing
               even in the default Free-only view, where it's

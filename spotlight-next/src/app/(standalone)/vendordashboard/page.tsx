@@ -16,6 +16,7 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useIsMobile } from "@/lib/useIsMobile";
+import LaunchOfferCompact from "@/components/LaunchOfferCompact";
 import { ONBOARDING_VIDEOS } from "@/lib/onboardingVideos";
 import ProfileTab from "./ProfileTab";
 import ProductsTab from "./ProductsTab";
@@ -583,6 +584,7 @@ function VendorDashboardInner() {
 
             {/* RIGHT SIDE */}
             <div className="vd-overview-right">
+              <LaunchOfferCompact onUpgrade={upgrade} />
               <div className="vd-top-cards">
 
                 {/* PLAN */}

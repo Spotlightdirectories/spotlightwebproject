@@ -19,16 +19,23 @@
 // 5. Success message shown → vendor clicks "Log in" to continue
 // ===============================================================
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { EmailTemplates } from "@/lib/emailTemplates";
 import { useIsMobile } from "@/lib/useIsMobile";
+import { useIsLoggedInVendor } from "@/lib/useIsLoggedInVendor";
 import { ONBOARDING_VIDEOS } from "@/lib/onboardingVideos";
 import styles from "./signup.module.css";
 
 export default function SignupPage() {
   const router = useRouter();
+  // Someone already logged in with a vendor account does not need to sign up again.
+  // (Checked once on arrival, so it never interrupts a signup in progress.)
+  const alreadyVendor = useIsLoggedInVendor();
+  useEffect(() => {
+    if (alreadyVendor) router.replace("/vendordashboard");
+  }, [alreadyVendor, router]);
   const isMobile = useIsMobile();
   const videoUrl = isMobile ? ONBOARDING_VIDEOS.fullWalkthrough.mobile : ONBOARDING_VIDEOS.fullWalkthrough.desktop;
 

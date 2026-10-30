@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Footer from "@/components/Footer";
 import HomeCategorySearch from "@/components/HomeCategorySearch";
 import PromoBanner from "@/components/PromoBanner";
+import { useIsLoggedInVendor } from "@/lib/useIsLoggedInVendor";
 import styles from "./homepage.module.css";
 
 // Scroll-reveal hook, added 2026-08-23 per Cyril: watches one section
@@ -117,6 +118,19 @@ export default function HomePage() {
   // is created once and would otherwise see a stale, always-false
   // value of isPaused if it read the state variable directly.
   const [isPaused, setIsPaused] = useState(false);
+
+  // Launch offer banner: 3 free months on yearly plans paid up to the end of
+  // 31 Dec 2026 (Lagos time). Hidden automatically once the offer ends.
+  const [offerDaysLeft, setOfferDaysLeft] = useState<number | null>(null);
+  const [offerEnded, setOfferEnded] = useState(false);
+  // Hidden from existing logged-in vendors; they see the offer on their dashboard.
+  const isVendor = useIsLoggedInVendor();
+  useEffect(() => {
+    const end = new Date("2027-01-01T00:00:00+01:00").getTime();
+    const left = Math.ceil((end - Date.now()) / (24 * 60 * 60 * 1000));
+    if (left <= 0) setOfferEnded(true);
+    else setOfferDaysLeft(left);
+  }, []);
   const isPausedRef = useRef(false);
 
   const togglePause = useCallback(() => {
@@ -240,7 +254,7 @@ export default function HomePage() {
               the navbar entirely (see Navbar.tsx) -- moved here to
               sit alongside search as its own "take action now" row,
               matching the locked navbar sketch. */}
-          <a href="/getlisted" className={styles.ldTopSearchCta}>Get Listed Free</a>
+          <a href={isVendor ? "/vendordashboard" : "/getlisted"} className={styles.ldTopSearchCta}>{isVendor ? "My Dashboard" : "Get Listed Free"}</a>
           <div className={styles.ldTopSearchField}>
             <HomeCategorySearch />
           </div>
@@ -266,13 +280,25 @@ export default function HomePage() {
             Whatever you sell or fix or build — Spotlight helps nearby customers find you, contact you, and choose you.
           </p>
           <div className={styles.ldHeroCtas}>
-            <a href="/getlisted" className={`${styles.ldBtn} ${styles.ldBtnPrimary}`}>Get Listed Free</a>
+            <a href={isVendor ? "/vendordashboard" : "/getlisted"} className={`${styles.ldBtn} ${styles.ldBtnPrimary}`}>{isVendor ? "Go to My Dashboard" : "Get Listed Free"}</a>
             <a href="/discover" className={`${styles.ldBtn} ${styles.ldBtnOutline}`}>Advanced Search</a>
           </div>
           <p className={styles.ldHeroMicro}>
             <i className="fa-solid fa-bolt"></i>
             {" "}Free for life · No card required
           </p>
+          {!offerEnded && isVendor === false && (
+            <a href="/getlisted" className={styles.ldBonus}>
+              <span className={styles.ldBonusIcon}><i className="fa-solid fa-gift"></i></span>
+              <span className={styles.ldBonusText}>
+                <span className={styles.ldBonusKicker}>Launch offer</span>
+                <span className={styles.ldBonusMain}>Get <b>3 months FREE</b> on any yearly plan</span>
+                <span className={styles.ldBonusSmall}>
+                  Pay before 31 Dec 2026{offerDaysLeft !== null ? ` · only ${offerDaysLeft} day${offerDaysLeft === 1 ? "" : "s"} left` : ""}
+                </span>
+              </span>
+            </a>
+          )}
         </div>
 
         <div className={styles.ldHeroSlideshow}>
@@ -482,7 +508,7 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-          <a href="/getlisted" className={`${styles.ldBtn} ${styles.ldBtnPrimary}`}>List Your Business Free</a>
+          <a href={isVendor ? "/vendordashboard" : "/getlisted"} className={`${styles.ldBtn} ${styles.ldBtnPrimary}`}>{isVendor ? "Go to My Dashboard" : "List Your Business Free"}</a>
         </div>
       </section>
 

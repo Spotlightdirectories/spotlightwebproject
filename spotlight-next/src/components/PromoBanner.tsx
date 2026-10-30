@@ -17,11 +17,14 @@
 
 import { useState, useEffect } from "react";
 import styles from "./PromoBanner.module.css";
+import { useIsLoggedInVendor } from "@/lib/useIsLoggedInVendor";
 
 const DISMISS_KEY = "spotlight_promo_dismissed";
 
 export default function PromoBanner() {
   const [visible, setVisible] = useState(false);
+  // Existing logged-in vendors are already listed -- never show them the "get listed" pitch.
+  const isVendor = useIsLoggedInVendor();
 
   useEffect(() => {
     const dismissed = localStorage.getItem(DISMISS_KEY);
@@ -37,7 +40,7 @@ export default function PromoBanner() {
     setVisible(false);
   }
 
-  if (!visible) return null;
+  if (!visible || isVendor !== false) return null;
 
   return (
     <div className={styles.overlay} onClick={handleClose}>
