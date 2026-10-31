@@ -1162,3 +1162,27 @@ performance-based deal, 12-month credit period, and a database marker to flag th
 is ON HOLD until further notice. Do NOT build it, and do not start it on your own.
 Keep it separate from commission partners (20% first payment / 10% renewals / 5% override),
 which are built and live. Resume only when Cyril gives the exact terms and says go ahead.
+
+## Homepage ideas — NOT BUILT, decided 2026-10-31 (think out properly first, no rush)
+Cyril's order of work: first push the 100 video adverts and boost ads on LinkedIn and Google
+Ads. Only after that decide on the two homepage ideas below. Do NOT build either on your own.
+
+1. "Fresh on Spotlight" listings grid under the hero (marketplace style, like Gumtree/Jiji).
+   - Start as one row of up to 6-8 real items WITH photos; sponsored items first, tagged "Sponsored".
+   - Grow into a full grid with filters (state, category) and "load more" once there are about
+     40-60 items with photos. On 2026-10-31 the live site had only 6 visible products (all with
+     photos) and 20 visible services across 30 active vendors, so a full grid would look empty.
+   - Hero and slideshow stay for now (they recruit vendors). Later the hero can shrink to a slim
+     search bar plus the launch offer.
+   - The existing search functions and sponsored ranking can be reused; the new part is one
+     home page section.
+
+2. Homepage video slideshow slots sold to vendors (real business videos).
+   - Cyril agrees it should be monetised. Preferred form: a new TOP sponsorship tier (working name
+     "Homepage Spotlight"), priced above the current top tier, not a separate product.
+   - Rules to settle: admin approval of every video; short clips (15-20 seconds); still image first,
+     play on tap or on good connection (phone data and Lighthouse); number of slots and rotation;
+     "Sponsored" or "Featured" label on each slide; own content fills empty slots.
+   - LAUNCH PLAN: announce it inside the advert videos on the launch date of the video slideshows,
+     so interested vendors can BOOK their space BEFORE the launch date. This means a pre-booking
+     way (waiting list or early booking) is needed before launch. Not designed yet.
