@@ -394,6 +394,16 @@ function VendorDashboardInner() {
   // page.tsx module comment for the full reasoning.
   const upgrade = () => { window.location.href = "/getlisted?context=upgrade"; };
 
+  const planKey = String(vendor?.plan_tier || "").toLowerCase();
+  const isPaidPlan = ["standard", "enterprise", "elite"].includes(planKey) && !!vendor?.expires_at;
+  const daysLeftPlan = isPaidPlan ? Math.ceil((new Date(String(vendor?.expires_at)).getTime() - Date.now()) / 86400000) : null;
+  const canRenewNow = isPaidPlan && daysLeftPlan !== null && daysLeftPlan <= 30;
+  const planDisplayName = planKey === "free" ? "On the Map" : (vendor?.plan_tier || "—");
+  const validUntilText = isPaidPlan
+    ? `Valid until ${new Date(String(vendor?.expires_at)).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}` +
+      (daysLeftPlan !== null ? (daysLeftPlan > 0 ? ` (${daysLeftPlan} day${daysLeftPlan === 1 ? "" : "s"} left)` : " (expired)") : "")
+    : "";
+
   const sec = (tab: TabKey) => `vd-section${activeTab === tab ? " active" : ""}`;
 
   return (
@@ -461,8 +471,11 @@ function VendorDashboardInner() {
 
           <div className="vd-plan-card">
             <p className="vd-plan-label">Current Plan</p>
-            <p id="vdSidebarPlan">{vendor.plan_tier || "—"}</p>
-            <button className="vd-upgrade-btn" onClick={upgrade}>Upgrade</button>
+            <p id="vdSidebarPlan">{planDisplayName}</p>
+            {validUntilText && (
+              <p style={{ fontSize: "0.75rem", margin: "2px 0 8px", color: canRenewNow ? "#d97706" : "inherit", opacity: canRenewNow ? 1 : 0.8 }}>{validUntilText}</p>
+            )}
+            <button className="vd-upgrade-btn" onClick={upgrade}>{canRenewNow ? "Renew My Plan" : isPaidPlan ? "Change Plan" : "Upgrade"}</button>
           </div>
         </div>
       </aside>
@@ -593,9 +606,18 @@ function VendorDashboardInner() {
                     <div className="vd-plan-icon"><i className="fa-solid fa-bolt"></i></div>
                     <div className="vd-plan-heading">
                       <p className="vd-card-label vd-plan-label-top">Current Plan</p>
-                      <h3>{vendor.plan_tier || "—"}</h3>
+                      <h3>{planDisplayName}</h3>
                     </div>
                   </div>
+
+                  {validUntilText && (
+                    <div style={{ marginTop: 12 }}>
+                      <p style={{ fontWeight: 600, color: canRenewNow ? "#d97706" : "inherit", margin: "0 0 8px" }}>{validUntilText}</p>
+                      {canRenewNow && (
+                        <button className="vd-trial-upgrade-btn" onClick={upgrade}>Renew My Plan</button>
+                      )}
+                    </div>
+                  )}
 
                   {vendor.plan_tier === "free" && vendor.trial_started_at && trialText && (
                     <div className={`vd-trial-box${trialText.ended ? " vd-trial-ended" : ""}`}>
@@ -609,9 +631,9 @@ function VendorDashboardInner() {
 
                 {/* UPGRADE CTA */}
                 <div className="vd-card vd-cta-dark">
-                  <h2 className="vd-cta-title">Upgrade</h2>
-                  <p className="vd-cta-text">Unlock access to more media, video and social links.</p>
-                  <button className="vd-upgrade-btn vd-cta-btn" onClick={upgrade}>Compare Plans</button>
+                  <h2 className="vd-cta-title">{canRenewNow ? "Renew" : "Upgrade"}</h2>
+                  <p className="vd-cta-text">{canRenewNow ? "Renew now and keep every product, service and media item visible. Time left on your plan is added to your renewal." : "Unlock access to more media, video and social links."}</p>
+                  <button className="vd-upgrade-btn vd-cta-btn" onClick={upgrade}>{canRenewNow ? "Renew My Plan" : "Compare Plans"}</button>
                 </div>
               </div>
 
