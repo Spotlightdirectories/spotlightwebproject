@@ -279,7 +279,7 @@ export default function GetListedClient() {
   // ---------------------------------------------------------------
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const [currentPlanActivePaid, setCurrentPlanActivePaid] = useState(false);
-  // True in the last 30 days of a paid term: the vendor may renew the same plan early.
+  // True in the last 90 days of a paid term: the vendor may renew the same plan early.
   const [canRenewCurrent, setCanRenewCurrent] = useState(false);
 
   // Default-Free-tier-only view, 2026-08 per Cyril: a first-time,
@@ -327,7 +327,7 @@ export default function GetListedClient() {
       const msLeft = vendor.expires_at ? new Date(vendor.expires_at).getTime() - Date.now() : null;
       setCanRenewCurrent(
         PAID_PLANS.includes(planTier) && vendor.subscription_status === "active" &&
-        msLeft !== null && msLeft > 0 && msLeft <= 30 * 24 * 60 * 60 * 1000
+        msLeft !== null && msLeft > 0 && msLeft <= 90 * 24 * 60 * 60 * 1000
       );
     })();
   }, [searchParams]);

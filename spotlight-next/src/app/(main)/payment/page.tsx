@@ -155,7 +155,7 @@ export default function PaymentPage() {
         v.subscription_status === "active" &&
         !upgradingPlan &&
         !!selectedPlan && selectedPlan === v.plan_tier &&
-        msLeft !== null && msLeft > 0 && msLeft <= 30 * 24 * 60 * 60 * 1000;
+        msLeft !== null && msLeft > 0 && msLeft <= 90 * 24 * 60 * 60 * 1000;
 
       if (PAID_PLANS.includes((v.plan_tier || "").toLowerCase()) && v.subscription_status === "active" && !upgradingPlan && !renewingSamePlan) {
         router.replace("/vendordashboard");

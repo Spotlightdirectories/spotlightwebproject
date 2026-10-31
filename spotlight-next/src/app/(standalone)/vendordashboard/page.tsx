@@ -397,11 +397,12 @@ function VendorDashboardInner() {
   const planKey = String(vendor?.plan_tier || "").toLowerCase();
   const isPaidPlan = ["standard", "enterprise", "elite"].includes(planKey) && !!vendor?.expires_at;
   const daysLeftPlan = isPaidPlan ? Math.ceil((new Date(String(vendor?.expires_at)).getTime() - Date.now()) / 86400000) : null;
-  const canRenewNow = isPaidPlan && daysLeftPlan !== null && daysLeftPlan <= 30;
+  const canRenewNow = isPaidPlan && daysLeftPlan !== null && daysLeftPlan <= 90;
+  const renewUrgent = canRenewNow && daysLeftPlan !== null && daysLeftPlan <= 30;
   const planDisplayName = planKey === "free" ? "On the Map" : (vendor?.plan_tier || "—");
   const validUntilText = isPaidPlan
     ? `Valid until ${new Date(String(vendor?.expires_at)).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}` +
-      (daysLeftPlan !== null ? (daysLeftPlan > 0 ? ` (${daysLeftPlan} day${daysLeftPlan === 1 ? "" : "s"} left)` : " (expired)") : "")
+      (daysLeftPlan !== null && daysLeftPlan <= 90 ? (daysLeftPlan > 0 ? ` (${daysLeftPlan} day${daysLeftPlan === 1 ? "" : "s"} left)` : " (expired)") : "")
     : "";
 
   const sec = (tab: TabKey) => `vd-section${activeTab === tab ? " active" : ""}`;
@@ -473,7 +474,7 @@ function VendorDashboardInner() {
             <p className="vd-plan-label">Current Plan</p>
             <p id="vdSidebarPlan">{planDisplayName}</p>
             {validUntilText && (
-              <p style={{ fontSize: "0.75rem", margin: "2px 0 8px", color: canRenewNow ? "#d97706" : "inherit", opacity: canRenewNow ? 1 : 0.8 }}>{validUntilText}</p>
+              <p style={{ fontSize: "0.75rem", margin: "2px 0 8px", color: renewUrgent ? "#d97706" : "inherit", opacity: renewUrgent ? 1 : 0.8 }}>{validUntilText}</p>
             )}
             <button className="vd-upgrade-btn" onClick={upgrade}>{canRenewNow ? "Renew My Plan" : isPaidPlan ? "Change Plan" : "Upgrade"}</button>
           </div>
@@ -612,7 +613,7 @@ function VendorDashboardInner() {
 
                   {validUntilText && (
                     <div style={{ marginTop: 12 }}>
-                      <p style={{ fontWeight: 600, color: canRenewNow ? "#d97706" : "inherit", margin: "0 0 8px" }}>{validUntilText}</p>
+                      <p style={{ fontWeight: 600, color: renewUrgent ? "#d97706" : "inherit", margin: "0 0 8px" }}>{validUntilText}</p>
                       {canRenewNow && (
                         <button className="vd-trial-upgrade-btn" onClick={upgrade}>Renew My Plan</button>
                       )}
@@ -633,7 +634,7 @@ function VendorDashboardInner() {
                 <div className="vd-card vd-cta-dark">
                   <h2 className="vd-cta-title">{canRenewNow ? "Renew" : "Upgrade"}</h2>
                   <p className="vd-cta-text">{canRenewNow ? "Renew now and keep every product, service and media item visible. Time left on your plan is added to your renewal." : "Unlock access to more media, video and social links."}</p>
-                  <button className="vd-upgrade-btn vd-cta-btn" onClick={upgrade}>{canRenewNow ? "Renew My Plan" : "Compare Plans"}</button>
+                  <button className="vd-upgrade-btn vd-cta-btn" onClick={upgrade}>{canRenewNow ? "Renew My Plan" : isPaidPlan ? "Change Plan" : "Upgrade"}</button>
                 </div>
               </div>
 
