@@ -476,7 +476,7 @@ function VendorDashboardInner() {
             {validUntilText && (
               <p style={{ fontSize: "0.75rem", margin: "2px 0 8px", color: renewUrgent ? "#d97706" : "inherit", opacity: renewUrgent ? 1 : 0.8 }}>{validUntilText}</p>
             )}
-            <button className="vd-upgrade-btn" style={renewUrgent ? { background: "#f59e0b", color: "#111", borderColor: "#f59e0b" } : { background: "#000", color: "#fff", border: "1px solid rgba(255,255,255,0.25)" }} onClick={upgrade}>{canRenewNow ? "Renew My Plan" : isPaidPlan ? "Change Plan" : "Upgrade"}</button>
+            <button className={`vd-upgrade-btn${renewUrgent ? "" : " vd-btn-calm"}`} style={renewUrgent ? { background: "#f59e0b", color: "#111", borderColor: "#f59e0b" } : undefined} onClick={upgrade}>{canRenewNow ? "Renew My Plan" : isPaidPlan ? "Change Plan" : "Upgrade"}</button>
           </div>
         </div>
       </aside>
