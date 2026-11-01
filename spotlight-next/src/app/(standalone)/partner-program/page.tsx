@@ -428,7 +428,7 @@ function PartnerProgramInner() {
 
             <p className={styles.ppRewardsNote}>
               <i className="fa-solid fa-gift"></i>
-              <strong>What you can tell vendors:</strong> a free On the Map listing for life, and 3 months free on any yearly plan paid on or before 31 December 2026.
+              <strong>What you can tell vendors:</strong> a free start on the On the Map plan, and 3 months free on any yearly plan paid on or before 31 December 2026.
             </p>
 
             <p className={styles.ppRewardsNote}>

@@ -3438,7 +3438,7 @@ if (subscriptionBillingCycle) {
   ) {
 
     subscriptionBillingCycle.textContent =
-      "Free Forever";
+      "Free";
 
   } else {
 

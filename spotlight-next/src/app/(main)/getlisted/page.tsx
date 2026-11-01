@@ -14,7 +14,7 @@ import { SITE_URL } from "@/lib/siteUrl";
 // the same underlying page, not two separate pages.
 export const metadata: Metadata = {
   title: "Get Listed | Spotlight Directories",
-  description: "Pick the plan that matches how your business grows — start free for life with no card required, and get 3 extra months free on any yearly plan paid before 31 December 2026.",
+  description: "Pick the plan that matches how your business grows — start free with no card required, and get 3 extra months free on any yearly plan paid before 31 December 2026.",
   alternates: {
     canonical: `${SITE_URL}/getlisted`,
   },

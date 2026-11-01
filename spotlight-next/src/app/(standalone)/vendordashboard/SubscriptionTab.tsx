@@ -118,7 +118,7 @@ export default function SubscriptionTab({ vendor }: { vendor: Vendor }) {
   const statusLabel = (vendor.subscription_status || "active").toUpperCase();
 
   const billingIntervalText =
-    vendor.plan_tier === "free" ? "Free Forever" : vendor.billing_cycle || "—";
+    vendor.plan_tier === "free" ? "Free" : vendor.billing_cycle || "—";
 
   const amountText =
     vendor.plan_tier === "free"

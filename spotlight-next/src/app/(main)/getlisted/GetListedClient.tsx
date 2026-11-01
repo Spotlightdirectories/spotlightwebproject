@@ -122,7 +122,7 @@ const PLANS = [
     monthlyPrice: "₦0",
     yearlyPrice: "₦0",
     yearlyNote: "Free to start — no card needed",
-    badge: "Free for life",
+    badge: "Start free",
     badgeTrial: true,
     cardTrial: true,
     btnClass: "trial",
@@ -130,7 +130,7 @@ const PLANS = [
     micro: "No credit card · Takes 5 minutes",
     filledDots: 1,
     locationLabel: "1 location",
-    everythingLabel: "Free for life, includes:",
+    everythingLabel: "Start free, includes:",
     features: [
       "List 2 products and 2 services",
       "Mini web page for products & services",
@@ -140,7 +140,7 @@ const PLANS = [
       "Eligible for a verification badge",
       "Up to 50-word description",
     ],
-    trialNote: "Free for life with core features — upgrade to a paid plan anytime for more.",
+    trialNote: "Start free with core features — upgrade to a paid plan anytime for more.",
   },
   {
     id: "standard",
@@ -413,7 +413,7 @@ export default function GetListedClient() {
 
           <div className={styles.trialBanner}>
             <i className="fa-solid fa-bolt"></i>
-            Every business starts <strong>free for life</strong> — no card required, live in minutes.
+            Every business can <strong>start free</strong> — no card required, live in minutes.
           </div>
 
           {(showFullGrid || isVendor === false) && <LaunchOffer showFullGrid={showFullGrid} />}

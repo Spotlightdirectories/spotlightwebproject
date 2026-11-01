@@ -407,7 +407,7 @@ function partnerApproved({
           infoRow("Partner Referral Link", `<a href="${partnerReferralLink}" style="color:#2563eb;">${partnerReferralLink}</a>`)
       )}
       ${paragraph("Share your Vendor Referral Link with businesses to help them get listed on Spotlight. You earn a commission for every vendor who subscribes through your link.")}
-      ${paragraph("<strong>What you can tell vendors:</strong> a free On the Map listing for life, and 3 months free on any yearly plan paid on or before 31 December 2026. Bring 10 paid yearly vendors and we send you 2 branded caps and 2 branded t-shirts.")}
+      ${paragraph("<strong>What you can tell vendors:</strong> a free start on the On the Map plan, and 3 months free on any yearly plan paid on or before 31 December 2026. Bring 10 paid yearly vendors and we send you 2 branded caps and 2 branded t-shirts.")}
       ${paragraph("One more step before you're fully set up: when you create your account below, you'll also be asked for your payout bank details and your NIN. Your bank account name must match the name on your NIN — please have both ready.")}
       ${primaryButton("Create My Partner Account", createAccountLink)}
       ${inductionLink
@@ -451,7 +451,7 @@ function partnerAccountCreated({
       ${paragraph("Your Spotlight Partner account has been created successfully. You can now log in to your partner dashboard and start earning commissions.")}
       ${referralCode ? infoTable(infoRow("Your Referral Code", `<strong style="font-size:18px;letter-spacing:2px;">${referralCode}</strong>`)) : ""}
       ${paragraph("Share your referral link with businesses to help them get listed on Spotlight. You earn a commission every time a vendor subscribes through your link.")}
-      ${paragraph("<strong>What you can tell vendors:</strong> a free On the Map listing for life, and 3 months free on any yearly plan paid on or before 31 December 2026. Bring 10 paid yearly vendors and we send you 2 branded caps and 2 branded t-shirts.")}
+      ${paragraph("<strong>What you can tell vendors:</strong> a free start on the On the Map plan, and 3 months free on any yearly plan paid on or before 31 December 2026. Bring 10 paid yearly vendors and we send you 2 branded caps and 2 branded t-shirts.")}
       ${primaryButton("Log In to Partner Dashboard", dashboardUrl)}
       ${alertBox("Your referral code is unique to you. Share it with businesses to start earning commissions immediately.", "info")}
     `;
@@ -511,7 +511,7 @@ function welcomeVendor({
         <li>Apply for verification to build trust with customers</li>
       </ol>
       ${primaryButton("Complete My Profile", loginUrl)}
-      ${alertBox("Your On the Map listing is free for life. Upgrade to a paid plan any time to unlock more features, and pay for a yearly plan before 31 December 2026 to get 3 extra months free.", "info")}
+      ${alertBox("Your On the Map listing is live and free. Upgrade to a paid plan any time to unlock more features, and pay for a yearly plan before 31 December 2026 to get 3 extra months free.", "info")}
     `;
   return base({ preheader: "Welcome to Spotlight Directories. Let us help your business get found.", body });
 }

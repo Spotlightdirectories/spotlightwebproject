@@ -69,7 +69,7 @@ const FAQS = [
   { q: "6. What happens if a vendor refunds or cancels?", a: "Spotlight's refund window for vendors is 7 days from payment. If a vendor refunds within that window, any related pending commission is reversed before it becomes available. Commissions that have already been marked available and paid are not clawed back." },
   { q: "7. Can I close my partner account, and what happens to my commissions?", a: "Yes, anytime, from your dashboard's Account section. Closing hides your account and gives you 14 days to change your mind and restore it. After that the closure is final, and within 30 more days your personal data (contact details, date of birth, location, identity document and login) is permanently erased. Closing does not forfeit commissions already earned: available and paid commissions remain yours regardless of account status. We keep the record of your commissions and payouts, the businesses and partners you registered, and your name and referral code, because we must retain them for accounting and reporting. If a commission is still owed to you, we keep your bank details only until it is paid, then erase them." },
   { q: "8. What is the Launch Pack?", a: "When you bring 10 paid yearly vendors, Spotlight sends you 2 branded face caps and 2 branded t-shirts to wear while you promote. It is a one-time marketing pack, not a repeating reward. Any later pack is decided by Spotlight management. Only yearly plans count toward the 10." },
-  { q: "9. What offers can I tell vendors about?", a: "Every vendor can list free for life on the On the Map plan, with no card required. Any yearly plan (Standard, Enterprise or Elite) paid on or before 31 December 2026 gets 3 extra months free, for a new purchase or a renewal. Monthly plans do not get the bonus. Always state the offer exactly as written here and never promise anything else." },
+  { q: "9. What offers can I tell vendors about?", a: "Every vendor can start free on the On the Map plan, with no card required. Any yearly plan (Standard, Enterprise or Elite) paid on or before 31 December 2026 gets 3 extra months free, for a new purchase or a renewal. Monthly plans do not get the bonus. Always state the offer exactly as written here and never promise anything else." },
 ];
 
 export default function PartnerLegalPage() {
@@ -364,7 +364,7 @@ export default function PartnerLegalPage() {
                     <li><strong>Don&apos;t</strong> promise features that don&apos;t exist yet (e.g. delivery arrangement, scheduling tools)</li>
                     <li><strong>Don&apos;t</strong> spam vendors with repeated messages</li>
                     <li><strong>Don&apos;t</strong> misrepresent how commissions or the monthly bonus are calculated</li>
-                    <li><strong>Do</strong> state the offers exactly as written: a free On the Map listing for life, and 3 months free on any yearly plan paid on or before 31 December 2026</li>
+                    <li><strong>Do</strong> state the offers exactly as written: a free start on the On the Map plan, and 3 months free on any yearly plan paid on or before 31 December 2026</li>
                   </ul>
                 </div>
 
