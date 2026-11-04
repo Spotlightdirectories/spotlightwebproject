@@ -19,10 +19,11 @@
 // 5. Success message shown → vendor clicks "Log in" to continue
 // ===============================================================
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { EmailTemplates } from "@/lib/emailTemplates";
+import { createVendorRow, sendVendorWelcomeEmail, clearSignupStorage, PENDING_VENDOR_KEY } from "@/lib/createVendorRecord";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { useIsLoggedInVendor } from "@/lib/useIsLoggedInVendor";
 import { ONBOARDING_VIDEOS } from "@/lib/onboardingVideos";
@@ -53,9 +54,56 @@ export default function SignupPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<ReactNode>("");
+  const errorRef = useRef<HTMLDivElement | null>(null);
+
+  // Show the message right where the person just tapped "Create account",
+  // so it is never hidden off-screen at the top on a phone.
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [error]);
+
+  // Exact wording for "already used" cases.
+  function usedMessage(emailVendor: boolean, nameVendor: boolean, emailCustomer: boolean): ReactNode {
+    const parts: ReactNode[] = [];
+    if (emailVendor && nameVendor) {
+      parts.push("This email address and this business name have both already been used to register a vendor account. Please log in instead, or use a different email address and business name.");
+    } else if (emailVendor) {
+      parts.push("This email address has already been used to register a vendor account. Please log in instead, or use a different email address.");
+    } else if (nameVendor) {
+      parts.push("This business name has already been used to register a vendor account. If it is your business, please log in. If not, please choose a different business name.");
+    }
+    if (emailCustomer && !emailVendor) {
+      parts.push(
+        nameVendor
+          ? " This email address has also been used to register a customer account."
+          : <span key="cust">
+              This email address has already been used to register a customer account. To add your business to that account, log in with your customer password. Your details are saved, so you will not need to type them again.
+              <a
+                href="/login?setup=vendor"
+                style={{ display: "block", marginTop: 8, fontWeight: 700 }}
+                onClick={savePendingDetails}
+              >
+                Log in to add your business
+              </a>
+            </span>
+      );
+    }
+    return <>{parts}</>;
+  }
+
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Keeps what the person typed so the login page can finish the registration.
+  function savePendingDetails() {
+    const { businessName, email, telephone, whatsapp, heardAboutUs, heardAboutDetail } = form;
+    try {
+      localStorage.setItem(PENDING_VENDOR_KEY, JSON.stringify({ businessName, email, telephone, whatsapp, heardAboutUs, heardAboutDetail }));
+    } catch { /* ignore */ }
+  }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const { name, value, type, checked } = e.target as HTMLInputElement;
@@ -94,6 +142,14 @@ export default function SignupPage() {
 
     setSubmitting(true);
 
+    // 0. Check, before creating anything, whether the email or business name is already used.
+    try {
+      const { data: avail } = await supabase.rpc("check_signup_availability", { p_email: email, p_name: businessName });
+      const a = (avail || {}) as { email_vendor?: boolean; name_vendor?: boolean; email_customer?: boolean };
+      const msg = usedMessage(!!a.email_vendor, !!a.name_vendor, !!a.email_customer);
+      if (msg) { setError(msg); setSubmitting(false); return; }
+    } catch { /* if the check itself fails, the normal sign-up below still protects against duplicates */ }
+
     // 1. Create auth user
     const { data, error: authError } = await supabase.auth.signUp({
       email,
@@ -104,85 +160,30 @@ export default function SignupPage() {
       },
     });
 
-    if (authError) { setError(authError.message); setSubmitting(false); return; }
-
-    const billingType = localStorage.getItem("billingType") || "monthly";
-
-    // 2. Resolve referral code → partner ID
-    // 2026-08 fix, per Cyril's partner-program security audit: this
-    // used to pull EVERY partner's id + referral_code into the
-    // browser just to find one match client-side — only possible
-    // because the `partners` table had a fully public read policy
-    // (now removed, since it also exposed every partner's name,
-    // email, phone, DOB, etc. to anyone with the public API key).
-    // Uses the same narrow, id-only lookup RPC partner-program's own
-    // sign-up form already used correctly.
-    let partnerId: string | null = null;
-    const storedReferral = localStorage.getItem("referral_code")?.trim().toUpperCase();
-    if (storedReferral) {
-      const { data: resolvedId } = await supabase
-        .rpc("get_partner_id_by_referral_code", { p_code: storedReferral })
-        .maybeSingle();
-      if (resolvedId) partnerId = resolvedId as unknown as string;
+    if (authError) {
+      const used = /already registered/i.test(authError.message || "");
+      setError(used ? usedMessage(true, false, false) : authError.message);
+      setSubmitting(false);
+      return;
     }
 
-    // 2b. Where the vendor first came from (saved by SourceCapture on their
-    // first visit). Missing or unreadable is fine: the fields stay empty.
-    let source: { utm_source?: string | null; utm_medium?: string | null; utm_campaign?: string | null; first_visit_at?: string | null } = {};
-    try {
-      source = JSON.parse(localStorage.getItem("spotlight_source") || "{}") || {};
-    } catch { /* ignore */ }
+    const billingType = localStorage.getItem("billingType") || "monthly";
+    const details = { businessName, email, telephone, whatsapp, heardAboutUs, heardAboutDetail };
 
-    // 3. Insert vendor row
-    const { error: vendorError } = await supabase.from("vendors").insert([{
-      auth_user_id: data.user!.id,
-      name: businessName,
-      email,
-      telephone,
-      whatsapp,
-      referred_by_partner_id: partnerId,
-      heard_about_us: heardAboutUs,
-      heard_about_detail: heardAboutDetail.trim().slice(0, 100) || null,
-      utm_source: source.utm_source ?? null,
-      utm_medium: source.utm_medium ?? null,
-      utm_campaign: source.utm_campaign ?? null,
-      first_visit_at: source.first_visit_at ?? null,
-      plan_tier: selectedPlan,
-      billing_cycle: billingType,
-      subscription_status: selectedPlan === "free" ? "free" : "pending",
-      trial_started_at: null, // No new-signup trial from go-live: free vendors start on the On the Map plan
-      is_premium: selectedPlan !== "free",
-      terms_accepted: true,
-      terms_accepted_at: new Date().toISOString(),
-    }]);
+    // 2. Create the vendor row (referral partner + source are resolved inside)
+    const createErr = await createVendorRow(data.user!.id, details, selectedPlan, billingType);
+    if (createErr) {
+      const dup = /duplicate key|unique/i.test(createErr);
+      const nameDup = dup && /name/i.test(createErr);
+      const emailDup = dup && /email/i.test(createErr);
+      setError(dup ? usedMessage(emailDup, nameDup || !emailDup, false) : createErr);
+      setSubmitting(false);
+      return;
+    }
 
-    if (vendorError) { setError(vendorError.message); setSubmitting(false); return; }
-
-    // 4. Send welcome email (non-fatal)
-    try {
-      await fetch(
-        "https://gyvzmktavyrevfxnwsay.supabase.co/functions/v1/send-email",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            to: email,
-            subject: "Welcome to Spotlight Directories",
-            html: EmailTemplates.welcomeVendor({
-              vendorName: businessName,
-              plan: selectedPlan,
-              loginUrl: `${window.location.origin}/login`,
-            }),
-          }),
-        }
-      );
-    } catch { /* non-fatal */ }
-
-    // 5. Clear localStorage
-    localStorage.removeItem("selectedPlan");
-    localStorage.removeItem("billingType");
-    localStorage.removeItem("referral_code");
-    localStorage.removeItem("spotlight_source");
+    // 3. Welcome email (non-fatal) and clean-up
+    await sendVendorWelcomeEmail(details, selectedPlan);
+    clearSignupStorage();
 
     setSubmitting(false);
     setSuccess(true);
@@ -221,8 +222,6 @@ export default function SignupPage() {
             <a href="/disclaimer" target="_blank" rel="noopener">restricted items list</a> for details.
           </div>
         </div>
-
-        {error && <div className={styles.authError}>{error}</div>}
 
         <a
           href={videoUrl}
@@ -304,6 +303,8 @@ export default function SignupPage() {
             <input type="checkbox" name="agreeTerms" checked={form.agreeTerms} onChange={handleChange} required />
             I agree to the <a href="/terms">Terms of Service</a>, <a href="/privacy">Privacy Policy</a>, and <a href="/disclaimer">Disclaimer</a> (including the Safety Guidelines and Restricted Items sections)
           </label>
+
+          {error && <div ref={errorRef} className={styles.authError} role="alert" style={{ marginTop: 12, marginBottom: 12 }}>{error}</div>}
 
           <button type="submit" className={styles.authBtn} disabled={submitting}>
             {submitting ? "Creating account..." : "Create account"}

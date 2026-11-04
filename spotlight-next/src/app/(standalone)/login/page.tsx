@@ -3,6 +3,7 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { createVendorRow, sendVendorWelcomeEmail, clearSignupStorage, PENDING_VENDOR_KEY, type VendorFormDetails } from "@/lib/createVendorRecord";
 import styles from "./login.module.css";
 
 // 2026-08 addition, per Cyril: the "New Visit Request" email links to
@@ -27,6 +28,9 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextUrl = searchParams.get("next") || "/vendordashboard";
+  // "?setup=vendor" arrives from the vendor signup page when the email already belongs to a
+  // customer account: after a correct login, the business is added to that same account.
+  const setupMode = searchParams.get("setup") === "vendor";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -63,6 +67,33 @@ function LoginForm() {
     if (vendorError) {
       setError("Error fetching vendor record.");
       setLoading(false);
+      return;
+    }
+
+    // 3a. Setup mode: add the business to this existing (customer) account
+    if (!vendor && setupMode) {
+      let pending: VendorFormDetails | null = null;
+      try { pending = JSON.parse(localStorage.getItem(PENDING_VENDOR_KEY) || "null"); } catch { /* ignore */ }
+      const selectedPlan = localStorage.getItem("selectedPlan");
+      if (!pending || !selectedPlan || pending.email.trim().toLowerCase() !== email.trim().toLowerCase()) {
+        await supabase.auth.signOut();
+        setError("We could not find your saved business details. Please go back to the vendor signup page and fill in the form again.");
+        setLoading(false);
+        return;
+      }
+      const billingType = localStorage.getItem("billingType") || "monthly";
+      const createErr = await createVendorRow(authData.user.id, pending, selectedPlan, billingType);
+      if (createErr) {
+        await supabase.auth.signOut();
+        setError(/duplicate key|unique/i.test(createErr)
+          ? "This business name or email is already used by another vendor account. Please go back to the signup page and choose a different business name."
+          : "Could not add your business. Please try again.");
+        setLoading(false);
+        return;
+      }
+      await sendVendorWelcomeEmail(pending, selectedPlan);
+      clearSignupStorage();
+      router.replace("/business-type");
       return;
     }
 
@@ -115,7 +146,7 @@ function LoginForm() {
       <div className={styles.authCard}>
 
         <h1 className={styles.authTitle}>Vendor Login</h1>
-        <p className={styles.authSubtitle}>Access your Spotlight dashboard</p>
+        <p className={styles.authSubtitle}>{setupMode ? "Log in with your customer password and we will add your business to the same account." : "Access your Spotlight dashboard"}</p>
 
         {error && (
           <div className={styles.authError}>{error}</div>
