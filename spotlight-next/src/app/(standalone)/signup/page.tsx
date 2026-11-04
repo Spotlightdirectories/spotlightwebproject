@@ -91,7 +91,7 @@ export default function SignupPage() {
             </span>
       );
     }
-    return <>{parts}</>;
+    return parts.length === 0 ? null : <>{parts}</>;
   }
 
   const [success, setSuccess] = useState(false);
@@ -146,8 +146,12 @@ export default function SignupPage() {
     try {
       const { data: avail } = await supabase.rpc("check_signup_availability", { p_email: email, p_name: businessName });
       const a = (avail || {}) as { email_vendor?: boolean; name_vendor?: boolean; email_customer?: boolean };
-      const msg = usedMessage(!!a.email_vendor, !!a.name_vendor, !!a.email_customer);
-      if (msg) { setError(msg); setSubmitting(false); return; }
+      const anythingUsed = !!a.email_vendor || !!a.name_vendor || !!a.email_customer;
+      if (anythingUsed) {
+        setError(usedMessage(!!a.email_vendor, !!a.name_vendor, !!a.email_customer));
+        setSubmitting(false);
+        return;
+      }
     } catch { /* if the check itself fails, the normal sign-up below still protects against duplicates */ }
 
     // 1. Create auth user
