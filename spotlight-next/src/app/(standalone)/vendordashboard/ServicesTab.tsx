@@ -867,6 +867,10 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
           platform.
         </p>
 
+        <p style={{ fontSize: "0.85rem", margin: "0 0 12px", opacity: 0.85 }}>
+          Looking for catering or a restaurant? Choose <strong>Food &amp; Catering</strong>. To sell cooked meals as products, use the Products tab and choose Prepared Meals &amp; Takeaway.
+        </p>
+
         <div className="vd-coordinates-row">
           <SearchableSelect
             placeholder="Select Category"
