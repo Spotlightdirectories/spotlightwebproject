@@ -33,6 +33,7 @@ interface Product {
   slug: string;
   vendor_id: string;
   product_name: string;
+  display_subcategory?: string | null;
   price: number;
   short_description: string;
   key_details: string;
@@ -334,6 +335,7 @@ export default function VendorProductPage() {
         {/* INFO */}
         <div className={styles.vpInfo}>
           <h1>{product.product_name}</h1>
+          {product.display_subcategory && <p style={{ fontSize: "0.75rem", color: "#9ca3af", margin: "2px 0 6px" }}>{product.display_subcategory}</p>}
 
           <p className={styles.vpPrice}>
             ₦ {Number(product.price || 0).toLocaleString("en-NG", {

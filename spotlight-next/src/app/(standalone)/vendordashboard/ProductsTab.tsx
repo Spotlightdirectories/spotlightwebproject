@@ -47,7 +47,7 @@ import UpgradePlanModal, { getListingUpgradeMessage } from "@/components/Upgrade
 import SearchableSelect from "@/components/SearchableSelect";
 import type { Vendor } from "./page";
 
-type Option = { id: string; name: string };
+type Option = { id: string; name: string; free_product_name?: boolean };
 
 // Category-specific spec fields (Jiji-style — RAM/Storage for phones,
 // Make/Model/Year for vehicles, etc.), 2026-08 per Cyril. Defined per
@@ -212,6 +212,9 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
 
   // CATEGORY + SUBCATEGORY (products taxonomy only — kind = 'product')
   const [categories, setCategories] = useState<Option[]>([]);
+  // For categories where the subcategory is a group (e.g. "Rice Dishes"), the vendor types the
+  // product's own name and the subcategory shows as a small grey label instead.
+  const [ownName, setOwnName] = useState("");
   const [subcategories, setSubcategories] = useState<Option[]>([]);
   const [categoryId, setCategoryId] = useState("");
   const [subcategoryId, setSubcategoryId] = useState("");
@@ -248,13 +251,14 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
     ...savedProducts.map((p) => p.category_id).filter(Boolean),
     ...pendingProducts.map((p) => p.category_id).filter(Boolean),
   ]);
+  const freeName = !!categories.find((c) => c.id === categoryId)?.free_product_name;
   const isDifferentField = !!categoryId && usedCategoryIds.size > 0 && !usedCategoryIds.has(categoryId);
 
   useEffect(() => {
     (async () => {
       const { data, error } = await supabase
         .from("categories")
-        .select("id,name")
+        .select("id,name,free_product_name")
         .eq("kind", "product")
         .order("name", { ascending: true });
       if (!error) setCategories(data || []);
@@ -427,6 +431,7 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
     setSubcategoryId("");
     setSubSubcategoryId("");
     setAttributeValues({});
+    setOwnName("");
     if (brandRef.current) brandRef.current.value = "";
     if (variantRef.current) variantRef.current.value = "";
     if (descriptionRef.current) descriptionRef.current.value = "";
@@ -516,7 +521,12 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
 
     const subcategoryName = subcategories.find((s) => s.id === subcategoryId)?.name || "";
     const subSubcategoryName = subSubcategories.find((s) => s.id === subSubcategoryId)?.name || "";
-    const name = composeProductName(brand, variant, subSubcategoryName || subcategoryName);
+    const name = freeName ? ownName.trim() : composeProductName(brand, variant, subSubcategoryName || subcategoryName);
+
+    if (freeName && !name) {
+      alert("Please type the product name.");
+      return;
+    }
 
     if (!description || !price) {
       alert("Product description and price are required.");
@@ -570,6 +580,7 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
     setCategoryId(product.category_id || "");
     if (!product.category_id) setSubcategoryId(product.subcategory_id || "");
 
+    setOwnName(product.product_name || "");
     if (brandRef.current) brandRef.current.value = product.brand || "";
     if (variantRef.current) variantRef.current.value = product.variant || "";
     if (descriptionRef.current) descriptionRef.current.value = product.short_description || "";
@@ -659,7 +670,11 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
         const variant = variantRef.current?.value.trim() || "";
         const subcategoryName = subcategories.find((s) => s.id === subcategoryId)?.name || "";
         const subSubcategoryName = subSubcategories.find((s) => s.id === subSubcategoryId)?.name || "";
-        const name = composeProductName(brand, variant, subSubcategoryName || subcategoryName);
+        const name = freeName ? ownName.trim() : composeProductName(brand, variant, subSubcategoryName || subcategoryName);
+        if (freeName && !name) {
+          alert("Please type the product name.");
+          return;
+        }
         const description = descriptionRef.current?.value.trim() || "";
         const price = Number(priceRef.current?.value || 0);
         const keyDetails = keyDetailsRef.current?.value.trim() || "";
@@ -1004,10 +1019,23 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
           </p>
         )}
 
-        <div className="vd-service-add-row">
-          <input type="text" ref={brandRef} className="vd-input" placeholder="Brand (optional)" />
-          <input type="text" ref={variantRef} className="vd-input" placeholder="Model / Variant (optional)" />
-        </div>
+        {freeName ? (
+          <div className="vd-service-add-row">
+            <input
+              type="text"
+              className="vd-input"
+              placeholder="Product name (e.g. Jollof Rice)"
+              maxLength={80}
+              value={ownName}
+              onChange={(e) => setOwnName(e.target.value)}
+            />
+          </div>
+        ) : (
+          <div className="vd-service-add-row">
+            <input type="text" ref={brandRef} className="vd-input" placeholder="Brand (optional)" />
+            <input type="text" ref={variantRef} className="vd-input" placeholder="Model / Variant (optional)" />
+          </div>
+        )}
 
         {attributeDefs.length > 0 && (
           <>
@@ -1177,7 +1205,7 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
       <AiDescribeModal
         open={aiModalOpen}
         type="product"
-        itemName={composeProductName(
+        itemName={freeName ? ownName : composeProductName(
           brandRef.current?.value || "",
           variantRef.current?.value || "",
           subSubcategories.find((s) => s.id === subSubcategoryId)?.name ||

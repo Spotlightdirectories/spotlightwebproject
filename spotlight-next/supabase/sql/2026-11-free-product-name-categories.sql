@@ -1,0 +1,16 @@
+-- Applied live 2026-11-04 (migration "free_product_name_categories").
+-- Categories with free_product_name = true: the vendor types the product's own name and the
+-- subcategory is shown as a small grey label (stored in vendor_products.display_subcategory).
+-- Switch categories on/off with:  update categories set free_product_name = true/false where name = '...';
+-- (Existing products keep their old names; the label is filled when a product is added or edited.)
+--
+-- 1. alter table categories add column free_product_name boolean not null default false;
+--    16 categories switched on: Prepared Meals & Takeaway, Groceries, Bakery Products, Fruits & Vegetables,
+--    Meat & Poultry, Clothing & Fashion, Footwear, Beauty & Personal Care (Products), Personal Hygiene,
+--    Party & Event Supplies, Books & Stationery, Office Supplies, Hardware & Tools, Plastic Products,
+--    Miscellaneous Products, Other Products.
+-- 2. alter table vendor_products add column display_subcategory text; trigger
+--    trg_set_product_display_subcategory fills it from the subcategory when the category is switched on.
+-- 3. vendor_products.search_vector rebuilt to include display_subcategory (weight B); GIN index recreated.
+-- 4. search_products (9-argument version) now also returns product_subcategory_label.
+-- The full SQL is in the Supabase migration history under that migration name.

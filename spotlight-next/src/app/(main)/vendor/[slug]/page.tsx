@@ -131,6 +131,7 @@ interface Product {
   id: string;
   slug: string;
   product_name: string;
+  display_subcategory?: string | null;
   price: number;
   primary_image_url: string | null;
   display_order: number;
@@ -1621,6 +1622,7 @@ export default function VendorProfilePage() {
                       className={styles.productImage}
                     />
                     <h3 className={styles.productTitle}>{p.product_name}</h3>
+                    {p.display_subcategory && <p style={{ fontSize: "0.75rem", color: "#9ca3af", margin: "2px 0 6px" }}>{p.display_subcategory}</p>}
                     <p className={styles.productPrice}>₦{Number(p.price || 0).toLocaleString()}</p>
                     <div className={styles.productVendor}>
                       <span>By {vendor.name}</span>
