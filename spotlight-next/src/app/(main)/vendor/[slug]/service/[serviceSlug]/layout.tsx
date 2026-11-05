@@ -20,8 +20,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const { data: service } = await supabase
     .from("vendor_services")
-    .select("service_name, starting_price, short_description, vendors ( name )")
+    .select("service_name, starting_price, short_description, vendors!inner ( name )")
     .eq("slug", serviceSlug)
+    .eq("vendors.slug", slug)
     .maybeSingle<{ service_name: string; starting_price: number | null; short_description: string | null; vendors: { name: string } | null }>();
 
   if (!service) return { title: FALLBACK_TITLE, description: FALLBACK_DESCRIPTION, alternates };

@@ -56,6 +56,7 @@ interface RelatedService {
   service_name: string;
   starting_price: number | null;
   representative_image_url: string | null;
+  vendorSlug?: string;
   vendorName?: string;
   vendorVerification?: string;
   vendorRating?: number;
@@ -196,12 +197,13 @@ export default function VendorServicePage() {
         .from("vendor_services")
         .select(`
           *,
-          vendors(
+          vendors!inner(
             slug, name, whatsapp, telephone, category, subcategory,
             verification_status, average_rating, reviews_count, is_sponsored
           )
         `)
         .eq("slug", serviceSlug)
+        .eq("vendors.slug", vendorSlug)
         .eq("moderation_status", "approved")
         .single();
 
@@ -297,7 +299,14 @@ export default function VendorServicePage() {
         p_exclude_service_id: data.id,
         p_limit: 12,
       });
+      const simVendorIds = Array.from(new Set((similar || []).map((r: any) => r.vendor_id).filter(Boolean)));
+      const simSlugs: Record<string, string> = {};
+      if (simVendorIds.length) {
+        const { data: vs } = await supabase.from("vendors").select("id, slug").in("id", simVendorIds);
+        (vs || []).forEach((v: any) => { simSlugs[v.id] = v.slug; });
+      }
       setSimilarServices((similar || []).map((s: any) => ({
+        vendorSlug: simSlugs[s.vendor_id],
         slug: s.slug,
         service_name: s.service_name,
         starting_price: s.starting_price,
@@ -310,7 +319,7 @@ export default function VendorServicePage() {
       })));
     }
     load();
-  }, [serviceSlug]);
+  }, [serviceSlug, vendorSlug]);
 
   // Deep-link support for "Request a Visit" (?requestVisit=1) — an
   // anonymous visitor gets sent to /customer-login first, then lands
@@ -792,9 +801,9 @@ export default function VendorServicePage() {
           <div className={styles.vsCardGrid}>
             {similarServices.map(s => (
               <ServiceCard
-                key={s.slug}
+                key={s.slug + (s.vendorSlug || "")}
                 service={s}
-                onClick={() => router.push(`/vendor/${vendorSlug}/service/${s.slug}`)}
+                onClick={() => router.push(`/vendor/${s.vendorSlug || vendorSlug}/service/${s.slug}`)}
               />
             ))}
           </div>

@@ -20,8 +20,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const { data: product } = await supabase
     .from("vendor_products")
-    .select("product_name, price, short_description, vendors ( name )")
+    .select("product_name, price, short_description, vendors!inner ( name )")
     .eq("slug", productSlug)
+    .eq("vendors.slug", slug)
     .maybeSingle<{ product_name: string; price: number | null; short_description: string | null; vendors: { name: string } | null }>();
 
   if (!product) return { title: FALLBACK_TITLE, description: FALLBACK_DESCRIPTION, alternates };

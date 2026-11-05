@@ -63,6 +63,7 @@ interface RelatedProduct {
   product_name: string;
   price: number;
   primary_image_url: string | null;
+  vendorSlug?: string;
   vendorName?: string;
   vendorVerification?: string;
   vendorRating?: number;
@@ -134,12 +135,13 @@ export default function VendorProductPage() {
         .from("vendor_products")
         .select(`
           *,
-          vendors(
+          vendors!inner(
             slug, name, whatsapp, telephone, category, subcategory,
             verification_status, average_rating, reviews_count, is_sponsored
           )
         `)
         .eq("slug", productSlug)
+        .eq("vendors.slug", vendorSlug)
         .eq("moderation_status", "approved")
         .single();
 
@@ -211,7 +213,14 @@ export default function VendorProductPage() {
         p_exclude_product_id: data.id,
         p_limit: 12,
       });
+      const simVendorIds = Array.from(new Set((similar || []).map((r: any) => r.vendor_id).filter(Boolean)));
+      const simSlugs: Record<string, string> = {};
+      if (simVendorIds.length) {
+        const { data: vs } = await supabase.from("vendors").select("id, slug").in("id", simVendorIds);
+        (vs || []).forEach((v: any) => { simSlugs[v.id] = v.slug; });
+      }
       setSimilarProducts((similar || []).map((p: any) => ({
+        vendorSlug: simSlugs[p.vendor_id],
         slug: p.slug,
         product_name: p.product_name,
         price: p.price,
@@ -224,7 +233,7 @@ export default function VendorProductPage() {
       })));
     }
     load();
-  }, [productSlug]);
+  }, [productSlug, vendorSlug]);
 
   // Fires on WhatsApp/Call tap — production never logged these at
   // all (plain links, no handler). Fire-and-forget, doesn't block the
@@ -460,7 +469,7 @@ export default function VendorProductPage() {
               <ProductCard
                 key={p.slug}
                 product={p}
-                onClick={() => router.push(`/vendor/${p.slug ? vendorSlug : vendorSlug}/product/${p.slug}`)}
+                onClick={() => router.push(`/vendor/${p.vendorSlug || vendorSlug}/product/${p.slug}`)}
               />
             ))}
           </div>
