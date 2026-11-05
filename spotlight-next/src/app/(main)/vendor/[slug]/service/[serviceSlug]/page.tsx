@@ -148,6 +148,8 @@ export default function VendorServicePage() {
 
   const [service, setService] = useState<Service | null>(null);
   const [activeImage, setActiveImage] = useState<string>("");
+  // Request a Visit only shows for home-service categories (categories.allows_visit_request)
+  const [visitAllowed, setVisitAllowed] = useState(false);
   const [moreServices, setMoreServices] = useState<RelatedService[]>([]);
   const [similarServices, setSimilarServices] = useState<RelatedService[]>([]);
   const [attributeLabels, setAttributeLabels] = useState<{ key: string; label: string }[]>([]);
@@ -206,6 +208,11 @@ export default function VendorServicePage() {
       if (error || !data) { setLoading(false); return; }
 
       setService(data);
+
+      if (data.category_id) {
+        const { data: cat } = await supabase.from("categories").select("allows_visit_request").eq("id", data.category_id).maybeSingle();
+        setVisitAllowed(!!cat?.allows_visit_request);
+      }
 
       // Main image: representative first, then secondary, then gallery
       const mainImg =
@@ -739,14 +746,16 @@ export default function VendorServicePage() {
               Share Service
             </button>
 
-            <button
-              type="button"
-              className={`${styles.vsActionBtn} ${styles.vsVisitBtn}`}
-              onClick={openVisitModal}
-            >
-              <i className="fa-solid fa-shield-heart"></i>
-              Request a Visit
-            </button>
+            {visitAllowed && (
+              <button
+                type="button"
+                className={`${styles.vsActionBtn} ${styles.vsVisitBtn}`}
+                onClick={openVisitModal}
+              >
+                <i className="fa-solid fa-shield-heart"></i>
+                Request a Visit
+              </button>
+            )}
 
             <button
               type="button"

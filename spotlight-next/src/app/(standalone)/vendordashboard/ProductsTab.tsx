@@ -45,6 +45,7 @@ import { uploadVendorFile } from "@/lib/uploadVendorFile";
 import AiDescribeModal, { useAiDescribeToast } from "@/components/AiDescribeModal";
 import UpgradePlanModal, { getListingUpgradeMessage } from "@/components/UpgradePlanModal";
 import SearchableSelect from "@/components/SearchableSelect";
+import { productCategoryHint } from "@/lib/categoryHints";
 import type { Vendor } from "./page";
 
 type Option = { id: string; name: string; free_product_name?: boolean };
@@ -973,14 +974,11 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
           the subcategory name alone becomes the product name.
         </p>
 
-        <p style={{ fontSize: "0.85rem", margin: "0 0 12px", opacity: 0.85 }}>
-          Selling cooked food or running a restaurant? Choose <strong>Prepared Meals &amp; Takeaway</strong>. For catering services, add them under the Services tab.
-        </p>
-
         <div className="vd-coordinates-row">
           <SearchableSelect
             placeholder="Select Category"
             searchPlaceholder="Search categories..."
+            hintFor={productCategoryHint}
             value={categoryId}
             onChange={handleCategoryChange}
             options={categories.map((c) => ({ value: c.id, label: c.name }))}

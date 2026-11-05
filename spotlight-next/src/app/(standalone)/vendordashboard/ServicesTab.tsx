@@ -29,6 +29,7 @@ import { uploadVendorFile } from "@/lib/uploadVendorFile";
 import AiDescribeModal, { useAiDescribeToast } from "@/components/AiDescribeModal";
 import UpgradePlanModal, { getListingUpgradeMessage } from "@/components/UpgradePlanModal";
 import SearchableSelect from "@/components/SearchableSelect";
+import { serviceCategoryHint } from "@/lib/categoryHints";
 import type { Vendor } from "./page";
 
 type Option = { id: string; name: string };
@@ -867,14 +868,11 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
           platform.
         </p>
 
-        <p style={{ fontSize: "0.85rem", margin: "0 0 12px", opacity: 0.85 }}>
-          Looking for catering or a restaurant? Choose <strong>Food &amp; Catering</strong>. To sell cooked meals as products, use the Products tab and choose Prepared Meals &amp; Takeaway.
-        </p>
-
         <div className="vd-coordinates-row">
           <SearchableSelect
             placeholder="Select Category"
             searchPlaceholder="Search categories..."
+            hintFor={serviceCategoryHint}
             value={categoryId}
             onChange={handleCategoryChange}
             options={categories.map((c) => ({ value: c.id, label: c.name }))}

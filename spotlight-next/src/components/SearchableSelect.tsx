@@ -42,6 +42,8 @@ type SearchableSelectProps = {
   disabled?: boolean;
   className?: string;
   id?: string;
+  /** Optional: returns a hint to show under the search box for the text typed so far. */
+  hintFor?: (query: string) => string | null;
 };
 
 export default function SearchableSelect({
@@ -54,6 +56,7 @@ export default function SearchableSelect({
   disabled = false,
   className = "",
   id,
+  hintFor,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -154,6 +157,11 @@ export default function SearchableSelect({
             }}
             onKeyDown={handleKeyDown}
           />
+          {hintFor && hintFor(query) && (
+            <div style={{ fontSize: "0.8rem", lineHeight: 1.4, padding: "8px 10px", margin: "6px 0", borderRadius: 6, background: "rgba(230,194,0,0.12)", whiteSpace: "pre-line" }}>
+              {hintFor(query)}
+            </div>
+          )}
           <div className={styles.optionsList}>
             {filtered.length === 0 && <div className={styles.emptyState}>{emptyMessage}</div>}
             {filtered.map((opt, i) => (

@@ -238,6 +238,8 @@ export default function VendorProfilePage() {
   // Data
   const [products, setProducts] = useState<Product[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  // Request a Visit only shows when the vendor has a service in a home-service category (categories.allows_visit_request)
+  const [visitAllowed, setVisitAllowed] = useState(false);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [similarBusinesses, setSimilarBusinesses] = useState<SimilarBusiness[]>([]);
@@ -541,6 +543,13 @@ export default function VendorProfilePage() {
       .eq("vendor_id", vendorId)
       .eq("moderation_status", "approved");
     setServices(data || []);
+
+    const catIds = new Set<string>((data || []).map((s: { category_id?: string | null }) => s.category_id).filter(Boolean) as string[]);
+    const { data: vrow } = await supabase.from("vendors").select("category_id").eq("id", vendorId).maybeSingle();
+    if (vrow?.category_id) catIds.add(vrow.category_id);
+    if (catIds.size === 0) { setVisitAllowed(false); return; }
+    const { data: okCats } = await supabase.from("categories").select("id").eq("allows_visit_request", true).in("id", Array.from(catIds));
+    setVisitAllowed((okCats || []).length > 0);
   }
 
   // ── Load social links ────────────────────────────────────────
@@ -1320,7 +1329,7 @@ export default function VendorProfilePage() {
                 <span>{isFavorited ? "Saved" : "Save"}</span>
               </button>
             )}
-            {!isOwner && (
+            {!isOwner && visitAllowed && (
               <button
                 type="button"
                 className={`${styles.quickAction} ${styles.quickActionVisit}`}
