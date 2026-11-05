@@ -968,8 +968,8 @@ export default function DiscoverResultsPage() {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.image || "/images/spotlightlogo-512.png"} alt={p.productName} className={styles.productImage} />
+                  {p.subLabel && <p style={{ fontSize: "0.75rem", color: "#9ca3af", margin: "4px 0 2px" }}>{p.subLabel}</p>}
                   <h3 className={styles.productTitle}>{p.productName}</h3>
-                  {p.subLabel && <p style={{ fontSize: "0.75rem", color: "#9ca3af", margin: "2px 0 6px" }}>{p.subLabel}</p>}
                   <p className={styles.productPrice}>₦{Number(p.price || 0).toLocaleString()}</p>
                   <div className={styles.productVendor}>
                     <span>By {p.vendorName}</span>

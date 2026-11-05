@@ -315,6 +315,7 @@ export default function VendorProductPage() {
               className={styles.vpMainImage}
             />
           </div>
+          {product.display_subcategory && <p style={{ fontSize: "0.75rem", color: "#9ca3af", margin: "4px 0 2px" }}>{product.display_subcategory}</p>}
 
           {thumbnails.length > 0 && (
             <div className={styles.vpThumbnails}>
@@ -335,7 +336,6 @@ export default function VendorProductPage() {
         {/* INFO */}
         <div className={styles.vpInfo}>
           <h1>{product.product_name}</h1>
-          {product.display_subcategory && <p style={{ fontSize: "0.75rem", color: "#9ca3af", margin: "2px 0 6px" }}>{product.display_subcategory}</p>}
 
           <p className={styles.vpPrice}>
             ₦ {Number(product.price || 0).toLocaleString("en-NG", {
