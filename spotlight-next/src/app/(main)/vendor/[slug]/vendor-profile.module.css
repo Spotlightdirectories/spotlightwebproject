@@ -801,6 +801,28 @@
   flex-direction: column;
 }
 
+/* Small picture on the left of the service card, same idea as the search results card */
+.serviceTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.serviceThumb {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 12px;
+  background: var(--color-border);
+}
+
+.serviceTopText {
+  min-width: 0;
+  flex: 1;
+}
+
 .serviceCard:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);

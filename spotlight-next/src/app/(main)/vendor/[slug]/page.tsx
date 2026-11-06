@@ -1660,15 +1660,25 @@ export default function VendorProfilePage() {
                     className={styles.serviceCard}
                     onClick={() => router.push(`/vendor/${vendor.slug}/service/${s.slug}`)}
                   >
-                    <h3>{s.service_name}</h3>
-                    <div className={styles.serviceVendorRow}>
-                      <span>By: {s.vendors?.name}</span>
-                      <SmallBadge status={s.vendors?.verification_status} />
-                    </div>
-                    <div className={styles.serviceRating}>
-                      <i className="fa-solid fa-star"></i>
-                      <span>{Number(s.vendors?.average_rating || 0).toFixed(1)}</span>
-                      <small>({s.vendors?.reviews_count || 0})</small>
+                    <div className={styles.serviceTop}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={s.representative_image_url || "/images/spotlightlogo-512.png"}
+                        alt={s.service_name}
+                        className={styles.serviceThumb}
+                      />
+                      <div className={styles.serviceTopText}>
+                        <h3>{s.service_name}</h3>
+                        <div className={styles.serviceVendorRow}>
+                          <span>By: {s.vendors?.name}</span>
+                          <SmallBadge status={s.vendors?.verification_status} />
+                        </div>
+                        <div className={styles.serviceRating}>
+                          <i className="fa-solid fa-star"></i>
+                          <span>{Number(s.vendors?.average_rating || 0).toFixed(1)}</span>
+                          <small>({s.vendors?.reviews_count || 0})</small>
+                        </div>
+                      </div>
                     </div>
                     {s.short_description && (
                       <p className={styles.serviceDescription}>
