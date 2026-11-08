@@ -21,6 +21,7 @@
 //   new feature, not something production already tracked.
 // ===============================================================
 
+import FounderBadge from "@/components/FounderBadge";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -84,7 +85,7 @@ function SmallBadge({ status }: { status: string }) {
   return null;
 }
 
-function ProductCard({ product, onClick }: { product: RelatedProduct; onClick: () => void }) {
+function ProductCard({ product, onClick, fallbackSlug }: { product: RelatedProduct; onClick: () => void; fallbackSlug?: string }) {
   const name = product.vendors?.name || product.vendorName || "";
   const verification = product.vendors?.verification_status || product.vendorVerification || "none";
   const rating = product.vendors?.average_rating ?? product.vendorRating ?? 0;
@@ -102,6 +103,7 @@ function ProductCard({ product, onClick }: { product: RelatedProduct; onClick: (
       <p className={styles.vpCardPrice}>₦{Number(product.price || 0).toLocaleString()}</p>
       <div className={styles.vpCardVendor}>
         <span>By {name}</span>
+        <FounderBadge slug={product.vendorSlug || fallbackSlug} size={16} />
         <SmallBadge status={verification} />
       </div>
       <div className={styles.vpCardRating}>
@@ -357,6 +359,7 @@ export default function VendorProductPage() {
           <div className={styles.vpVendorMeta}>
             <div className={styles.vpVendorRow}>
               <span>By {vendor?.name || ""}</span>
+              <FounderBadge slug={vendorSlug} size={16} />
               <SmallBadge status={vendor?.verification_status || "none"} />
             </div>
             <div className={styles.vpRatingRow}>
@@ -453,6 +456,7 @@ export default function VendorProductPage() {
               <ProductCard
                 key={p.slug}
                 product={p}
+                fallbackSlug={vendorSlug}
                 onClick={() => router.push(`/vendor/${vendorSlug}/product/${p.slug}`)}
               />
             ))}
@@ -469,6 +473,7 @@ export default function VendorProductPage() {
               <ProductCard
                 key={p.slug}
                 product={p}
+                fallbackSlug={vendorSlug}
                 onClick={() => router.push(`/vendor/${p.vendorSlug || vendorSlug}/product/${p.slug}`)}
               />
             ))}

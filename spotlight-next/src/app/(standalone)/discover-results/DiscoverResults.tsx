@@ -21,6 +21,7 @@ import { nigeriaData } from "@/lib/nigeria-data.js";
 import ProfileNav from "@/components/ProfileNav";
 import AccountButton from "@/components/AccountButton";
 import SearchableSelect from "@/components/SearchableSelect";
+import FounderBadge from "@/components/FounderBadge";
 import styles from "./discover-results.module.css";
 
 import { insertAnalytics } from "@/lib/analytics";
@@ -204,6 +205,20 @@ export default function DiscoverResultsPage() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  // Founders 1000 (1KF): vendor ids whose Spot-ID number is 1-1000.
+  const [founderIds, setFounderIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    const ids = [...new Set([
+      ...vendors.map(v => v.id),
+      ...products.map(p => p.vendorId),
+      ...services.map(sv => sv.vendorId),
+    ].filter(Boolean))];
+    if (ids.length === 0) { setFounderIds(new Set()); return; }
+    let cancelled = false;
+    supabase.from("vendors").select("id").in("id", ids).eq("is_founder", true)
+      .then(({ data }) => { if (!cancelled) setFounderIds(new Set((data || []).map((r: any) => r.id))); });
+    return () => { cancelled = true; };
+  }, [vendors, products, services]);
   const [sponsored, setSponsored] = useState<(Product | Service | Vendor)[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -926,6 +941,7 @@ export default function DiscoverResultsPage() {
                   )}
                   <div className={styles.productVendor}>
                     <span>By {vendorName}</span>
+                    <FounderBadge show={founderIds.has(isProduct || isService ? item.vendorId : item.id)} size={16} />
                     {badge(verification)}
                   </div>
                   <div className={styles.productRating}>
@@ -973,6 +989,7 @@ export default function DiscoverResultsPage() {
                   <p className={styles.productPrice}>₦{Number(p.price || 0).toLocaleString()}</p>
                   <div className={styles.productVendor}>
                     <span>By {p.vendorName}</span>
+                    <FounderBadge show={founderIds.has(p.vendorId)} size={16} />
                     {badge(p.vendorVerification)}
                   </div>
                   {p.distanceKm != null && (
@@ -1046,6 +1063,7 @@ export default function DiscoverResultsPage() {
                       <p style={{ fontSize: 12, color: "var(--color-text-muted)", margin: "2px 0 0", display: "flex", alignItems: "center", gap: 4 }}>
                         By {s.vendorName}
                       </p>
+                      <FounderBadge show={founderIds.has(s.vendorId)} size={16} />
                       {badge(s.vendorVerification)}
                       <div className={styles.ratingWrap}>
                         <i className="fa-solid fa-star"></i>
@@ -1118,6 +1136,7 @@ export default function DiscoverResultsPage() {
                 <div className={styles.vendorCenter}>
                   <div className={styles.vendorHeading}>
                     <h3>{v.isBranchMatch && v.branchName ? v.branchName : v.name}</h3>
+                    <FounderBadge show={founderIds.has(v.id)} size={16} />
                     {badge(v.verificationStatus)}
                     <div className={styles.ratingWrap}>
                       <i className="fa-solid fa-star"></i>

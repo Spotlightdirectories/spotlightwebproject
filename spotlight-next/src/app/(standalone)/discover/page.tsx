@@ -20,6 +20,7 @@
 //   (Commit 3 wires the results page itself)
 // ===============================================================
 
+import FounderBadge from "@/components/FounderBadge";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -40,6 +41,7 @@ interface SponsoredVendor {
   lga: string | null;
   state: string | null;
   verification_status: string;
+  is_founder?: boolean;
   average_rating: number | null;
   reviews_count: number | null;
 }
@@ -196,7 +198,7 @@ export default function DiscoverPage() {
       const { data } = await supabase
         .from("vendors")
         .select(
-          "id, slug, name, logo_url, category, subcategory, lga, state, verification_status, average_rating, reviews_count"
+          "id, slug, name, logo_url, category, subcategory, lga, state, verification_status, is_founder, average_rating, reviews_count"
         )
         .eq("account_status", "active")
         .in(
@@ -480,6 +482,7 @@ export default function DiscoverPage() {
                   <div className={styles.discoverSponsoredInfo}>
                     <div className={styles.discoverSponsoredTitleRow}>
                       <p className={styles.discoverSponsoredName}>{v.name}</p>
+                      <FounderBadge show={v.is_founder} size={16} />
                       <VendorBadge status={v.verification_status} />
                     </div>
                     <p className={styles.discoverSponsoredCat}>{v.subcategory || "Vendor"}</p>

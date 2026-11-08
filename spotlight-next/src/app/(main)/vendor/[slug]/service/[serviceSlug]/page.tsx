@@ -16,6 +16,7 @@
 // - Analytics: service_view event
 // ===============================================================
 
+import FounderBadge from "@/components/FounderBadge";
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -105,7 +106,7 @@ function SmallBadge({ status }: { status: string }) {
   return null;
 }
 
-function ServiceCard({ service, onClick }: { service: RelatedService; onClick: () => void }) {
+function ServiceCard({ service, onClick, fallbackSlug }: { service: RelatedService; onClick: () => void; fallbackSlug?: string }) {
   const name = service.vendors?.name || service.vendorName || "";
   const verification = service.vendors?.verification_status || service.vendorVerification || "none";
   const rating = service.vendors?.average_rating ?? service.vendorRating ?? 0;
@@ -129,6 +130,7 @@ function ServiceCard({ service, onClick }: { service: RelatedService; onClick: (
       )}
       <div className={styles.vsCardVendor}>
         <span>By {name}</span>
+        <FounderBadge slug={service.vendorSlug || fallbackSlug} size={16} />
         <SmallBadge status={verification} />
       </div>
       <div className={styles.vsCardRating}>
@@ -671,6 +673,7 @@ export default function VendorServicePage() {
           <div className={styles.vsVendorMeta}>
             <div className={styles.vsVendorRow}>
               <span>By {vendor?.name || ""}</span>
+              <FounderBadge slug={vendorSlug} size={16} />
               <SmallBadge status={vendor?.verification_status || "none"} />
             </div>
             <div className={styles.vsRatingRow}>
@@ -787,6 +790,7 @@ export default function VendorServicePage() {
               <ServiceCard
                 key={s.slug}
                 service={s}
+                fallbackSlug={vendorSlug}
                 onClick={() => router.push(`/vendor/${vendorSlug}/service/${s.slug}`)}
               />
             ))}
@@ -803,6 +807,7 @@ export default function VendorServicePage() {
               <ServiceCard
                 key={s.slug + (s.vendorSlug || "")}
                 service={s}
+                fallbackSlug={vendorSlug}
                 onClick={() => router.push(`/vendor/${s.vendorSlug || vendorSlug}/service/${s.slug}`)}
               />
             ))}

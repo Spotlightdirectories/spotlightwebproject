@@ -16,6 +16,7 @@
 // branches under Reviews, matching production's vendor-profile.js.
 // ===============================================================
 
+import FounderBadge from "@/components/FounderBadge";
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { KeyboardEvent } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -90,6 +91,7 @@ interface Vendor {
   logo_url: string | null;
   cover_url: string | null;
   verification_status: string;
+  is_founder?: boolean;
   average_rating: number;
   reviews_count: number;
   plan_tier: string;
@@ -146,7 +148,7 @@ interface Service {
   representative_image_url: string | null;
   vendors: {
     slug: string; name: string; category: string; subcategory: string;
-    state: string; lga: string; verification_status: string;
+    state: string; lga: string; verification_status: string; is_founder?: boolean;
     average_rating: number; reviews_count: number;
   };
 }
@@ -539,7 +541,7 @@ export default function VendorProfilePage() {
   async function loadServices(vendorId: string) {
     const { data } = await supabase
       .from("vendor_services")
-      .select(`*, vendors(slug, name, category, subcategory, state, lga, verification_status, average_rating, reviews_count)`)
+      .select(`*, vendors(slug, name, category, subcategory, state, lga, verification_status, is_founder, average_rating, reviews_count)`)
       .eq("vendor_id", vendorId)
       .eq("moderation_status", "approved");
     setServices(data || []);
@@ -1236,6 +1238,7 @@ export default function VendorProfilePage() {
             <div className={styles.heroText}>
               <div className={styles.nameRow}>
                 <h1>{locationView.name}</h1>
+                <FounderBadge show={vendor.is_founder} size={22} />
                 <Badge status={vendor.verification_status} />
               </div>
 
@@ -1635,6 +1638,7 @@ export default function VendorProfilePage() {
                     <p className={styles.productPrice}>₦{Number(p.price || 0).toLocaleString()}</p>
                     <div className={styles.productVendor}>
                       <span>By {vendor.name}</span>
+                      <FounderBadge show={vendor.is_founder} size={16} />
                       <SmallBadge status={vendor.verification_status} />
                     </div>
                     <div className={styles.productRating}>
@@ -1671,6 +1675,7 @@ export default function VendorProfilePage() {
                         <h3>{s.service_name}</h3>
                         <div className={styles.serviceVendorRow}>
                           <span>By: {s.vendors?.name}</span>
+                          <FounderBadge show={s.vendors?.is_founder} size={16} />
                           <SmallBadge status={s.vendors?.verification_status} />
                         </div>
                         <div className={styles.serviceRating}>
@@ -1797,6 +1802,7 @@ export default function VendorProfilePage() {
                 />
                 <div className={styles.similarNameRow}>
                   <span className={styles.similarName}>{b.name}</span>
+                  <FounderBadge slug={b.slug} size={16} />
                   <SmallBadge status={b.verification_status} />
                 </div>
                 <div className={styles.similarRating}>
