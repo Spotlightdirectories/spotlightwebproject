@@ -12,6 +12,7 @@
 // Standalone page: its own header + bottom nav, no site navbar.
 // ===============================================================
 
+import BadgeTip from "@/components/BadgeTip";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -730,8 +731,8 @@ export default function DiscoverResultsPage() {
 
   // ── Render helpers ───────────────────────────────────────
   function badge(status: string) {
-    if (status === "blue") return <img src="/images/bluebadge.png" alt="Verified Business" title="Verified Business — official business documents reviewed by Spotlight. This vendor operates a registered and credible business." className={styles.vendorBadge} />;
-    if (status === "gray") return <img src="/images/graybadge.png" alt="Verified Identity" title="Verified Identity — business owner identity confirmed" className={styles.vendorBadge} />;
+    if (status === "blue") return <BadgeTip kind="blue"><img src="/images/bluebadge.png" alt="Verified Business" className={styles.vendorBadge} /></BadgeTip>;
+    if (status === "gray") return <BadgeTip kind="gray"><img src="/images/graybadge.png" alt="Verified Identity" className={styles.vendorBadge} /></BadgeTip>;
     return null;
   }
 

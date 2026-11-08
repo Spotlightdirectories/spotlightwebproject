@@ -16,6 +16,7 @@
 // branches under Reviews, matching production's vendor-profile.js.
 // ===============================================================
 
+import BadgeTip from "@/components/BadgeTip";
 import FounderBadge from "@/components/FounderBadge";
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { KeyboardEvent } from "react";
@@ -191,14 +192,14 @@ interface Branch {
 
 // ── Badge helper ──────────────────────────────────────────────
 function Badge({ status }: { status: string }) {
-  if (status === "blue") return <img src="/images/bluebadge.png" alt="Verified Business" title="Verified Business — official business documents reviewed by Spotlight. This vendor operates a registered and credible business." style={{ width: 30, height: 30 }} />;
-  if (status === "gray") return <img src="/images/graybadge.png" alt="Verified Identity" title="Verified Identity — business owner identity confirmed" style={{ width: 30, height: 30 }} />;
+  if (status === "blue") return <BadgeTip kind="blue"><img src="/images/bluebadge.png" alt="Verified Business" style={{ width: 30, height: 30 }} /></BadgeTip>;
+  if (status === "gray") return <BadgeTip kind="gray"><img src="/images/graybadge.png" alt="Verified Identity" style={{ width: 30, height: 30 }} /></BadgeTip>;
   return null;
 }
 
 function SmallBadge({ status }: { status: string }) {
-  if (status === "blue") return <img src="/images/bluebadge.png" alt="Verified Business" title="Verified Business — official business documents reviewed by Spotlight. This vendor operates a registered and credible business." style={{ width: 18, height: 18 }} />;
-  if (status === "gray") return <img src="/images/graybadge.png" alt="Verified Identity" title="Verified Identity — business owner identity confirmed" style={{ width: 18, height: 18 }} />;
+  if (status === "blue") return <BadgeTip kind="blue"><img src="/images/bluebadge.png" alt="Verified Business" style={{ width: 18, height: 18 }} /></BadgeTip>;
+  if (status === "gray") return <BadgeTip kind="gray"><img src="/images/graybadge.png" alt="Verified Identity" style={{ width: 18, height: 18 }} /></BadgeTip>;
   return null;
 }
 

@@ -21,6 +21,7 @@
 //   new feature, not something production already tracked.
 // ===============================================================
 
+import BadgeTip from "@/components/BadgeTip";
 import FounderBadge from "@/components/FounderBadge";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -80,8 +81,8 @@ interface RelatedProduct {
 }
 
 function SmallBadge({ status }: { status: string }) {
-  if (status === "blue") return <img src="/images/bluebadge.png" alt="Verified" className={styles.vpBadge} />;
-  if (status === "gray") return <img src="/images/graybadge.png" alt="Verified" className={styles.vpBadge} />;
+  if (status === "blue") return <BadgeTip kind="blue"><img src="/images/bluebadge.png" alt="Verified" className={styles.vpBadge} /></BadgeTip>;
+  if (status === "gray") return <BadgeTip kind="gray"><img src="/images/graybadge.png" alt="Verified" className={styles.vpBadge} /></BadgeTip>;
   return null;
 }
 

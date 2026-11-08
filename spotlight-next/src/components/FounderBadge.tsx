@@ -14,6 +14,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import BadgeTip from "@/components/BadgeTip";
 
 export const FOUNDER_TOOLTIP =
   "Founders 1000 — one of the first 1,000 vendors to join Spotlight Directories";
@@ -49,8 +50,7 @@ export default function FounderBadge({
   return (
     <>
       <style>{`@keyframes founderGlow{0%,100%{box-shadow:0 0 3px 0 rgba(255,200,40,.5),0 0 7px 1px rgba(255,190,0,.25)}50%{box-shadow:0 0 4px 1px rgba(255,210,60,.65),0 0 9px 2px rgba(255,190,0,.32)}}`}</style>
-      <span
-        title={FOUNDER_TOOLTIP}
+      <span style={{ display: "inline-flex", marginRight: 6 }}><BadgeTip kind="founder"><span
         aria-label="Founders 1000"
         style={{
           display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -59,11 +59,11 @@ export default function FounderBadge({
           fontSize: Math.round(size * 0.62), fontWeight: 800, letterSpacing: 0.5, lineHeight: 1,
           textShadow: "0 0 3px rgba(255,216,77,.7)",
           animation: "founderGlow 2.2s ease-in-out infinite",
-          marginRight: 6, verticalAlign: "middle", flexShrink: 0, cursor: "help", whiteSpace: "nowrap",
+          verticalAlign: "middle", flexShrink: 0, whiteSpace: "nowrap",
         }}
       >
         1KF
-      </span>
+      </span></BadgeTip></span>
     </>
   );
 }

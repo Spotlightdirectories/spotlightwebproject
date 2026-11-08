@@ -20,6 +20,7 @@
 //   (Commit 3 wires the results page itself)
 // ===============================================================
 
+import BadgeTip from "@/components/BadgeTip";
 import FounderBadge from "@/components/FounderBadge";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -67,8 +68,8 @@ function getRecentSearches(): string[] {
 }
 
 function VendorBadge({ status }: { status: string }) {
-  if (status === "blue") return <img src="/images/bluebadge.png" alt="Verified Business" title="Verified Business — official business documents reviewed by Spotlight. This vendor operates a registered and credible business." className={styles.discoverSponsoredBadge} />;
-  if (status === "gray") return <img src="/images/graybadge.png" alt="Verified Identity" title="Verified Identity — business owner identity confirmed" className={styles.discoverSponsoredBadge} />;
+  if (status === "blue") return <BadgeTip kind="blue"><img src="/images/bluebadge.png" alt="Verified Business" className={styles.discoverSponsoredBadge} /></BadgeTip>;
+  if (status === "gray") return <BadgeTip kind="gray"><img src="/images/graybadge.png" alt="Verified Identity" className={styles.discoverSponsoredBadge} /></BadgeTip>;
   return null;
 }
 

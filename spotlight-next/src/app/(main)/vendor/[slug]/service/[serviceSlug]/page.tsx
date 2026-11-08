@@ -16,6 +16,7 @@
 // - Analytics: service_view event
 // ===============================================================
 
+import BadgeTip from "@/components/BadgeTip";
 import FounderBadge from "@/components/FounderBadge";
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -101,8 +102,8 @@ async function compressPhoto(file: File): Promise<File> {
 }
 
 function SmallBadge({ status }: { status: string }) {
-  if (status === "blue") return <img src="/images/bluebadge.png" alt="Verified" className={styles.vsBadge} />;
-  if (status === "gray") return <img src="/images/graybadge.png" alt="Verified" className={styles.vsBadge} />;
+  if (status === "blue") return <BadgeTip kind="blue"><img src="/images/bluebadge.png" alt="Verified" className={styles.vsBadge} /></BadgeTip>;
+  if (status === "gray") return <BadgeTip kind="gray"><img src="/images/graybadge.png" alt="Verified" className={styles.vsBadge} /></BadgeTip>;
   return null;
 }
 
