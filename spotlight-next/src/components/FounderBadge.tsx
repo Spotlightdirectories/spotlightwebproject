@@ -48,7 +48,7 @@ export default function FounderBadge({
   if (!on) return null;
   return (
     <>
-      <style>{`@keyframes founderGlow{0%,100%{box-shadow:0 0 6px 1px rgba(255,200,40,.8),0 0 14px 3px rgba(255,190,0,.45),inset 0 0 5px rgba(255,200,40,.35)}50%{box-shadow:0 0 9px 2px rgba(255,210,60,1),0 0 20px 6px rgba(255,190,0,.6),inset 0 0 7px rgba(255,200,40,.5)}}`}</style>
+      <style>{`@keyframes founderGlow{0%,100%{box-shadow:0 0 3px 0 rgba(255,200,40,.5),0 0 7px 1px rgba(255,190,0,.25)}50%{box-shadow:0 0 4px 1px rgba(255,210,60,.65),0 0 9px 2px rgba(255,190,0,.32)}}`}</style>
       <span
         title={FOUNDER_TOOLTIP}
         aria-label="Founders 1000"
@@ -56,8 +56,8 @@ export default function FounderBadge({
           display: "inline-flex", alignItems: "center", justifyContent: "center",
           height: size, padding: `0 ${Math.round(size * 0.36)}px`, borderRadius: size,
           background: "#000", color: "#FFD84D", border: "1px solid #F2C94C",
-          fontSize: Math.round(size * 0.55), fontWeight: 800, letterSpacing: 0.5, lineHeight: 1,
-          textShadow: "0 0 4px rgba(255,216,77,.95), 0 0 9px rgba(255,200,40,.8)",
+          fontSize: Math.round(size * 0.62), fontWeight: 800, letterSpacing: 0.5, lineHeight: 1,
+          textShadow: "0 0 3px rgba(255,216,77,.7)",
           animation: "founderGlow 2.2s ease-in-out infinite",
           marginRight: 6, verticalAlign: "middle", flexShrink: 0, cursor: "help", whiteSpace: "nowrap",
         }}

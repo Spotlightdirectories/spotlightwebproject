@@ -482,7 +482,7 @@ export default function DiscoverPage() {
                   <div className={styles.discoverSponsoredInfo}>
                     <div className={styles.discoverSponsoredTitleRow}>
                       <p className={styles.discoverSponsoredName}>{v.name}</p>
-                      <FounderBadge show={v.is_founder} size={16} />
+                      <FounderBadge show={v.is_founder} size={13} />
                       <VendorBadge status={v.verification_status} />
                     </div>
                     <p className={styles.discoverSponsoredCat}>{v.subcategory || "Vendor"}</p>

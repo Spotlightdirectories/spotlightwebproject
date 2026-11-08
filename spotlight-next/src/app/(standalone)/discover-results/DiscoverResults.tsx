@@ -941,7 +941,7 @@ export default function DiscoverResultsPage() {
                   )}
                   <div className={styles.productVendor}>
                     <span>By {vendorName}</span>
-                    <FounderBadge show={founderIds.has(isProduct || isService ? item.vendorId : item.id)} size={16} />
+                    <FounderBadge show={founderIds.has(isProduct || isService ? item.vendorId : item.id)} size={13} />
                     {badge(verification)}
                   </div>
                   <div className={styles.productRating}>
@@ -989,7 +989,7 @@ export default function DiscoverResultsPage() {
                   <p className={styles.productPrice}>₦{Number(p.price || 0).toLocaleString()}</p>
                   <div className={styles.productVendor}>
                     <span>By {p.vendorName}</span>
-                    <FounderBadge show={founderIds.has(p.vendorId)} size={16} />
+                    <FounderBadge show={founderIds.has(p.vendorId)} size={13} />
                     {badge(p.vendorVerification)}
                   </div>
                   {p.distanceKm != null && (
@@ -1063,7 +1063,7 @@ export default function DiscoverResultsPage() {
                       <p style={{ fontSize: 12, color: "var(--color-text-muted)", margin: "2px 0 0", display: "flex", alignItems: "center", gap: 4 }}>
                         By {s.vendorName}
                       </p>
-                      <FounderBadge show={founderIds.has(s.vendorId)} size={16} />
+                      <FounderBadge show={founderIds.has(s.vendorId)} size={13} />
                       {badge(s.vendorVerification)}
                       <div className={styles.ratingWrap}>
                         <i className="fa-solid fa-star"></i>
@@ -1136,7 +1136,7 @@ export default function DiscoverResultsPage() {
                 <div className={styles.vendorCenter}>
                   <div className={styles.vendorHeading}>
                     <h3>{v.isBranchMatch && v.branchName ? v.branchName : v.name}</h3>
-                    <FounderBadge show={founderIds.has(v.id)} size={16} />
+                    <FounderBadge show={founderIds.has(v.id)} size={13} />
                     {badge(v.verificationStatus)}
                     <div className={styles.ratingWrap}>
                       <i className="fa-solid fa-star"></i>
