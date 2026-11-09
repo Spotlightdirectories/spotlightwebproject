@@ -1,6 +1,9 @@
 // ===============================================================
 // src/middleware.ts
 //
+// Also: permanently redirects /vendor/...?slug=... to the clean
+// address (see the top of middleware() below).
+//
 // Handles the two old production URLs that next.config.ts's static
 // redirects() can't: vendor-product.html?slug=X and
 // vendor-service.html?slug=X. Production's URL only carries the
@@ -20,10 +23,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 export const config = {
-  matcher: ["/vendor-product.html", "/vendor-service.html"],
+  matcher: [
+    "/vendor-product.html",
+    "/vendor-service.html",
+    // Clean addresses that still carry a leftover ?slug=... (old links
+    // Google remembers). Only runs when that parameter is present.
+    { source: "/vendor/:path*", has: [{ type: "query", key: "slug" }] },
+  ],
 };
 
 export async function middleware(req: NextRequest) {
+  // /vendor/<name>?slug=<name>  ->  /vendor/<name>  (permanent redirect).
+  // Same for product and service pages. One real address per page, so
+  // Google stops counting the ?slug= copies as duplicates.
+  if (req.nextUrl.pathname.startsWith("/vendor/")) {
+    const clean = req.nextUrl.clone();
+    clean.searchParams.delete("slug");
+    return NextResponse.redirect(clean, 308);
+  }
+
   const slug = req.nextUrl.searchParams.get("slug");
   const fallback = () => NextResponse.redirect(new URL("/discover", req.url), 308);
 
