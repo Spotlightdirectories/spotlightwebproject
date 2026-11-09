@@ -104,7 +104,7 @@ function ProductCard({ product, onClick, fallbackSlug }: { product: RelatedProdu
       <p className={styles.vpCardPrice}>₦{Number(product.price || 0).toLocaleString()}</p>
       <div className={styles.vpCardVendor}>
         <span>By {name}</span>
-        <FounderBadge slug={product.vendorSlug || fallbackSlug} size={13} />
+        <FounderBadge slug={product.vendorSlug || fallbackSlug} size={15} />
         <SmallBadge status={verification} />
       </div>
       <div className={styles.vpCardRating}>
@@ -360,7 +360,7 @@ export default function VendorProductPage() {
           <div className={styles.vpVendorMeta}>
             <div className={styles.vpVendorRow}>
               <span>By {vendor?.name || ""}</span>
-              <FounderBadge slug={vendorSlug} size={13} />
+              <FounderBadge slug={vendorSlug} size={15} />
               <SmallBadge status={vendor?.verification_status || "none"} />
             </div>
             <div className={styles.vpRatingRow}>

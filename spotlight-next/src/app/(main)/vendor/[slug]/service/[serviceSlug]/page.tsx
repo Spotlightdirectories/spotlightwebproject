@@ -131,7 +131,7 @@ function ServiceCard({ service, onClick, fallbackSlug }: { service: RelatedServi
       )}
       <div className={styles.vsCardVendor}>
         <span>By {name}</span>
-        <FounderBadge slug={service.vendorSlug || fallbackSlug} size={13} />
+        <FounderBadge slug={service.vendorSlug || fallbackSlug} size={15} />
         <SmallBadge status={verification} />
       </div>
       <div className={styles.vsCardRating}>
@@ -674,7 +674,7 @@ export default function VendorServicePage() {
           <div className={styles.vsVendorMeta}>
             <div className={styles.vsVendorRow}>
               <span>By {vendor?.name || ""}</span>
-              <FounderBadge slug={vendorSlug} size={13} />
+              <FounderBadge slug={vendorSlug} size={15} />
               <SmallBadge status={vendor?.verification_status || "none"} />
             </div>
             <div className={styles.vsRatingRow}>

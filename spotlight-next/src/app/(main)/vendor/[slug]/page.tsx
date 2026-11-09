@@ -1239,7 +1239,7 @@ export default function VendorProfilePage() {
             <div className={styles.heroText}>
               <div className={styles.nameRow}>
                 <h1>{locationView.name}</h1>
-                <FounderBadge show={vendor.is_founder} size={18} />
+                <FounderBadge show={vendor.is_founder} size={26} />
                 <Badge status={vendor.verification_status} />
               </div>
 
@@ -1639,7 +1639,7 @@ export default function VendorProfilePage() {
                     <p className={styles.productPrice}>₦{Number(p.price || 0).toLocaleString()}</p>
                     <div className={styles.productVendor}>
                       <span>By {vendor.name}</span>
-                      <FounderBadge show={vendor.is_founder} size={13} />
+                      <FounderBadge show={vendor.is_founder} size={15} />
                       <SmallBadge status={vendor.verification_status} />
                     </div>
                     <div className={styles.productRating}>
@@ -1676,7 +1676,7 @@ export default function VendorProfilePage() {
                         <h3>{s.service_name}</h3>
                         <div className={styles.serviceVendorRow}>
                           <span>By: {s.vendors?.name}</span>
-                          <FounderBadge show={s.vendors?.is_founder} size={13} />
+                          <FounderBadge show={s.vendors?.is_founder} size={15} />
                           <SmallBadge status={s.vendors?.verification_status} />
                         </div>
                         <div className={styles.serviceRating}>
@@ -1803,7 +1803,7 @@ export default function VendorProfilePage() {
                 />
                 <div className={styles.similarNameRow}>
                   <span className={styles.similarName}>{b.name}</span>
-                  <FounderBadge slug={b.slug} size={13} />
+                  <FounderBadge slug={b.slug} size={15} />
                   <SmallBadge status={b.verification_status} />
                 </div>
                 <div className={styles.similarRating}>

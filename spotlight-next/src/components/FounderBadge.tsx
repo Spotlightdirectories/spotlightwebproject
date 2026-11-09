@@ -3,7 +3,7 @@
 // ===============================================================
 // src/components/FounderBadge.tsx
 //
-// Founders 1000 badge: gold "1KF" on black. Goes BEFORE the verified
+// Founders 1000 badge: round gold laurel medal with "1KF". Goes BEFORE the verified
 // badge, for the first 1,000 vendors (Spot-ID number 1-1000, stored
 // in vendors.is_founder). No number is shown on purpose.
 //
@@ -48,22 +48,17 @@ export default function FounderBadge({
   const on = show !== undefined && show !== null ? show : found;
   if (!on) return null;
   return (
-    <>
-      <style>{`@keyframes founderGlow{0%,100%{box-shadow:0 0 3px 0 rgba(255,200,40,.5),0 0 7px 1px rgba(255,190,0,.25)}50%{box-shadow:0 0 4px 1px rgba(255,210,60,.65),0 0 9px 2px rgba(255,190,0,.32)}}`}</style>
-      <span style={{ display: "inline-flex", marginRight: 6 }}><BadgeTip kind="founder"><span
-        aria-label="Founders 1000"
-        style={{
-          display: "inline-flex", alignItems: "center", justifyContent: "center",
-          height: size, padding: `0 ${Math.round(size * 0.36)}px`, borderRadius: size,
-          background: "#000", color: "#FFD84D", border: "1px solid #F2C94C",
-          fontSize: Math.round(size * 0.62), fontWeight: 800, letterSpacing: 0.5, lineHeight: 1,
-          textShadow: "0 0 3px rgba(255,216,77,.7)",
-          animation: "founderGlow 2.2s ease-in-out infinite",
-          verticalAlign: "middle", flexShrink: 0, whiteSpace: "nowrap",
-        }}
-      >
-        1KF
-      </span></BadgeTip></span>
-    </>
+    <span style={{ display: "inline-flex", alignItems: "center", marginRight: 4 }}>
+      <BadgeTip kind="founder">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/foundersbadge.png"
+          alt="Founders 1000"
+          width={size}
+          height={size}
+          style={{ width: size, height: size, display: "block" }}
+        />
+      </BadgeTip>
+    </span>
   );
 }
