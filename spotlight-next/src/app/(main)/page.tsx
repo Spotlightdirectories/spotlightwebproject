@@ -152,17 +152,6 @@ export default function HomePage() {
   // as real footage becomes available -- this lets that happen
   // gradually without anything breaking in the meantime.
   const [videoErrors, setVideoErrors] = useState<Record<number, boolean>>({});
-  // Speed: on slow or data-saver connections the hero clips (about 1 MB each,
-  // two loaded up front) are skipped and the still pictures are shown instead,
-  // so the page appears much sooner. Fast connections are unchanged.
-  const [slowConnection, setSlowConnection] = useState(false);
-  useEffect(() => {
-    const c = (navigator as unknown as { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
-    if (c && (c.saveData || c.effectiveType === "slow-2g" || c.effectiveType === "2g" || c.effectiveType === "3g")) {
-      setSlowConnection(true);
-    }
-  }, []);
-
   // Speed fix, 2026-11-10: the hero clips start downloading only after the
   // rest of the page (including the code that makes Search and the buttons
   // work) has finished loading, plus one second. Until then the still photo
@@ -363,7 +352,7 @@ export default function HomePage() {
             const slideIdx = state.slots[slot];
             const slideData = SLIDES[slideIdx];
             const isVisible = state.visibleSlot === slot;
-            if (!videosReady || !slideData.video || videoErrors[slideIdx] || slowConnection) return null;
+            if (!videosReady || !slideData.video || videoErrors[slideIdx]) return null;
             return (
               <video
                 key={`slot-${slot}`}
