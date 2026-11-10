@@ -1,5 +1,6 @@
 "use client";
 
+import { cachedQuery } from "@/lib/cachedQuery";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useTheme } from "./ThemeProvider";
@@ -40,14 +41,14 @@ export default function Navbar() {
 
   useEffect(() => {
     async function loadCats() {
-      const { data } = await supabase
+      const { data } = await cachedQuery("navbar-cats", () => supabase
         .from("categories")
         .select("name, audience_type, image_url")
         .in("audience_type", ["Artisan", "Professional"])
-        .order("name");
+        .order("name"));
       if (data) {
-        setArtisanCats(data.filter((c) => c.audience_type === "Artisan").map((c) => c.name));
-        setProfessionalCats(data.filter((c) => c.audience_type === "Professional").map((c) => c.name));
+        setArtisanCats(data.filter((c: { audience_type: string }) => c.audience_type === "Artisan").map((c: { name: string }) => c.name));
+        setProfessionalCats(data.filter((c: { audience_type: string }) => c.audience_type === "Professional").map((c: { name: string }) => c.name));
         setCatIcons((prev) => {
           const next = { ...prev };
           for (const c of data as any[]) if (c.image_url) next[c.name] = c.image_url;
@@ -70,10 +71,10 @@ export default function Navbar() {
 
   useEffect(() => {
     async function loadNested() {
-      const { data } = await supabase
+      const { data } = await cachedQuery("navbar-nested", () => supabase
         .from("categories")
         .select("name, subcategories(name, sub_subcategories(name))")
-        .in("name", ["Tailoring & Fashion Designer", "Clothing & Fashion"]);
+        .in("name", ["Tailoring & Fashion Designer", "Clothing & Fashion"]));
       if (!data) return;
       const nested: Record<string, Record<string, string[]>> = {};
       for (const cat of data as any[]) {
@@ -99,11 +100,11 @@ export default function Navbar() {
 
   useEffect(() => {
     async function loadGoodsCats() {
-      const { data } = await supabase
+      const { data } = await cachedQuery("navbar-goods", () => supabase
         .from("categories")
         .select("name, goods_subgroup, image_url")
         .eq("audience_type", "Goods")
-        .order("name");
+        .order("name"));
       if (!data) return;
       const grouped: Record<string, string[]> = {};
       const icons: Record<string, string> = {};

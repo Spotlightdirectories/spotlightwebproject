@@ -57,6 +57,10 @@ function LoginForm() {
       return;
     }
 
+    // Speed: start downloading the dashboard's code now, while we look up the
+    // vendor record below, so it is already there when we redirect.
+    router.prefetch(nextUrl);
+
     // 2. Fetch vendor record
     const { data: vendor, error: vendorError } = await supabase
       .from("vendors")

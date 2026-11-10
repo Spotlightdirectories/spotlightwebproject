@@ -119,7 +119,7 @@ export default function TawkChat() {
   if (!allowed) return null;
 
   return (
-    <Script id="tawk-to-widget" strategy="afterInteractive">
+    <Script id="tawk-to-widget" strategy="lazyOnload">
       {`
         var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
         (function(){

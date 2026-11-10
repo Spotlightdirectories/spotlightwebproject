@@ -12,6 +12,7 @@
 // Standalone page: its own header + bottom nav, no site navbar.
 // ===============================================================
 
+import { cachedQuery } from "@/lib/cachedQuery";
 import BadgeTip from "@/components/BadgeTip";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -252,11 +253,11 @@ export default function DiscoverResultsPage() {
   // ── Load categories ──────────────────────────────────────
   useEffect(() => {
     async function load() {
-      const { data } = await supabase
+      const { data } = await cachedQuery("cat-names", () => supabase
         .from("categories")
         .select("name")
-        .order("name");
-      if (data) setCategories(data.map(c => c.name));
+        .order("name"));
+      if (data) setCategories(data.map((c: { name: string }) => c.name));
     }
     load();
   }, []);
@@ -265,12 +266,12 @@ export default function DiscoverResultsPage() {
   useEffect(() => {
     if (!selectedCategory) { setSubcategories([]); setSelectedSubcategory(""); return; }
     async function load() {
-      const { data: catRow } = await supabase
-        .from("categories").select("id").eq("name", selectedCategory).maybeSingle();
+      const { data: catRow } = await cachedQuery("cat-id:" + selectedCategory, () => supabase
+        .from("categories").select("id").eq("name", selectedCategory).maybeSingle());
       if (!catRow) return;
-      const { data } = await supabase
-        .from("subcategories").select("name").eq("category_id", catRow.id).order("name");
-      if (data) setSubcategories(data.map(s => s.name));
+      const { data } = await cachedQuery("sub-names:" + catRow.id, () => supabase
+        .from("subcategories").select("name").eq("category_id", catRow.id).order("name"));
+      if (data) setSubcategories(data.map((s: { name: string }) => s.name));
     }
     load();
     setSelectedSubcategory("");

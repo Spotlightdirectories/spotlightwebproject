@@ -20,6 +20,7 @@
 //   (Commit 3 wires the results page itself)
 // ===============================================================
 
+import { cachedQuery } from "@/lib/cachedQuery";
 import BadgeTip from "@/components/BadgeTip";
 import FounderBadge from "@/components/FounderBadge";
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -121,11 +122,11 @@ export default function DiscoverPage() {
   // ── Load categories from Supabase ──────────────────────────
   useEffect(() => {
     async function loadCategories() {
-      const { data } = await supabase
+      const { data } = await cachedQuery("cat-names", () => supabase
         .from("categories")
         .select("name")
-        .order("name");
-      if (data) setCategories(data.map((c) => c.name));
+        .order("name"));
+      if (data) setCategories(data.map((c: { name: string }) => c.name));
     }
     loadCategories();
   }, []);
@@ -139,18 +140,18 @@ export default function DiscoverPage() {
     }
     async function loadSubs() {
       // subcategories links to categories via category_id, not name
-      const { data: catRow } = await supabase
+      const { data: catRow } = await cachedQuery("cat-id:" + selectedCategory, () => supabase
         .from("categories")
         .select("id")
         .eq("name", selectedCategory)
-        .maybeSingle();
+        .maybeSingle());
       if (!catRow) return;
-      const { data } = await supabase
+      const { data } = await cachedQuery("sub-names:" + catRow.id, () => supabase
         .from("subcategories")
         .select("name")
         .eq("category_id", catRow.id)
-        .order("name");
-      if (data) setSubcategories(data.map((s) => s.name));
+        .order("name"));
+      if (data) setSubcategories(data.map((s: { name: string }) => s.name));
     }
     loadSubs();
     setSelectedSubcategory("");

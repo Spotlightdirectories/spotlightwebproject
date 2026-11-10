@@ -38,6 +38,7 @@
 // is a faithful port of production's exact behavior.
 // ===============================================================
 
+import { cachedQuery } from "@/lib/cachedQuery";
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, RefObject } from "react";
 import { supabase } from "@/lib/supabase";
@@ -257,11 +258,11 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
 
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase
+      const { data, error } = await cachedQuery("tab-product-cats", () => supabase
         .from("categories")
         .select("id,name,free_product_name")
         .eq("kind", "product")
-        .order("name", { ascending: true });
+        .order("name", { ascending: true }));
       if (!error) setCategories(data || []);
     })();
   }, []);
@@ -276,11 +277,11 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
         setSubcategories([]);
         return;
       }
-      const { data, error } = await supabase
+      const { data, error } = await cachedQuery("subs:" + categoryId, () => supabase
         .from("subcategories")
         .select("id,name")
         .eq("category_id", categoryId)
-        .order("name", { ascending: true });
+        .order("name", { ascending: true }));
       if (!error) {
         setSubcategories(data || []);
         if (pendingEditSubcategoryId.current) {
@@ -301,11 +302,11 @@ export default function ProductsTab({ vendor }: { vendor: Vendor }) {
         setSubSubcategories([]);
         return;
       }
-      const { data, error } = await supabase
+      const { data, error } = await cachedQuery("subsubs:" + subcategoryId, () => supabase
         .from("sub_subcategories")
         .select("id,name")
         .eq("subcategory_id", subcategoryId)
-        .order("display_order", { ascending: true });
+        .order("display_order", { ascending: true }));
       if (!error) {
         setSubSubcategories(data || []);
         if (pendingEditSubSubcategoryId.current) {

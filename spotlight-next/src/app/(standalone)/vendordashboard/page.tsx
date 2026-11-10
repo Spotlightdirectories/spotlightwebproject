@@ -18,14 +18,19 @@ import { supabase } from "@/lib/supabase";
 import { useIsMobile } from "@/lib/useIsMobile";
 import LaunchOfferCompact from "@/components/LaunchOfferCompact";
 import { ONBOARDING_VIDEOS } from "@/lib/onboardingVideos";
-import ProfileTab from "./ProfileTab";
-import ProductsTab from "./ProductsTab";
-import ServicesTab from "./ServicesTab";
-import PortfolioTab from "./PortfolioTab";
-import SubscriptionTab from "./SubscriptionTab";
-import VerificationTab from "./VerificationTab";
-import VisitRequestsTab from "./VisitRequestsTab";
-import SettingsTab from "./SettingsTab";
+import dynamic from "next/dynamic";
+// Speed: each tab is its own small download, fetched only when the vendor
+// first opens it (and then kept, so nothing is lost when switching tabs).
+// Before, all eight tabs -- thousands of lines and ~25 database calls --
+// loaded the moment the dashboard opened, which is painful on slow data.
+const ProfileTab = dynamic(() => import("./ProfileTab"));
+const ProductsTab = dynamic(() => import("./ProductsTab"));
+const ServicesTab = dynamic(() => import("./ServicesTab"));
+const PortfolioTab = dynamic(() => import("./PortfolioTab"));
+const SubscriptionTab = dynamic(() => import("./SubscriptionTab"));
+const VerificationTab = dynamic(() => import("./VerificationTab"));
+const VisitRequestsTab = dynamic(() => import("./VisitRequestsTab"));
+const SettingsTab = dynamic(() => import("./SettingsTab"));
 
 export type Vendor = {
   id: string;
@@ -108,6 +113,13 @@ function VendorDashboardInner() {
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
+  // Tabs the vendor has opened so far. A tab (and its data loading) only
+  // starts the first time it is opened, then stays mounted.
+  const [visitedTabs, setVisitedTabs] = useState<Set<TabKey>>(new Set(["overview"]));
+  useEffect(() => {
+    setVisitedTabs((prev) => (prev.has(activeTab) ? prev : new Set(prev).add(activeTab)));
+  }, [activeTab]);
+  const seen = (tab: TabKey) => visitedTabs.has(tab) || activeTab === tab;
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -148,7 +160,11 @@ function VendorDashboardInner() {
   // ---------------------------------------------------------------
   useEffect(() => {
     async function load() {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      // getSession reads the saved login on the device (no network wait);
+      // getUser asked the server every time -- one extra slow round trip.
+      // The database still checks the login on every request.
+      const { data: { session }, error: authError } = await supabase.auth.getSession();
+      const user = session?.user || null;
 
       // Preserve where the vendor was actually headed (e.g. a
       // ?tab=visitRequests link from the visit-request email) through
@@ -191,6 +207,10 @@ function VendorDashboardInner() {
         setActiveTab(requestedTab as TabKey);
       }
 
+      // Show the dashboard NOW; the four checklist counts below arrive a
+      // moment later instead of holding up the whole page.
+      setLoading(false);
+
       // Media + social counts for the profile checklist. Category/subcategory
       // now lives on individual products/services (not on the vendor row
       // itself), so the checklist counts listings that have been given a
@@ -205,7 +225,6 @@ function VendorDashboardInner() {
       setMediaCount(mCount || 0);
       setSocialCount(sCount || 0);
       setCategorizedListingCount((pCatCount || 0) + (sCatCount || 0));
-      setLoading(false);
     }
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -673,17 +692,21 @@ function VendorDashboardInner() {
 
         {/* ============ PROFILE (module 2) ============ */}
         <section className={sec("profile")}>
+          {seen("profile") && (
           <ProfileTab
             vendor={vendor}
             onVendorUpdate={(patch) => setVendor((prev) => (prev ? { ...prev, ...patch } : prev))}
           />
+          )}
         </section>
 
         {/* ============ PRODUCTS ============ */}
 
         {showProducts && (
           <section className={sec("products")}>
+          {seen("products") && (
             <ProductsTab vendor={vendor} />
+          )}
           </section>
         )}
 
@@ -691,7 +714,9 @@ function VendorDashboardInner() {
 
         {showServices && (
           <section className={sec("services")}>
+          {seen("services") && (
             <ServicesTab vendor={vendor} />
+          )}
           </section>
         )}
 
@@ -699,30 +724,40 @@ function VendorDashboardInner() {
 
         {showPortfolio && (
           <section className={sec("portfolio")}>
+          {seen("portfolio") && (
             <PortfolioTab vendor={vendor} />
+          )}
           </section>
         )}
 
         {/* ============ SUBSCRIPTION (module 3) ============ */}
         <section className={sec("subscription")}>
+          {seen("subscription") && (
           <SubscriptionTab vendor={vendor} />
+          )}
         </section>
 
         {/* ============ VERIFICATION (module 4) ============ */}
         <section className={sec("verification")}>
+          {seen("verification") && (
           <VerificationTab vendor={vendor} />
+          )}
         </section>
 
         {/* ============ VISIT REQUESTS (2026-08 safety feature) ============ */}
         <section className={sec("visitRequests")}>
+          {seen("visitRequests") && (
           <VisitRequestsTab vendor={vendor} active={activeTab === "visitRequests"} onViewed={() => setUnreadVisits(0)} />
+          )}
         </section>
 
         <section className={sec("settings")}>
+          {seen("settings") && (
           <SettingsTab
             vendor={vendor}
             onVendorUpdate={(patch) => setVendor((prev) => (prev ? { ...prev, ...patch } : prev))}
           />
+          )}
         </section>
 
       </main>

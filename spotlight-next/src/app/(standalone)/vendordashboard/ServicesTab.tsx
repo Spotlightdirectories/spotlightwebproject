@@ -22,6 +22,7 @@
 // storage on delete, same as Products. See storagePathFromUrl below.)
 // ===============================================================
 
+import { cachedQuery } from "@/lib/cachedQuery";
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { supabase } from "@/lib/supabase";
@@ -242,11 +243,11 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
 
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase
+      const { data, error } = await cachedQuery("tab-service-cats", () => supabase
         .from("categories")
         .select("id,name")
         .eq("kind", "service")
-        .order("name", { ascending: true });
+        .order("name", { ascending: true }));
       if (!error) setCategories(data || []);
     })();
   }, []);
@@ -261,11 +262,11 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
         setSubcategories([]);
         return;
       }
-      const { data, error } = await supabase
+      const { data, error } = await cachedQuery("subs:" + categoryId, () => supabase
         .from("subcategories")
         .select("id,name")
         .eq("category_id", categoryId)
-        .order("name", { ascending: true });
+        .order("name", { ascending: true }));
       if (!error) {
         setSubcategories(data || []);
         if (pendingEditSubcategoryId.current) {
@@ -286,11 +287,11 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
         setSubSubcategories([]);
         return;
       }
-      const { data, error } = await supabase
+      const { data, error } = await cachedQuery("subsubs:" + subcategoryId, () => supabase
         .from("sub_subcategories")
         .select("id,name")
         .eq("subcategory_id", subcategoryId)
-        .order("display_order", { ascending: true });
+        .order("display_order", { ascending: true }));
       if (!error) {
         setSubSubcategories(data || []);
         if (pendingEditSubSubcategoryId.current) {

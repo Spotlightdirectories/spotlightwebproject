@@ -52,6 +52,7 @@
 // to one kind).
 // ===============================================================
 
+import { cachedQuery } from "@/lib/cachedQuery";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -167,11 +168,11 @@ export default function HomeCategorySearch() {
     let from = 0;
     const all: FlatSubcategory[] = [];
     for (;;) {
-      const { data, error } = await supabase
+      const { data, error } = await cachedQuery("all-subs:" + from, () => supabase
         .from("subcategories")
         .select("id,name,category_id")
         .order("name", { ascending: true })
-        .range(from, from + pageSize - 1);
+        .range(from, from + pageSize - 1));
       if (error || !data) break;
       all.push(...(data as FlatSubcategory[]));
       if (data.length < pageSize) break;
@@ -184,10 +185,10 @@ export default function HomeCategorySearch() {
   // pilot), so a single plain select is plenty — no pagination needed
   // like fetchAllSubcategories above.
   async function fetchAllSubSubcategories(): Promise<FlatSubSubcategory[]> {
-    const { data, error } = await supabase
+    const { data, error } = await cachedQuery("all-subsubs", () => supabase
       .from("sub_subcategories")
       .select("id,name,subcategory_id")
-      .order("name", { ascending: true });
+      .order("name", { ascending: true }));
     if (error || !data) return [];
     return data as FlatSubSubcategory[];
   }
@@ -257,7 +258,7 @@ export default function HomeCategorySearch() {
 
     const fetchAll = (async () => {
       const [categoriesRes, allSubcats, allSubSubcats, catCounts, subcatCounts] = await Promise.all([
-        supabase.from("categories").select("id,name,kind,image_url").in("kind", ["product", "service"]).order("name", { ascending: true }),
+        cachedQuery("home-cats", () => supabase.from("categories").select("id,name,kind,image_url").in("kind", ["product", "service"]).order("name", { ascending: true })),
         subcategoriesAllLoadedRef.current ? Promise.resolve(null) : fetchAllSubcategories(),
         subSubcategoriesAllLoadedRef.current ? Promise.resolve(null) : fetchAllSubSubcategories(),
         countsLoadedRef.current ? Promise.resolve(null) : fetchAllCounts("category_listing_counts", "category_id"),
@@ -378,11 +379,11 @@ export default function HomeCategorySearch() {
   async function ensureSubcategoriesLoaded(categoryId: string) {
     if (subcategoriesCache[categoryId] || loadingSubcatId === categoryId) return;
     setLoadingSubcatId(categoryId);
-    const { data, error } = await supabase
+    const { data, error } = await cachedQuery("subs:" + categoryId, () => supabase
       .from("subcategories")
       .select("id,name")
       .eq("category_id", categoryId)
-      .order("name", { ascending: true });
+      .order("name", { ascending: true }));
     if (!error) {
       setSubcategoriesCache((prev) => ({ ...prev, [categoryId]: data || [] }));
     }
@@ -392,11 +393,11 @@ export default function HomeCategorySearch() {
   async function ensureSubSubcategoriesLoaded(subcategoryId: string) {
     if (subSubcategoriesCache[subcategoryId] || loadingSubSubcatId === subcategoryId) return;
     setLoadingSubSubcatId(subcategoryId);
-    const { data, error } = await supabase
+    const { data, error } = await cachedQuery("subsubs:" + subcategoryId, () => supabase
       .from("sub_subcategories")
       .select("id,name")
       .eq("subcategory_id", subcategoryId)
-      .order("display_order", { ascending: true });
+      .order("display_order", { ascending: true }));
     if (!error) {
       setSubSubcategoriesCache((prev) => ({ ...prev, [subcategoryId]: data || [] }));
     }
