@@ -21,6 +21,7 @@
 //   new feature, not something production already tracked.
 // ===============================================================
 
+import CardLink from "@/components/CardLink";
 import BadgeTip from "@/components/BadgeTip";
 import FounderBadge from "@/components/FounderBadge";
 import { useState, useEffect } from "react";
@@ -86,14 +87,14 @@ function SmallBadge({ status }: { status: string }) {
   return null;
 }
 
-function ProductCard({ product, onClick, fallbackSlug }: { product: RelatedProduct; onClick: () => void; fallbackSlug?: string }) {
+function ProductCard({ product, href, fallbackSlug }: { product: RelatedProduct; href: string; fallbackSlug?: string }) {
   const name = product.vendors?.name || product.vendorName || "";
   const verification = product.vendors?.verification_status || product.vendorVerification || "none";
   const rating = product.vendors?.average_rating ?? product.vendorRating ?? 0;
   const reviews = product.vendors?.reviews_count ?? product.vendorReviews ?? 0;
 
   return (
-    <div className={styles.vpProductCard} onClick={onClick}>
+    <CardLink className={styles.vpProductCard} href={href}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={product.primary_image_url || "/images/spotlightlogo-512.png"}
@@ -112,7 +113,7 @@ function ProductCard({ product, onClick, fallbackSlug }: { product: RelatedProdu
         <span>{Number(rating).toFixed(1)}</span>
         <small>({reviews})</small>
       </div>
-    </div>
+    </CardLink>
   );
 }
 
@@ -458,7 +459,7 @@ export default function VendorProductPage() {
                 key={p.slug}
                 product={p}
                 fallbackSlug={vendorSlug}
-                onClick={() => router.push(`/vendor/${vendorSlug}/product/${p.slug}`)}
+                href={`/vendor/${vendorSlug}/product/${p.slug}`}
               />
             ))}
           </div>
@@ -475,7 +476,7 @@ export default function VendorProductPage() {
                 key={p.slug}
                 product={p}
                 fallbackSlug={vendorSlug}
-                onClick={() => router.push(`/vendor/${p.vendorSlug || vendorSlug}/product/${p.slug}`)}
+                href={`/vendor/${p.vendorSlug || vendorSlug}/product/${p.slug}`}
               />
             ))}
           </div>

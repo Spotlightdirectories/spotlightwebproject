@@ -16,6 +16,7 @@
 // branches under Reviews, matching production's vendor-profile.js.
 // ===============================================================
 
+import CardLink from "@/components/CardLink";
 import BadgeTip from "@/components/BadgeTip";
 import FounderBadge from "@/components/FounderBadge";
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -1651,11 +1652,9 @@ export default function VendorProfileClient({ initial }: { initial?: VendorIniti
               <h3 className={styles.servicesHeading}>Products</h3>
               <div className={styles.galleryGrid}>
                 {products.map(p => (
-                  <div
+                  <CardLink
                     key={p.id}
-                    className={styles.productCard}
-                    onClick={() => router.push(`/vendor/${vendor.slug}/product/${p.slug}`)}
-                  >
+                    className={styles.productCard} href={`/vendor/${vendor.slug}/product/${p.slug}`}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={p.primary_image_url || "/images/spotlightlogo-512.png"}
@@ -1676,7 +1675,7 @@ export default function VendorProfileClient({ initial }: { initial?: VendorIniti
                       <small>({vendor.reviews_count || 0})</small>
                     </div>
                     {vendor.is_sponsored && <p className={styles.productSponsored}>Sponsored</p>}
-                  </div>
+                  </CardLink>
                 ))}
               </div>
             </>
@@ -1688,11 +1687,9 @@ export default function VendorProfileClient({ initial }: { initial?: VendorIniti
               <h3 className={styles.servicesHeading}>Services</h3>
               <div className={styles.servicesList}>
                 {services.map(s => (
-                  <article
+                  <CardLink
                     key={s.id}
-                    className={styles.serviceCard}
-                    onClick={() => router.push(`/vendor/${vendor.slug}/service/${s.slug}`)}
-                  >
+                    className={styles.serviceCard} href={`/vendor/${vendor.slug}/service/${s.slug}`}>
                     <div className={styles.serviceTop}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -1730,7 +1727,7 @@ export default function VendorProfileClient({ initial }: { initial?: VendorIniti
                     <span className={styles.serviceCategory}>
                       {s.vendors?.subcategory || s.vendors?.category || "Service"}
                     </span>
-                  </article>
+                  </CardLink>
                 ))}
               </div>
             </div>

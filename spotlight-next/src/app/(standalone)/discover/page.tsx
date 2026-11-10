@@ -20,6 +20,7 @@
 //   (Commit 3 wires the results page itself)
 // ===============================================================
 
+import CardLink from "@/components/CardLink";
 import { cachedQuery } from "@/lib/cachedQuery";
 import BadgeTip from "@/components/BadgeTip";
 import FounderBadge from "@/components/FounderBadge";
@@ -288,10 +289,6 @@ export default function DiscoverPage() {
     router.push(`/discover-results?${params.toString()}`);
   }
 
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") handleSearch();
-  }
-
   function handleTrendingClick(kw: string) {
     setKeyword(kw);
     // Auto-search immediately, same as production
@@ -348,10 +345,18 @@ export default function DiscoverPage() {
       <section className={styles.discoverSearchSection}>
 
         {/* SEARCH BOX */}
-        <div className={styles.discoverSearchWrap}>
+        {/* A real form (2026-11-10 speed fix): pressing Search or Enter
+            before the page's code has loaded still opens the results page. */}
+        <form
+          className={styles.discoverSearchWrap}
+          action="/discover-results"
+          method="get"
+          onSubmit={(e) => { e.preventDefault(); handleSearch(); }}
+        >
           <i className="fa-solid fa-magnifying-glass"></i>
           <input
             type="text"
+            name="keyword"
             className={styles.discoverSearchInput}
             placeholder="Search products, services, vendors or categories"
             aria-label="Search products, services, vendors or categories"
@@ -361,17 +366,15 @@ export default function DiscoverPage() {
               setKeyword(e.target.value);
               setSearchError(false);
             }}
-            onKeyDown={handleKeyDown}
           />
           <button
-            type="button"
+            type="submit"
             className={styles.discoverSearchBtn}
-            onClick={handleSearch}
             disabled={searching}
           >
             {searching ? "..." : "Search"}
           </button>
-        </div>
+        </form>
 
         {searchError && (
           <p className={`${styles.discoverSearchError} ${styles.active}`}>
@@ -469,11 +472,9 @@ export default function DiscoverPage() {
           </div>
           <div className={styles.discoverSponsoredScroll}>
             {sponsoredVendors.map((v) => (
-              <article
+              <CardLink
                 key={v.id}
-                className={styles.discoverSponsoredCard}
-                onClick={() => router.push(`/vendor/${v.slug}`)}
-              >
+                className={styles.discoverSponsoredCard} href={`/vendor/${v.slug}`}>
                 <div className={styles.discoverSponsoredTop}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -508,20 +509,20 @@ export default function DiscoverPage() {
                     <button
                       type="button"
                       className={styles.reviewTriggerBtn}
-                      onClick={(e) => { e.stopPropagation(); router.push(`/vendor/${v.slug}?review=1`); }}
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); router.push(`/vendor/${v.slug}?review=1`); }}
                     >
                       Review
                     </button>
                     <button
                       type="button"
                       className={styles.viewProfileBtn}
-                      onClick={(e) => { e.stopPropagation(); router.push(`/vendor/${v.slug}`); }}
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); router.push(`/vendor/${v.slug}`); }}
                     >
                       Profile
                     </button>
                   </div>
                 </div>
-              </article>
+              </CardLink>
             ))}
           </div>
         </section>

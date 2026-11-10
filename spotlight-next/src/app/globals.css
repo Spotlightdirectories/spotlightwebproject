@@ -190,6 +190,25 @@ a {
   text-decoration: none;
 }
 
+/* Card links (CardLink component, 2026-11-10). :where() keeps these at zero
+   priority, so each card's own layout (e.g. display:flex) still wins. */
+:where(.card-link) {
+  display: block;
+  position: relative;
+}
+.card-link-opening {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 1.6rem;
+  border-radius: inherit;
+  z-index: 2;
+}
+
 
 /* ==============================================
    STICKY-FOOTER SHELL

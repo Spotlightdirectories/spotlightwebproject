@@ -163,6 +163,21 @@ export default function HomePage() {
     }
   }, []);
 
+  // Speed fix, 2026-11-10: the hero clips start downloading only after the
+  // rest of the page (including the code that makes Search and the buttons
+  // work) has finished loading, plus one second. Until then the still photo
+  // for each slide is shown, exactly as on slow connections. Before this,
+  // a first-time visitor's browser downloaded both clips at the same time
+  // as the page's code, so Search could stay unresponsive for a while.
+  const [videosReady, setVideosReady] = useState(false);
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const go = () => { t = setTimeout(() => setVideosReady(true), 1000); };
+    if (document.readyState === "complete") go();
+    else window.addEventListener("load", go, { once: true });
+    return () => { window.removeEventListener("load", go); if (t) clearTimeout(t); };
+  }, []);
+
   // One reveal hook per animated section -- see useRevealOnScroll above.
   const [benefitsRef, benefitsVisible] = useRevealOnScroll<HTMLDivElement>();
   const [howRef, howVisible] = useRevealOnScroll<HTMLDivElement>();
@@ -324,7 +339,15 @@ export default function HomePage() {
                     immediately, with zero dependency on whether any
                     video has loaded yet. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={slide.img} alt={slide.alt} className={isActive ? styles.ldSlideActiveImg : ""} />
+                <img
+                  src={slide.img}
+                  alt={slide.alt}
+                  className={isActive ? styles.ldSlideActiveImg : ""}
+                  // Speed fix 2026-11-10: only the first photo is urgent;
+                  // the others download after the page's code.
+                  fetchPriority={i === 0 ? "high" : "low"}
+                  decoding="async"
+                />
               </div>
             );
           })}
@@ -340,7 +363,7 @@ export default function HomePage() {
             const slideIdx = state.slots[slot];
             const slideData = SLIDES[slideIdx];
             const isVisible = state.visibleSlot === slot;
-            if (!slideData.video || videoErrors[slideIdx] || slowConnection) return null;
+            if (!videosReady || !slideData.video || videoErrors[slideIdx] || slowConnection) return null;
             return (
               <video
                 key={`slot-${slot}`}
@@ -457,7 +480,7 @@ export default function HomePage() {
         </div>
         <div className={styles.ldAppPhone}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/app-preview.webp" alt="Spotlight mobile app preview" />
+          <img src="/images/app-preview.webp" alt="Spotlight mobile app preview" loading="lazy" decoding="async" />
         </div>
       </section>
 
@@ -468,7 +491,7 @@ export default function HomePage() {
           {HOW_STEPS.map((step, i) => (
             <div key={i} className={styles.ldHowStep}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={step.img} alt={step.alt} />
+              <img src={step.img} alt={step.alt} loading="lazy" decoding="async" />
               <span className={styles.ldHowNumber}>{step.num}</span>
               <h3>{step.title}</h3>
               <p>{step.desc}</p>

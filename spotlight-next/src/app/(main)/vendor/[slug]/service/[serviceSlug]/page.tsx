@@ -16,6 +16,7 @@
 // - Analytics: service_view event
 // ===============================================================
 
+import CardLink from "@/components/CardLink";
 import BadgeTip from "@/components/BadgeTip";
 import FounderBadge from "@/components/FounderBadge";
 import { useState, useEffect, useRef } from "react";
@@ -107,14 +108,14 @@ function SmallBadge({ status }: { status: string }) {
   return null;
 }
 
-function ServiceCard({ service, onClick, fallbackSlug }: { service: RelatedService; onClick: () => void; fallbackSlug?: string }) {
+function ServiceCard({ service, href, fallbackSlug }: { service: RelatedService; href: string; fallbackSlug?: string }) {
   const name = service.vendors?.name || service.vendorName || "";
   const verification = service.vendors?.verification_status || service.vendorVerification || "none";
   const rating = service.vendors?.average_rating ?? service.vendorRating ?? 0;
   const reviews = service.vendors?.reviews_count ?? service.vendorReviews ?? 0;
 
   return (
-    <div className={styles.vsServiceCard} onClick={onClick}>
+    <CardLink className={styles.vsServiceCard} href={href}>
       {service.representative_image_url && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -139,7 +140,7 @@ function ServiceCard({ service, onClick, fallbackSlug }: { service: RelatedServi
         <span>{Number(rating).toFixed(1)}</span>
         <small>({reviews})</small>
       </div>
-    </div>
+    </CardLink>
   );
 }
 
@@ -792,7 +793,7 @@ export default function VendorServicePage() {
                 key={s.slug}
                 service={s}
                 fallbackSlug={vendorSlug}
-                onClick={() => router.push(`/vendor/${vendorSlug}/service/${s.slug}`)}
+                href={`/vendor/${vendorSlug}/service/${s.slug}`}
               />
             ))}
           </div>
@@ -809,7 +810,7 @@ export default function VendorServicePage() {
                 key={s.slug + (s.vendorSlug || "")}
                 service={s}
                 fallbackSlug={vendorSlug}
-                onClick={() => router.push(`/vendor/${s.vendorSlug || vendorSlug}/service/${s.slug}`)}
+                href={`/vendor/${s.vendorSlug || vendorSlug}/service/${s.slug}`}
               />
             ))}
           </div>

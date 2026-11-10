@@ -724,11 +724,16 @@ export default function HomeCategorySearch() {
 
   return (
     <div className={styles.wrap} ref={containerRef}>
-      <form className={styles.searchForm} onSubmit={handleKeywordSubmit}>
+      {/* action/method/name (2026-11-10 speed fix): if a first-time visitor
+          presses Search before the page's code has loaded, the browser
+          still goes to the results page on its own. Once the code is
+          loaded, handleKeywordSubmit takes over as before. */}
+      <form className={styles.searchForm} onSubmit={handleKeywordSubmit} action="/discover-results" method="get">
         <i className="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
         <input
           ref={inputRef}
           type="text"
+          name="keyword"
           className={styles.searchInput}
           placeholder="What are you looking for? e.g. phone, generator, tailor..."
           aria-label="Search for a product, service or business"

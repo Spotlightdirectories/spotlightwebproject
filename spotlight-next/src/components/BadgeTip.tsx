@@ -67,7 +67,7 @@ export default function BadgeTip({
       onMouseEnter={place}
       onMouseLeave={() => { if (!pinned) setPos(null); }}
       onClick={(e) => {
-        e.stopPropagation();
+        e.stopPropagation(); e.preventDefault();
         if (pinned) { setPinned(false); setPos(null); } else { place(); setPinned(true); }
       }}
     >

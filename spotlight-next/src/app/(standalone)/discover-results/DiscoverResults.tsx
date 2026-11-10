@@ -12,6 +12,7 @@
 // Standalone page: its own header + bottom nav, no site navbar.
 // ===============================================================
 
+import CardLink from "@/components/CardLink";
 import { cachedQuery } from "@/lib/cachedQuery";
 import BadgeTip from "@/components/BadgeTip";
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -931,7 +932,7 @@ export default function DiscoverResultsPage() {
                   ? `/vendor/${item.vendorSlug}/service/${item.slug}`
                   : `/vendor/${item.slug}`;
               return (
-                <article key={`sp-${i}`} className={styles.sponsoredCard} onClick={() => router.push(href)}>
+                <CardLink key={`sp-${i}`} className={styles.sponsoredCard} href={href}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={image} alt={name} className={styles.productImage} />
                   <h3 className={styles.productTitle}>{name}</h3>
@@ -952,7 +953,7 @@ export default function DiscoverResultsPage() {
                     <small>({reviews || 0})</small>
                   </div>
                   <p className={styles.sponsoredLabel}>Sponsored</p>
-                </article>
+                </CardLink>
               );
             })}
           </div>
@@ -979,11 +980,9 @@ export default function DiscoverResultsPage() {
               className={`${styles.productsGrid} ${showAllProducts ? styles.showAll : ""}`}
             >
               {visibleProducts.map(p => (
-                <article
+                <CardLink
                   key={p.id}
-                  className={styles.productCard}
-                  onClick={() => router.push(`/vendor/${p.vendorSlug}/product/${p.slug}`)}
-                >
+                  className={styles.productCard} href={`/vendor/${p.vendorSlug}/product/${p.slug}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.image || "/images/spotlightlogo-512.png"} alt={p.productName} className={styles.productImage} />
                   {p.subLabel && <p style={{ fontSize: "0.75rem", color: "#9ca3af", margin: "4px 0 2px" }}>{p.subLabel}</p>}
@@ -1006,7 +1005,7 @@ export default function DiscoverResultsPage() {
                     <small>({p.vendorReviews || 0})</small>
                   </div>
                   {p.sponsored && <p className={styles.sponsoredLabel}>Sponsored</p>}
-                </article>
+                </CardLink>
               ))}
             </div>
             <button type="button" className={`${styles.carouselArrow} ${styles.next}`}
@@ -1037,11 +1036,9 @@ export default function DiscoverResultsPage() {
               className={`${styles.servicesList} ${showAllServices ? styles.showAll : ""}`}
             >
               {visibleServices.map(s => (
-                <article
+                <CardLink
                   key={s.id}
-                  className={styles.serviceCard}
-                  onClick={() => router.push(`/vendor/${s.vendorSlug}/service/${s.slug}`)}
-                >
+                  className={styles.serviceCard} href={`/vendor/${s.vendorSlug}/service/${s.slug}`}>
                   <div className={styles.vendorLeft}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -1090,16 +1087,16 @@ export default function DiscoverResultsPage() {
                     {s.sponsored && <p className={styles.sponsoredLabel}>Sponsored</p>}
                     <div className={styles.actions}>
                       <button type="button" className={styles.reviewBtn}
-                        onClick={e => { e.stopPropagation(); /* review modal — Commit 3 */ }}>
+                        onClick={e => { e.stopPropagation(); e.preventDefault(); /* review modal — Commit 3 */ }}>
                         Leave Review
                       </button>
                       <button type="button" className={styles.profileBtn}
-                        onClick={e => { e.stopPropagation(); router.push(`/vendor/${s.vendorSlug}`); }}>
+                        onClick={e => { e.stopPropagation(); e.preventDefault(); router.push(`/vendor/${s.vendorSlug}`); }}>
                         View Profile
                       </button>
                     </div>
                   </div>
-                </article>
+                </CardLink>
               ))}
             </div>
             <button type="button" className={`${styles.carouselArrow} ${styles.next}`}
@@ -1122,11 +1119,9 @@ export default function DiscoverResultsPage() {
           </div>
           <div className={styles.vendorsList}>
             {visibleVendors.map(v => (
-              <article
+              <CardLink
                 key={`${v.id}-${v.branchId || "main"}`}
-                className={styles.vendorCard}
-                onClick={() => router.push(`/vendor/${v.slug}${v.branchId ? `?branch=${v.branchId}` : ""}`)}
-              >
+                className={styles.vendorCard} href={`/vendor/${v.slug}${v.branchId ? `?branch=${v.branchId}` : ""}`}>
                 <div className={styles.vendorLeft}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -1159,7 +1154,7 @@ export default function DiscoverResultsPage() {
                       type="button"
                       className={styles.reviewBtn}
                       onClick={(e) => {
-                        e.stopPropagation();
+                        e.stopPropagation(); e.preventDefault();
                         const params = new URLSearchParams();
                         if (v.branchId) params.set("branch", v.branchId);
                         params.set("review", "1");
@@ -1172,7 +1167,7 @@ export default function DiscoverResultsPage() {
                       type="button"
                       className={styles.profileBtn}
                       onClick={(e) => {
-                        e.stopPropagation();
+                        e.stopPropagation(); e.preventDefault();
                         router.push(`/vendor/${v.slug}${v.branchId ? `?branch=${v.branchId}` : ""}`);
                       }}
                     >
@@ -1180,7 +1175,7 @@ export default function DiscoverResultsPage() {
                     </button>
                   </div>
                 </div>
-              </article>
+              </CardLink>
             ))}
           </div>
         </section>
