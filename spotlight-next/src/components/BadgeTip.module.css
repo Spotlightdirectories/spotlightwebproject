@@ -5,6 +5,12 @@
   display: inline-flex;
   align-items: center;
   cursor: help;
+  /* Never let a long business name squeeze a badge narrow. */
+  flex-shrink: 0;
+}
+
+.wrap img {
+  flex-shrink: 0;
 }
 
 .tip {

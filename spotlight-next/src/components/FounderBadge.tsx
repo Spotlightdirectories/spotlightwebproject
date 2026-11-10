@@ -48,7 +48,7 @@ export default function FounderBadge({
   const on = show !== undefined && show !== null ? show : found;
   if (!on) return null;
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", marginRight: 4 }}>
+    <span style={{ display: "inline-flex", alignItems: "center", marginRight: 4, flexShrink: 0 }}>
       <BadgeTip kind="founder">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -56,7 +56,7 @@ export default function FounderBadge({
           alt="Founders 1000"
           width={size}
           height={size}
-          style={{ width: size, height: size, display: "block" }}
+          style={{ width: size, height: size, minWidth: size, flexShrink: 0, display: "block" }}
         />
       </BadgeTip>
     </span>
