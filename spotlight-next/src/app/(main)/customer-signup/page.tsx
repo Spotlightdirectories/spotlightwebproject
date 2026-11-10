@@ -14,7 +14,7 @@
 // and attaches a new customers row to it.
 // ===============================================================
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import { EmailTemplates } from "@/lib/emailTemplates";
@@ -29,6 +29,18 @@ export default function CustomerSignupPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  // 2026-11: when a visitor arrives from "Request a Quote" (or similar) the
+  // page they came from is passed as ?next=. We remember it in this browser
+  // so that after they confirm their email and log in, they are taken back
+  // there. Only same-site paths are accepted.
+  const [nextUrl, setNextUrl] = useState("");
+  useEffect(() => {
+    try {
+      const n = new URLSearchParams(window.location.search).get("next") || "";
+      if (n.startsWith("/") && !n.startsWith("//")) setNextUrl(n);
+    } catch { /* ignore */ }
+  }, []);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (submitting) return;
@@ -40,6 +52,10 @@ export default function CustomerSignupPage() {
 
     setSubmitting(true);
     setError("");
+
+    try {
+      if (nextUrl) localStorage.setItem("spotlight-after-signup", nextUrl);
+    } catch { /* ignore */ }
 
     // Create auth user (email confirmation ON — same as vendor signup)
     const { data, error: authError } = await supabase.auth.signUp({
@@ -58,7 +74,7 @@ export default function CustomerSignupPage() {
           <>
             An account with this email already exists on Spotlight.
             <a
-              href={`/customer-login?setup=1&email=${encodeURIComponent(email.trim())}&name=${encodeURIComponent(fullName.trim())}`}
+              href={`/customer-login?setup=1&email=${encodeURIComponent(email.trim())}&name=${encodeURIComponent(fullName.trim())}${nextUrl ? `&next=${encodeURIComponent(nextUrl)}` : ""}`}
               style={{ display: "block", marginTop: 6, fontWeight: 700 }}
             >
               Log in to set up your customer profile
@@ -191,7 +207,7 @@ export default function CustomerSignupPage() {
         </form>
 
         <p className={styles.authFooter}>
-          Already have an account? <a href="/customer-login">Log in</a>
+          Already have an account? <a href={nextUrl ? `/customer-login?next=${encodeURIComponent(nextUrl)}` : "/customer-login"}>Log in</a>
         </p>
 
         <p className={styles.authFooter}>

@@ -57,10 +57,20 @@ function CustomerLoginForm() {
   // customer here first and need them back on the exact page they
   // started from afterward, instead of dumping them on their profile
   // with no idea why they were asked to log in.
-  const nextUrl = searchParams.get("next") || "/customer-profile";
+  // 2026-11: a new customer who came here from "Request a Quote" and went to
+  // create an account is remembered in this browser (key below), so after
+  // they confirm their email and log in they still land back on the quote.
+  // Only same-site paths are accepted.
+  const [storedNext, setStoredNext] = useState("");
+  const rawNext = searchParams.get("next") || storedNext;
+  const nextUrl = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/customer-profile";
 
   useEffect(() => {
     if (setupEmail) setEmail(setupEmail);
+    try {
+      const saved = localStorage.getItem("spotlight-after-signup");
+      if (saved) setStoredNext(saved);
+    } catch { /* storage unavailable: just use the default */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -106,7 +116,8 @@ function CustomerLoginForm() {
           return;
         }
 
-        router.push(nextUrl);
+        try { localStorage.removeItem("spotlight-after-signup"); } catch { /* ignore */ }
+    router.push(nextUrl);
         return;
       }
 
@@ -118,6 +129,7 @@ function CustomerLoginForm() {
       return;
     }
 
+    try { localStorage.removeItem("spotlight-after-signup"); } catch { /* ignore */ }
     router.push(nextUrl);
   }
 
@@ -130,7 +142,7 @@ function CustomerLoginForm() {
           {setupMode
             ? "Log in below and we'll set up your customer profile on this account."
             : nextUrl !== "/customer-profile"
-            ? "Log in to continue where you left off."
+            ? "You need a free customer account to continue."
             : "Log in to see your favorite vendors and reviews."}
         </p>
 
@@ -179,7 +191,15 @@ function CustomerLoginForm() {
         </p>
 
         <p className={styles.authFooter}>
-          New here? <a href="/customer-signup">Create an account</a>
+          {nextUrl !== "/customer-profile" ? (
+            <>
+              New here?{" "}
+              <a href={`/customer-signup?next=${encodeURIComponent(nextUrl)}`}>Create a customer account</a>{" "}
+              to continue
+            </>
+          ) : (
+            <>New here? <a href="/customer-signup">Create an account</a></>
+          )}
         </p>
 
         <p className={styles.authFooter}>
