@@ -13,6 +13,7 @@
 // ===============================================================
 
 import CardLink from "@/components/CardLink";
+import ThumbImg from "@/components/ThumbImg";
 import { cachedQuery } from "@/lib/cachedQuery";
 import BadgeTip from "@/components/BadgeTip";
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -934,7 +935,7 @@ export default function DiscoverResultsPage() {
               return (
                 <CardLink key={`sp-${i}`} className={styles.sponsoredCard} href={href}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={image} alt={name} className={styles.productImage} />
+                  <ThumbImg src={image} alt={name} className={styles.productImage} />
                   <h3 className={styles.productTitle}>{name}</h3>
                   {price && (
                     <p className={styles.productPrice}>
@@ -984,7 +985,7 @@ export default function DiscoverResultsPage() {
                   key={p.id}
                   className={styles.productCard} href={`/vendor/${p.vendorSlug}/product/${p.slug}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.image || "/images/spotlightlogo-512.png"} alt={p.productName} className={styles.productImage} />
+                  <ThumbImg src={p.image || "/images/spotlightlogo-512.png"} alt={p.productName} className={styles.productImage} />
                   {p.subLabel && <p style={{ fontSize: "0.75rem", color: "#9ca3af", margin: "4px 0 2px" }}>{p.subLabel}</p>}
                   <h3 className={styles.productTitle}>{p.productName}</h3>
                   <p className={styles.productPrice}>₦{Number(p.price || 0).toLocaleString()}</p>
@@ -1041,7 +1042,7 @@ export default function DiscoverResultsPage() {
                   className={styles.serviceCard} href={`/vendor/${s.vendorSlug}/service/${s.slug}`}>
                   <div className={styles.vendorLeft}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <ThumbImg
                       src={s.image || s.vendorLogo || "/images/default-vendor-logo.png"}
                       alt={s.serviceName}
                       className={styles.vendorLogo}
@@ -1124,7 +1125,7 @@ export default function DiscoverResultsPage() {
                 className={styles.vendorCard} href={`/vendor/${v.slug}${v.branchId ? `?branch=${v.branchId}` : ""}`}>
                 <div className={styles.vendorLeft}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <ThumbImg
                     src={v.logo || "/images/default-vendor-logo.png"}
                     alt={v.name}
                     className={styles.vendorLogo}

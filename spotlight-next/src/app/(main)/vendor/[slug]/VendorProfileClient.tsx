@@ -17,6 +17,7 @@
 // ===============================================================
 
 import CardLink from "@/components/CardLink";
+import ThumbImg from "@/components/ThumbImg";
 import BadgeTip from "@/components/BadgeTip";
 import FounderBadge from "@/components/FounderBadge";
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -789,7 +790,7 @@ export default function VendorProfileClient({ initial }: { initial?: VendorIniti
       if (vendor.cover_url) {
         const oldPath = vendor.cover_url.split("/vendor-branding/")[1];
         if (oldPath) {
-          const { error } = await supabase.storage.from("vendor-branding").remove([oldPath]);
+          const { error } = await supabase.storage.from("vendor-branding").remove([oldPath, `thumbs/${oldPath}`]);
           if (error) console.error("Cover delete (storage) error:", error);
         }
       }
@@ -815,7 +816,7 @@ export default function VendorProfileClient({ initial }: { initial?: VendorIniti
       if (vendor.logo_url) {
         const oldPath = vendor.logo_url.split("/vendor-branding/")[1];
         if (oldPath) {
-          const { error } = await supabase.storage.from("vendor-branding").remove([oldPath]);
+          const { error } = await supabase.storage.from("vendor-branding").remove([oldPath, `thumbs/${oldPath}`]);
           if (error) console.error("Logo delete (storage) error:", error);
         }
       }
@@ -832,7 +833,7 @@ export default function VendorProfileClient({ initial }: { initial?: VendorIniti
     if (vendor.cover_url) {
       const oldPath = vendor.cover_url.split("/vendor-branding/")[1];
       if (oldPath) {
-        const { error } = await supabase.storage.from("vendor-branding").remove([oldPath]);
+        const { error } = await supabase.storage.from("vendor-branding").remove([oldPath, `thumbs/${oldPath}`]);
         if (error) console.error("Cover delete (storage) error:", error);
       }
     }
@@ -846,7 +847,7 @@ export default function VendorProfileClient({ initial }: { initial?: VendorIniti
     if (vendor.logo_url) {
       const oldPath = vendor.logo_url.split("/vendor-branding/")[1];
       if (oldPath) {
-        const { error } = await supabase.storage.from("vendor-branding").remove([oldPath]);
+        const { error } = await supabase.storage.from("vendor-branding").remove([oldPath, `thumbs/${oldPath}`]);
         if (error) console.error("Logo delete (storage) error:", error);
       }
     }
@@ -1229,7 +1230,7 @@ export default function VendorProfileClient({ initial }: { initial?: VendorIniti
               <div className={styles.logoWrap}>
                 {vendor.logo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={vendor.logo_url} alt={vendor.name} />
+                  <ThumbImg src={vendor.logo_url} alt={vendor.name} />
                 ) : isOwner ? (
                   <div className={styles.logoPlaceholder}>
                     112 × 112px<br />Max: 3MB<br />JPG, PNG
@@ -1656,7 +1657,7 @@ export default function VendorProfileClient({ initial }: { initial?: VendorIniti
                     key={p.id}
                     className={styles.productCard} href={`/vendor/${vendor.slug}/product/${p.slug}`}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <ThumbImg
                       src={p.primary_image_url || "/images/spotlightlogo-512.png"}
                       alt={p.product_name}
                       className={styles.productImage}
@@ -1692,7 +1693,7 @@ export default function VendorProfileClient({ initial }: { initial?: VendorIniti
                     className={styles.serviceCard} href={`/vendor/${vendor.slug}/service/${s.slug}`}>
                     <div className={styles.serviceTop}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <ThumbImg
                         src={s.representative_image_url || "/images/spotlightlogo-512.png"}
                         alt={s.service_name}
                         className={styles.serviceThumb}

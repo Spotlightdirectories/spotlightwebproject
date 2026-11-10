@@ -29,6 +29,7 @@
 // product/service rows are looked up separately and joined in JS.
 // ===============================================================
 
+import ThumbImg from "@/components/ThumbImg";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -762,7 +763,7 @@ export default function CustomerProfilePage() {
                 className={styles.cpActivityCard}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.image || "/images/spotlightlogo-512.png"} alt={item.name} />
+                <ThumbImg src={item.image || "/images/spotlightlogo-512.png"} alt={item.name} />
                 <div className={styles.cpFavoriteInfo}>
                   <strong>{item.name}</strong>
                   <span>By {item.vendorName}</span>
@@ -796,7 +797,7 @@ export default function CustomerProfilePage() {
                 className={styles.cpActivityCard}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.image || "/images/spotlightlogo-512.png"} alt={item.name} />
+                <ThumbImg src={item.image || "/images/spotlightlogo-512.png"} alt={item.name} />
                 <div className={styles.cpFavoriteInfo}>
                   <strong>{item.name}</strong>
                   <span>By {item.vendorName}</span>

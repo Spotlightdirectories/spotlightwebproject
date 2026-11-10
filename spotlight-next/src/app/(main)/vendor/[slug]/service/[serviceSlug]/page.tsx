@@ -17,6 +17,7 @@
 // ===============================================================
 
 import CardLink from "@/components/CardLink";
+import ThumbImg from "@/components/ThumbImg";
 import BadgeTip from "@/components/BadgeTip";
 import FounderBadge from "@/components/FounderBadge";
 import { useState, useEffect, useRef } from "react";
@@ -118,7 +119,7 @@ function ServiceCard({ service, href, fallbackSlug }: { service: RelatedService;
     <CardLink className={styles.vsServiceCard} href={href}>
       {service.representative_image_url && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <ThumbImg
           src={service.representative_image_url}
           alt={service.service_name}
           className={styles.vsCardImage}

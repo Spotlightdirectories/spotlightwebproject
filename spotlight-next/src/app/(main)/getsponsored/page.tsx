@@ -23,6 +23,7 @@
 // other ported page this migration.
 // ===============================================================
 
+import ThumbImg from "@/components/ThumbImg";
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
@@ -745,7 +746,7 @@ export default function GetSponsoredPage() {
                           />
                           {item.image ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={item.image} alt={item.name} />
+                            <ThumbImg src={item.image} alt={item.name} />
                           ) : (
                             <div className={styles.itemImagePlaceholder} aria-hidden="true">🖼️</div>
                           )}

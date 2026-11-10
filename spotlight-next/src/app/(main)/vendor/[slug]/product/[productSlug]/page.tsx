@@ -22,6 +22,7 @@
 // ===============================================================
 
 import CardLink from "@/components/CardLink";
+import ThumbImg from "@/components/ThumbImg";
 import BadgeTip from "@/components/BadgeTip";
 import FounderBadge from "@/components/FounderBadge";
 import { useState, useEffect } from "react";
@@ -96,7 +97,7 @@ function ProductCard({ product, href, fallbackSlug }: { product: RelatedProduct;
   return (
     <CardLink className={styles.vpProductCard} href={href}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <ThumbImg
         src={product.primary_image_url || "/images/spotlightlogo-512.png"}
         alt={product.product_name}
         className={styles.vpCardImage}

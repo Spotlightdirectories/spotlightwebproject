@@ -566,7 +566,7 @@ export default function ServicesTab({ vendor }: { vendor: Vendor }) {
       .filter((p): p is string => Boolean(p));
 
     if (storagePaths.length) {
-      const { error: storageError } = await supabase.storage.from("vendor-gallery").remove(storagePaths);
+      const { error: storageError } = await supabase.storage.from("vendor-gallery").remove([...storagePaths, ...storagePaths.map((p) => `thumbs/${p}`)]); // also the small card copies (2026-11-10)
       if (storageError) console.error(storageError);
     }
 

@@ -21,6 +21,7 @@
 // ===============================================================
 
 import CardLink from "@/components/CardLink";
+import ThumbImg from "@/components/ThumbImg";
 import { cachedQuery } from "@/lib/cachedQuery";
 import BadgeTip from "@/components/BadgeTip";
 import FounderBadge from "@/components/FounderBadge";
@@ -477,7 +478,7 @@ export default function DiscoverPage() {
                 className={styles.discoverSponsoredCard} href={`/vendor/${v.slug}`}>
                 <div className={styles.discoverSponsoredTop}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <ThumbImg
                     src={v.logo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(v.name)}&background=e6c200&color=000000&size=128`}
                     alt=""
                     className={styles.discoverSponsoredLogo}
