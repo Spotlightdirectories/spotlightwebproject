@@ -587,11 +587,9 @@ export default function VendorProfileClient({ initial }: { initial?: VendorIniti
 
   // ── Load social links ────────────────────────────────────────
   async function loadSocialLinks(vendorId: string) {
-    const { data } = await supabase
-      .from("vendor_social_links")
-      .select("*")
-      .eq("vendor_id", vendorId);
-    setSocialLinks(data || []);
+    // Read through the database function so a free vendor's link address stays hidden.
+    const { data } = await supabase.rpc("get_vendor_social_links", { p_vendor_id: vendorId });
+    setSocialLinks((data as SocialLink[] | null) || []);
   }
 
   // ── Load reviews ─────────────────────────────────────────────
@@ -733,7 +731,7 @@ export default function VendorProfileClient({ initial }: { initial?: VendorIniti
     try { new URL(url); } catch { alert("Invalid link format."); return; }
 
     const effectiveLimit = vendor.plan_tier === "free"
-      ? (trialActive ? 1 : 0)
+      ? 0 /* free plan: no links, not even during the trial (2026-11) */
       : (SOCIAL_LIMITS[vendor.plan_tier] ?? 0);
 
     if (socialLinks.length >= effectiveLimit) {
@@ -1131,7 +1129,7 @@ export default function VendorProfileClient({ initial }: { initial?: VendorIniti
   // ── Compute effective social limit ────────────────────────────
   const effectiveSocialLimit = vendor
     ? (vendor.plan_tier === "free"
-        ? (trialActive ? 1 : 0)
+        ? 0 /* free plan: no links, not even during the trial (2026-11) */
         : (SOCIAL_LIMITS[vendor.plan_tier] ?? 0))
     : 0;
 
@@ -1283,10 +1281,30 @@ export default function VendorProfileClient({ initial }: { initial?: VendorIniti
               <p className={styles.addressLine}>{locationView.address}</p>
 
               {/* SOCIAL LINKS */}
-              {socialLinks.length > 0 && (
+              {/* 2026-11: the free plan does not include links (they were allowed
+                  in error during the trial). Existing links stay visible on the
+                  profile as plain icons that cannot be clicked; vendors who
+                  want them active again can contact Spotlight. */}
+              {(() => {
+                const isFreePlan = vendor.plan_tier === "free";
+                const lockedWebsite = (_l: SocialLink) => isFreePlan; // free plan: every link is inactive
+                const withinLimit = new Set(
+                  socialLinks.filter(l => !lockedWebsite(l)).slice(0, effectiveSocialLimit).map(l => l.id)
+                );
+                const shownLinks = socialLinks.filter(l => lockedWebsite(l) || withinLimit.has(l.id));
+                if (shownLinks.length === 0) return null;
+                return (
                 <div className={styles.socialLinksRow}>
-                  {socialLinks.slice(0, effectiveSocialLimit).map(link => (
+                  {shownLinks.map(link => (
                     <div key={link.id} className={styles.socialItem}>
+                      {lockedWebsite(link) ? (
+                        <span
+                          className={styles.socialLink}
+                          style={{ cursor: "default", opacity: 0.6 }}
+                          aria-label="Link not active"
+                          dangerouslySetInnerHTML={{ __html: SOCIAL_ICONS[link.platform] || "" }}
+                        />
+                      ) : (
                       <a
                         href={link.url}
                         target="_blank"
@@ -1296,13 +1314,15 @@ export default function VendorProfileClient({ initial }: { initial?: VendorIniti
                         onClick={() => logEvent("external_visit")}
                         dangerouslySetInnerHTML={{ __html: SOCIAL_ICONS[link.platform] || "" }}
                       />
+                      )}
                       {isOwner && (
                         <button type="button" className={styles.socialDelete} onClick={() => handleDeleteSocial(link.id)} aria-label="Delete social link">×</button>
                       )}
                     </div>
                   ))}
                 </div>
-              )}
+                );
+              })()}
 
             </div>
           </div>

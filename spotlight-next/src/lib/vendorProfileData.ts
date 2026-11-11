@@ -51,7 +51,7 @@ export async function loadVendorProfileData(slug: string) {
       sb.from("vendor_services")
         .select(`*, vendors(slug, name, category, subcategory, state, lga, verification_status, is_founder, average_rating, reviews_count)`)
         .eq("vendor_id", vendorId).eq("moderation_status", "approved"),
-      sb.from("vendor_social_links").select("*").eq("vendor_id", vendorId),
+      sb.rpc("get_vendor_social_links", { p_vendor_id: vendorId }),
       sb.from("vendor_reviews").select("reviewer_name, review_text, created_at, customer_id")
         .eq("vendor_id", vendorId).order("created_at", { ascending: false }).limit(3),
       sb.rpc("get_similar_businesses", {

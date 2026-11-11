@@ -270,7 +270,7 @@ function VendorDashboardInner() {
       if (diff <= 0) {
         setTrialText({
           days: "Your trial has ended",
-          time: "Upgrade to keep your extra products, services, gallery photos and social link.",
+          time: "Upgrade to keep your extra products, services and gallery photos.",
           ended: true,
         });
         return false;
@@ -373,9 +373,11 @@ function VendorDashboardInner() {
   const hasLocation = !!(vendor.latitude && vendor.longitude);
   const hasMedia = mediaCount > 0;
   const hasSocial = socialCount > 0;
+  // Free plan has no links (2026-11), so the social-link step only applies to paid plans.
+  const socialApplies = vendor.plan_tier !== "free";
 
   let score = 0;
-  const total = 8;
+  const total = socialApplies ? 8 : 7;
   if (hasBasic) score++;
   if (hasDetails) score++;
   if (hasCategory) score++;
@@ -383,7 +385,7 @@ function VendorDashboardInner() {
   if (hasLocation) score++;
   if (emailVerified) score++;
   if (hasMedia) score++;
-  if (hasSocial) score++;
+  if (socialApplies && hasSocial) score++;
 
   const percent = Math.round((score / total) * 100);
   const complete = percent === 100;
@@ -396,7 +398,7 @@ function VendorDashboardInner() {
     { label: "Business location (map)", ok: hasLocation },
     { label: "Email verified", ok: emailVerified },
     { label: "Add at least 1 media", ok: hasMedia },
-    { label: "Add at least 1 social link", ok: hasSocial },
+    ...(socialApplies ? [{ label: "Add at least 1 social link", ok: hasSocial }] : []),
   ];
 
   const fallbackLetter = vendor.name ? vendor.name.charAt(0) : "S";

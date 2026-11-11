@@ -14,6 +14,15 @@
 // using the file's real bytes (not just its claimed type), before
 // anything reaches storage.
 //
+// 2026-11-10 UPDATE (card thumbnails): for public photo categories
+// (product, service, portfolio, gallery, cover, logo) a small copy,
+// at most THUMB_SIZE px on its longest side, is also saved at
+// "thumbs/<same path>" in the same bucket. Cards on the website and
+// the app show that small copy instead of the full photo, which is
+// several times lighter and appears almost instantly. The original is
+// stored exactly as before. If making the small copy fails, the upload
+// still succeeds (cards fall back to the original).
+//
 // UPDATE (this revision): dropped "image/webp" from the accepted
 // types for every category that goes through the decode/resize step
 // (product, service, gallery, cover, logo). The imagescript library
@@ -40,6 +49,11 @@
 // so the FINAL stored file still ends up small. PDFs bypass that
 // resize/recompress step entirely (they're stored as-is), so they
 // keep their own, tighter cap via the new `maxPdfBytes` rule field.
+//
+// 2026-08 UPDATE: added `partner_nin` category (Cyril's requirement:
+// partner payout setup collects an uploaded NIN document, not a typed
+// 11-digit number) -- owned by a `partners` row instead of a
+// `vendors` row, via the new `ownerTable` rule field.
 // ===============================================================
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
@@ -52,6 +66,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+// Longest side of the small card copy, in px. Cards show photos at
+// roughly 64-200px; 480 keeps them sharp on high-density phone screens.
+const THUMB_SIZE = 480;
+const THUMB_QUALITY = 78;
 
 // ===============================================================
 // RULES PER UPLOAD CATEGORY
@@ -72,6 +91,7 @@ type Rule = {
   folder: string; // subfolder inside the owner's own bucket path
   isPublic: boolean; // false for private buckets (verification docs, receipts) — no public URL exists for these
   ownerTable?: "vendors" | "partners"; // which table owns the uploader — defaults to "vendors" (every category except partner_nin)
+  thumbnail?: boolean; // also save a small card copy at thumbs/<path> (2026-11-10)
 };
 
 const RULES: Record<string, Rule> = {
@@ -84,6 +104,7 @@ const RULES: Record<string, Rule> = {
     bucket: "vendor-gallery",
     folder: "products",
     isPublic: true,
+    thumbnail: true,
   },
   service: {
     allowedTypes: ["image/jpeg", "image/png"],
@@ -94,6 +115,7 @@ const RULES: Record<string, Rule> = {
     bucket: "vendor-gallery",
     folder: "services",
     isPublic: true,
+    thumbnail: true,
   },
   gallery: {
     allowedTypes: ["image/jpeg", "image/png"],
@@ -102,6 +124,7 @@ const RULES: Record<string, Rule> = {
     bucket: "vendor-branding",
     folder: "gallery",
     isPublic: true,
+    thumbnail: true,
   },
   portfolio: {
     allowedTypes: ["image/jpeg", "image/png"],
@@ -112,20 +135,16 @@ const RULES: Record<string, Rule> = {
     bucket: "vendor-gallery",
     folder: "portfolio",
     isPublic: true,
+    thumbnail: true,
   },
   cover: {
-    // Original upload cap raised 1MB -> 3MB: vendors have no practical way
-    // to shrink a photo themselves before uploading, and every image is
-    // resized to 1200px + recompressed as JPEG-80 below regardless of
-    // input size, so the FINAL stored file stays small either way (see
-    // formatSize-based error text and the resize/recompress step further
-    // down). Same reasoning already applied to verification/receipt.
     allowedTypes: ["image/jpeg", "image/png"],
     maxBytes: 3 * 1024 * 1024,
     resizeTo: 1200,
     bucket: "vendor-branding",
     folder: "cover",
     isPublic: true,
+    thumbnail: true,
   },
   logo: {
     allowedTypes: ["image/jpeg", "image/png"],
@@ -134,11 +153,12 @@ const RULES: Record<string, Rule> = {
     bucket: "vendor-branding",
     folder: "logo",
     isPublic: true,
+    thumbnail: true,
   },
   verification: {
     allowedTypes: ["image/jpeg", "image/png", "application/pdf"],
-    maxBytes: 4 * 1024 * 1024, // accepted as-is from the phone; resized+recompressed below
-    maxPdfBytes: 2 * 1024 * 1024, // PDFs are stored as-is — no server-side compression
+    maxBytes: 4 * 1024 * 1024,
+    maxPdfBytes: 2 * 1024 * 1024,
     resizeTo: 1600,
     bucket: "vendor-verifications",
     folder: "documents",
@@ -162,10 +182,6 @@ const RULES: Record<string, Rule> = {
     folder: "bank-receipts",
     isPublic: false,
   },
-  // 2026-08 addition, per Cyril: partner payout setup collects a NIN
-  // document (not a typed number) — same identity-document handling
-  // already established for vendor "verification", just owned by a
-  // `partners` row instead of a `vendors` row.
   partner_nin: {
     allowedTypes: ["image/jpeg", "image/png", "application/pdf"],
     maxBytes: 4 * 1024 * 1024,
@@ -177,10 +193,6 @@ const RULES: Record<string, Rule> = {
     ownerTable: "partners",
   },
 };
-
-// ===============================================================
-// REAL FILE TYPE DETECTION (magic bytes — not the claimed MIME type)
-// ===============================================================
 
 function detectRealType(bytes: Uint8Array): string | null {
   if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
@@ -225,8 +237,6 @@ function extensionFor(type: string): string {
   return "bin";
 }
 
-// Human-readable size for error messages — KB below 1MB, MB above,
-// so a 4MB limit reads as "4MB" instead of "4096KB".
 function formatSize(bytes: number): string {
   if (bytes >= 1024 * 1024) {
     const mb = bytes / (1024 * 1024);
@@ -248,11 +258,6 @@ serve(async (req) => {
   }
 
   try {
-    // ---- AUTH CHECK ----
-    // We never trust a vendorId sent from the browser. Instead we verify
-    // who is actually calling (via their login token) and look up THEIR
-    // OWN vendor record — so nobody can upload a file into another
-    // vendor's folder just by changing an ID in the request.
     const authHeader = req.headers.get("Authorization");
 
     if (!authHeader) {
@@ -305,11 +310,6 @@ serve(async (req) => {
 
     const rule = RULES[category];
 
-    // ---- OWNER LOOKUP ----
-    // Every category except partner_nin belongs to a vendor (looked
-    // up by auth_user_id, as this always did). partner_nin belongs to
-    // a partner instead (looked up by user_id) -- same "never trust a
-    // caller-supplied id" principle, just against the other table.
     let ownerId: string;
 
     if (rule.ownerTable === "partners") {
@@ -342,12 +342,8 @@ serve(async (req) => {
       ownerId = vendorRow.id;
     }
 
-    // Decode base64 → raw bytes
     const bytes = Uint8Array.from(atob(fileBase64), (c) => c.charCodeAt(0));
 
-    // ---- REAL TYPE CHECK (ignores the claimed content-type entirely) ----
-    // Done before the size check now, since PDFs and images can have
-    // different size caps (PDFs aren't compressed below, images are).
     const realType = detectRealType(bytes);
 
     if (!realType || !rule.allowedTypes.includes(realType)) {
@@ -363,7 +359,6 @@ serve(async (req) => {
       );
     }
 
-    // ---- SIZE CHECK ----
     const effectiveMaxBytes =
       realType === "application/pdf" && rule.maxPdfBytes
         ? rule.maxPdfBytes
@@ -383,8 +378,10 @@ serve(async (req) => {
 
     let finalBytes = bytes;
     let finalType = realType;
+    // The processed (resized, white-backed) photo, kept so the small
+    // card copy can be made from it after the original is stored.
+    let processed: Image | null = null;
 
-    // ---- IMAGE-ONLY: dimension check + resize/compress ----
     if (realType !== "application/pdf") {
       let img;
 
@@ -424,26 +421,15 @@ serve(async (req) => {
         }
       }
 
-      // Re-encode as JPEG at 80% quality.
-      // (WEBP encoding isn't reliably supported in the Deno edge
-      // runtime today; JPEG at 80% gives an equivalent size/quality
-      // result for photographic content.)
-      //
-      // JPEG has no transparency support. Without flattening first,
-      // any transparent areas (common in PNG logos/product images)
-      // default to BLACK when the encoder discards the alpha channel
-      // — confirmed as the exact cause of the black-background bug.
-      // Composite the image onto a solid white background first, so
-      // transparent areas become white instead.
       const whiteBackground = new Image(img.width, img.height);
-      whiteBackground.fill(0xffffffff); // opaque white (RGBA)
+      whiteBackground.fill(0xffffffff);
       whiteBackground.composite(img, 0, 0);
 
       finalBytes = await whiteBackground.encodeJPEG(80);
       finalType = "image/jpeg";
+      processed = whiteBackground;
     }
 
-    // ---- UPLOAD TO STORAGE (same service-role client used for auth check above) ----
     const ext = extensionFor(finalType);
     const safeName = (fileName || "file").replace(/[^a-zA-Z0-9.-]/g, "_");
     const path = `${ownerId}/${rule.folder}/${Date.now()}-${safeName}.${ext}`;
@@ -461,6 +447,31 @@ serve(async (req) => {
         JSON.stringify({ success: false, error: "Upload failed." }),
         { status: 500, headers: corsHeaders }
       );
+    }
+
+    // Small card copy (2026-11-10). Never blocks the upload: if it
+    // fails, cards simply fall back to the original photo.
+    if (rule.thumbnail && processed) {
+      try {
+        const thumb = processed.clone();
+        if (thumb.width > THUMB_SIZE || thumb.height > THUMB_SIZE) {
+          if (thumb.width > thumb.height) {
+            thumb.resize(THUMB_SIZE, Image.RESIZE_AUTO);
+          } else {
+            thumb.resize(Image.RESIZE_AUTO, THUMB_SIZE);
+          }
+        }
+        const thumbBytes = await thumb.encodeJPEG(THUMB_QUALITY);
+        const { error: thumbError } = await supabase.storage
+          .from(rule.bucket)
+          .upload(`thumbs/${path}`, thumbBytes, {
+            contentType: "image/jpeg",
+            upsert: true,
+          });
+        if (thumbError) console.error("Thumbnail upload error:", thumbError);
+      } catch (thumbErr) {
+        console.error("Thumbnail error:", thumbErr);
+      }
     }
 
     const { data: publicUrlData } = rule.isPublic
