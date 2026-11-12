@@ -2,7 +2,7 @@
 
 // ===============================================================
 // Referral Rewards. Vendors who have referred other vendors.
-// A vendor who has 5 fully onboarded referrals (30 days active) can be
+// A vendor who has 5 fully onboarded referrals (7 days after full onboarding) can be
 // approved for 6 months of Standard. Nothing is granted automatically.
 // ===============================================================
 
@@ -48,7 +48,7 @@ export default function ReferralRewardsTab({ currentRole }: { currentRole: Admin
     <div>
       <h1 className="adm-section-heading"><i className="fa-solid fa-gift"></i> Referral Rewards</h1>
       <p className="adm-section-note">
-        Vendors who referred other vendors. A referral counts after the vendor has completed every onboarding step, has a verified email and an approved listing, and has been active for 30 days. At 5 you can approve 6 months of Standard (free-plan vendors only, once each).
+        Vendors who referred other vendors. A referral counts after the vendor has completed every onboarding step, has a verified email and an approved listing, and has been fully onboarded for 7 days. At 5 you can approve 6 months of Standard (free-plan vendors only, once each).
       </p>
       {msg && <p className="adm-section-note"><strong>{msg}</strong></p>}
       <div className="adm-table-wrap">

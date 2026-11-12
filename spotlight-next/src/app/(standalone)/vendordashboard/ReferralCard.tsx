@@ -46,7 +46,7 @@ export default function ReferralCard() {
         <>
           <h3 style={{ margin: "6px 0" }}>{shown} of 5 fully onboarded</h3>
           <p style={{ margin: "0 0 10px", fontSize: 14 }}>
-            Invite 5 vendors who complete all their onboarding steps and stay active for 30 days, and earn
+            Invite 5 vendors who complete all their onboarding steps. Each one counts 7 days after they finish, and you earn
             <strong> 6 months of the Standard plan free</strong>.
           </p>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
@@ -55,7 +55,7 @@ export default function ReferralCard() {
           </div>
           {p.signed_up > 0 && (
             <p style={{ margin: "10px 0 0", fontSize: 13, opacity: 0.8 }}>
-              {p.signed_up} signed up with your link{waiting > 0 ? `, ${waiting} still completing onboarding or within their first 30 days` : ""}.
+              {p.signed_up} signed up with your link{waiting > 0 ? `, ${waiting} still completing onboarding or within their 7 days after finishing` : ""}.
             </p>
           )}
         </>
