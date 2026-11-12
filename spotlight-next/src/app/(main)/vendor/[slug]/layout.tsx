@@ -23,11 +23,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const { data: vendor } = await supabase
     .from("vendors")
-    .select("name, category, subcategory, state, description")
+    .select("id, name, category, subcategory, state, description")
     .eq("slug", slug)
     .maybeSingle();
 
   if (!vendor) return { title: FALLBACK_TITLE, description: FALLBACK_DESCRIPTION, alternates };
+
+  // Free vendor with nothing listed yet: keep out of search engines.
+  const { data: listed } = await supabase.rpc("vendor_is_listed", { p_vendor_id: vendor.id });
+  if (listed === false) {
+    return { title: "Business setting up | Spotlight Directories", alternates, robots: { index: false, follow: false } };
+  }
 
   const locationBit = vendor.state ? ` in ${vendor.state}` : "";
   const categoryBit = vendor.subcategory || vendor.category || "business";

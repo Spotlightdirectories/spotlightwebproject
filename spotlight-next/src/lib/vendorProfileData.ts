@@ -43,6 +43,12 @@ export async function loadVendorProfileData(slug: string) {
 
     const tier = safeTier(vendor.plan_tier);
     const vendorId: string = vendor.id;
+
+    // Free vendor with no product/service: return only the bare minimum.
+    const { data: listedData } = await sb.rpc("vendor_is_listed", { p_vendor_id: vendorId });
+    if (listedData === false) {
+      return { listed: false as const, vendor: { id: vendorId, slug: vendor.slug, auth_user_id: vendor.auth_user_id } } as any;
+    }
     const isServiceLike = vendor.business_type === "service" || vendor.business_type === "hybrid";
 
     const [productsR, servicesR, socialR, reviewsR, similarR, branchesR, videoR, portfolioR] = await Promise.all([
@@ -102,6 +108,7 @@ export async function loadVendorProfileData(slug: string) {
     const branches = branchLimit === 0 ? [] : allBranches.slice(0, branchLimit);
 
     return {
+      listed: true as const,
       vendor,
       products: productsR.data || [],
       services,

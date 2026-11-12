@@ -14,6 +14,7 @@
 // ===============================================================
 
 import VendorProfileClient from "./VendorProfileClient";
+import UnlistedGate from "./UnlistedGate";
 import { loadVendorProfileData } from "@/lib/vendorProfileData";
 
 export const revalidate = 60;
@@ -21,5 +22,9 @@ export const revalidate = 60;
 export default async function VendorProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const initial = await loadVendorProfileData(slug);
+  // Free vendors with nothing listed yet are not shown to the public.
+  if (initial?.vendor && initial.listed === false) {
+    return <UnlistedGate ownerAuthId={initial.vendor.auth_user_id ?? null} />;
+  }
   return <VendorProfileClient initial={initial} />;
 }

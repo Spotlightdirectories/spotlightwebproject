@@ -55,7 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: r.priority,
   }));
 
-  const [{ data: vendors }, { data: products }, { data: services }] = await Promise.all([
+  const [{ data: vendorsRaw }, { data: products }, { data: services }, { data: hiddenSlugs }] = await Promise.all([
     supabase
       .from("vendors")
       .select("slug, created_at")
@@ -76,7 +76,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .eq("vendors.account_status", "active")
       .not("slug", "is", null)
       .limit(ROW_LIMIT),
+    supabase.rpc("get_unlisted_vendor_slugs"),
   ]);
+
+  // Free vendors with no product/service yet are hidden from the public.
+  const hidden = new Set<string>(((hiddenSlugs as unknown as string[]) || []).map(String));
+  const vendors = (vendorsRaw || []).filter(v => !hidden.has(v.slug as string));
 
   const vendorEntries: MetadataRoute.Sitemap = (vendors || []).map(v => ({
     url: `${SITE_URL}/vendor/${encodeURIComponent(v.slug as string)}`,

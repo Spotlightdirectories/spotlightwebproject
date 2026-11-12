@@ -25,6 +25,7 @@ import { adminSupabase, getAdminSession, clearAdminSession, type AdminRole, type
 
 import StaffTab from "./StaffTab";
 import SecurityLogTab from "./SecurityLogTab";
+import RemovalReviewTab from "./RemovalReviewTab";
 import PaymentsTab from "./PaymentsTab";
 import SponsorshipsTab from "./SponsorshipsTab";
 import VerificationsTab from "./VerificationsTab";
@@ -40,6 +41,7 @@ import QuoteQuestionsTab from "./QuoteQuestionsTab";
 type TabKey =
   | "staff"
   | "securityLog"
+  | "removalReview"
   | "payments"
   | "sponsorships"
   | "verifications"
@@ -65,6 +67,7 @@ type TabDef = {
 const TABS: TabDef[] = [
   { key: "staff", label: "Staff Management", icon: "fa-solid fa-shield-halved", roles: ["super_admin"], Component: StaffTab },
   { key: "securityLog", label: "Security Log", icon: "fa-solid fa-shield-halved", roles: ["super_admin"], Component: SecurityLogTab },
+  { key: "removalReview", label: "Removal Review", icon: "fa-solid fa-user-slash", roles: ["super_admin", "admin"], Component: RemovalReviewTab },
   { key: "payments", label: "Pending Payments", icon: "fa-solid fa-money-check-dollar", roles: ["super_admin", "admin", "finance_admin"], Component: PaymentsTab },
   { key: "sponsorships", label: "Pending Sponsorships", icon: "fa-solid fa-bullhorn", roles: ["super_admin", "admin", "finance_admin"], Component: SponsorshipsTab },
   { key: "verifications", label: "Pending Verifications", icon: "fa-solid fa-certificate", roles: ["super_admin", "admin", "verification_admin"], Component: VerificationsTab },

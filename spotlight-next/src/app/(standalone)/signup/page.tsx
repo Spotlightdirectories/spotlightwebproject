@@ -19,6 +19,7 @@
 // 5. Success message shown → vendor clicks "Log in" to continue
 // ===============================================================
 
+import { normalizeNigerianTelephone } from "@/lib/phone";
 import { useState, useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
@@ -136,6 +137,8 @@ export default function SignupPage() {
 
     const validWhatsapp = /^\+234\d{10}$/.test(whatsapp);
     if (!validWhatsapp) { setError("WhatsApp number must use valid Nigerian format (+234XXXXXXXXXX)."); return; }
+
+    if (!normalizeNigerianTelephone(telephone)) { setError("Telephone must be a valid Nigerian mobile or landline number."); return; }
 
     const selectedPlan = localStorage.getItem("selectedPlan");
     if (!selectedPlan) { setError("Please select a plan first."); router.push("/getlisted"); return; }

@@ -27,6 +27,7 @@
 //   this is a faithful port, not a rewrite).
 // ===============================================================
 
+import { normalizeNigerianTelephone } from "@/lib/phone";
 import { sanitizeRichText } from "@/lib/sanitizeRichText";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -189,8 +190,24 @@ export default function ProfileTab({ vendor, onVendorUpdate }: Props) {
       return;
     }
 
-    const whatsappValue = whatsappRef.current?.value.trim() || "";
-    const telephoneValue = telephoneRef.current?.value.trim() || "";
+    const whatsappDigits = (whatsappRef.current?.value || "").replace(/\D/g, "");
+    // Saved with the country code, always: +234 followed by 10 digits.
+    if (whatsappDigits && !/^[1-9][0-9]{9}$/.test(whatsappDigits)) {
+      setStatusMsg("WhatsApp number must be 10 digits after +234 (for example 8021234567).");
+      setSaving(false);
+      return;
+    }
+    const whatsappValue = whatsappDigits ? "+234" + whatsappDigits : "";
+    const telephoneRaw = telephoneRef.current?.value.trim() || "";
+    const telephoneNormalized = telephoneRaw ? normalizeNigerianTelephone(telephoneRaw) : "";
+    if (telephoneRaw && !telephoneNormalized) {
+      setStatusMsg("Telephone must be a valid Nigerian mobile or landline number.");
+      setSaving(false);
+      return;
+    }
+    // Keep an unchanged old-style number as it is; save anything new in +234 form.
+    const sameAsSaved = telephoneRaw !== "" && telephoneRaw.replace(/\D/g, "") === (vendor.telephone || "").replace(/\D/g, "");
+    const telephoneValue = sameAsSaved ? (vendor.telephone || "") : (telephoneNormalized || "");
     const addressValue = addressRef.current?.value.trim() || "";
 
     const requiredChecks: Array<{ value: string; label: string }> = [
@@ -238,7 +255,7 @@ export default function ProfileTab({ vendor, onVendorUpdate }: Props) {
     const nextDescription = descriptionHtml.trim();
 
     const hasChanges =
-      whatsappValue !== (vendor.whatsapp || "") ||
+      whatsappValue.replace(/\D/g, "") !== (vendor.whatsapp || "").replace(/\D/g, "") ||
       telephoneValue !== (vendor.telephone || "") ||
       addressValue !== (vendor.address || "") ||
       nextDescription !== (vendor.description || "") ||
@@ -385,7 +402,7 @@ export default function ProfileTab({ vendor, onVendorUpdate }: Props) {
                   maxLength={10}
                   inputMode="numeric"
                   pattern="[1-9][0-9]{9}"
-                  defaultValue={vendor.whatsapp || ""}
+                  defaultValue={(vendor.whatsapp || "").replace(/\D/g, "").replace(/^234/, "").replace(/^0/, "").slice(0, 10)}
                   onChange={handleWhatsappInput}
                 />
               </div>
