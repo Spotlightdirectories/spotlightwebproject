@@ -28,6 +28,15 @@ function clean(v: string | null): string | null {
 export default function SourceCapture() {
   useEffect(() => {
     try {
+      // Vendor-to-vendor referral link (?vref=CODE): remember it so the
+      // vendor signup can credit the vendor who shared it.
+      const vref = new URLSearchParams(window.location.search).get("vref");
+      if (vref && /^[A-Za-z0-9]{4,20}$/.test(vref.trim())) {
+        localStorage.setItem("vendor_referral_code", vref.trim().toUpperCase());
+      }
+    } catch { /* storage blocked */ }
+
+    try {
       const existing = localStorage.getItem(KEY);
       if (existing) {
         const saved = JSON.parse(existing);

@@ -17,6 +17,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useIsMobile } from "@/lib/useIsMobile";
 import LaunchOfferCompact from "@/components/LaunchOfferCompact";
+import ReferralCard from "./ReferralCard";
 import { ONBOARDING_VIDEOS } from "@/lib/onboardingVideos";
 import dynamic from "next/dynamic";
 // Speed: each tab is its own small download, fetched only when the vendor
@@ -620,6 +621,7 @@ function VendorDashboardInner() {
             {/* RIGHT SIDE */}
             <div className="vd-overview-right">
               <LaunchOfferCompact onUpgrade={upgrade} />
+              <ReferralCard />
               <div className="vd-top-cards">
 
                 {/* PLAN */}

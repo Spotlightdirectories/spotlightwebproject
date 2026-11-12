@@ -34,6 +34,17 @@ export async function createVendorRow(authUserId: string, f: VendorFormDetails, 
     if (resolvedId) partnerId = resolvedId as unknown as string;
   }
 
+  // Vendor-to-vendor referral. A partner commission always takes priority,
+  // so a sign-up is never both. The database also blocks self-referral.
+  let referrerVendorId: string | null = null;
+  if (!partnerId) {
+    const vref = localStorage.getItem("vendor_referral_code")?.trim().toUpperCase();
+    if (vref) {
+      const { data: vid } = await supabase.rpc("get_vendor_id_by_referral_code", { p_code: vref }).maybeSingle();
+      if (vid) referrerVendorId = vid as unknown as string;
+    }
+  }
+
   // Where the vendor first came from (saved by SourceCapture). Missing is fine.
   let source: { utm_source?: string | null; utm_medium?: string | null; utm_campaign?: string | null; first_visit_at?: string | null } = {};
   try {
@@ -47,6 +58,7 @@ export async function createVendorRow(authUserId: string, f: VendorFormDetails, 
     telephone: f.telephone,
     whatsapp: f.whatsapp,
     referred_by_partner_id: partnerId,
+    referred_by_vendor_id: referrerVendorId,
     heard_about_us: f.heardAboutUs,
     heard_about_detail: (f.heardAboutDetail || "").trim().slice(0, 100) || null,
     utm_source: source.utm_source ?? null,
@@ -87,6 +99,7 @@ export function clearSignupStorage() {
   localStorage.removeItem("selectedPlan");
   localStorage.removeItem("billingType");
   localStorage.removeItem("referral_code");
+  localStorage.removeItem("vendor_referral_code");
   localStorage.removeItem("spotlight_source");
   localStorage.removeItem(PENDING_VENDOR_KEY);
 }
