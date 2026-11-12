@@ -18,6 +18,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import styles from "./AccountButton.module.css";
+import { useOpenAccountPage } from "@/lib/useOpenAccountPage";
 
 export default function AccountButton({ placement = "auto" }: { placement?: "auto" | "absolute" }) {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -27,6 +28,7 @@ export default function AccountButton({ placement = "auto" }: { placement?: "aut
   const [logo, setLogo] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement | null>(null);
+  const { opening, open: openPage } = useOpenAccountPage([...(isVendor ? ["/vendordashboard"] : []), ...(isCustomer ? ["/customer-profile"] : [])]);
 
   useEffect(() => {
     async function resolveIdentity(userId: string | undefined) {
@@ -98,13 +100,13 @@ export default function AccountButton({ placement = "auto" }: { placement?: "aut
         <div className={styles.panel}>
           <div className={styles.panelName}>{name}</div>
           {isVendor && (
-            <Link href="/vendordashboard" onClick={() => setOpen(false)}>
-              <i className="fa-solid fa-gauge"></i> Vendor Dashboard
+            <Link href="/vendordashboard" onClick={(e) => openPage(e, "/vendordashboard")}>
+              <i className="fa-solid fa-gauge"></i> {opening === "/vendordashboard" ? "Opening dashboard…" : "Vendor Dashboard"}
             </Link>
           )}
           {isCustomer && (
-            <Link href="/customer-profile" onClick={() => setOpen(false)}>
-              <i className="fa-solid fa-user"></i> My Account
+            <Link href="/customer-profile" onClick={(e) => openPage(e, "/customer-profile")}>
+              <i className="fa-solid fa-user"></i> {opening === "/customer-profile" ? "Opening…" : "My Account"}
             </Link>
           )}
           <button type="button" className={styles.logout} onClick={handleLogout}>

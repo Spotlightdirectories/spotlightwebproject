@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useTheme } from "./ThemeProvider";
 import { supabase } from "@/lib/supabase";
 import styles from "./Navbar.module.css";
+import { useOpenAccountPage } from "@/lib/useOpenAccountPage";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -148,6 +149,7 @@ export default function Navbar() {
   const [accountName, setAccountName] = useState("");
   const [accountLogo, setAccountLogo] = useState<string | null>(null);
   const [accountOpen, setAccountOpen] = useState(false);
+  const { opening: openingPage, open: openAccountPage } = useOpenAccountPage([...(isVendor ? ["/vendordashboard"] : []), ...(isCustomer ? ["/customer-profile"] : [])]);
   const accountRef = useRef<HTMLLIElement | null>(null);
 
   // Close the account dropdown when clicking anywhere outside it.
@@ -448,13 +450,13 @@ export default function Navbar() {
                   <div className={styles.accountPanel}>
                     <div className={styles.accountPanelName}>{accountName}</div>
                     {isVendor && (
-                      <Link href="/vendordashboard" onClick={() => { setAccountOpen(false); setMenuOpen(false); }}>
-                        <i className="fa-solid fa-gauge"></i> Vendor Dashboard
+                      <Link href="/vendordashboard" onClick={(e) => openAccountPage(e, "/vendordashboard")}>
+                        <i className="fa-solid fa-gauge"></i> {openingPage === "/vendordashboard" ? "Opening dashboard…" : "Vendor Dashboard"}
                       </Link>
                     )}
                     {isCustomer && (
-                      <Link href="/customer-profile" onClick={() => { setAccountOpen(false); setMenuOpen(false); }}>
-                        <i className="fa-solid fa-user"></i> My Account
+                      <Link href="/customer-profile" onClick={(e) => openAccountPage(e, "/customer-profile")}>
+                        <i className="fa-solid fa-user"></i> {openingPage === "/customer-profile" ? "Opening…" : "My Account"}
                       </Link>
                     )}
                     <button type="button" className={styles.accountLogout} onClick={handleLogout}>
